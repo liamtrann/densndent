@@ -53,7 +53,7 @@ class NetsuiteService {
         }
       });
 
-      return response.data;
+      return response.data.items || [];
     } catch (error) {
       console.error('Netsuite API Error:', {
         status: error.response?.status,
@@ -67,7 +67,7 @@ class NetsuiteService {
 
 
   async querySuiteQL(sql, params = {}) {
-    console.log(params)
+
     return this.makeRequest({
       method: 'POST',
       endpoint: '/services/rest/query/v1/suiteql',
