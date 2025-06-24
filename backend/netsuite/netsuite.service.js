@@ -53,7 +53,8 @@ class NetsuiteService {
         }
       });
 
-      return response.data.items || [];
+      const { links, ...rest } = response.data;
+      return rest;
     } catch (error) {
       console.error('Netsuite API Error:', {
         status: error.response?.status,
