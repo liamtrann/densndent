@@ -1,4 +1,5 @@
 import React from "react";
+import Button from "../common/Button";
 
 export default function Catalogues() {
   return (
@@ -8,9 +9,7 @@ export default function Catalogues() {
         <p className="text-gray-700 mb-4">
           Browse our catalogues for exclusive discounts on dental supplies, instruments, equipment, and disposables.
         </p>
-        <button className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2 rounded">
-          Shop Now
-        </button>
+        <Button onClick={() => {}}>Show now</Button>
       </div>
       <img src="/catalogue-banner.png" alt="Catalogues" className="w-full md:w-1/2 rounded-lg" />
     </section>

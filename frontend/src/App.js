@@ -1,20 +1,19 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { Route, Router, Routes } from 'react-router-dom';
-import Home from './pages/Home';
-import CategoryPage from './pages/CategoryPage';
-import Header from './components/Header';
-import LandingPage from './pages/LandingPage';
-import Footer from './components/Footer';
+import { Routes, Route } from "react-router-dom";
+import LandingPage from "./pages/LandingPage";
+import TopicalAnestheticPage from "./pages/TopicalAnestheticPage"; // 👈 Import it
+import Header from "./components/Header";
+import Footer from "./components/Footer";
 
 function App() {
-
   return (
-    // <Routes>
-    //   <Route path="/" element={<Home />} />
-    //   <Route path="/category/:name" element={<CategoryPage />} />
-    // </Routes>
-    <div className='App'><Header /><LandingPage /><Footer /></div>
+    <div className="App">
+      <Header />
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/product/topical-anesthetic" element={<TopicalAnestheticPage />} />
+      </Routes>
+      <Footer />
+    </div>
   );
 }
 
