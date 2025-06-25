@@ -1,20 +1,35 @@
 import React, { useState } from "react";
-import { Button, Image, InputField } from '../common';
+import { useNavigate } from "react-router-dom";
+import Button from "../common/Button";
+import InputField from "../common/InputField";
+import Dropdown from "../common/Dropdown";
+import Image from "../common/Image";
+import Modal from "../components/Modal"; // You’ll create this component
 
 export default function TopicalAnestheticPage() {
   const [quantity, setQuantity] = useState(1);
+  const [flavor, setFlavor] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const navigate = useNavigate();
+
+  const handleAddToCart = () => {
+    setShowModal(true);
+    // Optional: Save to global/cart context here
+  };
+
+  const handleViewCart = () => {
+    navigate("/cart");
+  };
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-10">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-        {/* Product Image */}
         <Image
           src="/q2/topical-anesthetic.png"
           alt="Topical Anesthetic"
           className="w-full object-contain"
         />
 
-        {/* Product Details */}
         <div>
           <h2 className="text-2xl font-bold text-gray-800 mb-2">
             D2: Topical Anesthetic Gel 28gm Jar - D21301
@@ -23,7 +38,15 @@ export default function TopicalAnestheticPage() {
           <p className="text-2xl font-semibold mt-2">$11.99</p>
           <p className="text-sm text-gray-600 mt-1">BUY 3 GET 1 FREE</p>
 
-          {/* Quantity Selector */}
+          <div className="mt-4">
+            <label className="block mb-1 font-medium">Flavours:</label>
+            <Dropdown
+              options={["Mint", "Cherry", "Bubblegum"]}
+              value={flavor}
+              onChange={(e) => setFlavor(e.target.value)}
+            />
+          </div>
+
           <div className="mt-4">
             <label className="block mb-1 font-medium">Quantity:</label>
             <InputField
@@ -35,8 +58,7 @@ export default function TopicalAnestheticPage() {
             />
           </div>
 
-          {/* Buttons */}
-          <Button variant="primary" className="mt-6 w-full bg-blue-700 text-white py-3 rounded hover:bg-blue-800">
+          <Button className="mt-6 w-full" onClick={handleAddToCart}>
             Add to Shopping Cart
           </Button>
 
@@ -45,6 +67,22 @@ export default function TopicalAnestheticPage() {
           </div>
         </div>
       </div>
+
+      {/* ✅ Modal for cart confirmation */}
+      {showModal && (
+        <Modal
+          title="Added to Cart"
+          onClose={() => setShowModal(false)}
+          image="/q2/topical-anesthetic.png"
+          product={{
+            name: "Topical Anesthetic Gel 28gm Jar",
+            price: "$11.99",
+            flavor,
+            quantity,
+          }}
+          onViewCart={handleViewCart}
+        />
+      )}
     </div>
   );
 }
