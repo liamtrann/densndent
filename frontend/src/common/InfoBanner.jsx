@@ -1,5 +1,4 @@
 import React from "react";
-import PropTypes from "prop-types";
 import { Button, Image, Paragraph } from "./index";
 
 export default function InfoBanner({

@@ -1,6 +1,5 @@
 // components/BlueBanner.jsx
 import React from "react";
-import PropTypes from "prop-types";
 import Button from "../common/Button";
 import { SectionTitle } from '../common';
 

@@ -1,5 +1,4 @@
 import React from "react";
-import PropTypes from "prop-types";
 
 export default function FooterSection({ title, children, className = "", items, itemRender }) {
   return (
@@ -21,11 +20,3 @@ export default function FooterSection({ title, children, className = "", items, 
     </div>
   );
 }
-
-FooterSection.propTypes = {
-  title: PropTypes.string,
-  children: PropTypes.node,
-  className: PropTypes.string,
-  items: PropTypes.array,
-  itemRender: PropTypes.func,
-}; 
