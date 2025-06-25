@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "../common/Button";
 import InputField from "../common/InputField";
+import Paragraph from "../common/Paragraph";
 import Dropdown from "../common/Dropdown";
 import Image from "../common/Image";
 import Modal from "../components/Modal"; // You’ll create this component
@@ -34,9 +35,10 @@ export default function ProductsPage() {
           <h2 className="text-2xl font-bold text-gray-800 mb-2">
             D2: Topical Anesthetic Gel 28gm Jar - D21301
           </h2>
-          <p className="text-green-700 font-semibold">IN STOCK</p>
-          <p className="text-2xl font-semibold mt-2">$11.99</p>
-          <p className="text-sm text-gray-600 mt-1">BUY 3 GET 1 FREE</p>
+          <Paragraph className="text-green-700 font-semibold">IN STOCK</Paragraph>
+          <Paragraph className="text-2xl font-semibold mt-2">$11.99</Paragraph>
+          <Paragraph className="text-sm text-gray-600 mt-1">BUY 3 GET 1 FREE</Paragraph>
+
 
           <div className="mt-4">
             <label className="block mb-1 font-medium">Flavours:</label>

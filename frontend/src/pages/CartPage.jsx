@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import InputField from "../common/InputField";
 
 export default function CartPage() {
   const [quantity, setQuantity] = useState(1);
@@ -10,7 +11,9 @@ export default function CartPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-10">
-      <h1 className="text-2xl font-bold mb-6 text-center">SHOPPING CART (1 Product, {quantity} Item{quantity > 1 ? "s" : ""})</h1>
+      <h1 className="text-2xl font-bold mb-6 text-center">
+        SHOPPING CART (1 Product, {quantity} Item{quantity > 1 ? "s" : ""})
+      </h1>
 
       {/* Cart Item Section */}
       <div className="flex gap-6 border p-4 rounded-md shadow-sm">
@@ -18,26 +21,25 @@ export default function CartPage() {
         <div className="flex-grow">
           <h2 className="font-semibold mb-1">Topical Anesthetic Gel 28gm Jar Mint - D21301-M</h2>
           <p className="text-gray-600">$11.99</p>
-          <div className="mt-2">
-            <label className="text-sm font-medium">Flavours:</label>
-            <p className="text-sm text-gray-700">Mint</p>
-          </div>
 
-          <div className="mt-2">
-            <label className="text-sm font-medium">Quantity:</label>
-            <input
+          <p className="mt-2 text-sm">
+            <span className="font-medium">Flavours:</span> Mint
+          </p>
+
+          <div className="mt-2 w-24">
+            <InputField
+              label="Quantity:"
               type="number"
-              value={quantity}
               min={1}
+              value={quantity}
               onChange={(e) => setQuantity(Number(e.target.value))}
-              className="border px-2 py-1 w-20 ml-2"
             />
           </div>
 
-          <div className="mt-2">
-            <span className="text-sm font-medium">Amount:</span>{" "}
+          <p className="mt-2 text-sm">
+            <span className="font-medium">Amount:</span>{" "}
             <span className="font-bold">${subtotal}</span>
-          </div>
+          </p>
 
           <div className="mt-2 text-sm text-gray-600 space-x-4">
             <button className="text-blue-600 underline">Edit</button>
@@ -49,7 +51,7 @@ export default function CartPage() {
 
       {/* Order Summary Section */}
       <div className="mt-10 grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2"></div> {/* Empty for layout balance */}
+        <div className="lg:col-span-2" />
 
         <div className="border p-6 rounded shadow-md">
           <h3 className="text-xl font-semibold mb-4">Order Summary</h3>
@@ -62,31 +64,26 @@ export default function CartPage() {
             Subtotal Does Not Include Shipping Or Tax
           </p>
 
-          {/* Shipping Estimate */}
           <div className="mb-4">
             <h4 className="text-sm font-medium mb-1">Estimate Tax & Shipping</h4>
             <p className="text-xs mb-2">Ship available only to Canada</p>
-            <input
-              type="text"
+            <InputField
               placeholder="Postal Code"
               value={postalCode}
               onChange={(e) => setPostalCode(e.target.value)}
-              className="w-full border px-3 py-2 rounded mb-2"
             />
             <button className="w-full bg-gray-700 text-white py-2 rounded hover:bg-gray-800">
               ESTIMATE
             </button>
           </div>
 
-          {/* Promo Code */}
           <div className="mb-4">
             <h4 className="text-sm font-medium mb-1">Have a Promo Code?</h4>
             <div className="flex gap-2">
-              <input
-                type="text"
+              <InputField
                 value={promoCode}
                 onChange={(e) => setPromoCode(e.target.value)}
-                className="border px-3 py-2 rounded w-full"
+                placeholder="Promo Code"
               />
               <button className="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-800">
                 APPLY

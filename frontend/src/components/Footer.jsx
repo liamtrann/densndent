@@ -1,89 +1,56 @@
+// src/components/Footer.jsx
 import React from "react";
-import { Image, FooterSection } from '../common';
+import { FaFacebookF, FaInstagram, FaYoutube, FaLinkedinIn, FaGooglePlusG } from "react-icons/fa";
 
 export default function Footer() {
-  // Items for Logo + Social
-  const logoSocialItems = [
-    { type: 'logo' },
-    { type: 'social', icons: [
-      { icon: 'facebook', href: '#' },
-      { icon: 'youtube', href: '#' },
-      { icon: 'instagram', href: '#' },
-      { icon: 'google-plus-g', href: '#' },
-      { icon: 'linkedin', href: '#' },
-    ]}
-  ];
-
-  // Items for Contact
-  const contactItems = [
-    { label: '1-866-449-9998' },
-    { label: '905-475-3367' },
-    { label: 'Fax - 905-475-2894' },
-    { label: 'info@densndente.ca', href: 'mailto:info@densndente.ca' }
-  ];
-
   return (
-    <footer className="bg-white text-gray-800 px-6 py-10 text-sm">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-left">
-        {/* Logo + Social */}
-        <FooterSection
-          items={logoSocialItems}
-          itemRender={item => {
-            if (item.type === 'logo') {
-              return <Image src="/logo-footer.png" alt="Dens 'n Dente Logo" className="h-8 mb-4" />;
-            }
-            if (item.type === 'social') {
-              return (
-                <div className="flex gap-4 text-xl text-gray-700">
-                  {item.icons.map((icon, idx) => (
-                    <a key={icon.icon} href={icon.href}>
-                      <i className={`fab fa-${icon.icon}`}></i>
-                    </a>
-                  ))}
-                </div>
-              );
-            }
-            return null;
-          }}
-        />
+    <footer className="bg-gray-100 mt-12 py-10 border-t">
+      <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-8 text-sm text-gray-700">
+        
+        {/* Logo and Social */}
+        <div>
+          <img src="/logo.png" alt="Dens 'n Dente Logo" className="h-10 mb-4" />
+          <div className="flex space-x-3 mt-2">
+            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer"><FaFacebookF className="hover:text-blue-600" /></a>
+            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer"><FaLinkedinIn className="hover:text-blue-700" /></a>
+            <a href="https://plus.google.com" target="_blank" rel="noopener noreferrer"><FaGooglePlusG className="hover:text-red-600" /></a>
+            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer"><FaInstagram className="hover:text-pink-500" /></a>
+            <a href="https://youtube.com" target="_blank" rel="noopener noreferrer"><FaYoutube className="hover:text-red-600" /></a>
+          </div>
+        </div>
 
         {/* Location */}
-        <FooterSection title="LOCATION">
-          <p>91 Granton Drive,<br />Richmond Hill, ON<br />L4B 2N5</p>
-        </FooterSection>
+        <div>
+          <h4 className="font-semibold mb-2 text-blue-800">LOCATION</h4>
+          <p>91 Granton Drive,</p>
+          <p>Richmond Hill, ON</p>
+          <p>L4B 2N5</p>
+        </div>
 
         {/* Contact */}
-        <FooterSection
-          title="CONTACT US"
-          items={contactItems}
-          itemRender={item =>
-            item.href ? (
-              <a href={item.href} className="hover:underline">{item.label}</a>
-            ) : (
-              <span>{item.label}</span>
-            )
-          }
-        />
+        <div>
+          <h4 className="font-semibold mb-2 text-blue-800">CONTACT US</h4>
+          <p>1-866-449-9998</p>
+          <p>905-475-3367</p>
+          <p>Fax - 905-475-2894</p>
+          <p>info@densndente.ca</p>
+        </div>
 
         {/* Legal */}
-        <FooterSection
-          title="LEGAL"
-          items={[
-            { label: "Privacy Policy", href: "#" },
-            { label: "Terms & Conditions / Refund Policy", href: "#" },
-            { label: "Web Store Return Process", href: "#" },
-            { label: "Pick Up Process", href: "#" }
-          ]}
-        />
+        <div>
+          <h4 className="font-semibold mb-2 text-blue-800">LEGAL</h4>
+          <ul className="space-y-1">
+            <li><a href="/privacy-policy" className="hover:underline">Privacy Policy</a></li>
+            <li><a href="/terms" className="hover:underline">Terms & Conditions / Refund Policy</a></li>
+            <li><a href="/returns" className="hover:underline">Web Store Return Process</a></li>
+            <li><a href="/pickup" className="hover:underline">Pick Up Process</a></li>
+          </ul>
+        </div>
       </div>
 
-      <div className="border-t mt-8 pt-4 text-center text-gray-500 text-xs">
-        &copy; 2025 Smiles First Corporation. All rights reserved.
-        <div className="mt-2 space-x-4 text-blue-600">
-          <a href="#">LinkedIn</a>
-          <a href="#">Instagram</a>
-          <a href="#">YouTube</a>
-        </div>
+      {/* Bottom copyright */}
+      <div className="text-center text-xs text-gray-500 mt-8">
+        © {new Date().getFullYear()} Smiles First Corporation. All rights reserved.
       </div>
     </footer>
   );
