@@ -6,7 +6,7 @@ import Dropdown from "../common/Dropdown";
 import Image from "../common/Image";
 import Modal from "../components/Modal"; // You’ll create this component
 
-export default function TopicalAnestheticPage() {
+export default function ProductsPage() {
   const [quantity, setQuantity] = useState(1);
   const [flavor, setFlavor] = useState("");
   const [showModal, setShowModal] = useState(false);
