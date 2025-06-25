@@ -5,7 +5,7 @@ export { default as FooterSection } from './FooterSection';
 export { default as QuickOrderForm } from './QuickOrderForm';
 export { default as PromotionCard } from './PromotionCard';
 export { default as CategoryTile } from './CategoryTile';
-export { default as Paragraph } from './P';
+export { default as Paragraph } from './Paragraph';
 export { default as SectionTitle } from './SectionTitle';
 export { default as BestSellerCard } from './BestSellerCard';
 export { default as InfoBanner } from './InfoBanner';
