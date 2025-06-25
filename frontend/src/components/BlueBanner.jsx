@@ -2,6 +2,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import Button from "../common/Button";
+import { SectionTitle } from '../common';
 
 export default function BlueBanner({
   title,
@@ -16,9 +17,7 @@ export default function BlueBanner({
 
   return (
     <>
-      <section className="bg-smiles-blue text-white text-center py-4">
-        <h2 className="text-2xl font-bold">{title}</h2>
-      </section>
+      <SectionTitle>{title}</SectionTitle>
       <section className={`bg-white px-6 py-8 ${gridClasses} items-center justify-items-center text-center`}>
         {items.map((item, idx) => (
           <div key={idx}>
@@ -35,17 +34,3 @@ export default function BlueBanner({
     </>
   );
 }
-
-BlueBanner.propTypes = {
-  title: PropTypes.string.isRequired,
-  items: PropTypes.array.isRequired,
-  columns: PropTypes.shape({
-    base: PropTypes.number,
-    md: PropTypes.number,
-    lg: PropTypes.number,
-  }),
-  renderItem: PropTypes.func.isRequired,
-  showButton: PropTypes.bool,
-  buttonText: PropTypes.string,
-  buttonOnClick: PropTypes.func,
-};

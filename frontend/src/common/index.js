@@ -1,4 +1,11 @@
 export { default as Button } from './Button';
 export { default as Image } from './Image';
 export { default as InputField } from './InputField';
-export { default as FooterSection } from './FooterSection'; 
+export { default as FooterSection } from './FooterSection';
+export { default as QuickOrderForm } from './QuickOrderForm';
+export { default as PromotionCard } from './PromotionCard';
+export { default as CategoryTile } from './CategoryTile';
+export { default as Paragraph } from './P';
+export { default as SectionTitle } from './SectionTitle';
+export { default as BestSellerCard } from './BestSellerCard';
+export { default as InfoBanner } from './InfoBanner';
