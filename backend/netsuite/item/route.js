@@ -6,4 +6,6 @@ router.get('/by-class', controller.getItemsByClass);
 
 router.get('/by-id', controller.getItemById);
 
-module.exports = router; 
+router.post('/by-ids', controller.postItemsByIds);
+
+module.exports = router;

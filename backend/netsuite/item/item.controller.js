@@ -8,7 +8,7 @@ exports.getItemsByClass = async (req, res) => {
       return res.status(400).json({ error: 'classId is required' });
     }
     const items = await itemsService.findByClass(classId, limit, offset);
-     if (!items) {
+    if (!items) {
       return res.status(404).json({ error: 'Items not found' });
     }
     res.json(items);
@@ -31,4 +31,46 @@ exports.getItemById = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-}; 
+};
+
+exports.getItemsByIds = async (req, res) => {
+  try {
+    let { ids } = req.query;
+    if (!ids) {
+      return res.status(400).json({ error: 'ids is required' });
+    }
+    // Support both comma-separated string and array
+    if (typeof ids === 'string') {
+      ids = ids.split(',').map(id => id.trim()).filter(Boolean);
+    }
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'ids must be a non-empty array' });
+    }
+    const items = await itemsService.findByIds(ids);
+    if (!items) {
+      return res.status(404).json({ error: 'Items not found' });
+    }
+    res.json(items);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.postItemsByIds = async (req, res) => {
+  try {
+    let { ids } = req.body;
+    if (!ids) {
+      return res.status(400).json({ error: 'ids is required in body' });
+    }
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'ids must be a non-empty array' });
+    }
+    const items = await itemsService.findByIds(ids);
+    if (!items) {
+      return res.status(404).json({ error: 'Items not found' });
+    }
+    res.json(items);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

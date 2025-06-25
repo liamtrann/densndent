@@ -1,23 +1,3 @@
-import React, { useEffect } from "react";
-import authApi, { setupAuthApiInterceptors } from "../api/authApi";
-import { useAuth0 } from "@auth0/auth0-react";
-
-export default function CartPage() {
-  const { getAccessTokenSilently } = useAuth0();
-
-  useEffect(() => {
-    setupAuthApiInterceptors(getAccessTokenSilently);
-    // Example: Call a fake API endpoint
-    authApi.get("/fake-cart-endpoint")
-      .then(res => {
-        // handle response
-        console.log("Cart API response:", res.data);
-      })
-      .catch(err => {
-        // handle error
-        console.error("Cart API error:", err);
-      });
-  }, [getAccessTokenSilently]);
 import React, { useState } from "react";
 
 export default function CartPage() {

@@ -4,7 +4,6 @@ import ProductsPage from "./pages/ProductsPage";
 import CartPage from "./pages/CartPage"; // ✅ New: import the CartPage
 import Header from "./components/Header";
 import Footer from "./components/Footer";
-import ProductPage from "./pages/ProductPage";
 
 function App() {
   return (
