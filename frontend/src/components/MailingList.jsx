@@ -1,4 +1,5 @@
 import React from "react";
+import { Button, InputField } from '../common';
 
 export default function MailingList() {
   return (
@@ -6,14 +7,14 @@ export default function MailingList() {
       <h2 className="text-2xl font-bold text-gray-900">JOIN OUR MAILING LIST</h2>
       <p className="italic text-gray-700 text-sm mb-4">SIGN UP FOR OUR NEWSLETTER</p>
       <div className="flex justify-center">
-        <input
+        <InputField
           type="email"
           placeholder="username@domain.com"
-          className="px-4 py-2 w-64 rounded-l-md border border-gray-400 focus:outline-none"
+          className="px-4 py-2 w-64 rounded-l-md border-gray-400"
         />
-        <button className="bg-orange-500 text-white px-6 py-2 rounded-r-md hover:bg-blue-900">
+        <Button variant="primary" className="px-6 py-2 rounded-r-md">
           SUBSCRIBE
-        </button>
+        </Button>
       </div>
     </section>
   );

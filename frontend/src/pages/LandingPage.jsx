@@ -11,6 +11,7 @@ import MainSection from "../components/MainSection";
 import PromotionsGrid from "../components/PromotionsGrid";
 import ProductGrid from "../components/ProductGrid";
 import BlueBanner from "../components/BlueBanner";
+import { Image } from '../common';
 
 const LandingPage = () => {
   return (
@@ -37,7 +38,7 @@ const LandingPage = () => {
         columns={{ base: 2, md: 4, lg: 6 }}
         renderItem={({ name, brand, img }) => (
           <div className="shadow-md rounded-lg p-3 bg-white">
-            <img src={img} alt={name} className="mx-auto h-24 object-contain mb-2" />
+            <Image src={img} alt={name} className="mx-auto h-24 object-contain mb-2" />
             <p className="text-xs text-gray-600">{brand}</p>
             <h3 className="font-bold text-sm">{name}</h3>
           </div>
@@ -60,7 +61,7 @@ const LandingPage = () => {
         columns={{ base: 2, md: 4, lg: 5 }}
         renderItem={({ name, img }) => (
           <>
-            <img src={img} alt={name} className="mx-auto h-20 object-contain mb-2" />
+            <Image src={img} alt={name} className="mx-auto h-20 object-contain mb-2" />
             <p className="text-sm font-medium text-gray-800">{name}</p>
           </>
         )}
@@ -77,7 +78,7 @@ const LandingPage = () => {
         ]}
         columns={{ base: 3, md: 4, lg: 6 }}
         renderItem={(src) => (
-          <img src={`/brands/${src}`} alt={src.split('.')[0]} className="h-12 object-contain" />
+          <Image src={`/brands/${src}`} alt={src.split('.')[0]} className="h-12 object-contain" />
         )}
       />
 

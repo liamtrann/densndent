@@ -16,7 +16,7 @@ export default function BlueBanner({
 
   return (
     <>
-      <section className="bg-blue-900 text-white text-center py-4">
+      <section className="bg-smiles-blue text-white text-center py-4">
         <h2 className="text-2xl font-bold">{title}</h2>
       </section>
       <section className={`bg-white px-6 py-8 ${gridClasses} items-center justify-items-center text-center`}>

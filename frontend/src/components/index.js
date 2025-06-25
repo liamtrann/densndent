@@ -1,0 +1,12 @@
+export { default as FAQs } from './FAQs';
+export { default as ProductGrid } from './ProductGrid';
+export { default as Catalogues } from './Catalogues';
+export { default as PromotionsGrid } from './PromotionsGrid';
+export { default as MailingList } from './MailingList';
+export { default as GlovesHighlight } from './GlovesHighlight';
+export { default as MainSection } from './MainSection';
+export { default as Header } from './Header';
+export { default as BlueBanner } from './BlueBanner';
+export { default as Footer } from './Footer';
+export { default as CategoryTiles } from './CategoryTiles';
+export { default as Banner } from './Banner'; 
