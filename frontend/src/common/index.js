@@ -9,3 +9,4 @@ export { default as Paragraph } from './P';
 export { default as SectionTitle } from './SectionTitle';
 export { default as BestSellerCard } from './BestSellerCard';
 export { default as InfoBanner } from './InfoBanner';
+export { default as AuthButton } from './AuthButton';

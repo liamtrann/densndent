@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, Image, InputField } from '../common';
+import { Button, Image, InputField, AuthButton } from '../common';
 
 export default function Header() {
   return (
@@ -13,8 +13,7 @@ export default function Header() {
         className="flex-1 mx-6 text-sm"
       />
       <div className="flex items-center gap-4">
-        <Button variant="link">Login</Button>
-        <Button variant="primary">Create Account</Button>
+        <AuthButton />
       </div>
     </header>
   );

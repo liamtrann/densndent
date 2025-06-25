@@ -3,13 +3,10 @@ import {
   Banner,
   Catalogues,
   FAQs,
-  Footer,
   GlovesHighlight,
-  Header,
   MailingList,
   MainSection,
   PromotionsGrid,
-  ProductGrid,
   BlueBanner,
   CategoryTiles
 } from "../components";
