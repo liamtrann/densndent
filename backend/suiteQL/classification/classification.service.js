@@ -7,17 +7,20 @@ class ClassificationService {
     }
     async findAll(limit, offset) {
         const sql = `SELECT id, name, parent, subsidiary FROM classification ORDER BY name ASC`;
-        return runQueryWithPagination(sql, limit, offset);
+        const results = await runQueryWithPagination(sql, limit, offset);
+        return results;
     }
 
     // ✅ Get classifications by parent ID
     async findAllParentClass(limit, offset) {
         const sql = `SELECT id, name, parent, subsidiary FROM classification WHERE parent IS NOT NULL ORDER BY name ASC`;
-        return runQueryWithPagination(sql, limit, offset);
+        const results = await runQueryWithPagination(sql, limit, offset);
+        return results;
     }
     async findAllChildClass(limit, offset) {
         const sql = `SELECT id, name, parent, subsidiary FROM classification WHERE parent IS NULL ORDER BY name ASC`;
-        return runQueryWithPagination(sql, limit, offset);
+        const results = await runQueryWithPagination(sql, limit, offset);
+        return results;
     }
     async findByIds(classificationIds = []) {
         if (!Array.isArray(classificationIds) || classificationIds.length === 0) {
@@ -25,7 +28,8 @@ class ClassificationService {
         }
         const idsString = classificationIds.map(id => `'${id}'`).join(",");
         const sql = `SELECT id, name, parent, subsidiary FROM classification WHERE id IN (${idsString}) ORDER BY name ASC`;
-        return runQueryWithPagination(sql, classificationIds.length, 0);
+        const results = await runQueryWithPagination(sql, classificationIds.length, 0);
+        return results;
     }
 
 }

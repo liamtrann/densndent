@@ -8,11 +8,12 @@ import { URLS } from "../constants/urls";
 export default function Header() {
   return (
     <header className="bg-white shadow px-6 py-4 flex items-center justify-between">
-      {/* LEFT: Logo and Brand */}
-      <div className="flex items-center space-x-3">
+      
+      {/* LEFT: Logo and Brand linked to home */}
+      <Link to="/" className="flex items-center space-x-3">
         <Image src={URLS.LOGO} alt="Smiles First Logo" className="h-8" />
         <span className="text-xl font-bold text-orange-600">Dens 'n Dente USA</span>
-      </div>
+      </Link>
 
       {/* RIGHT: Auth and Cart */}
       <div className="flex items-center space-x-4">

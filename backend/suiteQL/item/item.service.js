@@ -8,13 +8,14 @@ class ItemsService {
     // Get items by class
     async findByClass(classId, limit, offset) {
         const sql = `SELECT i.id, i.class, i.manufacturer, i.itemid, i.itemType, i.subsidiary, i.isonline, i.displayname, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url FROM item i WHERE i.isonline = 'T' AND i.class = ${classId};`;
-        return runQueryWithPagination(sql, limit, offset);
+        const results = await runQueryWithPagination(sql, limit, offset);
+        return results;
     }
     // Get item by id
     async findById(itemId) {
-
         const sql = `SELECT i.id, i.class, i.manufacturer, i.mpn, i.itemid, i.itemType, i.subsidiary, i.isonline, i.displayname, i.storedetaileddescription, i.custitemcustitem_dnd_brand, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url FROM item i WHERE i.id = ${itemId};`;
-        return runQueryWithPagination(sql, 1, 0);
+        const results = await runQueryWithPagination(sql, 1, 0);
+        return results;
     }
     // Get items by multiple ids
     async findByIds(itemIds = []) {
@@ -23,7 +24,8 @@ class ItemsService {
         }
         const idsString = itemIds.map(id => `'${id}'`).join(",");
         const sql = `SELECT i.id, i.class, i.manufacturer, i.mpn, i.itemid, i.itemType, i.subsidiary, i.isonline, i.displayname, i.custitemcustitem_dnd_brand, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url FROM item i WHERE i.id IN (${idsString});`;
-        return runQueryWithPagination(sql, itemIds.length, 0);
+        const results = await runQueryWithPagination(sql, itemIds.length, 0);
+        return results;
     }
 }
 
