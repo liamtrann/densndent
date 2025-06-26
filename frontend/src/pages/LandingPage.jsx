@@ -44,45 +44,6 @@ const brands = [
 ];
 
 
-
-
-const blueBannerConfigs = [
-  {
-    title: "Best Sellers",
-    items: bestSellers,
-    columns: { base: 2, md: 4, lg: 6 },
-    renderItem: (item) => <BestSellerCard {...item} />,
-    showButton: false
-  },
-  {
-    title: "Shop By Categories",
-    items: categories,
-    columns: { base: 2, md: 4, lg: 5 },
-    renderItem: ({ name, img }) => (
-      <>
-        <Image src={img} alt={name} className="mx-auto h-20 object-contain mb-2" />
-        <p className="text-sm font-medium text-gray-800">{name}</p>
-      </>
-    )
-  },
-  {
-    title: "Shop By Brands",
-    items: brands,
-    columns: { base: 3, md: 4, lg: 6 },
-    renderItem: (src) => {
-      const key = src.split(".")[0].toLowerCase().replace(/\s+/g, "-");
-      const brandImage = URLS.BRANDS[key] || `/brands/${src}`;
-      return (
-        <img
-          src={brandImage}
-          alt={key}
-          className="h-12 object-contain mx-auto"
-        />
-      );
-    }
-  }
-];
-
 const LandingPage = () => {
   return (
     <div className="bg-gray-50 min-h-screen font-sans">
@@ -91,9 +52,6 @@ const LandingPage = () => {
       <CategoryTiles />
       <PromotionsGrid />
       <Catalogues />
-      {blueBannerConfigs.map((config) => (
-        <BlueBanner key={config.title} {...config} />
-      ))}
       <BestSellersSection />
       <CategoriesSection />
       <BlueBanner

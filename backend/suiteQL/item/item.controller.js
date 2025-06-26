@@ -74,3 +74,19 @@ exports.postItemsByIds = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+exports.getItemByIdWithBasePrice = async (req, res) => {
+  try {
+    const { id } = req.query;
+    if (!id) {
+      return res.status(400).json({ error: 'id is required' });
+    }
+    const item = await itemsService.findItemByIdWithBasePrice(id);
+    if (!item) {
+      return res.status(404).json({ error: 'Item not found' });
+    }
+    res.json(item);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

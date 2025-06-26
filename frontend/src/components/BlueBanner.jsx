@@ -9,7 +9,7 @@ export default function BlueBanner({
   columns = { base: 2, md: 4, lg: 5 },
   renderItem,
   showButton = true,
-  buttonText = "Shop All",
+  buttonText = "",
   buttonOnClick = () => {},
   loading = false,
   error = null,

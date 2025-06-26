@@ -2,7 +2,7 @@ import React from "react";
 import { Image } from '../common';
 
 export default function BestSellerCard(props) {
-  const base_file_url = "https://4571901-sb1.app.netsuite.com"
+  const base_file_url = process.env.BASE_FILE_URL || "https://4571901-sb1.app.netsuite.com";
   console.log(props)
   return (
     <div className="shadow-md rounded-lg p-3 bg-white">
