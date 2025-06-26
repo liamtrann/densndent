@@ -14,35 +14,21 @@ import {
   CategoriesSection
 } from "../components";
 
-import { Image, BestSellerCard } from "../common";
+import { Image } from "../common";
 import { URLS } from "../constants/urls";
 
-const bestSellers = [
-  { name: "SPONGOSTAN", brand: "Johnson & Johnson", img: "/spongostan.png" },
-  { name: "LIDOCAINE", brand: "Cook-Waite", img: "/lidocaine.png" },
-  { name: "XYLOCAINE", brand: "Dentsply Sirona", img: "/xylocaine.png" },
-  { name: "STEAM INDICATOR", brand: "Bionova", img: "/steam-indicator.png" },
-  { name: "CAVITRON", brand: "Dentsply Sirona", img: "/cavitron.png" },
-  { name: "BITE REGISTRATION", brand: "Mark3", img: "/bite-registration.png" },
+const brandKeys = [
+  "d2-healthcare", "3m", "aurelia", "dmg", "kerr",
+  "keystone", "microcopy", "johnson-and-johnson", "dentsply",
+  "diadent", "medicom", "premier", "surgical-specialties",
+  "flight", "mark3"
 ];
 
-const categories = [
-  { name: "Anesthetics", img: "/anesthetics.png" },
-  { name: "Cements & Liners", img: "/liners.png" },
-  { name: "Gloves", img: "/gloves-icon.png" },
-  { name: "Face Masks", img: "/masks.png" },
-  { name: "Infection Control", img: "/wipes.png" },
-  { name: "Instruments", img: "/instruments.png" },
-  { name: "Restoratives", img: "/restoratives.png" },
-];
-
-const brands = [
-  "d2-healthcare.png", "3m.png", "aurelia.png", "dmg.png", "kerr.png",
-  "keystone.png", "microcopy.png", "johnson-and-johnson.png", "dentsply.png",
-  "diadent.png", "medicom.png", "premier.png", "surgical-specialties.png",
-  "flight.png", "mark3.png" // ✅ Added here
-];
-
+const brands = brandKeys.map(key => ({
+  key,
+  url: URLS.BRANDS[key],
+  name: key.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+}));
 
 const LandingPage = () => {
   return (
@@ -58,8 +44,8 @@ const LandingPage = () => {
         title="Shop By Brands"
         items={brands}
         columns={{ base: 3, md: 4, lg: 6 }}
-        renderItem={(src) => (
-          <Image src={`/brands/${src}`} alt={src.split('.')[0]} className="h-12 object-contain" />
+        renderItem={({ url, name }) => (
+          <Image src={url} alt={name} className="h-12 object-contain" />
         )}
       />
       <GlovesHighlight />

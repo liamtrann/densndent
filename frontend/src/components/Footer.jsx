@@ -1,21 +1,26 @@
 // src/components/Footer.jsx
 import React from "react";
 import { FaFacebookF, FaInstagram, FaYoutube, FaLinkedinIn, FaGooglePlusG } from "react-icons/fa";
+import { URLS } from "../constants/urls";
+import { Image, AppLink } from "../common";
 
 export default function Footer() {
   return (
     <footer className="bg-gray-100 mt-12 py-10 border-t">
       <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-8 text-sm text-gray-700">
-        
+
         {/* Logo and Social */}
-        <div>
-          <img src="/logo.png" alt="Dens 'n Dente Logo" className="h-10 mb-4" />
-          <div className="flex space-x-3 mt-2">
-            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer"><FaFacebookF className="hover:text-blue-600" /></a>
-            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer"><FaLinkedinIn className="hover:text-blue-700" /></a>
-            <a href="https://plus.google.com" target="_blank" rel="noopener noreferrer"><FaGooglePlusG className="hover:text-red-600" /></a>
-            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer"><FaInstagram className="hover:text-pink-500" /></a>
-            <a href="https://youtube.com" target="_blank" rel="noopener noreferrer"><FaYoutube className="hover:text-red-600" /></a>
+        <div className="flex flex-col items-center w-full max-w-[160px] mx-auto">
+          <Image
+            src={URLS.LOGO}
+            className="w-full max-w-[120px] mx-auto mb-2"
+          />
+          <div className="flex space-x-3 w-full justify-center">
+            <AppLink href={URLS.SOCIAL.FACEBOOK}><FaFacebookF className="hover:text-blue-600 text-xl" /></AppLink>
+            <AppLink href={URLS.SOCIAL.LINKEDIN}><FaLinkedinIn className="hover:text-blue-700 text-xl" /></AppLink>
+            <AppLink href={URLS.SOCIAL.GOOGLE_PLUS}><FaGooglePlusG className="hover:text-red-600 text-xl" /></AppLink>
+            <AppLink href={URLS.SOCIAL.INSTAGRAM}><FaInstagram className="hover:text-pink-500 text-xl" /></AppLink>
+            <AppLink href={URLS.SOCIAL.YOUTUBE}><FaYoutube className="hover:text-red-600 text-xl" /></AppLink>
           </div>
         </div>
 
@@ -40,10 +45,10 @@ export default function Footer() {
         <div>
           <h4 className="font-semibold mb-2 text-blue-800">LEGAL</h4>
           <ul className="space-y-1">
-            <li><a href="/privacy-policy" className="hover:underline">Privacy Policy</a></li>
-            <li><a href="/terms" className="hover:underline">Terms & Conditions / Refund Policy</a></li>
-            <li><a href="/returns" className="hover:underline">Web Store Return Process</a></li>
-            <li><a href="/pickup" className="hover:underline">Pick Up Process</a></li>
+            <li><AppLink href="/privacy-policy">Privacy Policy</AppLink></li>
+            <li><AppLink href="/terms">Terms & Conditions / Refund Policy</AppLink></li>
+            <li><AppLink href="/returns">Web Store Return Process</AppLink></li>
+            <li><AppLink href="/pickup">Pick Up Process</AppLink></li>
           </ul>
         </div>
       </div>
