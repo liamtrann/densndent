@@ -7,6 +7,7 @@ const fileRoute = require('./file/route');
 const pricingRoute = require('./pricing/route');
 const saleInvoicedRoute = require('./saleInvoiced/route');
 const customerRoute = require('./customer/route');
+const brandsRoute = require('./brands/route');
 
 router.use('/classification', classificationRoutes);
 router.use('/item', itemsRoute);
@@ -14,5 +15,6 @@ router.use('/file', fileRoute);
 router.use('/pricing', pricingRoute);
 router.use('/saleInvoiced', saleInvoicedRoute);
 router.use('/customer', customerRoute);
+router.use('/brands', brandsRoute);
 
 module.exports = router;
