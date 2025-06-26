@@ -10,7 +10,9 @@ import {
   BlueBanner,
   CategoryTiles
 } from "../components";
-import { Image, BestSellerCard } from '../common';
+
+import { Image, BestSellerCard } from "../common";
+import { URLS } from "../constants/urls";
 
 const bestSellers = [
   { name: "SPONGOSTAN", brand: "Johnson & Johnson", img: "/spongostan.png" },
@@ -32,11 +34,14 @@ const categories = [
 ];
 
 const brands = [
-  "d2-healthcare.png", "3m.png", "ansell.png", "aurelia.png",
-  "flow.png", "mark3.png", "surgical-specialties.png", "medicom.png",
-  "dia-dent.png", "dmg.png", "keystone.png", "kerr.png",
-  "morita.png", "pulpdent.png"
+  "d2-healthcare.png", "3m.png", "aurelia.png", "dmg.png", "kerr.png",
+  "keystone.png", "microcopy.png", "johnson-and-johnson.png", "dentsply.png",
+  "diadent.png", "medicom.png", "premier.png", "surgical-specialties.png",
+  "flight.png", "mark3.png" // ✅ Added here
 ];
+
+
+
 
 const blueBannerConfigs = [
   {
@@ -55,19 +60,27 @@ const blueBannerConfigs = [
         <Image src={img} alt={name} className="mx-auto h-20 object-contain mb-2" />
         <p className="text-sm font-medium text-gray-800">{name}</p>
       </>
-    ),
+    )
   },
   {
     title: "Shop By Brands",
     items: brands,
     columns: { base: 3, md: 4, lg: 6 },
-    renderItem: (src) => (
-      <Image src={`/brands/${src}`} alt={src.split('.')[0]} className="h-12 object-contain" />
-    ),
-  },
+    renderItem: (src) => {
+      const key = src.split(".")[0].toLowerCase().replace(/\s+/g, "-");
+      const brandImage = URLS.BRANDS[key] || `/brands/${src}`;
+      return (
+        <img
+          src={brandImage}
+          alt={key}
+          className="h-12 object-contain mx-auto"
+        />
+      );
+    }
+  }
 ];
 
-const LandingPage = () => {
+export default function LandingPage() {
   return (
     <div className="bg-gray-50 min-h-screen font-sans">
       <Banner text="FREE SHIPPING on orders over $300" />
@@ -75,7 +88,7 @@ const LandingPage = () => {
       <CategoryTiles />
       <PromotionsGrid />
       <Catalogues />
-      {blueBannerConfigs.map((config, idx) => (
+      {blueBannerConfigs.map((config) => (
         <BlueBanner key={config.title} {...config} />
       ))}
       <GlovesHighlight />
@@ -83,6 +96,4 @@ const LandingPage = () => {
       <MailingList />
     </div>
   );
-};
-
-export default LandingPage;
+}
