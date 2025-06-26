@@ -75,14 +75,16 @@ export default function ProductsPage() {
         <Modal
           title="Added to Cart"
           onClose={() => setShowModal(false)}
-          image="/q2/topical-anesthetic.png"
-          product={{
+          image={null}
+          product={[{
             name: "Topical Anesthetic Gel 28gm Jar",
             price: "$11.99",
             flavor,
             quantity,
-          }}
-          onViewCart={handleViewCart}
+          }]}
+          onSubmit={handleViewCart}
+          onCloseText="Continue Shopping"
+          onSubmitText="View Cart"
         />
       )}
     </div>
