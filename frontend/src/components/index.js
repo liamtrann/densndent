@@ -13,3 +13,6 @@ export { default as Sidebar } from './Sidebar';
 export { default as HeroPromotion } from './HeroPromotion';
 export { default as PromotionGrid } from './PromotionGrid';
 export { default as CategoryTiles } from './CategoryTiles';
+export { default as Modal } from './Modal';
+export { default as BestSellersSection } from './BestSellersSection';
+export { default as CategoriesSection } from './CategoriesSection';

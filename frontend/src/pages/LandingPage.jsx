@@ -8,7 +8,10 @@ import {
   MainSection,
   PromotionsGrid,
   BlueBanner,
-  CategoryTiles
+  CategoryTiles,
+  Modal,
+  BestSellersSection,
+  CategoriesSection
 } from "../components";
 
 import { Image, BestSellerCard } from "../common";
@@ -80,7 +83,7 @@ const blueBannerConfigs = [
   }
 ];
 
-export default function LandingPage() {
+const LandingPage = () => {
   return (
     <div className="bg-gray-50 min-h-screen font-sans">
       <Banner text="FREE SHIPPING on orders over $300" />
@@ -91,9 +94,21 @@ export default function LandingPage() {
       {blueBannerConfigs.map((config) => (
         <BlueBanner key={config.title} {...config} />
       ))}
+      <BestSellersSection />
+      <CategoriesSection />
+      <BlueBanner
+        title="Shop By Brands"
+        items={brands}
+        columns={{ base: 3, md: 4, lg: 6 }}
+        renderItem={(src) => (
+          <Image src={`/brands/${src}`} alt={src.split('.')[0]} className="h-12 object-contain" />
+        )}
+      />
       <GlovesHighlight />
       <FAQs />
       <MailingList />
     </div>
   );
 }
+
+export default LandingPage;
