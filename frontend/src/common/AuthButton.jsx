@@ -17,14 +17,9 @@ export default function AuthButton() {
           </Button>
         </div>
       ) : (
-        <>
-          <Button variant="link" onClick={() => loginWithRedirect({ screen_hint: "login" })}>
-            Login
-          </Button>
-          <Button variant="primary" onClick={() => loginWithRedirect({ screen_hint: "signup" })}>
-            Create Account
-          </Button>
-        </>
+        <Button variant="link" onClick={() => loginWithRedirect({ screen_hint: "login" })}>
+          Login
+        </Button>
       )}
     </>
   );

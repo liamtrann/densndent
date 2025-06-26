@@ -1,6 +1,5 @@
 // components/Button.js
 import React from "react";
-import PropTypes from "prop-types";
 import classNames from "classnames";
 
 export default function Button({
@@ -44,12 +43,3 @@ export default function Button({
     </button>
   );
 }
-
-Button.propTypes = {
-  children: PropTypes.node.isRequired,
-  onClick: PropTypes.func,
-  type: PropTypes.oneOf(["button", "submit", "reset"]),
-  variant: PropTypes.oneOf(["primary", "secondary", "link"]),
-  className: PropTypes.string,
-  disabled: PropTypes.bool,
-};

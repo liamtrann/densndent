@@ -1,5 +1,4 @@
 import React from "react";
-import PropTypes from "prop-types";
 
 export default function SectionTitle({ children, className = "" }) {
   return (
@@ -8,8 +7,3 @@ export default function SectionTitle({ children, className = "" }) {
     </section>
   );
 }
-
-SectionTitle.propTypes = {
-  children: PropTypes.node.isRequired,
-  className: PropTypes.string,
-};

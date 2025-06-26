@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
-const netsuiteRoutes = require('./netsuite/route');
+const suiteqlRoutes = require('./suiteQL/route');
 const protectedRoutes = require('./protected/route');
 const app = express();
 
@@ -13,7 +13,7 @@ app.use(express.json());
 
 // Routes
 // Routes
-app.use('/netsuite', netsuiteRoutes);
+app.use('/suiteql', suiteqlRoutes);
 app.use('/protected', protectedRoutes);
 
 // Error handling middleware
