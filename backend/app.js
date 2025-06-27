@@ -4,6 +4,7 @@ const cors = require('cors');
 const morgan = require('morgan');
 const suiteqlRoutes = require('./suiteQL/route');
 const protectedRoutes = require('./protected/route');
+const netsuiteRestRoute = require('./netsuiteRest/route');
 const app = express();
 
 // Middleware
@@ -12,9 +13,9 @@ app.use(morgan('dev'));
 app.use(express.json());
 
 // Routes
-// Routes
 app.use('/suiteql', suiteqlRoutes);
 app.use('/protected', protectedRoutes);
+app.use('/netsuite-rest', netsuiteRestRoute);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

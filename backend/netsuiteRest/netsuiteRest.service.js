@@ -19,6 +19,14 @@ class NetsuiteRestService {
             params: queryParams
         });
     }
+
+    async postRecord(recordType, data) {
+        return this.makeRequest({
+            method: 'POST',
+            endpoint: `/services/rest/record/v1/${recordType}`,
+            data
+        });
+    }
 }
 
 module.exports = new NetsuiteRestService();
