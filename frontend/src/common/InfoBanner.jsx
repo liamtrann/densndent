@@ -7,6 +7,7 @@ export default function InfoBanner({
   description,
   descriptionClass = "",
   imageSrc,
+  imageAlt = "",
   imageClass = "",
   buttonText,
   buttonClass = "",
@@ -26,8 +27,13 @@ export default function InfoBanner({
           </Button>
         )}
       </div>
-      {imageSrc && <Image src={imageSrc} className={`w-full md:w-1/2 rounded-lg ${imageClass}`} />}
+      {imageSrc && (
+        <Image
+          src={imageSrc}
+          alt={imageAlt}
+          className={`w-full md:w-1/2 rounded-lg ${imageClass}`}
+        />
+      )}
     </section>
   );
 }
-
