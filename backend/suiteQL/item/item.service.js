@@ -1,4 +1,4 @@
-const netsuiteService = require('../netsuite.service');
+const netsuiteService = require('../suiteql.service');
 const { runQueryWithPagination } = require('../util');
 
 class ItemsService {
@@ -29,11 +29,11 @@ class ItemsService {
     }
 
     async findItemByIdWithBasePrice(itemId) {
-    const sql = `SELECT i.id, i.class, i.manufacturer, i.mpn, i.itemid, i.itemType, i.subsidiary, i.isonline, i.displayname, i.storedetaileddescription, i.custitemcustitem_dnd_brand, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url, p.quantity, p.saleunit, p.priceqty, p.unitprice FROM item i LEFT JOIN (SELECT item, quantity, saleunit, priceqty, unitprice FROM pricing WHERE item = ${itemId} FETCH FIRST 1 ROWS ONLY) p ON p.item = i.id WHERE i.id = ${itemId}`;
-    
-    const result = await runQueryWithPagination(sql, 1, 0);
-    return result.items?.[0] || null;
-}
+        const sql = `SELECT i.id, i.class, i.manufacturer, i.mpn, i.itemid, i.itemType, i.subsidiary, i.isonline, i.displayname, i.storedetaileddescription, i.custitemcustitem_dnd_brand, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url, p.quantity, p.saleunit, p.priceqty, p.unitprice FROM item i LEFT JOIN (SELECT item, quantity, saleunit, priceqty, unitprice FROM pricing WHERE item = ${itemId} FETCH FIRST 1 ROWS ONLY) p ON p.item = i.id WHERE i.id = ${itemId}`;
+
+        const result = await runQueryWithPagination(sql, 1, 0);
+        return result.items?.[0] || null;
+    }
 
 }
 
