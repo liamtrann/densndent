@@ -8,22 +8,22 @@ export default function CategoriesSection() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    async function fetchCategories() {
-      try {
-        setLoading(true);
-        setError(null);
-        // Replace with your actual API endpoint
-        const res = await axios.get("/api/categories");
-        setCategories(res.data);
-      } catch (err) {
-        setError("Failed to load categories.");
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchCategories();
-  }, []);
+//   useEffect(() => {
+//     async function fetchCategories() {
+//       try {
+//         setLoading(true);
+//         setError(null);
+//         // Replace with your actual API endpoint
+//         const res = await axios.get("/api/categories");
+//         setCategories(res.data);
+//       } catch (err) {
+//         setError("Failed to load categories.");
+//       } finally {
+//         setLoading(false);
+//       }
+//     }
+//     fetchCategories();
+//   }, []);
 
   return (
     <BlueBanner

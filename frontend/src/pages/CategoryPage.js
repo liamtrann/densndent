@@ -18,7 +18,7 @@ function CategoryPage() {
                 setError('Failed to fetch category data');
             });
     }, [id]);
-    console.log(id)
+
 
     return (
         <div className="p-6">

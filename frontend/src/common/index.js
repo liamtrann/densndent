@@ -14,3 +14,4 @@ export { default as ProductSummary } from './ProductSummary';
 export { default as Loading } from './Loading';
 export { default as ErrorMessage } from './ErrorMessage';
 export { default as AppLink } from './AppLink';
+export { default as AnimatedCard } from './AnimatedCard';
