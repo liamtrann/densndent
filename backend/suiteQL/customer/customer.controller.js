@@ -2,11 +2,11 @@ const customerService = require('./customer.service');
 
 exports.getCustomerByEmail = async (req, res) => {
     try {
-        const { email } = req.query;
+        const { email, limit, offset } = req.query;
         if (!email) {
             return res.status(400).json({ error: 'Email is required' });
         }
-        const customer = await customerService.findByEmail(email);
+        const customer = await customerService.findByEmail(email, limit, offset);
         if (!customer) {
             return res.status(404).json({ error: 'Customer not found' });
         }

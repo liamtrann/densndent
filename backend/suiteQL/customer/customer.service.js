@@ -1,14 +1,14 @@
 const { runQueryWithPagination } = require('../util');
 
 class CustomerService {
-    async findByEmail(email) {
+    async findByEmail(email, limit, offset) {
         if (!email) throw new Error('Email is required');
-        const sql = `SELECT id, email, entityid, companyname, firstname, lastname, phone FROM customer WHERE email = '${email}' FETCH FIRST 1 ROWS ONLY`;
-        const results = await runQueryWithPagination(sql, 1, 0);
-        return results.items?.[0] || null;
+        const sql = `SELECT id, email, entityid, companyname, firstname, lastname, phone, searchstage FROM customer WHERE email = '${email}'`;
+        const results = await runQueryWithPagination(sql, limit, offset);
+        return results.items || [];
     }
 
-    async findByStage(stage, limit = 20, offset = 0) {
+    async findByStage(stage, limit, offset) {
         const allowedStages = ['Lead', 'Customer', 'Prospect'];
         if (!allowedStages.includes(stage)) {
             throw new Error('Invalid stage value');
