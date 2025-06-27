@@ -6,13 +6,17 @@ class NetsuiteRestService {
     }
 
     async getRecord(recordType, id) {
+        const endpoint = id
+            ? `/services/rest/record/v1/${recordType}/${id}`
+            : `/services/rest/record/v1/${recordType}`;
         return this.makeRequest({
             method: 'GET',
-            endpoint: `/services/rest/record/v1/${recordType}/${id}`
+            endpoint
         });
     }
 
     async searchRecords(recordType, queryParams = {}) {
+      
         return this.makeRequest({
             method: 'GET',
             endpoint: `/services/rest/record/v1/${recordType}`,
