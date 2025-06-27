@@ -25,7 +25,19 @@ const cartSlice = createSlice({
     },
     reducers: {
         addToCart: (state, action) => {
-            state.items.push(action.payload);
+            // Store all product details, only update quantity if exists (by id and flavor if present)
+            const { id, flavor, quantity } = action.payload;
+            let existing;
+            if (flavor !== undefined) {
+                existing = state.items.find(item => item.id === id && item.flavor === flavor);
+            } else {
+                existing = state.items.find(item => item.id === id);
+            }
+            if (existing) {
+                existing.quantity += quantity;
+            } else {
+                state.items.push({ ...action.payload, quantity });
+            }
             saveCartToStorage(state.items);
         },
         removeFromCart: (state, action) => {

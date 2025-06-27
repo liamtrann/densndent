@@ -1,6 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
-import ProductsPage from "./pages/ProductsPage";
+import ProductsPage from "./pages/ProductDetail";
 import CartPage from "./pages/CartPage";
 import AllList from "./pages/AllList"; // ✅ Correct placement
 import Header from "./components/Header";
