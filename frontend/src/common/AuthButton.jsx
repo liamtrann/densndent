@@ -1,13 +1,24 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import Button from "./Button";
 import Modal from "../components/Modal";
+import VerifyEmailModal from "../components/VerifyEmailModal";
 
 export default function AuthButton() {
-  const { loginWithRedirect, logout, isAuthenticated, user, isLoading } = useAuth0();
+  const { loginWithRedirect, logout, isAuthenticated, user, isLoading, error } = useAuth0();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
   const dropdownRef = useRef(null);
+
+  // Show verify email modal if error message matches
+  useEffect(() => {
+    if (error && error.message && error.message.toLowerCase().includes("verify your email")) {
+      setShowVerifyModal(true);
+    } else {
+      setShowVerifyModal(false);
+    }
+  }, [error]);
 
   // Close dropdown if clicked outside
   React.useEffect(() => {
@@ -28,6 +39,11 @@ export default function AuthButton() {
 
   return (
     <>
+      <VerifyEmailModal
+        open={showVerifyModal}
+        onClose={() => setShowVerifyModal(false)}
+        onSubmit={() => setShowVerifyModal(false)}
+      />
       {isAuthenticated ? (
         <div className="relative" ref={dropdownRef}>
           <span
@@ -35,7 +51,7 @@ export default function AuthButton() {
             onClick={() => setDropdownOpen((open) => !open)}
             onMouseEnter={() => setDropdownOpen(true)}
           >
-            {user?.name}
+            {user?.name || user?.email || "User"}
           </span>
           {dropdownOpen && !showModal && (
             <div className="absolute right-0 mt-2 w-32 bg-white border rounded shadow z-10">
