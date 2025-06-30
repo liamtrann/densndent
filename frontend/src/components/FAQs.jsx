@@ -1,18 +1,15 @@
 import React from "react";
-import { InfoBanner } from '../common';
+import { InfoBanner } from "../common";
 
-export default function FAQs() {
+export default function FAQsHighlight() {
   return (
     <InfoBanner
       title="FAQs"
       titleClass="text-smiles-blue"
       description="Get quick answers about ordering, shipping, returns, and how to shop for dental supplies and products on our website."
-      descriptionClass="mb-4"
-      imageSrc="/faq-banner.png"
-      imageAlt="FAQs"
       buttonText="Learn More"
-      buttonClass="px-5 py-2"
-      sectionClass="bg-smiles-orange/10"
+      imageSrc="/faq-banner.png" // Make sure this path points to the proper full-width image
+      sectionClass="bg-smiles-white/5"
     />
   );
 }
