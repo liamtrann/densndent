@@ -1,13 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import Button from "../common/Button";
-import InputField from "../common/InputField";
-import Paragraph from "../common/Paragraph";
-import Dropdown from "../common/Dropdown";
-import Image from "../common/Image";
 import Modal from "../components/Modal";
-import { Loading, ErrorMessage } from "../common";
+import { Loading, ErrorMessage, ProductImage, Paragraph, Dropdown, InputField, Button } from "../common";
 import api from "../api/api";
 import { addToCart } from "../redux/slices/cartSlice";
 
@@ -61,7 +56,7 @@ export default function ProductsPage() {
     <div className="max-w-6xl mx-auto px-6 py-10">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
         <div className="overflow-hidden">
-          <Image
+          <ProductImage
             src={product.file_url}
             className="w-full object-contain transition-transform duration-300 ease-in-out hover:scale-150 cursor-zoom-in"
           />

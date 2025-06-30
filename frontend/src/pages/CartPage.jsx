@@ -2,21 +2,67 @@ import React from "react";
 import { useSelector } from "react-redux";
 import InputField from "../common/InputField";
 import Image from "../common/Image";
+import { useAuth0 } from "@auth0/auth0-react";
+import api from "../api/api";
+import endpoint from "../api/endpoints";
 
 export default function CartPage() {
   const cart = useSelector((state) => state.cart.items);
   const [postalCode, setPostalCode] = React.useState("");
   const [promoCode, setPromoCode] = React.useState("");
+  const { user, isAuthenticated, loginWithRedirect } = useAuth0();
+  const [customer, setCustomer] = React.useState(null);
+  const [customerLoading, setCustomerLoading] = React.useState(false);
+  const [customerError, setCustomerError] = React.useState(null);
+
+  // Force sign in if not authenticated
+  React.useEffect(() => {
+    if (!isAuthenticated) {
+      loginWithRedirect();
+    }
+  }, [isAuthenticated, loginWithRedirect]);
+
+  // Fetch customer by email from Auth0
+  React.useEffect(() => {
+    async function fetchCustomer() {
+      if (isAuthenticated && user?.email) {
+        setCustomerLoading(true);
+        setCustomerError(null);
+        try {
+          const res = await api.get(endpoint.GET_CUSTOMER_BY_EMAIL(user.email));
+          setCustomer(res.data);
+        } catch (err) {
+          setCustomerError("Failed to fetch customer info.");
+        } finally {
+          setCustomerLoading(false);
+        }
+      }
+    }
+    fetchCustomer();
+  }, [isAuthenticated, user]);
+
+  console.log(customer)
 
   // Calculate subtotal and total quantity
   const subtotal = cart.reduce((sum, item) => sum + (item.unitprice || item.price || 0) * item.quantity, 0).toFixed(2);
   const totalQuantity = cart.reduce((sum, item) => sum + item.quantity, 0);
-console.log(cart)
+  console.log(cart)
   return (
     <div className="max-w-6xl mx-auto px-6 py-10">
       <h1 className="text-2xl font-bold mb-6 text-center">
         SHOPPING CART ({cart.length} Product{cart.length !== 1 ? "s" : ""}, {totalQuantity} Item{totalQuantity !== 1 ? "s" : ""})
       </h1>
+
+      {/* Customer Info */}
+      {isAuthenticated && (
+        <div className="mb-4">
+          {customerLoading && <p className="text-sm text-gray-500">Loading customer info...</p>}
+          {customerError && <p className="text-sm text-red-600">{customerError}</p>}
+          {customer && (
+            <p className="text-sm text-green-700">Welcome, {customer.name || customer.email || user.email}!</p>
+          )}
+        </div>
+      )}
 
       {/* Cart Items */}
       {cart.length > 0 ? (
