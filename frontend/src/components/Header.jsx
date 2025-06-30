@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { FaShoppingCart, FaBars, FaTimes } from "react-icons/fa";
 import AuthButton from "../common/AuthButton";
@@ -6,6 +6,39 @@ import AuthButton from "../common/AuthButton";
 export default function Header() {
   const [isDrawerOpen, setDrawerOpen] = useState(false);
   const [isProductsHovered, setProductsHovered] = useState(false);
+  const [hoveredCategory, setHoveredCategory] = useState(null);
+  const [expandedMobileMenus, setExpandedMobileMenus] = useState({});
+  const hoverTimeout = useRef(null);
+
+  const productCategories = [
+    {
+      name: "Alloys",
+      subcategories: ["Amalgam"],
+    },
+    {
+      name: "Anesthetics",
+      subcategories: ["Injectables", "Needles", "Sutures", "Topical"],
+    },
+  ];
+
+  const handleMouseEnter = () => {
+    clearTimeout(hoverTimeout.current);
+    setProductsHovered(true);
+  };
+
+  const handleMouseLeave = () => {
+    hoverTimeout.current = setTimeout(() => {
+      setProductsHovered(false);
+      setHoveredCategory(null);
+    }, 200);
+  };
+
+  const toggleMobileMenu = (category) => {
+    setExpandedMobileMenus((prev) => ({
+      ...prev,
+      [category]: !prev[category],
+    }));
+  };
 
   return (
     <>
@@ -27,20 +60,54 @@ export default function Header() {
             className="text-xl cursor-pointer"
           />
         </div>
-        <nav className="flex flex-col px-6 py-4 space-y-4 text-gray-800">
+
+        <nav className="flex flex-col px-6 py-4 space-y-2 text-gray-800 text-sm">
           <Link to="/" onClick={() => setDrawerOpen(false)}>Home</Link>
-          <Link to="/products" onClick={() => setDrawerOpen(false)}>Products</Link>
-          <Link
-            to="/login"
-            className="text-orange-600 font-semibold"
-            onClick={() => setDrawerOpen(false)}
-          >
+
+          {/* Expandable Products Section */}
+          <div>
+            <button
+              onClick={() => toggleMobileMenu("Products")}
+              className="flex items-center justify-between w-full py-2"
+            >
+              <span>Products</span>
+              <span>{expandedMobileMenus["Products"] ? "▲" : "▼"}</span>
+            </button>
+
+            {expandedMobileMenus["Products"] && (
+              <div className="ml-4 space-y-1">
+                {productCategories.map((cat) => (
+                  <div key={cat.name}>
+                    <button
+                      onClick={() => toggleMobileMenu(cat.name)}
+                      className="flex justify-between w-full text-left"
+                    >
+                      <span>{cat.name}</span>
+                      <span>{expandedMobileMenus[cat.name] ? "▲" : "▼"}</span>
+                    </button>
+
+                    {expandedMobileMenus[cat.name] && (
+                      <div className="ml-4 text-gray-600">
+                        {cat.subcategories.map((sub) => (
+                          <div key={sub} className="py-1">
+                            {sub}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <Link to="/login" onClick={() => setDrawerOpen(false)} className="text-orange-600 font-semibold">
             Login
           </Link>
         </nav>
       </div>
 
-      {/* Backdrop overlay when drawer is open */}
+      {/* Backdrop overlay */}
       {isDrawerOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-30 z-40"
@@ -50,9 +117,9 @@ export default function Header() {
 
       {/* Main Header */}
       <header className="bg-white shadow px-6 py-4 flex items-center justify-between relative z-30">
-        {/* Left side: Hamburger + Logo + Nav */}
+        {/* Left: Logo + Nav */}
         <div className="flex items-center justify-start w-full lg:w-auto space-x-4">
-          {/* Hamburger (visible only on mobile) */}
+          {/* Hamburger for Mobile */}
           <div className="lg:hidden">
             <FaBars
               className="text-2xl text-gray-700 cursor-pointer"
@@ -60,39 +127,67 @@ export default function Header() {
             />
           </div>
 
-          {/* Centered Logo in mobile, left in desktop */}
+          {/* Logo */}
           <div className="flex-1 lg:flex-none flex justify-center lg:justify-start">
             <Link to="/" className="flex items-center space-x-2">
               <img src="/logo.png" alt="Smiles First Logo" className="h-8 w-auto" />
             </Link>
           </div>
 
-          {/* Nav links for desktop only */}
+          {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center space-x-6">
             <Link to="/" className="text-sm text-gray-700 hover:text-orange-600">Home</Link>
+
             <div
               className="relative"
-              onMouseEnter={() => setProductsHovered(true)}
-              onMouseLeave={() => setProductsHovered(false)}
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={handleMouseLeave}
             >
-              <span className="text-sm text-gray-700 hover:text-orange-600 cursor-pointer">Products</span>
+              <span className="text-sm text-gray-700 hover:text-orange-600 cursor-pointer">
+                Products
+              </span>
+
               {isProductsHovered && (
-                <div className="absolute left-0 top-full mt-2 w-[90vw] bg-white shadow-xl border rounded-md p-6 flex flex-wrap z-50 max-h-[80vh] overflow-y-auto">
-                  {/* Your mega menu contents go here */}
-                  <p>Category links...</p>
+                <div className="absolute left-0 top-full mt-2 w-[600px] bg-white shadow-xl border rounded-md p-4 flex z-50">
+                  {/* Left Column: Categories */}
+                  <div className="w-1/2">
+                    {productCategories.map((cat) => (
+                      <div
+                        key={cat.name}
+                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center"
+                        onMouseEnter={() => setHoveredCategory(cat.name)}
+                      >
+                        <span className="text-sm">{cat.name}</span>
+                        <span className="text-gray-400">&gt;</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Right Column: Subcategories */}
+                  <div className="w-1/2 border-l pl-4">
+                    {hoveredCategory &&
+                      productCategories
+                        .find((cat) => cat.name === hoveredCategory)
+                        ?.subcategories.map((sub) => (
+                          <div
+                            key={sub}
+                            className="px-4 py-2 hover:bg-orange-50 cursor-pointer text-sm"
+                          >
+                            {sub}
+                          </div>
+                        ))}
+                  </div>
                 </div>
               )}
             </div>
           </nav>
         </div>
 
-        {/* Right: Auth & Cart (AuthButton hidden in mobile) */}
+        {/* Right: Auth + Cart */}
         <div className="flex items-center space-x-4">
-          {/* Hide AuthButton in mobile, show only on lg+ */}
           <div className="hidden lg:block">
             <AuthButton />
           </div>
-
           <Link to="/cart" className="relative">
             <FaShoppingCart className="text-xl text-orange-600 hover:text-orange-700" />
           </Link>

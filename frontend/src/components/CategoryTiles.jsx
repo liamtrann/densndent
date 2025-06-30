@@ -2,6 +2,7 @@ import React from "react";
 import { CategoryTile } from '../common';
 
 const categoryData = [
+  /*
   {
     title: "Supplies & Small Equipment",
     img: "/supplies.jpg",
@@ -22,7 +23,7 @@ const categoryData = [
       "About Thrive Rewards", "Thrive Rewards Benefits", "Thrive FAQs",
       "Thrive Promotions", "Terms & Conditions",
     ],
-  },
+  } */
 ];
 
 export default function CategoryTiles() {
@@ -33,4 +34,4 @@ export default function CategoryTiles() {
       ))}
     </section>
   );
-}
+} 
