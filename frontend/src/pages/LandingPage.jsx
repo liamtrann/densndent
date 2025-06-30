@@ -37,7 +37,7 @@ const brands = brandKeys.map(key => ({
 const LandingPage = () => {
   return (
     <div className="bg-gray-50 min-h-screen font-sans">
-      <Banner text="FREE SHIPPING on orders over $300" />
+      
       <MainSection />
       <CategoryTiles />
       <PromotionsGrid />
