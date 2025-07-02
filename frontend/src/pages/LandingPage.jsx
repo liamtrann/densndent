@@ -18,7 +18,9 @@ import { Image } from "../common";
 import { URLS } from "../constants/urls";
 import { Link } from "react-router-dom";
 
-// Define brand keys
+// ✅ NEW: FAQPage added in router separately
+// FAQ preview is just a section on homepage
+
 const brandKeys = [
   "d2-healthcare", "3m", "aurelia", "dmg", "kerr",
   "keystone", "microcopy", "johnson-and-johnson", "dentsply",
@@ -26,18 +28,15 @@ const brandKeys = [
   "flight", "mark3"
 ];
 
-// Convert to full brand objects with URL and label
 const brands = brandKeys.map(key => ({
   key,
   url: URLS.BRANDS[key],
   name: key.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
 }));
 
-// Final component
 const LandingPage = () => {
   return (
     <div className="bg-gray-50 min-h-screen font-sans">
-      
       <MainSection />
       <CategoryTiles />
       <PromotionsGrid />
@@ -45,7 +44,6 @@ const LandingPage = () => {
       <BestSellersSection />
       <CategoriesSection />
 
-      {/* ✅ Shop By Brands with clickable logo */}
       <BlueBanner
         title="Shop By Brands"
         items={brands}
@@ -62,7 +60,17 @@ const LandingPage = () => {
       />
 
       <GlovesHighlight />
+
+      {/* ✅ FAQs Preview + Learn More */}
       <FAQs />
+      <div className="text-center my-4">
+        <Link to="/faq">
+          <button className="bg-orange-600 text-white px-6 py-2 rounded hover:bg-orange-700 transition">
+            Learn More
+          </button>
+        </Link>
+      </div>
+
       <MailingList />
     </div>
   );
