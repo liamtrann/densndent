@@ -6,7 +6,9 @@ export default function Modal({ title, onClose, image, product = [], onSubmit, o
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
       <div className="bg-white w-full max-w-lg p-6 rounded shadow-lg relative">
-        <button onClick={onClose} className="absolute top-3 right-4 text-xl">×</button>
+        {onClose && (
+          <button onClick={onClose} className="absolute top-3 right-4 text-xl">×</button>
+        )}
         <h2 className="text-2xl font-semibold mb-4">{title}</h2>
         {Array.isArray(product) && product.length > 0 && (
           <div className="space-y-4 mb-4">
@@ -15,10 +17,12 @@ export default function Modal({ title, onClose, image, product = [], onSubmit, o
             ))}
           </div>
         )}
-        <div className="flex justify-end mt-6 gap-4">
-          <Button variant="secondary" onClick={onClose}>{onCloseText}</Button>
-          <Button onClick={onSubmit}>{onSubmitText}</Button>
-        </div>
+        {(onClose || onSubmit) && (
+          <div className="flex justify-end mt-6 gap-4">
+            {onClose && <Button variant="secondary" onClick={onClose}>{onCloseText}</Button>}
+            {onSubmit && <Button onClick={onSubmit}>{onSubmitText}</Button>}
+          </div>
+        )}
       </div>
     </div>
   );

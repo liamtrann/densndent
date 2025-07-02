@@ -1,4 +1,4 @@
-const netsuiteService = require("./netsuite.service");
+const netsuiteService = require("./suiteql.service");
 
 function runQueryWithPagination(sql, limit, offset) {
   const params = {};

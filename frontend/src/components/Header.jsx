@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import { Link } from "react-router-dom";
-import { FaShoppingCart, FaBars, FaTimes } from "react-icons/fa";
+import { FaBars, FaShoppingCart, FaTimes } from "react-icons/fa";
+import { useSelector } from "react-redux";
 import AuthButton from "../common/AuthButton";
 
 export default function Header() {
@@ -39,6 +40,8 @@ export default function Header() {
       [category]: !prev[category],
     }));
   };
+  const cart = useSelector((state) => state.cart.items);
+  const totalProducts = cart.length;
 
   return (
     <>
