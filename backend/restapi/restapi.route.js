@@ -5,7 +5,7 @@ const checkJwt = require('../auth/middleware');
 const orderRoutes = require('./order/order.route');
 
 // Protect all /restapi routes with JWT
-// router.use(checkJwt);
+router.use(checkJwt);
 router.use('/order', orderRoutes);
 
 // Error handler for UnauthorizedError from express-jwt
