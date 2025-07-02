@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import { LandingPage, ProductsPage, CartPage, AllList, NotFound, CheckoutPage, FAQPage, ProfilePage } from "./pages";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
+import AmalgamPage from "./pages/AmalgamPage";
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
           <Route path="/faq" element={<FAQPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="*" element={<NotFound />} />
+          <Route path="/products/alloys/amalgam" element={<AmalgamPage />} />
         </Routes>
       </main>
       <Footer />
