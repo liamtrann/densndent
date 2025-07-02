@@ -1,8 +1,7 @@
 import { Routes, Route } from "react-router-dom";
-import { LandingPage, ProductsPage, CartPage, AllList, NotFound, CheckoutPage, FAQPage, ProfilePage } from "./pages";
+import { LandingPage, ProductDetail, CartPage, AllList, NotFound, CheckoutPage, FAQPage, ProfilePage, ListProductPage } from "./pages";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
-import AmalgamPage from "./pages/AmalgamPage";
 
 function App() {
   return (
@@ -11,14 +10,14 @@ function App() {
       <main className="flex-grow">
         <Routes>
           <Route path="/" element={<LandingPage />} />
-          <Route path="/product/:id" element={<ProductsPage />} />
+          <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/brands/d2-healthcare" element={<AllList />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/faq" element={<FAQPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="*" element={<NotFound />} />
-          <Route path="/products/alloys/amalgam" element={<AmalgamPage />} />
+          <Route path="/products/alloys/amalgam" element={<ListProductPage />} />
         </Routes>
       </main>
       <Footer />

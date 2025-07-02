@@ -29,7 +29,7 @@ const sampleProducts = [
   },
 ];
 
-export default function AmalgamPage() {
+export default function ListProductPage() {
   return (
     <div className="px-6 py-8 max-w-screen-xl mx-auto">
       {/* Breadcrumb & Heading */}
