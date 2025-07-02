@@ -40,6 +40,7 @@ export default function Header() {
       [category]: !prev[category],
     }));
   };
+
   const cart = useSelector((state) => state.cart.items);
   const totalProducts = cart.length;
 
@@ -92,9 +93,14 @@ export default function Header() {
                     {expandedMobileMenus[cat.name] && (
                       <div className="ml-4 text-gray-600">
                         {cat.subcategories.map((sub) => (
-                          <div key={sub} className="py-1">
+                          <Link
+                            key={sub}
+                            to={`/products/${cat.name.toLowerCase()}/${sub.toLowerCase()}`}
+                            className="block py-1"
+                            onClick={() => setDrawerOpen(false)}
+                          >
                             {sub}
-                          </div>
+                          </Link>
                         ))}
                       </div>
                     )}
@@ -104,7 +110,11 @@ export default function Header() {
             )}
           </div>
 
-          <Link to="/login" onClick={() => setDrawerOpen(false)} className="text-orange-600 font-semibold">
+          <Link
+            to="/login"
+            onClick={() => setDrawerOpen(false)}
+            className="text-orange-600 font-semibold"
+          >
             Login
           </Link>
         </nav>
@@ -139,7 +149,9 @@ export default function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center space-x-6">
-            <Link to="/" className="text-sm text-gray-700 hover:text-orange-600">Home</Link>
+            <Link to="/" className="text-sm text-gray-700 hover:text-orange-600">
+              Home
+            </Link>
 
             <div
               className="relative"
@@ -172,12 +184,17 @@ export default function Header() {
                       productCategories
                         .find((cat) => cat.name === hoveredCategory)
                         ?.subcategories.map((sub) => (
-                          <div
+                          <Link
                             key={sub}
-                            className="px-4 py-2 hover:bg-orange-50 cursor-pointer text-sm"
+                            to={`/products/${hoveredCategory.toLowerCase()}/${sub.toLowerCase()}`}
+                            className="block px-4 py-2 hover:bg-orange-50 cursor-pointer text-sm"
+                            onClick={() => {
+                              setProductsHovered(false);
+                              setHoveredCategory(null);
+                            }}
                           >
                             {sub}
-                          </div>
+                          </Link>
                         ))}
                   </div>
                 </div>
@@ -193,6 +210,11 @@ export default function Header() {
           </div>
           <Link to="/cart" className="relative">
             <FaShoppingCart className="text-xl text-orange-600 hover:text-orange-700" />
+            {totalProducts > 0 && (
+              <span className="absolute top-0 right-0 bg-red-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center">
+                {totalProducts}
+              </span>
+            )}
           </Link>
         </div>
       </header>

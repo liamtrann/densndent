@@ -7,6 +7,7 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import NotFound from "./pages/NotFound";
 import FAQPage from "./pages/FAQPage";
+import AmalgamPage from "./pages/AmalgamPage";
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
           <Route path="/cart" element={<CartPage />} />
           <Route path="/brands/d2-healthcare" element={<AllList />} /> {/* ✅ Moved inside Routes */}
           <Route path="/faq" element={<FAQPage />} /> {/* ✅ NEW ROUTE */}
+          <Route path="/products/alloys/amalgam" element={<AmalgamPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
