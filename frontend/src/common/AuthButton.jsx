@@ -55,15 +55,26 @@ export default function AuthButton() {
           </span>
           {dropdownOpen && !showModal && (
             <div className="absolute right-0 mt-2 w-32 bg-white border rounded shadow z-10">
-              <button
-                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              <Button
+                variant="link"
+                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:no-underline"
+                onClick={() => {
+                  setDropdownOpen(false);
+                  window.location.href = '/profile';
+                }}
+              >
+                Profile
+              </Button>
+              <Button
+                variant="link"
+                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:no-underline"
                 onClick={() => {
                   setDropdownOpen(false);
                   setShowModal(true);
                 }}
               >
                 Logout
-              </button>
+              </Button>
             </div>
           )}
 

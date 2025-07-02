@@ -1,13 +1,7 @@
 import { Routes, Route } from "react-router-dom";
-import LandingPage from "./pages/LandingPage";
-import ProductsPage from "./pages/ProductsPage";
-import CartPage from "./pages/CartPage";
-import AllList from "./pages/AllList"; // ✅ Correct placement
+import { LandingPage, ProductsPage, CartPage, AllList, NotFound, CheckoutPage, FAQPage, ProfilePage } from "./pages";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
-import NotFound from "./pages/NotFound";
-import FAQPage from "./pages/FAQPage";
-import AmalgamPage from "./pages/AmalgamPage";
 
 function App() {
   return (
@@ -18,9 +12,10 @@ function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/product/:id" element={<ProductsPage />} />
           <Route path="/cart" element={<CartPage />} />
-          <Route path="/brands/d2-healthcare" element={<AllList />} /> {/* ✅ Moved inside Routes */}
-          <Route path="/faq" element={<FAQPage />} /> {/* ✅ NEW ROUTE */}
-          <Route path="/products/alloys/amalgam" element={<AmalgamPage />} />
+          <Route path="/brands/d2-healthcare" element={<AllList />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/faq" element={<FAQPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>

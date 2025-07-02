@@ -13,12 +13,12 @@ class ClassificationService {
 
     // ✅ Get classifications by parent ID
     async findAllParentClass(limit, offset) {
-        const sql = `SELECT id, name, parent, subsidiary FROM classification WHERE parent IS NOT NULL ORDER BY name ASC`;
+        const sql = `SELECT id, name, parent, subsidiary FROM classification WHERE parent IS NULL ORDER BY name ASC`;
         const results = await runQueryWithPagination(sql, limit, offset);
         return results;
     }
     async findAllChildClass(limit, offset) {
-        const sql = `SELECT id, name, parent, subsidiary FROM classification WHERE parent IS NULL ORDER BY name ASC`;
+        const sql = `SELECT id, name, parent, subsidiary FROM classification WHERE parent IS NOT NULL ORDER BY name ASC`;
         const results = await runQueryWithPagination(sql, limit, offset);
         return results;
     }
