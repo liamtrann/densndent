@@ -9,7 +9,11 @@ export default function ProductSummary({ image, product }) {
             <div>
                 <p className="font-semibold">{product.name}{product.flavor ? ` - ${product.flavor}` : ""}</p>
                 {product.price && <p>{product.price}</p>}
+                {product.stockdescription && (
+                    <span className="text-xs bg-primary-blue text-white rounded px-2 py-1 inline-block mt-1">{product.stockdescription}</span>
+                )}
                 {product.quantity !== undefined && <p>Quantity: {product.quantity}</p>}
+
             </div>
         </div>
     );

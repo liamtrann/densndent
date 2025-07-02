@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import Modal from "../components/Modal";
-import { Loading, ErrorMessage, ProductImage, Paragraph, Dropdown, InputField, Button } from "../common";
+import { Loading, ErrorMessage, ProductImage, Paragraph, InputField, Button } from "../common";
 import api from "../api/api";
 import { addToCart } from "../redux/slices/cartSlice";
 
@@ -10,8 +10,8 @@ export default function ProductsPage() {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
   const [quantity, setQuantity] = useState(1);
-  const [flavor, setFlavor] = useState("");
   const [showModal, setShowModal] = useState(false);
+  const [alertModal, setAlertModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
@@ -38,14 +38,30 @@ export default function ProductsPage() {
 
   const handleAddToCart = () => {
     if (!product) return;
+    const maxQty = product.totalquantityonhand || 9999;
+    if (Number(quantity) > maxQty) {
+      setAlertModal(true);
+      return;
+    }
     // Store all product details, only change quantity
-    const cartItem = { ...product, quantity: Number(quantity), flavor: flavor || undefined };
+    const cartItem = { ...product, quantity: Number(quantity) };
     dispatch(addToCart(cartItem));
     setShowModal(true);
   };
 
   const handleViewCart = () => {
     navigate("/cart");
+  };
+
+  const handleQuantityChange = (e) => {
+    const value = e.target.value;
+    const maxQty = product?.totalquantityonhand || 9999;
+    if (Number(value) > maxQty) {
+      setAlertModal(true);
+      setQuantity(maxQty);
+    } else {
+      setQuantity(value);
+    }
   };
 
   if (loading) return <Loading text="Loading product..." />;
@@ -78,30 +94,18 @@ export default function ProductsPage() {
           <Paragraph className="text-2xl font-semibold mt-2">
             {product.unitprice ? `$${product.unitprice}` : ""}
           </Paragraph>
-          {/* Example promo */}
-          <Paragraph className="text-sm text-gray-600 mt-1">
-            BUY 3 GET 1 FREE (this is fixed for now)
-          </Paragraph>
-
-          {/* Flavors (if available) */}
-          {product.flavors && product.flavors.length > 0 && (
-            <div className="mt-4">
-              <label className="block mb-1 font-medium">Flavours:</label>
-              <Dropdown
-                options={product.flavors}
-                value={flavor}
-                onChange={(e) => setFlavor(e.target.value)}
-              />
-            </div>
-          )}
+          {product.stockdescription && <Paragraph className="text-sm bg-primary-blue text-white mt-1 rounded px-2 py-1 inline-block">
+            {product.stockdescription}
+          </Paragraph>}
 
           <div className="mt-4">
             <label className="block mb-1 font-medium">Quantity:</label>
             <InputField
               type="number"
               min="1"
+              max={product.totalquantityonhand || 9999}
               value={quantity}
-              onChange={(e) => setQuantity(e.target.value)}
+              onChange={handleQuantityChange}
               className="px-2 py-1 w-24"
             />
           </div>
@@ -130,7 +134,7 @@ export default function ProductsPage() {
             {
               name: product.displayname || product.itemid,
               price: product.unitprice ? `$${product.unitprice}` : "",
-              flavor,
+              stockdescription: product.stockdescription,
               quantity,
             },
           ]}
@@ -138,6 +142,18 @@ export default function ProductsPage() {
           onCloseText="Continue Shopping"
           onSubmitText="View Cart"
         />
+      )}
+      {/* Alert Modal for stock limit */}
+      {alertModal && (
+        <Modal
+          title="Stock Limit Exceeded"
+          onClose={() => setAlertModal(false)}
+          onCloseText="OK"
+        >
+          <p>
+            Sorry, only {product.totalquantityonhand} in stock. Please adjust your quantity.
+          </p>
+        </Modal>
       )}
     </div>
   );

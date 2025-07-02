@@ -1,101 +1,134 @@
-import React from "react";
-import { useSelector } from "react-redux";
+import React, { useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import InputField from "../common/InputField";
-import Image from "../common/Image";
-import { useAuth0 } from "@auth0/auth0-react";
-import api from "../api/api";
-import endpoint from "../api/endpoints";
+import Modal from "../components/Modal";
+import { removeFromCart, addToCart } from "../redux/slices/cartSlice";
+import { ProductImage } from "../common";
 
 export default function CartPage() {
   const cart = useSelector((state) => state.cart.items);
-  const [postalCode, setPostalCode] = React.useState("");
-  const [promoCode, setPromoCode] = React.useState("");
-  const { user, isAuthenticated, loginWithRedirect } = useAuth0();
-  const [customer, setCustomer] = React.useState(null);
-  const [customerLoading, setCustomerLoading] = React.useState(false);
-  const [customerError, setCustomerError] = React.useState(null);
-
-  // Force sign in if not authenticated
-  React.useEffect(() => {
-    if (!isAuthenticated) {
-      loginWithRedirect();
-    }
-  }, [isAuthenticated, loginWithRedirect]);
-
-  // Fetch customer by email from Auth0
-  React.useEffect(() => {
-    async function fetchCustomer() {
-      if (isAuthenticated && user?.email) {
-        setCustomerLoading(true);
-        setCustomerError(null);
-        try {
-          const res = await api.get(endpoint.GET_CUSTOMER_BY_EMAIL(user.email));
-          setCustomer(res.data);
-        } catch (err) {
-          setCustomerError("Failed to fetch customer info.");
-        } finally {
-          setCustomerLoading(false);
-        }
-      }
-    }
-    fetchCustomer();
-  }, [isAuthenticated, user]);
-
-  console.log(customer)
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const [postalCode, setPostalCode] = useState("");
+  const [promoCode, setPromoCode] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   // Calculate subtotal and total quantity
   const subtotal = cart.reduce((sum, item) => sum + (item.unitprice || item.price || 0) * item.quantity, 0).toFixed(2);
   const totalQuantity = cart.reduce((sum, item) => sum + item.quantity, 0);
-  console.log(cart)
+
+  // Handle quantity change
+  const handleQuantityChange = (item, value) => {
+    const newQuantity = Math.max(1, Math.min(Number(value), item.totalquantityonhand || 9999));
+    if (newQuantity !== item.quantity) {
+      dispatch(addToCart({ ...item, quantity: newQuantity - item.quantity }));
+    }
+  };
+
+  // Handle remove
+  const handleRemoveClick = (item) => {
+    setSelectedProduct(item);
+    setModalOpen(true);
+  };
+
+  const handleConfirmRemove = () => {
+    if (selectedProduct) {
+      dispatch(removeFromCart(selectedProduct.id));
+      setModalOpen(false);
+      setSelectedProduct(null);
+    }
+  };
+
+  const handleCancelRemove = () => {
+    setModalOpen(false);
+    setSelectedProduct(null);
+  };
+
+  const handleNavigateToProduct = (id) => {
+    navigate(`/product/${id}`);
+  };
+
   return (
     <div className="max-w-6xl mx-auto px-6 py-10">
       <h1 className="text-2xl font-bold mb-6 text-center">
         SHOPPING CART ({cart.length} Product{cart.length !== 1 ? "s" : ""}, {totalQuantity} Item{totalQuantity !== 1 ? "s" : ""})
       </h1>
 
-      {/* Customer Info */}
-      {isAuthenticated && (
-        <div className="mb-4">
-          {customerLoading && <p className="text-sm text-gray-500">Loading customer info...</p>}
-          {customerError && <p className="text-sm text-red-600">{customerError}</p>}
-          {customer && (
-            <p className="text-sm text-green-700">Welcome, {customer.name || customer.email || user.email}!</p>
-          )}
-        </div>
-      )}
-
       {/* Cart Items */}
       {cart.length > 0 ? (
         cart.map((item) => (
           <div key={item.id + (item.flavor ? `-${item.flavor}` : "")}
             className="flex gap-6 border p-4 rounded-md shadow-sm mb-4">
-            <Image src={item.file_url} alt={item.itemid || item.displayname || "Product"} className="h-32" />
+            <span
+              className="cursor-pointer"
+              onClick={() => window.location.href = `/product/${item.id}`}
+            >
+              <ProductImage src={item.file_url} alt={item.itemid || item.displayname || "Product"} className="h-32" />
+            </span>
             <div className="flex-grow">
-              <h2 className="font-semibold mb-1">
+              <h2
+                className="font-semibold mb-1 cursor-pointer hover:underline"
+                onClick={() => window.location.href = `/product/${item.id}`}
+              >
                 {item.itemid || item.displayname}
               </h2>
               <p className="text-gray-600">${item.unitprice || item.price}</p>
               {item.flavor && (
                 <p className="mt-2 text-sm"><span className="font-medium">Flavours:</span> {item.flavor}</p>
               )}
+              {item.stockdescription && (
+                <p className="text-xs bg-primary-blue text-white rounded px-2 py-1 inline-block mt-1">
+                  {item.stockdescription}
+                </p>
+              )}
               <div className="mt-2 w-24">
                 <InputField
                   label="Quantity:"
                   type="number"
                   min={1}
+                  max={item.totalquantityonhand || 9999}
                   value={item.quantity}
-                  disabled={true}
+                  onChange={(e) => handleQuantityChange(item, e.target.value)}
                 />
               </div>
               <p className="mt-2 text-sm">
                 <span className="font-medium">Amount:</span>{" "}
                 <span className="font-bold">${((item.unitprice || item.price || 0) * item.quantity).toFixed(2)}</span>
               </p>
+              <button
+                className="mt-2 text-red-600 underline text-sm"
+                onClick={() => handleRemoveClick(item)}
+              >
+                Remove
+              </button>
             </div>
           </div>
         ))
       ) : (
         <p className="text-center mt-6 text-sm text-blue-700 font-medium">Your cart is empty.</p>
+      )}
+
+      {/* Remove Confirmation Modal */}
+      {modalOpen && selectedProduct && (
+        <Modal
+          title="Remove Product"
+          onClose={handleCancelRemove}
+          onSubmit={handleConfirmRemove}
+          onCloseText="Cancel"
+          onSubmitText="Remove"
+          image={selectedProduct.file_url}
+          product={[
+            {
+              name: selectedProduct.displayname || selectedProduct.itemid,
+              price: selectedProduct.unitprice || selectedProduct.price,
+              quantity: selectedProduct.quantity,
+            },
+          ]}
+        >
+          <p>Are you sure you want to remove this product from your cart?</p>
+        </Modal>
       )}
 
       {/* Order Summary */}
@@ -136,7 +169,10 @@ export default function CartPage() {
                 </button>
               </div>
             </div>
-            <button className="w-full mt-4 bg-purple-800 text-white py-3 rounded hover:bg-purple-900">
+            <button
+              className="w-full mt-4 bg-purple-800 text-white py-3 rounded hover:bg-purple-900"
+              onClick={() => navigate("/checkout")}
+            >
               PROCEED TO CHECKOUT
             </button>
           </div>

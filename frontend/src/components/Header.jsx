@@ -2,10 +2,13 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { FaShoppingCart } from "react-icons/fa";
+import { useSelector } from "react-redux";
 import AuthButton from "../common/AuthButton";
 
 export default function Header() {
   const [isProductsHovered, setProductsHovered] = useState(false);
+  const cart = useSelector((state) => state.cart.items);
+  const totalProducts = cart.length;
 
   return (
     <header className="bg-white shadow px-6 py-4 flex items-center justify-between relative z-50">
@@ -257,6 +260,11 @@ export default function Header() {
         <AuthButton />
         <Link to="/cart" className="relative">
           <FaShoppingCart className="text-xl text-orange-600 hover:text-orange-700" />
+          {totalProducts > 0 && (
+            <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full px-1.5 py-0.5 font-bold min-w-[20px] text-center">
+              {totalProducts}
+            </span>
+          )}
         </Link>
       </div>
     </header>
