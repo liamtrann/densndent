@@ -63,14 +63,6 @@ const LandingPage = () => {
 
       {/* ✅ FAQs Preview + Learn More */}
       <FAQs />
-      <div className="text-center my-4">
-        <Link to="/faq">
-          <button className="bg-orange-600 text-white px-6 py-2 rounded hover:bg-orange-700 transition">
-            Learn More
-          </button>
-        </Link>
-      </div>
-
       <MailingList />
     </div>
   );

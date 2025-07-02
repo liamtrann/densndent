@@ -1,5 +1,7 @@
 import React from "react";
 import { Button, Paragraph } from "./index";
+import { Link } from "react-router-dom"; // ✅ Add at the top
+
 
 export default function InfoBanner({
   title,
@@ -36,14 +38,16 @@ export default function InfoBanner({
             </Paragraph>
           )}
           {buttonText && (
-            <Button
-              variant="primary"
-              className={`px-6 py-2 ${buttonClass}`}
-              onClick={onButtonClick}
-            >
-              {buttonText}
-            </Button>
-          )}
+            <Link to="/faq">
+              <Button
+                variant="primary"
+                className={`px-6 py-2 ${buttonClass}`}
+            > 
+                {buttonText}
+              </Button>
+            </Link>
+      )}
+
         </div>
       </div>
     </section>
