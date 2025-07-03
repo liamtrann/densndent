@@ -7,6 +7,7 @@ import ProductToolbar from "../common/ProductToolbar";
 import ProductListGrid from "../components/ProductListGrid";
 import { fetchProductsByClass, fetchCountByClass } from "../redux/slices/productsSlice";
 import Loading from "../common/Loading";
+import Pagination from "../common/Pagination";
 
 export default function ListProductPage() {
   const { name: nameAndId } = useParams();
@@ -24,21 +25,32 @@ export default function ListProductPage() {
 
   const [perPage, setPerPage] = useState(12);
   const [sort, setSort] = useState("price-asc");
+  const [page, setPage] = useState(1);
 
   const dispatch = useDispatch();
-  const { products = [], status, error } = useSelector(
-    (state) => state.products.byClassId?.[classId + "_" + perPage + "_" + sort] || { products: [], status: "idle", error: null }
-  );
+  // Use productsByPage and key `${classId}_${page}`
+  const key = classId + "_" + page;
+  const products = useSelector(state => state.products.productsByPage[key] || []);
+  const isLoading = useSelector(state => state.products.isLoading);
+  const error = useSelector(state => state.products.error);
   const total = useSelector(state => state.products.totalByClass?.[classId] || 0);
 
   useEffect(() => {
     if (classId) {
-      dispatch(fetchProductsByClass({ classId, page: 1, limit: perPage, sort }));
+      if (!products || products.length === 0) {
+        dispatch(fetchProductsByClass({ classId, page, limit: perPage, sort }));
+      }
+    }
+  }, [dispatch, classId, perPage, sort, page]);
+
+  useEffect(() => {
+    if (classId) {
       dispatch(fetchCountByClass(classId));
     }
-  }, [dispatch, classId, perPage, sort]);
+  }, [dispatch, classId]);
 
-  console.log(total)
+  const totalPages = Math.ceil(total / perPage) || 1;
+  console.log(products)
 
   return (
     <div className="px-6 py-8 max-w-screen-xl mx-auto">
@@ -51,24 +63,26 @@ export default function ListProductPage() {
         <main className="flex-1">
           <ProductToolbar
             perPageOptions={[12, 24, 48]}
-            onPerPageChange={e => setPerPage(Number(e.target.value))}
+            onPerPageChange={e => { setPerPage(Number(e.target.value)); setPage(1); }}
             perPage={perPage}
             sort={sort}
             onSortChange={e => setSort(e.target.value)}
             total={total}
           />
-          {status === "loading" && <Loading message="Loading products..." />}
-          {status === "failed" && (
+          {/* Pagination Controls */}
+          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+          {isLoading && <Loading message="Loading products..." />}
+          {error && (
             <div className="text-red-500 py-8 text-center">
               {error || "Failed to load products."}
             </div>
           )}
-          {status === "succeeded" && products.length === 0 && (
+          {!isLoading && !error && products.length === 0 && (
             <div className="text-gray-500 py-8 text-center">
               No products found for this category.
             </div>
           )}
-          {status === "succeeded" && products.length > 0 && (
+          {!isLoading && !error && products.length > 0 && (
             <ProductListGrid products={products} />
           )}
         </main>
