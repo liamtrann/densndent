@@ -2,10 +2,11 @@ import React from "react";
 import ProductImage from "./ProductImage";
 
 export default function ProductSummary({ image, product }) {
+
     if (!product) return null;
     return (
         <div className="flex gap-6 items-center">
-            {image && <ProductImage src={image} alt={product.name} className="h-24" />}
+            <ProductImage src={image} alt={product.name} className="h-24" />
             <div>
                 <p className="font-semibold">{product.name}{product.flavor ? ` - ${product.flavor}` : ""}</p>
                 {product.price && <p>{product.price}</p>}
