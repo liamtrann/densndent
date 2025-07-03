@@ -1,8 +1,9 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { FaBars, FaShoppingCart, FaTimes } from "react-icons/fa";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import AuthButton from "../common/AuthButton";
+import { fetchClassifications } from "../redux/slices/classificationSlice";
 
 export default function Header() {
   const [isDrawerOpen, setDrawerOpen] = useState(false);
@@ -11,16 +12,17 @@ export default function Header() {
   const [expandedMobileMenus, setExpandedMobileMenus] = useState({});
   const hoverTimeout = useRef(null);
 
-  const productCategories = [
-    {
-      name: "Alloys",
-      subcategories: ["Amalgam"],
-    },
-    {
-      name: "Anesthetics",
-      subcategories: ["Injectables", "Needles", "Sutures", "Topical"],
-    },
-  ];
+  const dispatch = useDispatch();
+  // Defensive: fallback to empty object if state.classification is undefined
+  const { classes: productCategories = [], loading: classLoading = false, error: classError = null } = useSelector((state) => state.classification || {});
+
+  useEffect(() => {
+    if (!productCategories || productCategories.length === 0) {
+      dispatch(fetchClassifications());
+    }
+  }, [dispatch, productCategories]);
+
+  console.log(productCategories)
 
   const handleMouseEnter = () => {
     clearTimeout(hoverTimeout.current);
@@ -53,9 +55,8 @@ export default function Header() {
 
       {/* Mobile Sidebar Drawer */}
       <div
-        className={`fixed top-0 left-0 h-full w-64 bg-white shadow-lg transform ${
-          isDrawerOpen ? "translate-x-0" : "-translate-x-full"
-        } transition-transform duration-300 z-50`}
+        className={`fixed top-0 left-0 h-full w-64 bg-white shadow-lg transform ${isDrawerOpen ? "translate-x-0" : "-translate-x-full"
+          } transition-transform duration-300 z-50`}
       >
         <div className="flex justify-between items-center px-4 py-4 border-b">
           <span className="text-lg font-bold">Menu</span>
@@ -92,10 +93,10 @@ export default function Header() {
 
                     {expandedMobileMenus[cat.name] && (
                       <div className="ml-4 text-gray-600">
-                        {cat.subcategories.map((sub) => (
+                        {cat.child.map((sub) => (
                           <Link
                             key={sub}
-                            to={`/products/${cat.name.toLowerCase()}/${sub.toLowerCase()}`}
+                            to={`/products/`}
                             className="block py-1"
                             onClick={() => setDrawerOpen(false)}
                           >
@@ -183,10 +184,10 @@ export default function Header() {
                     {hoveredCategory &&
                       productCategories
                         .find((cat) => cat.name === hoveredCategory)
-                        ?.subcategories.map((sub) => (
+                        ?.child.map((sub) => (
                           <Link
                             key={sub}
-                            to={`/products/${hoveredCategory.toLowerCase()}/${sub.toLowerCase()}`}
+                            to={`/products/`}
                             className="block px-4 py-2 hover:bg-orange-50 cursor-pointer text-sm"
                             onClick={() => {
                               setProductsHovered(false);
@@ -211,10 +212,10 @@ export default function Header() {
           <Link to="/cart" className="relative">
             <FaShoppingCart className="text-xl text-orange-600 hover:text-orange-700" />
             {totalProducts > 0 && (
-            <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full px-1.5 py-0.5 font-bold min-w-[20px] text-center">
-              {totalProducts}
-            </span>
-          )}
+              <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full px-1.5 py-0.5 font-bold min-w-[20px] text-center">
+                {totalProducts}
+              </span>
+            )}
           </Link>
         </div>
       </header>
