@@ -36,7 +36,7 @@ export default function ProductsDropdown({ categories }) {
         <div className="absolute left-0 top-full mt-2 w-auto bg-white shadow-xl border rounded-md flex z-50">
           {/* Left Column - Categories */}
           <div className="w-48 p-4">
-            {categories.map((cat) => (
+            {/* {categories.map((cat) => (
               <Link
                 key={cat.name}
                 to={`/products/${cat.name.toLowerCase()}`}
@@ -48,6 +48,17 @@ export default function ProductsDropdown({ categories }) {
                 {cat.name}
                 <span className="text-gray-400">&gt;</span>
               </Link>
+            ))} */}
+            {categories.map((cat) => (
+              <div
+                key={cat.name}
+                onMouseEnter={() => handleCategoryHover(cat.name)}
+                className={`px-4 py-2 text-sm flex justify-between items-center hover:bg-gray-100 cursor-pointer ${hoveredCategory === cat.name ? "bg-gray-100" : ""
+                  }`}
+              >
+                {cat.name}
+                <span className="text-gray-400">&gt;</span>
+              </div>
             ))}
           </div>
 
