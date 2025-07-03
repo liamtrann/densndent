@@ -17,7 +17,7 @@ function App() {
           <Route path="/faq" element={<FAQPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="*" element={<NotFound />} />
-          <Route path="/products/alloys/amalgam" element={<ListProductPage />} />
+          <Route path="/products/:name" element={<ListProductPage />} />
         </Routes>
       </main>
       <Footer />

@@ -8,7 +8,19 @@ export const fetchClassifications = createAsyncThunk(
     async (_, { rejectWithValue }) => {
         try {
             const res = await api.get(endpoint.GET_ALL_CLASSIFICATIONS);
-            return res.data;
+            // Clean data: remove 'links' field from each item
+            const clean = (arr) => arr.map(item => {
+                const { links, ...rest } = item;
+                return rest;
+            });
+            // If res.data.items exists, clean that, else clean res.data
+            if (Array.isArray(res.data.items)) {
+                return { ...res.data, items: clean(res.data.items) };
+            } else if (Array.isArray(res.data)) {
+                return clean(res.data);
+            } else {
+                return res.data;
+            }
         } catch (err) {
             return rejectWithValue(err?.response?.data || err.message);
         }
@@ -17,7 +29,6 @@ export const fetchClassifications = createAsyncThunk(
 
 // Helper to nest children under their parent (one level only)
 function nestClassifications(flatList) {
-    console.log(flatList)
     // Parent items: no parent field
     const parents = flatList.filter(item => !item.parent);
     // For each parent, find its children

@@ -31,6 +31,12 @@ class ClassificationService {
         const results = await runQueryWithPagination(sql, classificationIds.length, 0);
         return results;
     }
+    async findByName(name, limit = 50, offset = 0) {
+        if (!name) throw new Error('Name is required');
+        const sql = `SELECT id, name, parent FROM classification WHERE LOWER(name) = LOWER(?) ORDER BY name ASC`;
+        const results = await runQueryWithPagination(sql, limit, offset, [name]);
+        return results;
+    }
 
 }
 

@@ -48,3 +48,19 @@ exports.postClassificationsByIds = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+exports.getClassificationByName = async (req, res) => {
+  try {
+    const { name, limit, offset } = req.query;
+    if (!name) {
+      return res.status(400).json({ error: 'name query param is required' });
+    }
+    const classifications = await classificationService.findByName(name, limit, offset);
+    if (!classifications || classifications.length === 0) {
+      return res.status(404).json({ error: 'Classification not found' });
+    }
+    res.json(classifications);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
