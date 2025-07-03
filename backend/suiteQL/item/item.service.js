@@ -35,6 +35,13 @@ class ItemsService {
         return result.items?.[0] || null;
     }
 
+    async findByNameLike(name) {
+        // Use the same fields as other item queries
+        const sql = `SELECT i.id, i.itemid FROM item i WHERE LOWER(i.itemid) LIKE '%' || LOWER('${name}') || '%' ORDER BY i.itemid ASC
+`;
+        const results = await runQueryWithPagination(sql);
+        return results;
+    }
 }
 
 module.exports = new ItemsService();

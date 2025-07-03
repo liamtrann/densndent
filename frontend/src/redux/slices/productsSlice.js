@@ -3,7 +3,7 @@ import api from '../../api/api';
 import endpoint from '../../api/endpoints';
 
 // Async thunk to fetch a page of products by class
-export const fetchProductsPage = createAsyncThunk(
+export const fetchProducts = createAsyncThunk(
     'products/fetchPage',
     async ({ classId, page, limit }, { rejectWithValue }) => {
         try {
@@ -12,12 +12,10 @@ export const fetchProductsPage = createAsyncThunk(
             const res = await api.get(url);
             // Assume API returns { items: [...], total: N }
             return {
+                classId,
                 page,
                 products: res.data.items || res.data,
                 total: res.data.total || 0,
-                classId,
-                limit,
-                offset
             };
         } catch (err) {
             return rejectWithValue(err?.response?.data || err.message);
@@ -28,27 +26,27 @@ export const fetchProductsPage = createAsyncThunk(
 const productsSlice = createSlice({
     name: 'products',
     initialState: {
-        productsByPage: {},
+        productsByPage: {}, // key: `${classId}_${page}` => products[]
         total: 0,
-        loading: false,
+        isLoading: false,
         error: null,
     },
     reducers: {},
     extraReducers: (builder) => {
         builder
-            .addCase(fetchProductsPage.pending, (state) => {
-                state.loading = true;
+            .addCase(fetchProducts.pending, (state) => {
+                state.isLoading = true;
                 state.error = null;
             })
-            .addCase(fetchProductsPage.fulfilled, (state, action) => {
-                state.loading = false;
-                const { page, products, total, classId, limit, offset } = action.payload;
-                const key = `${classId}_${page}_${limit}`;
-                state.productsByPage[key] = { products, classId, page, limit, offset };
+            .addCase(fetchProducts.fulfilled, (state, action) => {
+                state.isLoading = false;
+                const { classId, page, products, total } = action.payload;
+                const key = `${classId}_${page}`;
+                state.productsByPage[key] = products;
                 state.total = total;
             })
-            .addCase(fetchProductsPage.rejected, (state, action) => {
-                state.loading = false;
+            .addCase(fetchProducts.rejected, (state, action) => {
+                state.isLoading = false;
                 state.error = action.payload;
             });
     },
