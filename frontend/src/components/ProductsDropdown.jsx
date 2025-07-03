@@ -37,16 +37,17 @@ export default function ProductsDropdown({ categories }) {
           {/* Left Column - Categories */}
           <div className="w-48 p-4">
             {categories.map((cat) => (
-              <div
+              <Link
                 key={cat.name}
+                to={`/products/${cat.name.toLowerCase()}`}
+                className={`px-4 py-2 text-sm flex justify-between items-center hover:bg-gray-100 cursor-pointer ${hoveredCategory === cat.name ? "bg-gray-100" : ""
+                  }`}
                 onMouseEnter={() => handleCategoryHover(cat.name)}
-                className={`px-4 py-2 text-sm flex justify-between items-center hover:bg-gray-100 cursor-pointer ${
-                  hoveredCategory === cat.name ? "bg-gray-100" : ""
-                }`}
+                onClick={() => setOpen(false)}
               >
                 {cat.name}
                 <span className="text-gray-400">&gt;</span>
-              </div>
+              </Link>
             ))}
           </div>
 
