@@ -57,6 +57,8 @@ export default function ListProductPage() {
 
   const totalPages = Math.ceil(total / perPage) || 1;
 
+  console.log(products)
+
   return (
     <div className="px-6 py-8 max-w-screen-xl mx-auto">
       <Breadcrumb path={["Home", "Products", name]} />
