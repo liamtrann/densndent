@@ -2,6 +2,7 @@
 import React, { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { FaTimes } from 'react-icons/fa';
+import { useAuth0 } from '@auth0/auth0-react';
 
 export default function MobileDrawer({
   isOpen,
@@ -11,19 +12,24 @@ export default function MobileDrawer({
   toggleMenu
 }) {
   const ref = useRef();
+  const { isAuthenticated, loginWithRedirect, logout, user } = useAuth0();
+
   return (
     <div
       ref={ref}
-      className={`fixed top-0 left-0 h-full w-64 bg-white shadow-lg transform ${isOpen ? 'translate-x-0' : '-translate-x-full'
-        } transition-transform duration-300 z-50`}
+      className={`fixed top-0 left-0 h-full w-64 bg-white shadow-lg transform ${
+        isOpen ? 'translate-x-0' : '-translate-x-full'
+      } transition-transform duration-300 z-50`}
     >
       <div className="flex justify-between items-center px-4 py-4 border-b">
         <span className="text-lg font-bold">Menu</span>
         <FaTimes onClick={onClose} className="text-xl cursor-pointer" />
       </div>
+
       <nav className="flex flex-col px-6 py-4 space-y-2 text-gray-800 text-sm">
         <Link to="/" onClick={onClose}>Home</Link>
 
+        {/* Products Dropdown */}
         <div>
           <button
             onClick={() => toggleMenu('Products')}
@@ -67,9 +73,32 @@ export default function MobileDrawer({
           )}
         </div>
 
-        <Link to="/login" onClick={onClose} className="text-orange-600 font-semibold">
-          Login
-        </Link>
+        {/* Auth Section */}
+        {!isAuthenticated ? (
+          <button
+            onClick={() => {
+              loginWithRedirect();
+              onClose();
+            }}
+            className="text-left text-orange-600 font-semibold"
+          >
+            Login
+          </button>
+        ) : (
+          <div className="pt-2">
+            <p className="text-sm text-gray-700 mb-1">Signed in as</p>
+            <p className="text-sm font-semibold text-black mb-2">{user?.name}</p>
+            <button
+              onClick={() => {
+                logout({ returnTo: window.location.origin });
+                onClose();
+              }}
+              className="text-left text-red-600 text-sm"
+            >
+              Log out
+            </button>
+          </div>
+        )}
       </nav>
     </div>
   );

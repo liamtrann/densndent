@@ -1,15 +1,16 @@
 import React from "react";
 import PropTypes from "prop-types";
 import Button from "../common/Button";
+import { ProductImage } from "../common";
 
 
 export default function ListProduct({ product }) {
-  const { name, img, price } = product;
+  const { itemid, file_url, price } = product;
 
   return (
     <div className="border p-4 rounded shadow hover:shadow-md transition">
-      <img src={img} alt={name} className="h-40 mx-auto object-contain mb-4" />
-      <h3 className="text-sm font-medium text-gray-900 mb-1">{name}</h3>
+      <ProductImage src={file_url} />
+      <h3 className="text-sm font-medium text-gray-900 mb-1">{itemid}</h3>
       <p className="font-semibold text-gray-800 mb-2">${price}</p>
 
       <Button className="w-full mb-2">ADD TO SHOPPING CART</Button>
@@ -21,11 +22,3 @@ export default function ListProduct({ product }) {
     </div>
   );
 }
-
-ListProduct.propTypes = {
-  product: PropTypes.shape({
-    name: PropTypes.string,
-    img: PropTypes.string,
-    price: PropTypes.string,
-  }).isRequired,
-};
