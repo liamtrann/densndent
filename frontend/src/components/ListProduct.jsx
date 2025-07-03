@@ -35,13 +35,7 @@ export default function ListProduct({ product }) {
           Out of stock
         </Paragraph>
       )}
-      <Button
-        className={`w-full mb-2 ${!inStock
-            ? "bg-gray-300 text-gray-500 cursor-not-allowed opacity-60"
-            : ""
-          }`}
-        disabled={!inStock}
-      >
+      <Button className="w-full mb-2" disabled={!inStock}>
         ADD TO SHOPPING CART
       </Button>
     </div>

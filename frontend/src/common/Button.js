@@ -12,17 +12,17 @@ export default function Button({
   ...props
 }) {
   const baseStyles =
-    "font-medium transition duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2";
+    "text-sm font-sm transition duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2";
 
   const variants = {
     primary:
-      "bg-smiles-orange text-white px-4 py-2 rounded hover:bg-smiles-orange/80 focus:ring-smiles-orange",
+      "bg-smiles-blue text-white px-1 py-1 rounded hover:bg-smiles-orange/80 focus:ring-smiles-orange",
     secondary:
-      "bg-white border border-smiles-orange text-smiles-orange px-4 py-2 rounded hover:bg-smiles-orange/10 focus:ring-smiles-orange",
+      "bg-white blue border-smiles-orange text-smiles-orange px-4 py-2 rounded hover:bg-smiles-orange/10 focus:ring-smiles-orange",
     link:
-      "text-smiles-orange bg-transparent hover:underline p-0 focus:ring-smiles-orange",
+      "text-smiles-blue bg-transparent hover:underline p-0 focus:ring-smiles-orange",
     disabled:
-      "bg-gray-300 text-gray-600 cursor-not-allowed px-4 py-2 rounded",
+      "bg-gray-300 text-gray-600 cursor-not-allowed px-1 py-1 rounded",
   };
 
   const finalClassName = classNames(
