@@ -1,18 +1,14 @@
 // src/components/Header/Header.jsx
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaBars } from 'react-icons/fa';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import Logo from './Logo';
 import MobileDrawer from './MobileDrawer';
 import DesktopNav from './DesktopNav';
 import CartIndicator from "./CartIndicator";
 import AuthButton from "../common/AuthButton";
+import { fetchClassifications } from "../redux/slices/classificationSlice";
 
-
-const PRODUCT_CATS = [
-  { name: 'Alloys', subcategories: ['Amalgam'] },
-  { name: 'Anesthetics', subcategories: ['Injectables', 'Needles', 'Sutures', 'Topical'] }
-];
 
 export default function Header() {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -20,8 +16,25 @@ export default function Header() {
   const cartItems = useSelector(s => s.cart.items);
   const total = cartItems.length;
 
+  const dispatch = useDispatch();
+  const { classes: categories = [] } = useSelector(s => s.classification || {});
+
+  useEffect(() => {
+    if (!categories.length) dispatch(fetchClassifications());
+  }, [dispatch, categories.length]);
+
+  // Transform for nav: name is category, subcategories is child names
+  const navCategories = categories
+    .filter(cat => Array.isArray(cat.child) && cat.child.length > 0)
+    .map(cat => ({
+      name: cat.name,
+      subcategories: cat.child.map(sub => sub.name)
+    }));
+
   const toggleMenu = key =>
     setExpandedMenus(m => ({ ...m, [key]: !m[key] }));
+
+
 
   return (
     <>
@@ -34,7 +47,7 @@ export default function Header() {
       <MobileDrawer
         isOpen={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        categories={PRODUCT_CATS}
+        categories={navCategories}
         expandedMenus={expandedMenus}
         toggleMenu={toggleMenu}
       />
@@ -56,7 +69,7 @@ export default function Header() {
             />
           </div>
           <Logo />
-          <DesktopNav categories={PRODUCT_CATS} />
+          <DesktopNav categories={navCategories} />
         </div>
 
         {/* Right: Auth & Cart */}
