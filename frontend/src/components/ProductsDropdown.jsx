@@ -1,21 +1,25 @@
-// src/components/Header/ProductsDropdown.jsx
 import React, { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 
 export default function ProductsDropdown({ categories }) {
   const [open, setOpen] = useState(false);
-  const [hovered, setHovered] = useState(null);
+  const [hoveredCategory, setHoveredCategory] = useState(null);
   const timer = useRef();
 
   const enter = () => {
     clearTimeout(timer.current);
     setOpen(true);
   };
+
   const leave = () => {
     timer.current = setTimeout(() => {
       setOpen(false);
-      setHovered(null);
+      setHoveredCategory(null);
     }, 200);
+  };
+
+  const handleCategoryHover = (name) => {
+    setHoveredCategory(name);
   };
 
   return (
@@ -29,36 +33,40 @@ export default function ProductsDropdown({ categories }) {
       </span>
 
       {open && (
-        <div className="absolute left-0 top-full mt-2 w-[600px] bg-white shadow-xl border rounded-md p-4 flex z-50">
-          {/* Main categories */}
-          <div className="w-1/2">
-            {categories.map(cat => (
+        <div className="absolute left-0 top-full mt-2 w-auto bg-white shadow-xl border rounded-md flex z-50">
+          {/* Left Column - Categories */}
+          <div className="w-48 p-4">
+            {categories.map((cat) => (
               <div
                 key={cat.name}
-                className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center"
-                onMouseEnter={() => setHovered(cat.name)}
+                onMouseEnter={() => handleCategoryHover(cat.name)}
+                className={`px-4 py-2 text-sm flex justify-between items-center hover:bg-gray-100 cursor-pointer ${
+                  hoveredCategory === cat.name ? "bg-gray-100" : ""
+                }`}
               >
-                <span className="text-sm">{cat.name}</span>
+                {cat.name}
                 <span className="text-gray-400">&gt;</span>
               </div>
             ))}
           </div>
-          {/* Subcategories */}
-          <div className="w-1/2 border-l pl-4">
-            {hovered &&
-              categories
-                .find(c => c.name === hovered)
-                .subcategories.map(sub => (
+
+          {/* Right Column - Only when hovering a category */}
+          {hoveredCategory && (
+            <div className="w-60 border-l p-4">
+              {categories
+                .find((cat) => cat.name === hoveredCategory)
+                ?.subcategories.map((sub) => (
                   <Link
                     key={sub}
-                    to={`/products/${hovered.toLowerCase()}/${sub.toLowerCase()}`}
-                    className="block px-4 py-2 hover:bg-orange-50 cursor-pointer text-sm"
+                    to={`/products/${hoveredCategory.toLowerCase()}/${sub.toLowerCase()}`}
+                    className="block px-4 py-2 text-sm hover:bg-orange-50"
                     onClick={() => setOpen(false)}
                   >
                     {sub}
                   </Link>
                 ))}
-          </div>
+            </div>
+          )}
         </div>
       )}
     </div>
