@@ -3,7 +3,7 @@ import api from '../../api/api';
 import endpoint from '../../api/endpoints';
 
 // Async thunk to fetch a page of products by class
-export const fetchProducts = createAsyncThunk(
+export const fetchProductsByClass = createAsyncThunk(
     'products/fetchPage',
     async ({ classId, page, limit }, { rejectWithValue }) => {
         try {
@@ -23,10 +23,25 @@ export const fetchProducts = createAsyncThunk(
     }
 );
 
+// Async thunk to fetch count of products by class
+export const fetchCountByClass = createAsyncThunk(
+    'products/fetchCountByClass',
+    async (classId, { rejectWithValue }) => {
+        try {
+            const url = endpoint.GET_COUNT_BY_CLASS(classId);
+            const res = await api.get(url);
+            return { classId, count: res.data.count };
+        } catch (err) {
+            return rejectWithValue(err?.response?.data || err.message);
+        }
+    }
+);
+
 const productsSlice = createSlice({
     name: 'products',
     initialState: {
         productsByPage: {}, // key: `${classId}_${page}` => products[]
+        totalByClass: {},   // key: classId => total count
         total: 0,
         isLoading: false,
         error: null,
@@ -34,20 +49,25 @@ const productsSlice = createSlice({
     reducers: {},
     extraReducers: (builder) => {
         builder
-            .addCase(fetchProducts.pending, (state) => {
+            .addCase(fetchProductsByClass.pending, (state) => {
                 state.isLoading = true;
                 state.error = null;
             })
-            .addCase(fetchProducts.fulfilled, (state, action) => {
+            .addCase(fetchProductsByClass.fulfilled, (state, action) => {
                 state.isLoading = false;
                 const { classId, page, products, total } = action.payload;
                 const key = `${classId}_${page}`;
                 state.productsByPage[key] = products;
-                state.total = total;
+                // Optionally update total for this page, but prefer count from fetchCountByClass
             })
-            .addCase(fetchProducts.rejected, (state, action) => {
+            .addCase(fetchProductsByClass.rejected, (state, action) => {
                 state.isLoading = false;
                 state.error = action.payload;
+            })
+            .addCase(fetchCountByClass.fulfilled, (state, action) => {
+                const { classId, count } = action.payload;
+                state.totalByClass[classId] = count;
+                state.total = count;
             });
     },
 });

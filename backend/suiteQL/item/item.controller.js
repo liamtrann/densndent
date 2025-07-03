@@ -116,3 +116,16 @@ exports.postItemsByNameLike = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+exports.getCountByClass = async (req, res) => {
+  try {
+    const { classId } = req.query;
+    if (!classId) {
+      return res.status(400).json({ error: 'classId is required' });
+    }
+    const count = await itemsService.countByClass(classId);
+    res.json({ count });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

@@ -12,6 +12,7 @@ const endpoint = {
     },
     GET_CUSTOMER_BY_EMAIL: (email) => `/suiteql/customer/by-email?email=${email}`,
     POST_ITEMS_BY_NAME: () => '/suiteql/item/by-name',
+    GET_COUNT_BY_CLASS: (classId) => `/suiteql/item/count-by-class?classId=${classId}`,
     // NETSUITE REST API Endpoints
     GET_CUSTOMER: (id) => `/netsuite-rest/customer/${id}`,
     GET_SALES_ORDER: (id) => `/netsuite-rest/salesOrder/${id}`,

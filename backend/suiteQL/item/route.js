@@ -14,4 +14,6 @@ router.get('/by-name', controller.getItemsByNameLike);
 
 router.post('/by-name', controller.postItemsByNameLike);
 
+router.get('/count-by-class', controller.getCountByClass);
+
 module.exports = router;
