@@ -28,8 +28,8 @@ export default function ListProductPage() {
   const [page, setPage] = useState(1);
 
   const dispatch = useDispatch();
-  // Use productsByPage and key `${classId}_${page}`
-  const key = classId + "_" + page;
+  // Use productsByPage and key `${classId}_${perPage}_${sort}_${page}`
+  const key = `${classId}_${perPage}_${sort}_${page}`;
   const products = useSelector(state => state.products.productsByPage[key] || []);
   const isLoading = useSelector(state => state.products.isLoading);
   const error = useSelector(state => state.products.error);
@@ -41,7 +41,7 @@ export default function ListProductPage() {
         dispatch(fetchProductsByClass({ classId, page, limit: perPage, sort }));
       }
     }
-  }, [dispatch, classId, perPage, sort, page]);
+  }, [dispatch, classId, perPage, sort, page, products.length]);
 
   useEffect(() => {
     if (classId) {
@@ -50,7 +50,6 @@ export default function ListProductPage() {
   }, [dispatch, classId]);
 
   const totalPages = Math.ceil(total / perPage) || 1;
-  console.log(products)
 
   return (
     <div className="px-6 py-8 max-w-screen-xl mx-auto">
