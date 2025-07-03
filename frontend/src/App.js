@@ -1,5 +1,15 @@
 import { Routes, Route } from "react-router-dom";
-import { LandingPage, ProductDetail, CartPage, AllList, NotFound, CheckoutPage, FAQPage, ProfilePage, ListProductPage } from "./pages";
+import {
+  LandingPage,
+  ProductDetail,
+  CartPage,
+  AllList,
+  NotFound,
+  CheckoutPage,
+  FAQPage,
+  ProfilePage,
+  ListProductPage,
+} from "./pages";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 
@@ -16,8 +26,9 @@ function App() {
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/faq" element={<FAQPage />} />
           <Route path="/profile" element={<ProfilePage />} />
-          <Route path="*" element={<NotFound />} />
           <Route path="/products/:name" element={<ListProductPage />} />
+          <Route path="/products/:name/:subname" element={<ListProductPage />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
       <Footer />
