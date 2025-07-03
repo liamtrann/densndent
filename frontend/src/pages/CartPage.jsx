@@ -5,6 +5,7 @@ import InputField from "../common/InputField";
 import Modal from "../components/Modal";
 import { removeFromCart, addToCart } from "../redux/slices/cartSlice";
 import { ProductImage } from "../common";
+import { delayCall } from "../api/util";
 
 export default function CartPage() {
   const cart = useSelector((state) => state.cart.items);
@@ -23,7 +24,7 @@ export default function CartPage() {
   const handleQuantityChange = (item, value) => {
     const newQuantity = Math.max(1, Math.min(Number(value), item.totalquantityonhand || 9999));
     if (newQuantity !== item.quantity) {
-      dispatch(addToCart({ ...item, quantity: newQuantity - item.quantity }));
+      delayCall(() => dispatch(addToCart({ ...item, quantity: newQuantity - item.quantity })));
     }
   };
 
@@ -35,7 +36,7 @@ export default function CartPage() {
 
   const handleConfirmRemove = () => {
     if (selectedProduct) {
-      dispatch(removeFromCart(selectedProduct.id));
+      delayCall(() => dispatch(removeFromCart(selectedProduct.id)));
       setModalOpen(false);
       setSelectedProduct(null);
     }

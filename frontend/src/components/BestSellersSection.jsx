@@ -5,6 +5,7 @@ import { BestSellerCard, AnimatedCard } from '../common';
 import BlueBanner from "./BlueBanner";
 import { fetchBestSellers } from '../redux/slices/bestSellersSlice';
 import { STATUS } from '../redux/status';
+import { delayCall } from "../api/util";
 
 export default function BestSellersSection() {
     const dispatch = useDispatch();
@@ -12,7 +13,7 @@ export default function BestSellersSection() {
     const { items: bestSellers, status, error } = useSelector(state => state.bestSellers);
 
     useEffect(() => {
-        dispatch(fetchBestSellers());
+        return delayCall(() => dispatch(fetchBestSellers()));
     }, [dispatch]);
 
     const handleClick = (item) => {

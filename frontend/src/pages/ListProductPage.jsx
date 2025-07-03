@@ -9,6 +9,7 @@ import { fetchProductsByClass, fetchCountByClass } from "../redux/slices/product
 import Loading from "../common/Loading";
 import Pagination from "../common/Pagination";
 import ErrorMessage from "../common/ErrorMessage";
+import { delayCall } from "../api/util";
 
 export default function ListProductPage() {
   const { name: nameAndId } = useParams();
@@ -39,7 +40,7 @@ export default function ListProductPage() {
   useEffect(() => {
     setPage(1);
     if (classId) {
-      dispatch(fetchCountByClass(classId));
+      return delayCall(() => dispatch(fetchCountByClass(classId)));
     }
   }, [dispatch, classId]);
 
@@ -47,10 +48,9 @@ export default function ListProductPage() {
   useEffect(() => {
     if (classId) {
       if (!products || products.length === 0) {
-        const timeout = setTimeout(() => {
+        return delayCall(() => {
           dispatch(fetchProductsByClass({ classId, page, limit: perPage, sort }));
-        }, 50);
-        return () => clearTimeout(timeout);
+        });
       }
     }
   }, [dispatch, classId, perPage, sort, page, products.length]);
