@@ -7,7 +7,7 @@ class ItemsService {
     }
     // Get items by class
     async findByClass(classId, limit, offset) {
-        const sql = `SELECT i.id, i.class, i.manufacturer, i.itemid, i.itemType, i.subsidiary, i.isonline, i.displayname, i.totalquantityonhand, i.stockdescription, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url FROM item i WHERE i.isonline = 'T' AND i.class = ${classId};`;
+        const sql = `SELECT i.id, i.itemid, i.totalquantityonhand, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url FROM item i WHERE i.isonline = 'T' AND i.class = ${classId};`;
         const results = await runQueryWithPagination(sql, limit, offset);
         return results;
     }
@@ -35,6 +35,19 @@ class ItemsService {
         return result.items?.[0] || null;
     }
 
+    async findByNameLike(name) {
+        // Use the same fields as other item queries
+        const sql = `SELECT i.id, i.itemid FROM item i WHERE LOWER(i.itemid) LIKE '%' || LOWER('${name}') || '%' ORDER BY i.itemid ASC
+`;
+        const results = await runQueryWithPagination(sql);
+        return results;
+    }
+    // Get count of items by class
+    async countByClass(classId) {
+        const sql = `SELECT COUNT(*) AS count FROM item i WHERE i.isonline = 'T' AND i.class = ${classId};`;
+        const results = await runQueryWithPagination(sql, 1, 0);
+        return results.items?.[0]?.count || 0;
+    }
 }
 
 module.exports = new ItemsService();

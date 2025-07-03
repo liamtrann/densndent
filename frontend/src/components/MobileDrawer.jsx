@@ -14,9 +14,8 @@ export default function MobileDrawer({
   return (
     <div
       ref={ref}
-      className={`fixed top-0 left-0 h-full w-64 bg-white shadow-lg transform ${
-        isOpen ? 'translate-x-0' : '-translate-x-full'
-      } transition-transform duration-300 z-50`}
+      className={`fixed top-0 left-0 h-full w-64 bg-white shadow-lg transform ${isOpen ? 'translate-x-0' : '-translate-x-full'
+        } transition-transform duration-300 z-50`}
     >
       <div className="flex justify-between items-center px-4 py-4 border-b">
         <span className="text-lg font-bold">Menu</span>
@@ -46,16 +45,20 @@ export default function MobileDrawer({
                   </button>
                   {expandedMenus[cat.name] && (
                     <div className="ml-4 text-gray-600">
-                      {cat.subcategories.map(sub => (
-                        <Link
-                          key={sub}
-                          to={`/products/${cat.name.toLowerCase()}/${sub.toLowerCase()}`}
-                          className="block py-1"
-                          onClick={onClose}
-                        >
-                          {sub}
-                        </Link>
-                      ))}
+                      {cat.subcategories.map(sub => {
+                        const name = (sub.name || '').replace(/\s+/g, '');
+                        const id = sub.id || '';
+                        return (
+                          <Link
+                            key={name + (id ? `-${id}` : '')}
+                            to={id ? `/products/${name.toLowerCase()}-${id}` : `/products/${name.toLowerCase()}`}
+                            className="block py-1"
+                            onClick={onClose}
+                          >
+                            {sub.name}
+                          </Link>
+                        );
+                      })}
                     </div>
                   )}
                 </div>

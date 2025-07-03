@@ -23,18 +23,17 @@ export default function Header() {
     if (!categories.length) dispatch(fetchClassifications());
   }, [dispatch, categories.length]);
 
-  // Transform for nav: name is category, subcategories is child names
+  // Transform for nav: name and id for both category and subcategory
   const navCategories = categories
     .filter(cat => Array.isArray(cat.child) && cat.child.length > 0)
     .map(cat => ({
       name: cat.name,
-      subcategories: cat.child.map(sub => sub.name)
+      id: cat.id,
+      subcategories: cat.child.map(sub => ({ name: sub.name, id: sub.id }))
     }));
 
   const toggleMenu = key =>
     setExpandedMenus(m => ({ ...m, [key]: !m[key] }));
-
-
 
   return (
     <>

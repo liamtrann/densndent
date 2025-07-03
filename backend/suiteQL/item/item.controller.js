@@ -90,3 +90,42 @@ exports.getItemByIdWithBasePrice = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+exports.getItemsByNameLike = async (req, res) => {
+  try {
+    const { name } = req.query;
+    if (!name) {
+      return res.status(400).json({ error: 'Missing name query parameter' });
+    }
+    const items = await itemsService.findByNameLike(name);
+    res.json(items);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.postItemsByNameLike = async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name) {
+      return res.status(400).json({ error: 'Missing name in request body' });
+    }
+    const items = await itemsService.findByNameLike(name);
+    res.json(items);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getCountByClass = async (req, res) => {
+  try {
+    const { classId } = req.query;
+    if (!classId) {
+      return res.status(400).json({ error: 'classId is required' });
+    }
+    const count = await itemsService.countByClass(classId);
+    res.json({ count });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

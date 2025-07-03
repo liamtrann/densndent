@@ -1,48 +1,90 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import Breadcrumb from "../common/Breadcrumb";
 import FilterSidebar from "../components/FilterSidebar";
 import ProductToolbar from "../common/ProductToolbar";
 import ProductListGrid from "../components/ProductListGrid";
-
-
-const sampleProducts = [
-  {
-    id: 1,
-    name: "Silmet: Spherodon M 50 Capsules Regular Set 2 Spill - 121472",
-    img: "/amalgam-1.jpg",
-    price: "119.99",
-  },
-  {
-    id: 2,
-    name: "Silmet: Spherodon M 50 Capsules Regular Set 1 Spill - 121471",
-    img: "/amalgam-2.jpg",
-    price: "119.99",
-  },
-  {
-    id: 3,
-    name: "Silmet: Spherodon M - 50 Capsules Fast Set 1 Spill - 120471",
-    img: "/amalgam-3.jpg",
-    price: "119.99",
-  },
-  {
-    id: 4,
-    name: "Silmet: Spherodon M (Silmet) - 50 Capsules Fast Set 3 Spill - 120473",
-    img: "/amalgam-4.jpg",
-    price: "119.99",
-  },
-];
+import { fetchProductsByClass, fetchCountByClass } from "../redux/slices/productsSlice";
+import Loading from "../common/Loading";
+import Pagination from "../common/Pagination";
 
 export default function ListProductPage() {
+  const { name: nameAndId } = useParams();
+  let name = "";
+  let classId = "";
+  if (nameAndId) {
+    const lastDash = nameAndId.lastIndexOf("-");
+    if (lastDash !== -1) {
+      name = nameAndId.slice(0, lastDash);
+      classId = nameAndId.slice(lastDash + 1);
+    } else {
+      name = nameAndId;
+    }
+  }
+
+  const [perPage, setPerPage] = useState(12);
+  const [sort, setSort] = useState("price-asc");
+  const [page, setPage] = useState(1);
+
+  const dispatch = useDispatch();
+  // Use productsByPage and key `${classId}_${page}`
+  const key = classId + "_" + page;
+  const products = useSelector(state => state.products.productsByPage[key] || []);
+  const isLoading = useSelector(state => state.products.isLoading);
+  const error = useSelector(state => state.products.error);
+  const total = useSelector(state => state.products.totalByClass?.[classId] || 0);
+
+  useEffect(() => {
+    if (classId) {
+      if (!products || products.length === 0) {
+        dispatch(fetchProductsByClass({ classId, page, limit: perPage, sort }));
+      }
+    }
+  }, [dispatch, classId, perPage, sort, page]);
+
+  useEffect(() => {
+    if (classId) {
+      dispatch(fetchCountByClass(classId));
+    }
+  }, [dispatch, classId]);
+
+  const totalPages = Math.ceil(total / perPage) || 1;
+  console.log(products)
+
   return (
     <div className="px-6 py-8 max-w-screen-xl mx-auto">
-      <Breadcrumb path={["Home", "Products", "Alloys", "Amalgam"]} />
-      <h1 className="text-3xl font-bold text-smiles-blue mb-6">AMALGAM</h1>
-
+      <Breadcrumb path={["Home", "Products", name]} />
+      <h1 className="text-3xl font-bold text-smiles-blue mb-6">
+        {name.toUpperCase()}
+      </h1>
       <div className="flex flex-col lg:flex-row gap-8">
         <FilterSidebar />
         <main className="flex-1">
-          <ProductToolbar total={sampleProducts.length} />
-          <ProductListGrid products={sampleProducts} />
+          <ProductToolbar
+            perPageOptions={[12, 24, 48]}
+            onPerPageChange={e => { setPerPage(Number(e.target.value)); setPage(1); }}
+            perPage={perPage}
+            sort={sort}
+            onSortChange={e => setSort(e.target.value)}
+            total={total}
+          />
+          {/* Pagination Controls */}
+          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+          {isLoading && <Loading message="Loading products..." />}
+          {error && (
+            <div className="text-red-500 py-8 text-center">
+              {error || "Failed to load products."}
+            </div>
+          )}
+          {!isLoading && !error && products.length === 0 && (
+            <div className="text-gray-500 py-8 text-center">
+              No products found for this category.
+            </div>
+          )}
+          {!isLoading && !error && products.length > 0 && (
+            <ProductListGrid products={products} />
+          )}
         </main>
       </div>
     </div>

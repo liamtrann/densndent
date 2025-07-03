@@ -27,7 +27,6 @@ function App() {
           <Route path="/faq" element={<FAQPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/products/:name" element={<ListProductPage />} />
-          <Route path="/products/:name/:subname" element={<ListProductPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
