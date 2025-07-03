@@ -17,3 +17,4 @@ export { default as ErrorMessage } from './ErrorMessage';
 export { default as AppLink } from './AppLink';
 export { default as AnimatedCard } from './AnimatedCard';
 export { default as Dropdown } from './Dropdown';
+export { default as ShowMoreHtml } from './ShowMoreHtml';

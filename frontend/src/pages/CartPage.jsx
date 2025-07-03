@@ -50,6 +50,8 @@ export default function CartPage() {
     navigate(`/product/${id}`);
   };
 
+  console.log(cart)
+
   return (
     <div className="max-w-6xl mx-auto px-6 py-10">
       <h1 className="text-2xl font-bold mb-6 text-center">
@@ -63,24 +65,27 @@ export default function CartPage() {
             className="flex gap-6 border p-4 rounded-md shadow-sm mb-4">
             <span
               className="cursor-pointer"
-              onClick={() => window.location.href = `/product/${item.id}`}
+              onClick={() => handleNavigateToProduct(item.id)}
             >
               <ProductImage src={item.file_url} alt={item.itemid || item.displayname || "Product"} className="h-32" />
             </span>
             <div className="flex-grow">
               <h2
                 className="font-semibold mb-1 cursor-pointer hover:underline"
-                onClick={() => window.location.href = `/product/${item.id}`}
+                onClick={() => handleNavigateToProduct(item.id)}
               >
                 {item.itemid || item.displayname}
               </h2>
               <p className="text-gray-600">${item.unitprice || item.price}</p>
-              {item.flavor && (
-                <p className="mt-2 text-sm"><span className="font-medium">Flavours:</span> {item.flavor}</p>
-              )}
-              {item.stockdescription && (
-                <p className="text-xs bg-primary-blue text-white rounded px-2 py-1 inline-block mt-1">
-                  {item.stockdescription}
+              {typeof item.totalquantityonhand !== 'undefined' && (
+                <p className={
+                  item.totalquantityonhand > 0
+                    ? "text-green-700 font-semibold text-sm mb-1"
+                    : "text-red-600 font-semibold text-sm mb-1"
+                }>
+                  {item.totalquantityonhand > 0
+                    ? `Current Stock: ${item.totalquantityonhand}`
+                    : "Out of stock"}
                 </p>
               )}
               <div className="mt-2 w-24">
