@@ -1,4 +1,4 @@
-// src/components/profile/SettingsCard.jsx
+// components/profile/SettingsCard.jsx
 import React from "react";
 
 export default function SettingsCard({ title, children }) {
