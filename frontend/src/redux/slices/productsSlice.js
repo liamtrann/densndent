@@ -5,10 +5,10 @@ import endpoint from '../../api/endpoints';
 // Async thunk to fetch a page of products by class
 export const fetchProductsByClass = createAsyncThunk(
     'products/fetchPage',
-    async ({ classId, page, limit }, { rejectWithValue }) => {
+    async ({ classId, page, limit, sort }, { rejectWithValue }) => {
         try {
             const offset = (page - 1) * limit;
-            const url = endpoint.GET_ITEMS_BY_CLASS({ classId, limit, offset });
+            const url = endpoint.GET_ITEMS_BY_CLASS({ classId, limit, offset, sort });
             const res = await api.get(url);
             // Assume API returns { items: [...], total: N }
             return {
@@ -16,6 +16,8 @@ export const fetchProductsByClass = createAsyncThunk(
                 page,
                 products: res.data.items || res.data,
                 total: res.data.total || 0,
+                limit,
+                sort,
             };
         } catch (err) {
             return rejectWithValue(err?.response?.data || err.message);
@@ -55,8 +57,9 @@ const productsSlice = createSlice({
             })
             .addCase(fetchProductsByClass.fulfilled, (state, action) => {
                 state.isLoading = false;
-                const { classId, page, products, total } = action.payload;
-                const key = `${classId}_${page}`;
+                const { classId, page, products, total, limit, sort } = action.payload;
+                // Use a key that includes perPage (limit) and sort
+                const key = `${classId}_${limit || 12}_${sort || 'price-asc'}_${page}`;
                 state.productsByPage[key] = products;
                 // Optionally update total for this page, but prefer count from fetchCountByClass
             })

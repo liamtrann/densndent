@@ -68,6 +68,8 @@ export default function ProductsPage() {
   if (error) return <ErrorMessage message={error} />;
   if (!product) return null;
 
+  console.log(product)
+
   return (
     <div className="max-w-6xl mx-auto px-6 py-10">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
@@ -92,7 +94,7 @@ export default function ProductsPage() {
             </Paragraph>
           )}
           <Paragraph className="text-2xl font-semibold mt-2">
-            {product.unitprice ? `$${product.unitprice}` : ""}
+            {product.price ? `$${product.price}` : ""}
           </Paragraph>
           {product.stockdescription && <Paragraph className="text-sm bg-primary-blue text-white mt-1 rounded px-2 py-1 inline-block">
             {product.stockdescription}
@@ -133,7 +135,7 @@ export default function ProductsPage() {
           product={[
             {
               name: product.displayname || product.itemid,
-              price: product.unitprice ? `$${product.unitprice}` : "",
+              price: product.price ? `$${product.price}` : "",
               stockdescription: product.stockdescription,
               quantity,
             },
