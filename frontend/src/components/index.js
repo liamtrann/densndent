@@ -16,3 +16,8 @@ export { default as CategoryTiles } from './CategoryTiles';
 export { default as Modal } from './Modal';
 export { default as BestSellersSection } from './BestSellersSection';
 export { default as CategoriesSection } from './CategoriesSection';
+export { default as ProductSummary } from '../common/ProductSummary';
+export { default as ProductImage } from '../common/ProductImage';
+export { default as ShowMoreHtml } from '../common/ShowMoreHtml';
+export { default as RecentPurchases } from './RecentPurchases';
+export { default as SettingsCard } from './SettingsCard';

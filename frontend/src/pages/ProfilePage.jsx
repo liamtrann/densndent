@@ -1,11 +1,10 @@
 // pages/ProfilePage.jsx
 import React, { useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
-import RecentPurchases from "../components/RecentPurchases";
-import SettingsCard from "../components/SettingsCard";
-import AddressModal from "../components/AddressModal";
 import api from "../api/api";
 import endpoint from "../api/endpoints";
+import { AddressModal } from "../common";
+import { RecentPurchases, SettingsCard } from "../components";
 
 export default function ProfilePage() {
   const { user, getAccessTokenSilently } = useAuth0();
