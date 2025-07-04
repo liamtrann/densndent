@@ -4,10 +4,33 @@ import { useAuth0 } from "@auth0/auth0-react";
 import RecentPurchases from "../components/RecentPurchases";
 import SettingsCard from "../components/SettingsCard";
 import AddressModal from "../components/AddressModal";
+import api from "../api/api";
+import endpoint from "../api/endpoints";
 
 export default function ProfilePage() {
-  const { user } = useAuth0();
+  const { user, getAccessTokenSilently } = useAuth0();
   const [showAddressModal, setShowAddressModal] = useState(false);
+  const [customer, setCustomer] = useState(null);
+
+  React.useEffect(() => {
+    async function fetchCustomer() {
+      if (user?.email) {
+        try {
+          const token = await getAccessTokenSilently();
+          const res = await api.get(
+            endpoint.GET_CUSTOMER_BY_EMAIL(user.email),
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          setCustomer(res.data);
+        } catch (err) {
+          setCustomer(null);
+        }
+      }
+    }
+    fetchCustomer();
+  }, [user?.email, getAccessTokenSilently]);
+
+  console.log(customer);
 
   return (
     <>
@@ -18,7 +41,7 @@ export default function ProfilePage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <SettingsCard
             title="Profile"
-            description={[user.name, user.email]}
+            // description={[user.name, user.email, customer ? `Customer #: ${customer.entityid}` : null]}
             actionLabel="Edit"
           />
 
