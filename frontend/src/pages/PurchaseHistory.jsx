@@ -27,7 +27,9 @@ export default function PurchaseHistory() {
       try {
         const token = await getAccessTokenSilently();
         const url = endpoint.GET_TRANSACTION_BY_EMAIL("liamtran@gmail.com");
-        const res = await api.get(url, { headers: { Authorization: `Bearer ${token}` } });
+        const res = await api.get(url, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         setOrders(res.data.items || res.data || []);
       } catch (err) {
         setError(err?.response?.data?.error || "Failed to fetch orders");
@@ -37,22 +39,6 @@ export default function PurchaseHistory() {
     }
     fetchOrders();
   }, [user?.sub, getAccessTokenSilently]);
-
-  console.log(orders)
-
-  const filtered = orders
-    .filter(order => status === "All" || order.status === status)
-    .filter(order => {
-      if (!fromDate && !toDate) return true;
-      const orderDate = new Date(order.date);
-      return (!fromDate || new Date(fromDate) <= orderDate) &&
-        (!toDate || orderDate <= new Date(toDate));
-    })
-    .sort((a, b) => {
-      return sort === "recent"
-        ? new Date(b.date) - new Date(a.date)
-        : new Date(a.date) - new Date(b.date);
-    });
 
   const sortOptions = ["Most Recent", "Oldest First"];
   const sortValues = ["recent", "oldest"];
@@ -65,51 +51,68 @@ export default function PurchaseHistory() {
       <h2 className="text-2xl font-bold text-gray-800 mb-6">Purchase History</h2>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-4 mb-6">
-        <InputField
-          type="date"
-          label="From"
-          value={fromDate}
-          onChange={(e) => setFromDate(e.target.value)}
-        />
-        <InputField
-          type="date"
-          label="To"
-          value={toDate}
-          onChange={(e) => setToDate(e.target.value)}
-        />
-        <Dropdown
-          label="Sort By"
-          options={sortOptions}
-          value={sortOptions[sortValues.indexOf(sort)]}
-          onChange={(e) => setSort(sortValues[sortOptions.indexOf(e.target.value)])}
-        />
-        <Dropdown
-          label="Status"
-          options={statusOptions}
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-        />
-      </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6 items-end">
+          <InputField
+            type="date"
+            label="From"
+            value={fromDate}
+            onChange={(e) => setFromDate(e.target.value)}
+            className="min-w-[150px]"
+          />
+          <InputField
+            type="date"
+            label="To"
+            value={toDate}
+            onChange={(e) => setToDate(e.target.value)}
+            className="min-w-[150px]"
+          />
+          <Dropdown
+            label="Sort By"
+            options={sortOptions}
+            value={sortOptions[sortValues.indexOf(sort)]}
+            onChange={(e) => setSort(sortValues[sortOptions.indexOf(e.target.value)])}
+            className="min-w-[150px]"
+          />
+          <Dropdown
+            label="Status"
+            options={statusOptions}
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            className="min-w-[150px]"
+          />
+        </div>
+
 
       {/* Order List */}
       <div className="bg-white border rounded shadow-sm">
-        {filtered.map((order) => (
+        {orders.map((order) => (
           <div
             key={order.id}
             className="p-4 border-b last:border-b-0 flex justify-between items-center"
           >
             <div>
               <p className="font-medium text-gray-700">Order #{order.id}</p>
-              <p className="text-sm text-gray-500">Placed on {order.date}</p>
+              <p className="text-sm text-gray-500 mb-1">
+                Placed on {order.date || "Unknown"}
+              </p>
+              {order.shipcarrier && (
+                <p className="text-sm text-gray-600">
+                  Carrier: <span className="font-medium">{order.shipcarrier}</span>
+                </p>
+              )}
             </div>
             <div className="text-right">
-              <p className="text-sm text-gray-600">{order.status}</p>
-              <p className="text-base font-semibold text-gray-800">{order.total}</p>
+              <p className="text-sm text-gray-600">{order.status || "Pending Fulfillment"}</p>
+              {order.foreigntotal && (
+                <p className="text-base font-semibold text-gray-800">
+                  ${order.foreigntotal}
+                </p>
+              )}
             </div>
           </div>
         ))}
-        {filtered.length === 0 && !loading && (
+
+        {!loading && orders.length === 0 && (
           <p className="text-center text-gray-500 py-6">
             No orders match your filters.
           </p>
