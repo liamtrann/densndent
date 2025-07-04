@@ -9,6 +9,7 @@ const saleInvoicedRoute = require('./saleInvoiced/route');
 const customerRoute = require('./customer/route');
 const brandsRoute = require('./brands/route');
 const transactionRoute = require('./transaction/route');
+const promotionRoute = require('./promotion/route');
 
 router.use('/classification', classificationRoutes);
 router.use('/item', itemsRoute);
@@ -18,5 +19,6 @@ router.use('/saleInvoiced', saleInvoicedRoute);
 router.use('/customer', customerRoute);
 router.use('/brands', brandsRoute);
 router.use('/transaction', transactionRoute);
+router.use('/promotion', promotionRoute);
 
 module.exports = router;
