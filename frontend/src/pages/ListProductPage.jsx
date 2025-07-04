@@ -26,7 +26,7 @@ export default function ListProductPage() {
   }
 
   const [perPage, setPerPage] = useState(12);
-  const [sort, setSort] = useState("price-asc");
+  const [sort, setSort] = useState(null);
   const [page, setPage] = useState(1);
 
   const dispatch = useDispatch();
@@ -39,6 +39,7 @@ export default function ListProductPage() {
 
   useEffect(() => {
     setPage(1);
+    setSort("")
     if (classId) {
       return delayCall(() => dispatch(fetchCountByClass(classId)));
     }

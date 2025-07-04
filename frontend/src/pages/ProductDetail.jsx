@@ -19,6 +19,8 @@ export default function ProductsPage() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
+  console.log(product)
+
   useEffect(() => {
     async function fetchProduct() {
       try {

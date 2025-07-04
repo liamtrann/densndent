@@ -3,12 +3,22 @@ const endpoint = {
     // SuiteQL Endpoints
     GET_ALL_CLASSIFICATIONS: '/suiteql/classification',
     GET_PRODUCT_BY_ID: (id) => `/suiteql/item/by-id?id=${id}`,
-    GET_ITEMS_BY_CLASS: ({ classId, limit, offset }) => {
+    GET_ITEMS_BY_CLASS: ({ classId, limit, offset, sort }) => {
         const params = new URLSearchParams();
         if (classId) params.append('classId', classId);
         if (limit) params.append('limit', limit);
         if (offset) params.append('offset', offset);
+        if (sort) params.append('sort', sort);
         return `/suiteql/item/by-class?${params.toString()}`;
+    },
+    GET_ITEMS_BY_CLASS_AND_BRAND: ({ classId, brand, limit, offset, sort }) => {
+        const params = new URLSearchParams();
+        if (classId) params.append('classId', classId);
+        if (brand) params.append('brand', brand);
+        if (limit) params.append('limit', limit);
+        if (offset) params.append('offset', offset);
+        if (sort) params.append('sort', sort);
+        return `/suiteql/item/by-class-and-brand?${params.toString()}`;
     },
     GET_CUSTOMER_BY_EMAIL: (email) => `/suiteql/customer/by-email?email=${email}`,
     POST_ITEMS_BY_NAME: () => '/suiteql/item/by-name',

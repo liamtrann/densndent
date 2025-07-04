@@ -57,9 +57,9 @@ const productsSlice = createSlice({
             })
             .addCase(fetchProductsByClass.fulfilled, (state, action) => {
                 state.isLoading = false;
-                const { classId, page, products, total, limit, sort } = action.payload;
+                const { classId, page, products, limit, sort } = action.payload;
                 // Use a key that includes perPage (limit) and sort
-                const key = `${classId}_${limit || 12}_${sort || 'price-asc'}_${page}`;
+                const key = `${classId}_${limit || 12}_${sort}_${page}`;
                 state.productsByPage[key] = products;
                 // Optionally update total for this page, but prefer count from fetchCountByClass
             })

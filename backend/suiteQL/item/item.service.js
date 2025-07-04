@@ -5,27 +5,39 @@ class ItemsService {
     constructor() {
         this.recordType = 'item';
     }
-    // Get items by class
-    async findByClass(classId, limit, offset) {
-        const sql = `SELECT i.id, i.itemid, i.totalquantityonhand, ip.price, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url FROM item i JOIN itemprice ip ON i.id = ip.item AND ip.pricelevel = 1 WHERE i.isonline = 'T' AND i.class ='${classId}'`;
+    // Generalized method for filtering by a field
+    async findByField(field, value, limit, offset, sort) {
+        const allowedFields = {
+            class: 'i.class',
+            brand: 'i.custitemcustitem_dnd_brand'
+        };
+        const allowedOrders = ['asc', 'desc'];
+        let sortBy = '';
+        if (sort && allowedOrders.includes(sort.toLowerCase())) {
+            sortBy = ` ORDER BY ip.price ${sort.toLowerCase()}`;
+        }
+        if (!allowedFields[field]) {
+            throw new Error('Invalid filter field');
+        }
+        const sql = `SELECT i.id, i.itemid, i.totalquantityonhand, ip.price, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url FROM item i JOIN itemprice ip ON i.id = ip.item AND ip.pricelevel = 1 WHERE i.isonline = 'T' AND ${allowedFields[field]}='${value}' ${sortBy}`;
         const results = await runQueryWithPagination(sql, limit, offset);
         return results;
     }
-    // Get items by brand
-    async findByBrand(brand, limit, offset) {
-        const sql = `SELECT i.id, i.itemid, i.totalquantityonhand, ip.price, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url FROM item i JOIN itemprice ip ON i.id = ip.item AND ip.pricelevel = 1 WHERE i.isonline = 'T' AND i.custitemcustitem_dnd_brand ='${brand}'`;
+
+        // Find items by both class and brand
+    async findByClassAndBrand(classId, brand, limit, offset, sort) {
+        const allowedOrders = ['asc', 'desc'];
+        let sortBy = '';
+        if (sort && allowedOrders.includes(sort.toLowerCase())) {
+            sortBy = ` ORDER BY ip.price ${sort.toLowerCase()}`;
+        }
+        const sql = `SELECT i.id, i.itemid, i.totalquantityonhand, ip.price, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url FROM item i JOIN itemprice ip ON i.id = ip.item AND ip.pricelevel = 1 WHERE i.isonline = 'T' AND i.class='${classId}' AND i.custitemcustitem_dnd_brand='${brand}' ${sortBy}`;
         const results = await runQueryWithPagination(sql, limit, offset);
         return results;
     }
-    // Get item by id
-    // async findById(itemId) {
-    //     const sql = `SELECT i.id, i.class, i.manufacturer, i.mpn, i.itemid, i.itemType, i.subsidiary, i.isonline, i.displayname, i.storedetaileddescription, i.custitemcustitem_dnd_brand, i.totalquantityonhand, i.stockdescription, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url FROM item i WHERE i.id = ${itemId};`;
-    //     const results = await runQueryWithPagination(sql, 1, 0);
-    //     return results;
-    // }
 
     async findById(itemId) {
-        const sql = `SELECT i.id, i.class, i.manufacturer, i.mpn, i.itemid, i.itemType, i.subsidiary, i.isonline, i.displayname, i.storedetaileddescription, i.custitemcustitem_dnd_brand, i.totalquantityonhand, i.stockdescription, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url, ip.item, ip.price FROM item i LEFT JOIN itemprice ip ON ip.item = i.id AND ip.pricelevel = 1 WHERE i.id = '${itemId}'`;
+        const sql = `SELECT i.id, i.class, i.manufacturer, i.mpn, i.itemid, i.itemType, i.subsidiary, i.isonline, i.displayname, i.storedetaileddescription, i.custitemcustitem_dnd_brand AS branditem, i.totalquantityonhand, i.stockdescription, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url, ip.item, ip.price FROM item i LEFT JOIN itemprice ip ON ip.item = i.id AND ip.pricelevel = 1 WHERE i.id = '${itemId}'`;
 
         const result = await runQueryWithPagination(sql, 1, 0);
         return result.items?.[0] || null;
@@ -36,7 +48,7 @@ class ItemsService {
             throw new Error('itemIds must be a non-empty array');
         }
         const idsString = itemIds.map(id => `'${id}'`).join(",");
-        const sql = `SELECT i.id, i.class, i.manufacturer, i.mpn, i.itemid, i.itemType, i.subsidiary, i.isonline, i.displayname, i.custitemcustitem_dnd_brand, i.totalquantityonhand, i.stockdescription, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url FROM item i WHERE i.id IN (${idsString});`;
+        const sql = `SELECT i.id, i.class, i.manufacturer, i.mpn, i.itemid, i.itemType, i.subsidiary, i.isonline, i.displayname, i.custitemcustitem_dnd_brand AS branditem, i.totalquantityonhand, i.stockdescription, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url FROM item i WHERE i.id IN (${idsString});`;
         const results = await runQueryWithPagination(sql, itemIds.length, 0);
         return results;
     }
@@ -48,15 +60,16 @@ class ItemsService {
         const results = await runQueryWithPagination(sql);
         return results;
     }
-    // Get count of items by class
-    async countByClass(classId) {
-        const sql = `SELECT COUNT(*) AS count FROM item i WHERE i.isonline = 'T' AND i.class = '${classId}';`;
-        const results = await runQueryWithPagination(sql, 1, 0);
-        return results.items?.[0]?.count || 0;
-    }
-    // Get count of items by brand
-    async countByBrand(brand) {
-        const sql = `SELECT COUNT(*) AS count FROM item i WHERE i.isonline = 'T' AND i.custitemcustitem_dnd_brand ='${brand}';`;
+    // Generalized count method for class or brand
+    async countByField(field, value) {
+        const allowedFields = {
+            class: 'i.class',
+            brand: 'i.custitemcustitem_dnd_brand'
+        };
+        if (!allowedFields[field]) {
+            throw new Error('Invalid filter field');
+        }
+        const sql = `SELECT COUNT(*) AS count FROM item i WHERE i.isonline = 'T' AND ${allowedFields[field]} = '${value}';`;
         const results = await runQueryWithPagination(sql, 1, 0);
         return results.items?.[0]?.count || 0;
     }

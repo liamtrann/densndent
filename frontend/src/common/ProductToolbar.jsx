@@ -1,15 +1,16 @@
 import React from "react";
 
 const SORT_OPTIONS = [
-  { value: "price-asc", label: "Price, low to high" },
-  { value: "price-desc", label: "Price, high to low" },
+  { value: "", label: "By Default" },
+  { value: "asc", label: "Price, low to high" },
+  { value: "desc", label: "Price, high to low" },
 ];
 
 export default function ProductToolbar({
   perPageOptions = [12, 24, 48],
   onPerPageChange,
   perPage = 12,
-  sort = "price-asc",
+  sort = "",
   onSortChange,
   total = 0,
 }) {

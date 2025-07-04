@@ -3,11 +3,44 @@ const itemsService = require('./item.service');
 
 exports.getItemsByClass = async (req, res) => {
   try {
-    const { classId, limit, offset } = req.query;
+    const { classId, limit, offset, sort } = req.query;
     if (!classId) {
       return res.status(400).json({ error: 'classId is required' });
     }
-    const items = await itemsService.findByClass(classId, limit, offset);
+    const items = await itemsService.findByField('class', classId, limit, offset, sort);
+    if (!items) {
+      return res.status(404).json({ error: 'Items not found' });
+    }
+    res.json(items);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getItemsByBrand = async (req, res) => {
+  try {
+    const { brand, limit, offset, sort } = req.query;
+    if (!brand) {
+      return res.status(400).json({ error: 'brand is required' });
+    }
+    const items = await itemsService.findByField('brand', brand, limit, offset, sort);
+    if (!items) {
+      return res.status(404).json({ error: 'Items not found' });
+    }
+    res.json(items);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
+exports.getItemsByClassAndBrand = async (req, res) => {
+  try {
+    const { classId, brand, limit, offset, sort } = req.query;
+    if (!classId || !brand) {
+      return res.status(400).json({ error: 'classId and brand are required' });
+    }
+    const items = await itemsService.findByClassAndBrand(classId, brand, limit, offset, sort);
     if (!items) {
       return res.status(404).json({ error: 'Items not found' });
     }
@@ -75,21 +108,21 @@ exports.postItemsByIds = async (req, res) => {
   }
 };
 
-exports.getItemByIdWithBasePrice = async (req, res) => {
-  try {
-    const { id } = req.query;
-    if (!id) {
-      return res.status(400).json({ error: 'id is required' });
-    }
-    const item = await itemsService.findItemByIdWithBasePrice(id);
-    if (!item) {
-      return res.status(404).json({ error: 'Item not found' });
-    }
-    res.json(item);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+// exports.getItemByIdWithBasePrice = async (req, res) => {
+//   try {
+//     const { id } = req.query;
+//     if (!id) {
+//       return res.status(400).json({ error: 'id is required' });
+//     }
+//     const item = await itemsService.findItemByIdWithBasePrice(id);
+//     if (!item) {
+//       return res.status(404).json({ error: 'Item not found' });
+//     }
+//     res.json(item);
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
 
 exports.getItemsByNameLike = async (req, res) => {
   try {
@@ -123,24 +156,8 @@ exports.getCountByClass = async (req, res) => {
     if (!classId) {
       return res.status(400).json({ error: 'classId is required' });
     }
-    const count = await itemsService.countByClass(classId);
+    const count = await itemsService.countByField('class', classId);
     res.json({ count });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-exports.getItemsByBrand = async (req, res) => {
-  try {
-    const { brand, limit, offset } = req.query;
-    if (!brand) {
-      return res.status(400).json({ error: 'brand is required' });
-    }
-    const items = await itemsService.findByBrand(brand, limit, offset);
-    if (!items) {
-      return res.status(404).json({ error: 'Items not found' });
-    }
-    res.json(items);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -152,7 +169,7 @@ exports.getCountByBrand = async (req, res) => {
     if (!brand) {
       return res.status(400).json({ error: 'brand is required' });
     }
-    const count = await itemsService.countByBrand(brand);
+    const count = await itemsService.countByField('brand', brand);
     res.json({ count });
   } catch (error) {
     res.status(500).json({ error: error.message });
