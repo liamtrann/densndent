@@ -5,11 +5,13 @@ import api from "../api/api";
 import endpoint from "../api/endpoints";
 import { AddressModal } from "../common";
 import { RecentPurchases, SettingsCard } from "../components";
+import { ErrorMessage } from "../common";
 
 export default function ProfilePage() {
   const { user, getAccessTokenSilently } = useAuth0();
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [customer, setCustomer] = useState(null);
+  const [error, setError] = useState(null);
 
   React.useEffect(() => {
     async function fetchCustomer() {
@@ -21,8 +23,10 @@ export default function ProfilePage() {
             { headers: { Authorization: `Bearer ${token}` } }
           );
           setCustomer(res.data);
+          setError(null);
         } catch (err) {
           setCustomer(null);
+          setError(err.response?.data?.error || "An error occurred");
         }
       }
     }
@@ -34,6 +38,7 @@ export default function ProfilePage() {
   return (
     <>
       <div className="max-w-6xl mx-auto px-6 py-10">
+        {error && <ErrorMessage message={error} />}
         <RecentPurchases />
 
         <h2 className="text-lg font-semibold text-gray-800 mb-4">My Settings</h2>
