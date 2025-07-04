@@ -100,12 +100,13 @@ export default function Header() {
 
       {/* Search Bar Below Header */}
       {showSearch && (
-        <div className="w-full border-t border-gray-200 bg-white py-4 px-4 flex justify-center">
-          <div className="max-w-3xl w-full">
-            <SearchBar />
+          <div className="w-full border-t border-gray-200 bg-white py-4 px-4 flex justify-center">
+            <div className="max-w-3xl w-full">
+              <SearchBar onClose={() => setShowSearch(false)} />
+            </div>
           </div>
-        </div>
-      )}
+     )}
+
     </>
   );
 }
