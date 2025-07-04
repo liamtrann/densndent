@@ -9,3 +9,4 @@ export { default as FAQPage } from './FAQPage';
 export { default as AllList } from './AllList';
 export { default as ListProductPage } from './ListProductPage';
 export { default as ProductDetail } from './ProductDetail';
+export { default as PurchaseHistory } from './PurchaseHistory';

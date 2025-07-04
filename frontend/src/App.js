@@ -12,6 +12,7 @@ import {
 } from "./pages";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
+import PurchaseHistory from "./pages/PurchaseHistory";
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
           <Route path="/faq" element={<FAQPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/products/:name" element={<ListProductPage />} />
+          <Route path="/profile/history" element={<PurchaseHistory />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
