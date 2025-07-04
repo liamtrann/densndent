@@ -1,10 +1,10 @@
-// src/components/Header/MobileDrawer.jsx
+// src/components/MobileDrawer.jsx
 import React, { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { FaTimes } from 'react-icons/fa';
 import { useAuth0 } from '@auth0/auth0-react';
 
-export default function MobileDrawer({
+function MobileDrawer({
   isOpen,
   onClose,
   categories,
@@ -73,6 +73,12 @@ export default function MobileDrawer({
           )}
         </div>
 
+        {/* Additional Static Links */}
+        <Link to="/promotions" onClick={onClose}>Promotions & Catalogues</Link>
+        <Link to="/clearance" onClick={onClose}>Clearance</Link>
+        <Link to="/partners" onClick={onClose}>Our Partners</Link>
+        <Link to="/about" onClick={onClose}>About Us</Link>
+
         {/* Auth Section */}
         {!isAuthenticated ? (
           <button
@@ -103,3 +109,5 @@ export default function MobileDrawer({
     </div>
   );
 }
+
+export default MobileDrawer;
