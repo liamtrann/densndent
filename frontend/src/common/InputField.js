@@ -1,6 +1,6 @@
 import React from "react";
-import classNames from "classnames"; //
-// common/InputField.js
+import classNames from "classnames";
+
 export default function InputField({
   label,
   value,
@@ -8,22 +8,42 @@ export default function InputField({
   placeholder = "",
   type = "text",
   className = "",
+  checked,
   ...props
 }) {
+  const isCheckbox = type === "checkbox";
+
   return (
     <div className="mb-2">
-      {label && <label className="block mb-1 font-medium text-sm">{label}</label>}
-      <input
-        type={type}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        className={classNames(
-          "border rounded px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-smiles-orange transition",
-          className
-        )}
-        {...props}
-      />
+      {isCheckbox ? (
+        <label className="flex items-center text-sm">
+          <input
+            type="checkbox"
+            checked={checked}
+            onChange={onChange}
+            className="mr-2"
+            {...props}
+          />
+          {label}
+        </label>
+      ) : (
+        <>
+          {label && (
+            <label className="block mb-1 font-medium text-sm">{label}</label>
+          )}
+          <input
+            type={type}
+            value={value}
+            onChange={onChange}
+            placeholder={placeholder}
+            className={classNames(
+              "border rounded px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-smiles-orange transition",
+              className
+            )}
+            {...props}
+          />
+        </>
+      )}
     </div>
   );
 }
