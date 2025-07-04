@@ -16,4 +16,8 @@ router.post('/by-name', controller.postItemsByNameLike);
 
 router.get('/count-by-class', controller.getCountByClass);
 
+router.get('/by-brand', controller.getItemsByBrand);
+
+router.get('/count-by-brand', controller.getCountByBrand);
+
 module.exports = router;

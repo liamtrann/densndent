@@ -129,3 +129,32 @@ exports.getCountByClass = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+exports.getItemsByBrand = async (req, res) => {
+  try {
+    const { brand, limit, offset } = req.query;
+    if (!brand) {
+      return res.status(400).json({ error: 'brand is required' });
+    }
+    const items = await itemsService.findByBrand(brand, limit, offset);
+    if (!items) {
+      return res.status(404).json({ error: 'Items not found' });
+    }
+    res.json(items);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getCountByBrand = async (req, res) => {
+  try {
+    const { brand } = req.query;
+    if (!brand) {
+      return res.status(400).json({ error: 'brand is required' });
+    }
+    const count = await itemsService.countByBrand(brand);
+    res.json({ count });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
