@@ -1,15 +1,10 @@
 import React from "react";
-import FormInput from "./FormInput";
-import FormSelect from "./FormSelect";
-
+import InputField from "./InputField";
+import Dropdown from "./Dropdown";
+import Button from "./Button";
 
 export default function AddressModal({ onClose }) {
-  const states = [
-    { label: "California", value: "CA" },
-    { label: "New York", value: "NY" },
-    { label: "Texas", value: "TX" },
-    // Add more as needed
-  ];
+  const states = ["California", "New York", "Texas"];
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
@@ -25,13 +20,13 @@ export default function AddressModal({ onClose }) {
         <h2 className="text-xl font-semibold mb-4">Add New Address</h2>
 
         <form>
-          <FormInput label="Full Name" required />
-          <FormInput label="Address" required placeholder="1234 Main Street" />
-          <FormInput label="Address 2" placeholder="Apt. 3 or Suite #1516" />
-          <FormInput label="City" required />
-          <FormSelect label="State" required options={states} />
-          <FormInput label="Zip Code" required placeholder="94117" />
-          <FormInput label="Phone Number" required placeholder="555-123-1234" />
+          <InputField label="Full Name" required />
+          <InputField label="Address" required placeholder="1234 Main Street" />
+          <InputField label="Address 2" placeholder="Apt. 3 or Suite #1516" />
+          <InputField label="City" required />
+          <Dropdown label="State" options={states} required />
+          <InputField label="Zip Code" required placeholder="94117" />
+          <InputField label="Phone Number" required placeholder="555-123-1234" />
 
           <div className="mb-4 space-y-2 text-sm">
             <label><input type="checkbox" className="mr-1" /> This is a Residential Address</label><br />
@@ -40,8 +35,8 @@ export default function AddressModal({ onClose }) {
           </div>
 
           <div className="flex justify-end gap-3">
-            <button type="submit" className="bg-orange-600 text-white px-4 py-2 rounded">Save Address</button>
-            <button type="button" onClick={onClose} className="bg-gray-700 text-white px-4 py-2 rounded">Cancel</button>
+            <Button type="submit">Save Address</Button>
+            <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
           </div>
         </form>
       </div>
