@@ -2,9 +2,11 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import Modal from "../components/Modal";
-import { Loading, ErrorMessage, ProductImage, Paragraph, InputField, Button } from "../common";
+import { Loading, ErrorMessage, ProductImage, Paragraph, InputField, Button, ShowMoreHtml } from "../common";
 import api from "../api/api";
 import { addToCart } from "../redux/slices/cartSlice";
+import endpoint from "../api/endpoints";
+import { delayCall } from "../api/util";
 
 export default function ProductsPage() {
   const { id } = useParams();
@@ -24,7 +26,7 @@ export default function ProductsPage() {
         setError(null);
         // Use centralized axios instance for API call
         const res = await api.get(
-          `/suiteql/item/by-id-with-base-price?id=${id}`
+          endpoint.GET_PRODUCT_BY_ID(id)
         );
         setProduct(res.data);
       } catch (err) {
@@ -45,7 +47,7 @@ export default function ProductsPage() {
     }
     // Store all product details, only change quantity
     const cartItem = { ...product, quantity: Number(quantity) };
-    dispatch(addToCart(cartItem));
+    delayCall(() => dispatch(addToCart(cartItem)));
     setShowModal(true);
   };
 
@@ -67,9 +69,6 @@ export default function ProductsPage() {
   if (loading) return <Loading text="Loading product..." />;
   if (error) return <ErrorMessage message={error} />;
   if (!product) return null;
-
-  console.log(product)
-
   return (
     <div className="max-w-6xl mx-auto px-6 py-10">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
@@ -96,10 +95,12 @@ export default function ProductsPage() {
           <Paragraph className="text-2xl font-semibold mt-2">
             {product.price ? `$${product.price}` : ""}
           </Paragraph>
-          {product.stockdescription && <Paragraph className="text-sm bg-primary-blue text-white mt-1 rounded px-2 py-1 inline-block">
-            {product.stockdescription}
-          </Paragraph>}
-
+          {product.storedetaileddescription && (
+            <ShowMoreHtml html={product.storedetaileddescription} maxLength={400} />
+          )}
+          <div className="text-sm text-gray-500 mt-4">
+            MPN: {product.mpn}
+          </div>
           <div className="mt-4">
             <label className="block mb-1 font-medium">Quantity:</label>
             <InputField
@@ -119,10 +120,6 @@ export default function ProductsPage() {
           >
             Add to Shopping Cart
           </Button>
-
-          <div className="text-sm text-gray-500 mt-4">
-            MPN: {product.mpn}
-          </div>
         </div>
       </div>
 

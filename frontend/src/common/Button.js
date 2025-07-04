@@ -22,7 +22,7 @@ export default function Button({
     link:
       "text-smiles-blue bg-transparent hover:underline p-0 focus:ring-smiles-orange",
     disabled:
-      "bg-gray-300 text-gray-600 cursor-not-allowed px-4 py-2 rounded",
+      "bg-gray-300 text-gray-600 cursor-not-allowed px-1 py-1 rounded",
   };
 
   const finalClassName = classNames(

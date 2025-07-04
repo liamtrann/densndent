@@ -8,6 +8,7 @@ import DesktopNav from './DesktopNav';
 import CartIndicator from "./CartIndicator";
 import AuthButton from "../common/AuthButton";
 import { fetchClassifications } from "../redux/slices/classificationSlice";
+import { delayCall } from "../api/util";
 
 
 export default function Header() {
@@ -20,7 +21,7 @@ export default function Header() {
   const { classes: categories = [] } = useSelector(s => s.classification || {});
 
   useEffect(() => {
-    if (!categories.length) dispatch(fetchClassifications());
+    if (!categories.length) delayCall(() => dispatch(fetchClassifications()));
   }, [dispatch, categories.length]);
 
   // Transform for nav: name and id for both category and subcategory

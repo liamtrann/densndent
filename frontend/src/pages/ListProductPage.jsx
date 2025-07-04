@@ -8,6 +8,8 @@ import ProductListGrid from "../components/ProductListGrid";
 import { fetchProductsByClass, fetchCountByClass } from "../redux/slices/productsSlice";
 import Loading from "../common/Loading";
 import Pagination from "../common/Pagination";
+import ErrorMessage from "../common/ErrorMessage";
+import { delayCall } from "../api/util";
 
 export default function ListProductPage() {
   const { name: nameAndId } = useParams();
@@ -36,20 +38,26 @@ export default function ListProductPage() {
   const total = useSelector(state => state.products.totalByClass?.[classId] || 0);
 
   useEffect(() => {
+    setPage(1);
+    if (classId) {
+      return delayCall(() => dispatch(fetchCountByClass(classId)));
+    }
+  }, [dispatch, classId]);
+
+  // Fetch products when classId, perPage, sort, or page changes
+  useEffect(() => {
     if (classId) {
       if (!products || products.length === 0) {
-        dispatch(fetchProductsByClass({ classId, page, limit: perPage, sort }));
+        return delayCall(() => {
+          dispatch(fetchProductsByClass({ classId, page, limit: perPage, sort }));
+        });
       }
     }
   }, [dispatch, classId, perPage, sort, page, products.length]);
 
-  useEffect(() => {
-    if (classId) {
-      dispatch(fetchCountByClass(classId));
-    }
-  }, [dispatch, classId]);
-
   const totalPages = Math.ceil(total / perPage) || 1;
+
+  console.log(products)
 
   return (
     <div className="px-6 py-8 max-w-screen-xl mx-auto">
@@ -72,9 +80,7 @@ export default function ListProductPage() {
           <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
           {isLoading && <Loading message="Loading products..." />}
           {error && (
-            <div className="text-red-500 py-8 text-center">
-              {error || "Failed to load products."}
-            </div>
+            <ErrorMessage message={error} />
           )}
           {!isLoading && !error && products.length === 0 && (
             <div className="text-gray-500 py-8 text-center">
