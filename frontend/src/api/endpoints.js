@@ -24,6 +24,7 @@ const endpoint = {
     POST_ITEMS_BY_NAME: () => '/suiteql/item/by-name',
     GET_COUNT_BY_CLASS: (classId) => `/suiteql/item/count-by-class?classId=${classId}`,
     GET_TRANSACTION_BY_ID: (id) => `/suiteql/transaction/by-id?id=${id}`,
+    GET_TRANSACTION_BY_EMAIL: (email) => `/suiteql/transaction/by-email?email=${email}`,
 
     // NETSUITE REST API Endpoints
     GET_CUSTOMER: (id) => `/netsuite-rest/customer/${id}`,

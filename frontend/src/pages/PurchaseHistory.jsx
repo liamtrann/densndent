@@ -3,26 +3,50 @@ import React, { useState } from "react";
 import InputField from "../common/InputField";
 import Dropdown from "../common/Dropdown";
 import Breadcrumb from "../common/Breadcrumb";
-
-const mockData = [
-  { id: "ORD-1001", date: "2024-05-02", status: "Delivered", total: "$120.00" },
-  { id: "ORD-1002", date: "2024-05-18", status: "Open", total: "$76.00" },
-  { id: "ORD-1003", date: "2024-06-01", status: "Delivered", total: "$310.50" },
-];
+import api from "../api/api";
+import endpoint from "../api/endpoints";
+import { useAuth0 } from "@auth0/auth0-react";
+import Loading from "../common/Loading";
+import { ErrorMessage } from "../common";
 
 export default function PurchaseHistory() {
+  const { user, getAccessTokenSilently } = useAuth0();
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [status, setStatus] = useState("All");
   const [sort, setSort] = useState("recent");
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const filtered = mockData
+  React.useEffect(() => {
+    async function fetchOrders() {
+      if (!user?.sub) return;
+      setLoading(true);
+      setError(null);
+      try {
+        const token = await getAccessTokenSilently();
+        const url = endpoint.GET_TRANSACTION_BY_EMAIL("liamtran@gmail.com");
+        const res = await api.get(url, { headers: { Authorization: `Bearer ${token}` } });
+        setOrders(res.data.items || res.data || []);
+      } catch (err) {
+        setError(err?.response?.data?.error || "Failed to fetch orders");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchOrders();
+  }, [user?.sub, getAccessTokenSilently]);
+
+  console.log(orders)
+
+  const filtered = orders
     .filter(order => status === "All" || order.status === status)
     .filter(order => {
       if (!fromDate && !toDate) return true;
       const orderDate = new Date(order.date);
       return (!fromDate || new Date(fromDate) <= orderDate) &&
-             (!toDate || orderDate <= new Date(toDate));
+        (!toDate || orderDate <= new Date(toDate));
     })
     .sort((a, b) => {
       return sort === "recent"
@@ -85,11 +109,13 @@ export default function PurchaseHistory() {
             </div>
           </div>
         ))}
-        {filtered.length === 0 && (
+        {filtered.length === 0 && !loading && (
           <p className="text-center text-gray-500 py-6">
             No orders match your filters.
           </p>
         )}
+        {loading && <Loading className="text-center py-6" />}
+        {error && <ErrorMessage message={error} className="text-center py-6" />}
       </div>
     </div>
   );

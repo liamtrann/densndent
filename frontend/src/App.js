@@ -13,6 +13,7 @@ import {
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import PurchaseHistory from "./pages/PurchaseHistory";
+import ProtectedRoute from "./common/ProtectedRoute";
 
 function App() {
   return (
@@ -26,13 +27,16 @@ function App() {
           <Route path="/brands/d2-healthcare" element={<AllList />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/faq" element={<FAQPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
           <Route path="/products/:name" element={<ListProductPage />} />
-          <Route path="/profile/history" element={<PurchaseHistory />} />
           <Route path="/promotions" element={<div>Promotions Page</div>} />
           <Route path="/clearance" element={<div>Clearance Page</div>} />
           <Route path="/partners" element={<div>Our Partners Page</div>} />
           <Route path="/about" element={<div>About Us Page</div>} />
+
+          <Route element={<ProtectedRoute />}>
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/profile/history" element={<PurchaseHistory />} />
+          </Route>
 
           <Route path="*" element={<NotFound />} />
         </Routes>

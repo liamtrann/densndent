@@ -1,4 +1,3 @@
-const netsuiteService = require('../suiteql.service');
 const { runQueryWithPagination } = require('../util');
 
 class ItemsService {
@@ -24,7 +23,7 @@ class ItemsService {
         return results;
     }
 
-        // Find items by both class and brand
+    // Find items by both class and brand
     async findByClassAndBrand(classId, brand, limit, offset, sort) {
         const allowedOrders = ['asc', 'desc'];
         let sortBy = '';
