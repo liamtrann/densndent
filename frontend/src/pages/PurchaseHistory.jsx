@@ -21,6 +21,8 @@ export default function PurchaseHistory() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  const sortValues = ["recent", "oldest"];
+
   const sortOptions = [
   { value: "recent", label: "Most Recent" },
   { value: "oldest", label: "Oldest First" }
