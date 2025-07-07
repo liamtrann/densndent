@@ -17,13 +17,15 @@ export default function PurchaseHistory() {
   const [status, setStatus] = useState("All");
   const [sort, setSort] = useState("recent");
   const [orders, setOrders] = useState([]);
+  const [filteredOrders, setFilteredOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const sortOptions = ["Most Recent", "Oldest First"];
   const sortValues = ["recent", "oldest"];
-  const statusOptions = ["All", "Open", "Delivered"];
+  const statusOptions = ["All", "Open", "Delivered", "Pending Fulfillment", "Billed"];
 
+  // Fetch orders
   useEffect(() => {
     async function fetchOrders() {
       if (!user?.sub) return;
@@ -31,11 +33,13 @@ export default function PurchaseHistory() {
       setError(null);
       try {
         const token = await getAccessTokenSilently();
-        const url = endpoint.GET_TRANSACTION_BY_EMAIL("liamtran@gmail.com");
+        const url = endpoint.GET_TRANSACTION_BY_EMAIL("jtnc101@yahoo.com"); // Update as needed
         const res = await api.get(url, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setOrders(res.data.items || res.data || []);
+        const data = res.data.items || res.data || [];
+        setOrders(data);
+        setFilteredOrders(data);
       } catch (err) {
         setError(err?.response?.data?.error || "Failed to fetch orders");
       } finally {
@@ -46,6 +50,38 @@ export default function PurchaseHistory() {
     fetchOrders();
   }, [user?.sub, getAccessTokenSilently]);
 
+  // Filter by date range and status
+  useEffect(() => {
+    if (!orders.length) return;
+
+    const from = fromDate ? new Date(fromDate) : null;
+    const to = toDate ? new Date(toDate) : null;
+
+    let filtered = orders.filter((order) => {
+      const orderDate = new Date(order.trandate);
+      if (isNaN(orderDate)) return false;
+
+      if (from && orderDate < from) return false;
+      if (to && orderDate > to) return false;
+
+      return true;
+    });
+
+    if (status !== "All") {
+      filtered = filtered.filter((o) =>
+        (o.status || "Pending Fulfillment").toLowerCase() === status.toLowerCase()
+      );
+    }
+
+    if (sort === "recent") {
+      filtered.sort((a, b) => new Date(b.trandate) - new Date(a.trandate));
+    } else if (sort === "oldest") {
+      filtered.sort((a, b) => new Date(a.trandate) - new Date(b.trandate));
+    }
+
+    setFilteredOrders(filtered);
+  }, [fromDate, toDate, status, sort, orders]);
+
   return (
     <div className="max-w-6xl mx-auto px-6 py-10">
       <Breadcrumb path={["Home", "Profile", "Purchase History"]} />
@@ -53,54 +89,62 @@ export default function PurchaseHistory() {
       <h2 className="text-2xl font-bold text-gray-800 mb-6">Purchase History</h2>
 
       {/* Filters */}
-      <div className="flex flex-wrap md:flex-nowrap gap-4 mb-6">
-        <div className="flex-1">
-          <InputField
-            type="date"
-            label="From"
-            value={fromDate}
-            onChange={(e) => setFromDate(e.target.value)}
-          />
-        </div>
-        <div className="flex-1">
-          <InputField
-            type="date"
-            label="To"
-            value={toDate}
-            onChange={(e) => setToDate(e.target.value)}
-          />
-        </div>
-        <div className="flex-1">
-          <Dropdown
-            label="Sort By"
-            options={sortOptions}
-            value={sortOptions[sortValues.indexOf(sort)]}
-            onChange={(e) =>
-              setSort(sortValues[sortOptions.indexOf(e.target.value)])
-            }
-          />
-        </div>
-        <div className="flex-1">
-          <Dropdown
-            label="Status"
-            options={statusOptions}
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-          />
-        </div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6 items-end">
+        <InputField
+          type="date"
+          label="From"
+          value={fromDate}
+          onChange={(e) => setFromDate(e.target.value)}
+          className="min-w-[150px]"
+        />
+        <InputField
+          type="date"
+          label="To"
+          value={toDate}
+          onChange={(e) => setToDate(e.target.value)}
+          className="min-w-[150px]"
+        />
+        <Dropdown
+          label="Sort By"
+          options={sortOptions}
+          value={sortOptions[sortValues.indexOf(sort)]}
+          onChange={(e) =>
+            setSort(sortValues[sortOptions.indexOf(e.target.value)])
+          }
+          className="min-w-[150px]"
+        />
+        <Dropdown
+          label="Status"
+          options={statusOptions}
+          value={status}
+          onChange={(e) => setStatus(e.target.value)}
+          className="min-w-[150px]"
+        />
       </div>
 
-      {/* Order List */}
-      <div className="bg-white border rounded shadow-sm">
-        {orders.map((order) => (
+      {/* Scrollable Order List */}
+      <div className="bg-white border rounded shadow-sm max-h-[500px] overflow-y-auto">
+        {loading && <Loading className="text-center py-6" />}
+        {error && (
+          <ErrorMessage message={error} className="text-center py-6" />
+        )}
+        {!loading && filteredOrders.length === 0 && (
+          <Paragraph className="text-center text-gray-500 py-6">
+            No orders match your filters.
+          </Paragraph>
+        )}
+
+        {filteredOrders.map((order) => (
           <div
             key={order.id}
             className="p-4 border-b last:border-b-0 flex justify-between items-center"
           >
             <div>
-              <Paragraph className="font-medium">Order #{order.id}</Paragraph>
+              <Paragraph className="font-medium">
+                {order.trandisplayname}
+              </Paragraph>
               <Paragraph className="text-sm text-gray-500 mb-1">
-                Placed on {order.date || "Unknown"}
+                Placed on {order.trandate || "Unknown"}
               </Paragraph>
               {order.shipcarrier && (
                 <Paragraph className="text-sm text-gray-600">
@@ -121,16 +165,6 @@ export default function PurchaseHistory() {
             </div>
           </div>
         ))}
-
-        {!loading && orders.length === 0 && (
-          <Paragraph className="text-center text-gray-500 py-6">
-            No orders match your filters.
-          </Paragraph>
-        )}
-        {loading && <Loading className="text-center py-6" />}
-        {error && (
-          <ErrorMessage message={error} className="text-center py-6" />
-        )}
       </div>
     </div>
   );
