@@ -5,7 +5,7 @@ import Breadcrumb from "../common/Breadcrumb";
 import FilterSidebar from "../components/FilterSidebar";
 import ProductToolbar from "../common/ProductToolbar";
 import ProductListGrid from "../components/ProductListGrid";
-import { fetchProductsByClass, fetchCountByClass } from "../redux/slices/productsSlice";
+import { fetchProductsBy, fetchCountBy } from "../redux/slices/productsSlice";
 import Loading from "../common/Loading";
 import Pagination from "../common/Pagination";
 import ErrorMessage from "../common/ErrorMessage";
@@ -30,7 +30,6 @@ export default function ListProductPage() {
   const [page, setPage] = useState(1);
 
   const dispatch = useDispatch();
-  // Use productsByPage and key `${classId}_${perPage}_${sort}_${page}`
   const key = `${classId}_${perPage}_${sort}_${page}`;
   const products = useSelector(state => state.products.productsByPage[key] || []);
   const isLoading = useSelector(state => state.products.isLoading);
@@ -41,7 +40,7 @@ export default function ListProductPage() {
     setPage(1);
     setSort("")
     if (classId) {
-      return delayCall(() => dispatch(fetchCountByClass(classId)));
+      return delayCall(() => dispatch(fetchCountBy({ type: "classification", id: classId })));
     }
   }, [dispatch, classId]);
 
@@ -50,7 +49,7 @@ export default function ListProductPage() {
     if (classId) {
       if (!products || products.length === 0) {
         return delayCall(() => {
-          dispatch(fetchProductsByClass({ classId, page, limit: perPage, sort }));
+          dispatch(fetchProductsBy({ type: "classification", id: classId, page: page, limit: perPage, sort: sort }));
         });
       }
     }

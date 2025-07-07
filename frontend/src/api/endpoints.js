@@ -11,6 +11,14 @@ const endpoint = {
         if (sort) params.append('sort', sort);
         return `/suiteql/item/by-class?${params.toString()}`;
     },
+    GET_ITEMS_BY_BRAND: ({ brand, limit, offset, sort }) => {
+        const params = new URLSearchParams();
+        if (brand) params.append('brand', brand);
+        if (limit) params.append('limit', limit);
+        if (offset) params.append('offset', offset);
+        if (sort) params.append('sort', sort);
+        return `/suiteql/item/by-brand?${params.toString()}`;
+    },
     GET_ITEMS_BY_CLASS_AND_BRAND: ({ classId, brand, limit, offset, sort }) => {
         const params = new URLSearchParams();
         if (classId) params.append('classId', classId);
@@ -23,6 +31,7 @@ const endpoint = {
     GET_CUSTOMER_BY_EMAIL: (email) => `/suiteql/customer/by-email?email=${email}`,
     POST_ITEMS_BY_NAME: () => '/suiteql/item/by-name',
     GET_COUNT_BY_CLASS: (classId) => `/suiteql/item/count-by-class?classId=${classId}`,
+    GET_COUNT_BY_BRAND: (brand) => `/suiteql/item/count-by-brand?brand=${brand}`,
     GET_TRANSACTION_BY_ID: (id) => `/suiteql/transaction/by-id?id=${id}`,
     GET_TRANSACTION_BY_EMAIL: (email) => `/suiteql/transaction/by-email?email=${email}`,
 
