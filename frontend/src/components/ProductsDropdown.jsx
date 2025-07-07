@@ -28,7 +28,7 @@ export default function ProductsDropdown({ categories }) {
       onMouseEnter={enter}
       onMouseLeave={leave}
     >
-      <span className="text-sm text-gray-700 hover:text-orange-600 cursor-pointer">
+      <span className="text-sm text-gray-800 hover:text-orange-600 font-medium">
         Products
       </span>
 
