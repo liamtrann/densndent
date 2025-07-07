@@ -34,3 +34,4 @@ export { default as ProductListGrid } from './ProductListGrid';
 export { default as ProductsDropdown } from './ProductsDropdown';
 export { default as SearchBar } from './SearchBar';
 export { default as VerifyEmailModal } from './VerifyEmailModal';
+export { default as ProfileEditCard } from './ProfileEditCard';

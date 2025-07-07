@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { FaTimes } from 'react-icons/fa';
 import { useAuth0 } from '@auth0/auth0-react';
 import Paragraph from '../common/Paragraph';
-import Button from '../common/Button'; // ✅ Import reusable Button
+import Button from '../common/Button';
 
 function MobileDrawer({
   isOpen,
@@ -98,7 +98,13 @@ function MobileDrawer({
         ) : (
           <div className="pt-2">
             <Paragraph className="text-sm text-gray-700 mb-1">Signed in as</Paragraph>
-            <Paragraph className="text-sm font-semibold text-black mb-2">{user?.name}</Paragraph>
+            <Link
+              to="/profile"
+              onClick={onClose}
+              className="text-sm font-semibold text-black hover:underline mb-2 block"
+            >
+              {user?.name}
+            </Link>
 
             <Button
               variant="link"

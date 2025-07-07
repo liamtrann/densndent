@@ -1,29 +1,28 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import { useAuth0 } from "@auth0/auth0-react";
 import InputField from "../common/InputField";
+import Button from "../common/Button";
 import Dropdown from "../common/Dropdown";
+import Paragraph from "../common/Paragraph";
+import { ProductImage } from "../common";
 
 export default function CheckoutPage() {
-  const {
-    isAuthenticated,
-    isLoading,
-    loginWithRedirect,
-    getAccessTokenSilently,
-    user,
-  } = useAuth0();
+  const { isAuthenticated, isLoading, loginWithRedirect, getAccessTokenSilently } = useAuth0();
+  const cart = useSelector((state) => state.cart.items);
+
+  const [promoCode, setPromoCode] = useState("");
+  const [addressFilled, setAddressFilled] = useState(false); // Placeholder for validation
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       loginWithRedirect();
-      return;
-    }
-    if (!isLoading && isAuthenticated) {
+    } else if (isAuthenticated) {
       (async () => {
         try {
-          const token = await getAccessTokenSilently({
+          await getAccessTokenSilently({
             audience: process.env.REACT_APP_AUTH0_AUDIENCE,
           });
-          console.log("Access Token:", token);
         } catch (err) {
           console.error("Error getting access token:", err);
         }
@@ -33,107 +32,121 @@ export default function CheckoutPage() {
 
   if (isLoading || !isAuthenticated) {
     return (
-      <div className="max-w-2xl mx-auto px-6 py-10">
-        <h1 className="text-2xl font-bold mb-6 text-center">Checkout</h1>
-        <div className="bg-white p-6 rounded shadow">
-          <p className="text-lg text-gray-700 mb-4">Checking authentication...</p>
-        </div>
+      <div className="max-w-2xl mx-auto px-6 py-10 text-center">
+        <h1 className="text-2xl font-bold mb-6">Checkout</h1>
+        <Paragraph>Checking authentication...</Paragraph>
       </div>
     );
   }
 
-  return (
-    <div className="max-w-7xl mx-auto px-6 py-10">
-      <h1 className="text-3xl font-bold mb-4">Checkout</h1>
-      <p className="text-sm text-gray-600 mb-8">
-        <span className="text-sm text-gray-500">1. Shipping Address / </span>
-        <span className="font-bold">2. Payment</span>
-        <span className="text-sm text-gray-500"> / 3. Review</span>
-      </p>
+  const subtotal = cart.reduce(
+    (sum, item) => sum + (item.unitprice || item.price || 0) * item.quantity,
+    0
+  ).toFixed(2);
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-        {/* Left: Shipping Form */}
+  const renderCartSummary = () => (
+    <div className="border p-6 rounded shadow-md bg-white">
+      <h3 className="text-lg font-semibold mb-4">Summary</h3>
+      <div className="mb-2 flex justify-between text-sm">
+        <span>SUBTOTAL {cart.length} ITEM{cart.length !== 1 ? "S" : ""}</span>
+        <span className="font-semibold">${subtotal}</span>
+      </div>
+      <Paragraph className="text-xs text-gray-500 mb-2">
+        Subtotal Does Not Include Shipping Or Tax
+      </Paragraph>
+      <div className="mb-2 flex justify-between text-sm">
+        <span>Shipping</span>
+        <span>$0.00</span>
+      </div>
+      <div className="mb-4 flex justify-between font-semibold">
+        <span>TOTAL</span>
+        <span>${subtotal}</span>
+      </div>
+
+      <div className="mb-4">
+        <h4 className="text-sm font-medium mb-1">Have a Promo Code?</h4>
+        <div className="flex gap-2">
+          <InputField
+            value={promoCode}
+            onChange={(e) => setPromoCode(e.target.value)}
+            placeholder="Enter code"
+          />
+          <Button onClick={() => {}}>Apply</Button>
+        </div>
+      </div>
+
+      <div className="mt-4">
+        <h4 className="text-sm font-medium mb-2">Items to Ship ({cart.length})</h4>
+        <div className="space-y-3 text-sm">
+          {cart.map((item, idx) => (
+            <div key={item.id + "-" + idx} className="p-3 border rounded space-y-1">
+              <div className="font-semibold">{item.itemid || item.displayname}</div>
+              <div>Unit price: ${item.unitprice || item.price}</div>
+              <div>Quantity: {item.quantity}</div>
+              <div className="font-bold">Amount: ${(item.unitprice || item.price) * item.quantity}</div>
+            </div>
+          ))}
+        </div>
+        <Button className="text-blue-600 text-xs underline mt-2" variant="link">
+          Edit Cart
+        </Button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="max-w-6xl mx-auto px-6 py-10">
+      <h1 className="text-3xl font-bold mb-4">Checkout</h1>
+      <Paragraph className="mb-6 text-sm text-gray-500">
+        1. Shipping Address / <strong>2. Payment</strong> / 3. Review
+      </Paragraph>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left: Form */}
         <div className="lg:col-span-2">
           <h2 className="text-xl font-semibold mb-4">Choose Shipping Address</h2>
 
-          <div className="space-y-5">
-            <InputField label="Full Name" value={user?.name || ""} />
-            <InputField label="Address" placeholder="Example: 1234 Main Street" />
+          <div className="bg-white p-6 rounded shadow-md space-y-4">
+            <InputField label="Full Name" placeholder="Huzaifa Khan" />
+            <InputField label="Address" placeholder="1234 Main Street" />
             <InputField placeholder="(optional)" />
-            <InputField label="City" />
-            <Dropdown label="State" options={["Alabama", "California", "New York", "Texas"]} />
-            <InputField label="Zip Code" placeholder="Example: 94117" />
-            <InputField label="Phone Number" placeholder="Example: 555-123-1234" />
-            <div className="flex items-center gap-2">
-              <input type="checkbox" id="residential" className="mt-1" />
-              <label htmlFor="residential" className="text-sm">
-                This is a Residential Address
-              </label>
-            </div>
+            <InputField label="City *" />
+
+            <Dropdown label="State *" options={["NY", "CA", "TX"]} />
+
+            <InputField label="Zip Code *" placeholder="94117" />
+            <InputField label="Phone Number *" placeholder="555-123-1234" />
+            <InputField
+              type="checkbox"
+              checked={false}
+              onChange={() => {}}
+              label="This is a Residential Address"
+            />
           </div>
 
-          <div className="mt-8 bg-gray-50 p-4 rounded border">
-            <h3 className="text-lg font-semibold mb-2">Delivery Method</h3>
-            <p className="text-sm text-yellow-600 bg-yellow-100 p-2 rounded">
-              Warning: Please enter a valid shipping address first
-            </p>
+          {/* Delivery Method */}
+          <div className="bg-gray-50 border mt-6 p-6 rounded shadow">
+            <h3 className="font-semibold text-lg mb-3">Delivery Method</h3>
+            {!addressFilled && (
+              <Paragraph className="text-yellow-800 bg-yellow-100 border border-yellow-300 p-3 rounded text-sm">
+                <strong>Warning:</strong> Please enter a valid shipping address first
+              </Paragraph>
+            )}
           </div>
 
-          <div className="mt-6">
-            <button className="bg-[#be3b10] text-white px-8 py-3 rounded hover:bg-[#a4310d]">
+          <div className="flex justify-end mt-6">
+            <Button
+              className="px-6 py-3"
+              disabled={!addressFilled}
+              onClick={() => {}}
+            >
               Continue
-            </button>
+            </Button>
           </div>
         </div>
 
-        {/* Right: Order Summary */}
-        <div className="border p-6 rounded shadow-md">
-          <h3 className="text-lg font-semibold mb-4 text-center">Summary</h3>
-          <div className="text-sm mb-2">
-            <strong>SUBTOTAL</strong> 1 ITEM
-          </div>
-          <div className="text-right font-semibold mb-2">$51.99</div>
-          <p className="text-xs text-gray-500 mb-4">
-            Subtotal Does Not Include Shipping Or Tax
-          </p>
-          <div className="mb-2 text-sm">
-            <strong>Shipping</strong>
-            <div className="text-right">$0.00</div>
-          </div>
-          <div className="flex justify-between mt-2 font-semibold border-t pt-2">
-            <span>TOTAL</span>
-            <span>$51.99</span>
-          </div>
-
-          {/* Promo */}
-          <div className="mt-6">
-            <label className="block mb-1 text-sm font-medium">Have a Promo Code?</label>
-            <div className="flex items-center">
-              <input
-                type="text"
-                placeholder="Enter code"
-                className="border px-3 py-2 w-full rounded-l focus:outline-none focus:ring-2 focus:ring-smiles-orange transition"
-              />
-              <button className="bg-gray-700 text-white px-4 py-2 rounded-r hover:bg-gray-800">
-                Apply
-              </button>
-            </div>
-          </div>
-
-          {/* Items to ship */}
-          <div className="mt-6">
-            <h4 className="text-sm font-semibold mb-2">Items to Ship (1)</h4>
-            <div className="border p-3 rounded">
-              <p className="text-sm font-semibold">
-                Dentsply: XCP Bite Blocks Endo Green 3/Pk - 540935
-              </p>
-              <p className="text-sm text-gray-600 mt-1">Unit price: $51.99</p>
-              <p className="text-sm text-gray-600">Quantity: 1</p>
-              <p className="text-sm font-bold">Amount: $51.99</p>
-            </div>
-            <button className="mt-3 text-blue-600 text-sm underline">Edit Cart</button>
-          </div>
-        </div>
+        {/* Right: Summary */}
+        {renderCartSummary()}
       </div>
     </div>
   );

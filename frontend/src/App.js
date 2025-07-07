@@ -10,9 +10,11 @@ import {
   ProfilePage,
   ListProductPage,
 } from "./pages";
+
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import PurchaseHistory from "./pages/PurchaseHistory";
+import ProfileEditCard from "./components/ProfileEditCard"; // ✅ added edit page component
 import ProtectedRoute from "./common/ProtectedRoute";
 
 function App() {
@@ -21,6 +23,7 @@ function App() {
       <Header />
       <main className="flex-grow">
         <Routes>
+          {/* Public Pages */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/cart" element={<CartPage />} />
@@ -33,11 +36,14 @@ function App() {
           <Route path="/partners" element={<div>Our Partners Page</div>} />
           <Route path="/about" element={<div>About Us Page</div>} />
 
+          {/* Protected Routes */}
           <Route element={<ProtectedRoute />}>
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/profile/edit" element={<ProfileEditCard />} />
             <Route path="/profile/history" element={<PurchaseHistory />} />
           </Route>
 
+          {/* Fallback Route */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
@@ -45,4 +51,5 @@ function App() {
     </div>
   );
 }
+
 export default App;

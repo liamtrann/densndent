@@ -1,15 +1,26 @@
+// src/common/AddressModal.jsx
 import React, { useState } from "react";
 import InputField from "./InputField";
-import Dropdown from "./Dropdown";
 import Button from "./Button";
 
 export default function AddressModal({ onClose }) {
-  const states = ["California", "New York", "Texas"];
+  const [formData, setFormData] = useState({
+    newEmail: "",
+    confirmEmail: "",
+    password: "",
+  });
 
-  // Example checkbox state (optional: convert to full form state if needed)
-  const [residential, setResidential] = useState(false);
-  const [defaultBilling, setDefaultBilling] = useState(false);
-  const [defaultShipping, setDefaultShipping] = useState(false);
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    // Add logic to validate and send verification
+    console.log("Submitted:", formData);
+    onClose();
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
@@ -21,41 +32,41 @@ export default function AddressModal({ onClose }) {
           &times;
         </button>
 
-        <h2 className="text-xl font-semibold mb-4">Add New Address</h2>
+        <h2 className="text-xl font-semibold mb-4">Change Email</h2>
 
-        <form>
-          <InputField label="Full Name" required />
-          <InputField label="Address" required placeholder="1234 Main Street" />
-          <InputField label="Address 2" placeholder="Apt. 3 or Suite #1516" />
-          <InputField label="City" required />
-          <Dropdown label="State" options={states} required />
-          <InputField label="Zip Code" required placeholder="94117" />
-          <InputField label="Phone Number" required placeholder="555-123-1234" />
-
-          {/* Reused InputField for checkboxes */}
+        <form onSubmit={handleSubmit}>
           <InputField
-            type="checkbox"
-            label="This is a Residential Address"
-            checked={residential}
-            onChange={(e) => setResidential(e.target.checked)}
+            label="New Email"
+            name="newEmail"
+            type="email"
+            value={formData.newEmail}
+            onChange={handleChange}
+            required
           />
           <InputField
-            type="checkbox"
-            label="Make this my default billing address"
-            checked={defaultBilling}
-            onChange={(e) => setDefaultBilling(e.target.checked)}
+            label="Confirm New Email"
+            name="confirmEmail"
+            type="email"
+            value={formData.confirmEmail}
+            onChange={handleChange}
+            required
           />
           <InputField
-            type="checkbox"
-            label="Make this my default shipping address"
-            checked={defaultShipping}
-            onChange={(e) => setDefaultShipping(e.target.checked)}
+            label="Password"
+            name="password"
+            type="password"
+            value={formData.password}
+            onChange={handleChange}
+            required
           />
 
-          <div className="flex justify-end gap-3 mt-4">
-            <Button type="submit">Save Address</Button>
-            <Button type="button" variant="secondary" onClick={onClose}>
-              Cancel
+          <p className="text-sm text-gray-600 mt-2">
+            You will still be able to login with your current email address and password until your new email address is verified.
+          </p>
+
+          <div className="mt-4">
+            <Button type="submit" className="bg-red-600 hover:bg-red-700">
+              Send Verification Email
             </Button>
           </div>
         </form>
