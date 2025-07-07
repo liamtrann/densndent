@@ -5,14 +5,15 @@ const controller = require('./item.controller');
 router.get('/by-class', controller.getItemsByClass);
 
 router.get('/by-id', controller.getItemById);
+router.post('/by-parent', controller.postGetItemsByParent);
 
 // router.get('/by-id-with-base-price', controller.getItemByIdWithBasePrice);
 
 router.post('/by-ids', controller.postItemsByIds);
 
-router.get('/by-name', controller.getItemsByNameLike);
+// router.get('/by-name', controller.getItemsByNameLike);
 
-router.post('/by-name', controller.postItemsByNameLike);
+router.post('/search-by-name', controller.postItemsByNameLike);
 
 router.get('/count-by-class', controller.getCountByClass);
 

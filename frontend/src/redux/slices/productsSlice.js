@@ -3,16 +3,24 @@ import api from '../../api/api';
 import endpoint from '../../api/endpoints';
 
 // Async thunk to fetch a page of products by class
-export const fetchProductsByClass = createAsyncThunk(
+export const fetchProductsBy = createAsyncThunk(
     'products/fetchPage',
-    async ({ classId, page, limit, sort }, { rejectWithValue }) => {
+    async ({ type, id, page, limit, sort }, { rejectWithValue }) => {
         try {
+            let url;
             const offset = (page - 1) * limit;
-            const url = endpoint.GET_ITEMS_BY_CLASS({ classId, limit, offset, sort });
+            if (type === "classification") {
+                url = endpoint.GET_ITEMS_BY_CLASS({ classId: id, limit, offset, sort });
+            } else if (type === "brand") {
+                url = endpoint.GET_ITEMS_BY_BRAND({ brand: id, limit, offset, sort });
+            } else {
+                throw new Error("Unknown product type");
+            }
+            console.log(url)
             const res = await api.get(url);
             // Assume API returns { items: [...], total: N }
             return {
-                classId,
+                id,
                 page,
                 products: res.data.items || res.data,
                 total: res.data.total || 0,
@@ -26,13 +34,20 @@ export const fetchProductsByClass = createAsyncThunk(
 );
 
 // Async thunk to fetch count of products by class
-export const fetchCountByClass = createAsyncThunk(
-    'products/fetchCountByClass',
-    async (classId, { rejectWithValue }) => {
+export const fetchCountBy = createAsyncThunk(
+    'products/fetchCountBy',
+    async ({ type, id }, { rejectWithValue }) => {
         try {
-            const url = endpoint.GET_COUNT_BY_CLASS(classId);
+            let url;
+            if (type === "classification") {
+                url = endpoint.GET_COUNT_BY_CLASS(id);
+            } else if (type === "brand") {
+                url = endpoint.GET_COUNT_BY_BRAND(id);
+            } else {
+                throw new Error("Unknown type");
+            }
             const res = await api.get(url);
-            return { classId, count: res.data.count };
+            return { id, count: res.data.count };
         } catch (err) {
             return rejectWithValue(err?.response?.data || err.message);
         }
@@ -51,25 +66,25 @@ const productsSlice = createSlice({
     reducers: {},
     extraReducers: (builder) => {
         builder
-            .addCase(fetchProductsByClass.pending, (state) => {
+            .addCase(fetchProductsBy.pending, (state) => {
                 state.isLoading = true;
                 state.error = null;
             })
-            .addCase(fetchProductsByClass.fulfilled, (state, action) => {
+            .addCase(fetchProductsBy.fulfilled, (state, action) => {
                 state.isLoading = false;
-                const { classId, page, products, limit, sort } = action.payload;
+                const { id, page, products, limit, sort } = action.payload;
                 // Use a key that includes perPage (limit) and sort
-                const key = `${classId}_${limit || 12}_${sort}_${page}`;
+                const key = `${id}_${limit || 12}_${sort}_${page}`;
                 state.productsByPage[key] = products;
                 // Optionally update total for this page, but prefer count from fetchCountByClass
             })
-            .addCase(fetchProductsByClass.rejected, (state, action) => {
+            .addCase(fetchProductsBy.rejected, (state, action) => {
                 state.isLoading = false;
                 state.error = action.payload;
             })
-            .addCase(fetchCountByClass.fulfilled, (state, action) => {
-                const { classId, count } = action.payload;
-                state.totalByClass[classId] = count;
+            .addCase(fetchCountBy.fulfilled, (state, action) => {
+                const { id, count } = action.payload;
+                state.totalByClass[id] = count;
                 state.total = count;
             });
     },

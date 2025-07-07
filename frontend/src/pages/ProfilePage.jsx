@@ -33,6 +33,13 @@ export default function ProfilePage() {
     fetchCustomer();
   }, [user?.email, getAccessTokenSilently]);
 
+  console.log(customer)
+
+  const updateAddress = (newAddress) => {
+
+    console.log(newAddress)
+  }
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-10">
       {error && <ErrorMessage message={error} />}

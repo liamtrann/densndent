@@ -9,6 +9,12 @@ export default function AddressModal({ onClose }) {
     confirmEmail: "",
     password: "",
   });
+  const states = [
+    { value: "California", label: "California" },
+    { value: "New York", label: "New York" },
+    { value: "Texas", label: "Texas" }
+  ];
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;

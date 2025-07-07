@@ -5,12 +5,14 @@ const morgan = require('morgan');
 const suiteqlRoutes = require('./suiteQL/route');
 const netsuiteRestRoute = require('./netsuiteRest/route');
 const restapiRoutes = require('./restapi/restapi.route');
+const bodyParser = require('body-parser');
 const app = express();
 
 // Middleware
 app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
+app.use(bodyParser.json());
 
 // Routes
 app.use('/suiteql', suiteqlRoutes);

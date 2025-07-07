@@ -18,6 +18,8 @@ export default function ProfileEditCard() {
 
   const [showModal, setShowModal] = useState(false);
 
+  const [currentData, setData] = useState()
+
   useEffect(() => {
     async function fetchCustomer() {
       if (user?.email) {
@@ -28,6 +30,7 @@ export default function ProfileEditCard() {
           });
 
           const data = res.data;
+          setData(data)
           setFormData({
             firstName: data.firstname || "",
             lastName: data.lastname || "",
@@ -41,6 +44,8 @@ export default function ProfileEditCard() {
     }
     fetchCustomer();
   }, [user?.email, getAccessTokenSilently]);
+
+  console.log(currentData)
 
   const handleChange = (e) => {
     const { name, value } = e.target;

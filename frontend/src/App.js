@@ -9,6 +9,7 @@ import {
   FAQPage,
   ProfilePage,
   ListProductPage,
+  ListProductsByBrandPage,
 } from "./pages";
 
 import Header from "./components/Header";
@@ -31,6 +32,7 @@ function App() {
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/faq" element={<FAQPage />} />
           <Route path="/products/:name" element={<ListProductPage />} />
+          <Route path="/brands/:brandName" element={<ListProductsByBrandPage />} />
           <Route path="/promotions" element={<div>Promotions Page</div>} />
           <Route path="/clearance" element={<div>Clearance Page</div>} />
           <Route path="/partners" element={<div>Our Partners Page</div>} />

@@ -66,6 +66,22 @@ exports.getItemById = async (req, res) => {
   }
 };
 
+exports.postGetItemsByParent = async (req, res) => {
+  try {
+    let { parent } = req.body;
+    if (!parent) {
+      return res.status(400).json({ error: 'parent is required in body' });
+    }
+    const items = await itemsService.findByParent(parent);
+    if (!items) {
+      return res.status(404).json({ error: 'Items not found' });
+    }
+    res.json(items);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 exports.getItemsByIds = async (req, res) => {
   try {
     let { ids } = req.query;
@@ -130,7 +146,7 @@ exports.getItemsByNameLike = async (req, res) => {
     if (!name) {
       return res.status(400).json({ error: 'Missing name query parameter' });
     }
-    const items = await itemsService.findByNameLike(name);
+    const items = await itemsService.findByNameLike(name, );
     res.json(items);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -139,11 +155,12 @@ exports.getItemsByNameLike = async (req, res) => {
 
 exports.postItemsByNameLike = async (req, res) => {
   try {
+    const { limit, offset } = req.query;
     const { name } = req.body;
     if (!name) {
       return res.status(400).json({ error: 'Missing name in request body' });
     }
-    const items = await itemsService.findByNameLike(name);
+    const items = await itemsService.findByNameLike(name, limit, offset);
     res.json(items);
   } catch (error) {
     res.status(500).json({ error: error.message });

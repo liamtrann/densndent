@@ -18,9 +18,6 @@ import { Image } from "../common";
 import { URLS } from "../constants/urls";
 import { Link } from "react-router-dom";
 
-// ✅ NEW: FAQPage added in router separately
-// FAQ preview is just a section on homepage
-
 const brandKeys = [
   "d2-healthcare", "3m", "aurelia", "dmg", "kerr",
   "keystone", "microcopy", "johnson-and-johnson", "dentsply",

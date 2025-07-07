@@ -17,10 +17,9 @@ export default function Dropdown({ label, options, value, onChange, className = 
         )}
         {...props}
       >
-        <option value="">- Select -</option>
         {options.map((opt) => (
-          <option key={opt} value={opt}>
-            {opt}
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
           </option>
         ))}
       </select>
