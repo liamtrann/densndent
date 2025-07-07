@@ -1,17 +1,17 @@
+// src/pages/ProfilePage.jsx
 import React, { useState, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import api from "../api/api";
 import endpoint from "../api/endpoints";
-import { RecentPurchases, SettingsCard } from "../components";
-import { ErrorMessage, CreateAddressModal } from "../common";
-import { Link, useNavigate } from "react-router-dom";
+import { RecentPurchases, SettingsCard, ProfileEditCard } from "../components";
+import { CreateAddressModal, ErrorMessage } from "../common";
 
 export default function ProfilePage() {
   const { user, getAccessTokenSilently } = useAuth0();
   const [showAddressModal, setShowAddressModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [customer, setCustomer] = useState(null);
   const [error, setError] = useState(null);
-  const navigate = useNavigate();
 
   useEffect(() => {
     async function fetchCustomer() {
@@ -33,25 +33,18 @@ export default function ProfilePage() {
     fetchCustomer();
   }, [user?.email, getAccessTokenSilently]);
 
-  console.log(customer)
-
-  const updateAddress = (newAddress) => {
-
-    console.log(newAddress)
-  }
-
   return (
     <div className="max-w-4xl mx-auto px-4 py-10">
       {error && <ErrorMessage message={error} />}
 
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-lg font-semibold text-gray-800">Recent Purchases</h2>
-        <Link
-          to="/profile/history"
+        <a
+          href="/profile/history"
           className="text-sm text-blue-600 hover:underline"
         >
           View Purchase History →
-        </Link>
+        </a>
       </div>
 
       <RecentPurchases />
@@ -68,7 +61,10 @@ export default function ProfilePage() {
             </>
           }
           actionLabel="Edit"
-          onAction={() => navigate("/profile/edit")}
+          onAction={(e) => {
+            e.preventDefault();
+            setShowEditModal(true);
+          }}
         />
 
         <SettingsCard
@@ -90,6 +86,19 @@ export default function ProfilePage() {
 
       {showAddressModal && (
         <CreateAddressModal onClose={() => setShowAddressModal(false)} />
+      )}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded p-6 w-full max-w-xl relative">
+            <button
+              onClick={() => setShowEditModal(false)}
+              className="absolute top-2 right-4 text-xl font-bold text-gray-600 hover:text-gray-800"
+            >
+              &times;
+            </button>
+            <ProfileEditCard onClose={() => setShowEditModal(false)} />
+          </div>
+        </div>
       )}
     </div>
   );

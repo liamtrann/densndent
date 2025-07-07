@@ -1,12 +1,13 @@
+// src/components/ProfileEditCard.jsx
 import React, { useState, useEffect } from "react";
 import InputField from "../common/InputField";
 import Button from "../common/Button";
-import { AddressModal } from "../common";
+import AddressModal from "../common/AddressModal";
 import { useAuth0 } from "@auth0/auth0-react";
 import api from "../api/api";
 import endpoint from "../api/endpoints";
 
-export default function ProfileEditCard() {
+export default function ProfileEditCard({ onClose }) {
   const { user, getAccessTokenSilently } = useAuth0();
 
   const [formData, setFormData] = useState({
@@ -18,19 +19,17 @@ export default function ProfileEditCard() {
 
   const [showModal, setShowModal] = useState(false);
 
-  const [currentData, setData] = useState()
-
   useEffect(() => {
     async function fetchCustomer() {
       if (user?.email) {
         try {
           const token = await getAccessTokenSilently();
-          const res = await api.get(endpoint.GET_CUSTOMER_BY_EMAIL(user.email), {
-            headers: { Authorization: `Bearer ${token}` },
-          });
+          const res = await api.get(
+            endpoint.GET_CUSTOMER_BY_EMAIL(user.email),
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
 
           const data = res.data;
-          setData(data)
           setFormData({
             firstName: data.firstname || "",
             lastName: data.lastname || "",
@@ -45,8 +44,6 @@ export default function ProfileEditCard() {
     fetchCustomer();
   }, [user?.email, getAccessTokenSilently]);
 
-  console.log(currentData)
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -55,11 +52,10 @@ export default function ProfileEditCard() {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log("Submitting:", formData);
-    // You can send PUT/PATCH to update customer info here
   };
 
   return (
-    <div className="border rounded-lg p-6 shadow-sm max-w-2xl mx-auto">
+    <div>
       <h3 className="text-lg font-semibold mb-4">Profile Information</h3>
       <form onSubmit={handleSubmit}>
         <InputField
@@ -96,8 +92,11 @@ export default function ProfileEditCard() {
           </span>
         </div>
 
-        <div className="mt-4">
+        <div className="mt-4 flex gap-4">
           <Button type="submit">Update</Button>
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
         </div>
       </form>
 
