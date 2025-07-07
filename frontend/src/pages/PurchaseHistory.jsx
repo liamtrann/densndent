@@ -21,9 +21,19 @@ export default function PurchaseHistory() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const sortOptions = ["Most Recent", "Oldest First"];
-  const sortValues = ["recent", "oldest"];
-  const statusOptions = ["All", "Open", "Delivered", "Pending Fulfillment", "Billed"];
+  const sortOptions = [
+  { value: "recent", label: "Most Recent" },
+  { value: "oldest", label: "Oldest First" }
+];
+
+const statusOptions = [
+  { value: "all", label: "All" },
+  { value: "open", label: "Open" },
+  { value: "delivered", label: "Delivered" },
+  { value: "pending", label: "Pending Fulfillment" },
+  { value: "billed", label: "Billed" }
+];
+
 
   // Fetch orders
   useEffect(() => {

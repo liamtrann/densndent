@@ -48,6 +48,8 @@ export default function CheckoutPage() {
     0
   ).toFixed(2);
 
+  console.log(cart)
+
   const renderCartSummary = () => (
     <div className="border p-6 rounded shadow-md bg-white">
       <h3 className="text-lg font-semibold mb-4">Summary</h3>
