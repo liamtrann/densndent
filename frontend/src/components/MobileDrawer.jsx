@@ -1,8 +1,9 @@
-// src/components/MobileDrawer.jsx
 import React, { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { FaTimes } from 'react-icons/fa';
 import { useAuth0 } from '@auth0/auth0-react';
+import Paragraph from '../common/Paragraph';
+import Button from '../common/Button'; // ✅ Import reusable Button
 
 function MobileDrawer({
   isOpen,
@@ -31,24 +32,27 @@ function MobileDrawer({
 
         {/* Products Dropdown */}
         <div>
-          <button
+          <Button
+            variant="link"
             onClick={() => toggleMenu('Products')}
             className="flex items-center justify-between w-full py-2"
           >
             <span>Products</span>
             <span>{expandedMenus['Products'] ? '▲' : '▼'}</span>
-          </button>
+          </Button>
+
           {expandedMenus['Products'] && (
             <div className="ml-4 space-y-1">
               {categories.map(cat => (
                 <div key={cat.name}>
-                  <button
+                  <Button
+                    variant="link"
                     onClick={() => toggleMenu(cat.name)}
                     className="flex justify-between w-full text-left"
                   >
                     <span>{cat.name}</span>
                     <span>{expandedMenus[cat.name] ? '▲' : '▼'}</span>
-                  </button>
+                  </Button>
                   {expandedMenus[cat.name] && (
                     <div className="ml-4 text-gray-600">
                       {cat.subcategories.map(sub => {
@@ -73,7 +77,7 @@ function MobileDrawer({
           )}
         </div>
 
-        {/* Additional Static Links */}
+        {/* Static Links */}
         <Link to="/promotions" onClick={onClose}>Promotions & Catalogues</Link>
         <Link to="/clearance" onClick={onClose}>Clearance</Link>
         <Link to="/partners" onClick={onClose}>Our Partners</Link>
@@ -81,7 +85,8 @@ function MobileDrawer({
 
         {/* Auth Section */}
         {!isAuthenticated ? (
-          <button
+          <Button
+            variant="link"
             onClick={() => {
               loginWithRedirect();
               onClose();
@@ -89,12 +94,14 @@ function MobileDrawer({
             className="text-left text-orange-600 font-semibold"
           >
             Login
-          </button>
+          </Button>
         ) : (
           <div className="pt-2">
-            <p className="text-sm text-gray-700 mb-1">Signed in as</p>
-            <p className="text-sm font-semibold text-black mb-2">{user?.name}</p>
-            <button
+            <Paragraph className="text-sm text-gray-700 mb-1">Signed in as</Paragraph>
+            <Paragraph className="text-sm font-semibold text-black mb-2">{user?.name}</Paragraph>
+
+            <Button
+              variant="link"
               onClick={() => {
                 logout({ returnTo: window.location.origin });
                 onClose();
@@ -102,7 +109,7 @@ function MobileDrawer({
               className="text-left text-red-600 text-sm"
             >
               Log out
-            </button>
+            </Button>
           </div>
         )}
       </nav>
