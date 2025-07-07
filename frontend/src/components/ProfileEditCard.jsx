@@ -1,8 +1,7 @@
-// src/components/ProfileEditCard.jsx
 import React, { useState, useEffect } from "react";
 import InputField from "../common/InputField";
 import Button from "../common/Button";
-import AddressModal from "../common/AddressModal";
+import { AddressModal } from "../common";
 import { useAuth0 } from "@auth0/auth0-react";
 import api from "../api/api";
 import endpoint from "../api/endpoints";
@@ -24,10 +23,9 @@ export default function ProfileEditCard() {
       if (user?.email) {
         try {
           const token = await getAccessTokenSilently();
-          const res = await api.get(
-            endpoint.GET_CUSTOMER_BY_EMAIL(user.email),
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
+          const res = await api.get(endpoint.GET_CUSTOMER_BY_EMAIL(user.email), {
+            headers: { Authorization: `Bearer ${token}` },
+          });
 
           const data = res.data;
           setFormData({
@@ -52,10 +50,11 @@ export default function ProfileEditCard() {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log("Submitting:", formData);
+    // You can send PUT/PATCH to update customer info here
   };
 
   return (
-    <div className="border rounded-lg p-6 shadow-sm">
+    <div className="border rounded-lg p-6 shadow-sm max-w-2xl mx-auto">
       <h3 className="text-lg font-semibold mb-4">Profile Information</h3>
       <form onSubmit={handleSubmit}>
         <InputField

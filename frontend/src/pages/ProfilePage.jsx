@@ -1,11 +1,9 @@
-// src/pages/ProfilePage.jsx
 import React, { useState, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import api from "../api/api";
 import endpoint from "../api/endpoints";
-import { AddressModal } from "../common";
 import { RecentPurchases, SettingsCard } from "../components";
-import { ErrorMessage } from "../common";
+import { ErrorMessage, CreateAddressModal } from "../common";
 import { Link, useNavigate } from "react-router-dom";
 
 export default function ProfilePage() {
@@ -84,7 +82,7 @@ export default function ProfilePage() {
       </div>
 
       {showAddressModal && (
-        <AddressModal onClose={() => setShowAddressModal(false)} />
+        <CreateAddressModal onClose={() => setShowAddressModal(false)} />
       )}
     </div>
   );
