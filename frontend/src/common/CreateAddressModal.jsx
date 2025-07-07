@@ -3,8 +3,13 @@ import React, { useState } from "react";
 import InputField from "./InputField";
 import Dropdown from "./Dropdown";
 import Button from "./Button";
+import api from "../api/api";
+import endpoint from "../api/endpoints";
+import { useAuth0 } from "@auth0/auth0-react";
 
-export default function CreateAddressModal({ onClose }) {
+export default function CreateAddressModal({ onClose, onAddressCreated }) {
+  const { getAccessTokenSilently } = useAuth0();
+
   const [formData, setFormData] = useState({
     fullName: "",
     address1: "",
@@ -18,6 +23,17 @@ export default function CreateAddressModal({ onClose }) {
     defaultShipping: false,
   });
 
+  const stateOptions = [
+    { label: "-- Select --", value: "" },
+    { label: "California", value: "CA" },
+    { label: "New York", value: "NY" },
+    { label: "Texas", value: "TX" },
+    { label: "Ontario", value: "ON" },
+    { label: "Quebec", value: "QC" },
+    { label: "British Columbia", value: "BC" },
+    { label: "Alberta", value: "AB" },
+  ];
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
@@ -26,10 +42,31 @@ export default function CreateAddressModal({ onClose }) {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Create New Address:", formData);
-    onClose();
+
+    try {
+      const token = await getAccessTokenSilently();
+
+      const res = await api.post(
+        endpoint.CREATE_NEW_ADDRESS(),
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log("✅ Address saved:", res.data);
+      alert("Address saved successfully!");
+
+      if (onAddressCreated) onAddressCreated(); // Optional callback for parent refresh
+      onClose();
+    } catch (err) {
+      console.error("❌ Error saving address:", err);
+      alert("Failed to save address. Please try again.");
+    }
   };
 
   return (
@@ -54,7 +91,14 @@ export default function CreateAddressModal({ onClose }) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <InputField label="City" name="city" value={formData.city} onChange={handleChange} required />
-            <Dropdown label="State" name="state" value={formData.state} onChange={handleChange} options={["-- Select --", "CA", "NY", "TX"]} required />
+            <Dropdown
+              label="State"
+              name="state"
+              value={formData.state}
+              onChange={handleChange}
+              options={stateOptions}
+              required
+            />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -74,14 +118,23 @@ export default function CreateAddressModal({ onClose }) {
             </label>
 
             <label className="flex items-center gap-2">
-              <input type="checkbox" name="defaultShipping" checked={formData.defaultShipping} onChange={handleChange} />
+              <input
+                type="checkbox"
+                name="defaultShipping"
+                checked={formData.defaultShipping}
+                onChange={handleChange}
+              />
               <span>Make this my default shipping address</span>
             </label>
           </div>
 
           <div className="mt-6 flex justify-end gap-4">
-            <Button type="submit" className="bg-red-600 hover:bg-red-700">Save Address</Button>
-            <Button variant="outline" onClick={onClose}>Cancel</Button>
+            <Button type="submit" className="bg-red-600 hover:bg-red-700">
+              Save Address
+            </Button>
+            <Button variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
           </div>
         </form>
       </div>

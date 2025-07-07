@@ -44,6 +44,7 @@ const endpoint = {
     // NETSUITE REST API Endpoints
     GET_CUSTOMER: (id) => `/netsuite-rest/customer/${id}`,
     GET_SALES_ORDER: (id) => `/netsuite-rest/salesOrder/${id}`,
+    CREATE_NEW_ADDRESS: () => '/suiteql/customer/address/create',
 };
 
 export default endpoint;
