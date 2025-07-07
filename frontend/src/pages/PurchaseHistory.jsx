@@ -1,5 +1,5 @@
 // src/pages/PurchaseHistory.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import InputField from "../common/InputField";
 import Dropdown from "../common/Dropdown";
 import Breadcrumb from "../common/Breadcrumb";
@@ -8,6 +8,7 @@ import endpoint from "../api/endpoints";
 import { useAuth0 } from "@auth0/auth0-react";
 import Loading from "../common/Loading";
 import { ErrorMessage } from "../common";
+import Paragraph from "../common/Paragraph";
 
 export default function PurchaseHistory() {
   const { user, getAccessTokenSilently } = useAuth0();
@@ -16,47 +17,70 @@ export default function PurchaseHistory() {
   const [status, setStatus] = useState("All");
   const [sort, setSort] = useState("recent");
   const [orders, setOrders] = useState([]);
+  const [filteredOrders, setFilteredOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  React.useEffect(() => {
+  const sortOptions = ["Most Recent", "Oldest First"];
+  const sortValues = ["recent", "oldest"];
+  const statusOptions = ["All", "Open", "Delivered", "Pending Fulfillment", "Billed"];
+
+  // Fetch orders
+  useEffect(() => {
     async function fetchOrders() {
       if (!user?.sub) return;
       setLoading(true);
       setError(null);
       try {
         const token = await getAccessTokenSilently();
-        const url = endpoint.GET_TRANSACTION_BY_EMAIL("liamtran@gmail.com");
-        const res = await api.get(url, { headers: { Authorization: `Bearer ${token}` } });
-        setOrders(res.data.items || res.data || []);
+        const url = endpoint.GET_TRANSACTION_BY_EMAIL("jtnc101@yahoo.com"); // Update as needed
+        const res = await api.get(url, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = res.data.items || res.data || [];
+        setOrders(data);
+        setFilteredOrders(data);
       } catch (err) {
         setError(err?.response?.data?.error || "Failed to fetch orders");
       } finally {
         setLoading(false);
       }
     }
+
     fetchOrders();
   }, [user?.sub, getAccessTokenSilently]);
 
-  console.log(orders)
+  // Filter by date range and status
+  useEffect(() => {
+    if (!orders.length) return;
 
-  const filtered = orders
-    .filter(order => status === "All" || order.status === status)
-    .filter(order => {
-      if (!fromDate && !toDate) return true;
-      const orderDate = new Date(order.date);
-      return (!fromDate || new Date(fromDate) <= orderDate) &&
-        (!toDate || orderDate <= new Date(toDate));
-    })
-    .sort((a, b) => {
-      return sort === "recent"
-        ? new Date(b.date) - new Date(a.date)
-        : new Date(a.date) - new Date(b.date);
+    const from = fromDate ? new Date(fromDate) : null;
+    const to = toDate ? new Date(toDate) : null;
+
+    let filtered = orders.filter((order) => {
+      const orderDate = new Date(order.trandate);
+      if (isNaN(orderDate)) return false;
+
+      if (from && orderDate < from) return false;
+      if (to && orderDate > to) return false;
+
+      return true;
     });
 
-  const sortOptions = ["Most Recent", "Oldest First"];
-  const sortValues = ["recent", "oldest"];
-  const statusOptions = ["All", "Open", "Delivered"];
+    if (status !== "All") {
+      filtered = filtered.filter((o) =>
+        (o.status || "Pending Fulfillment").toLowerCase() === status.toLowerCase()
+      );
+    }
+
+    if (sort === "recent") {
+      filtered.sort((a, b) => new Date(b.trandate) - new Date(a.trandate));
+    } else if (sort === "oldest") {
+      filtered.sort((a, b) => new Date(a.trandate) - new Date(b.trandate));
+    }
+
+    setFilteredOrders(filtered);
+  }, [fromDate, toDate, status, sort, orders]);
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-10">
@@ -65,57 +89,82 @@ export default function PurchaseHistory() {
       <h2 className="text-2xl font-bold text-gray-800 mb-6">Purchase History</h2>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6 items-end">
         <InputField
           type="date"
           label="From"
           value={fromDate}
           onChange={(e) => setFromDate(e.target.value)}
+          className="min-w-[150px]"
         />
         <InputField
           type="date"
           label="To"
           value={toDate}
           onChange={(e) => setToDate(e.target.value)}
+          className="min-w-[150px]"
         />
         <Dropdown
           label="Sort By"
           options={sortOptions}
           value={sortOptions[sortValues.indexOf(sort)]}
-          onChange={(e) => setSort(sortValues[sortOptions.indexOf(e.target.value)])}
+          onChange={(e) =>
+            setSort(sortValues[sortOptions.indexOf(e.target.value)])
+          }
+          className="min-w-[150px]"
         />
         <Dropdown
           label="Status"
           options={statusOptions}
           value={status}
           onChange={(e) => setStatus(e.target.value)}
+          className="min-w-[150px]"
         />
       </div>
 
-      {/* Order List */}
-      <div className="bg-white border rounded shadow-sm">
-        {filtered.map((order) => (
+      {/* Scrollable Order List */}
+      <div className="bg-white border rounded shadow-sm max-h-[500px] overflow-y-auto">
+        {loading && <Loading className="text-center py-6" />}
+        {error && (
+          <ErrorMessage message={error} className="text-center py-6" />
+        )}
+        {!loading && filteredOrders.length === 0 && (
+          <Paragraph className="text-center text-gray-500 py-6">
+            No orders match your filters.
+          </Paragraph>
+        )}
+
+        {filteredOrders.map((order) => (
           <div
             key={order.id}
             className="p-4 border-b last:border-b-0 flex justify-between items-center"
           >
             <div>
-              <p className="font-medium text-gray-700">Order #{order.id}</p>
-              <p className="text-sm text-gray-500">Placed on {order.date}</p>
+              <Paragraph className="font-medium">
+                {order.trandisplayname}
+              </Paragraph>
+              <Paragraph className="text-sm text-gray-500 mb-1">
+                Placed on {order.trandate || "Unknown"}
+              </Paragraph>
+              {order.shipcarrier && (
+                <Paragraph className="text-sm text-gray-600">
+                  Carrier:{" "}
+                  <span className="font-medium">{order.shipcarrier}</span>
+                </Paragraph>
+              )}
             </div>
             <div className="text-right">
-              <p className="text-sm text-gray-600">{order.status}</p>
-              <p className="text-base font-semibold text-gray-800">{order.total}</p>
+              <Paragraph className="text-sm text-gray-600">
+                {order.status || "Pending Fulfillment"}
+              </Paragraph>
+              {order.foreigntotal && (
+                <Paragraph className="text-base font-semibold text-gray-800">
+                  ${order.foreigntotal}
+                </Paragraph>
+              )}
             </div>
           </div>
         ))}
-        {filtered.length === 0 && !loading && (
-          <p className="text-center text-gray-500 py-6">
-            No orders match your filters.
-          </p>
-        )}
-        {loading && <Loading className="text-center py-6" />}
-        {error && <ErrorMessage message={error} className="text-center py-6" />}
       </div>
     </div>
   );
