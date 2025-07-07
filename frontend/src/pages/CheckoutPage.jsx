@@ -4,6 +4,12 @@ import InputField from "../common/InputField";
 import Dropdown from "../common/Dropdown";
 
 export default function CheckoutPage() {
+  const states = [
+  { value: "California", label: "California" },
+  { value: "New York", label: "New York" },
+  { value: "Texas", label: "Texas" }
+];
+
   const {
     isAuthenticated,
     isLoading,
@@ -61,7 +67,7 @@ export default function CheckoutPage() {
             <InputField label="Address" placeholder="Example: 1234 Main Street" />
             <InputField placeholder="(optional)" />
             <InputField label="City" />
-            <Dropdown label="State" options={["Alabama", "California", "New York", "Texas"]} />
+            <Dropdown label="State" options={states} />
             <InputField label="Zip Code" placeholder="Example: 94117" />
             <InputField label="Phone Number" placeholder="Example: 555-123-1234" />
             <div className="flex items-center gap-2">

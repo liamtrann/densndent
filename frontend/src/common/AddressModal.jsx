@@ -4,7 +4,12 @@ import Dropdown from "./Dropdown";
 import Button from "./Button";
 
 export default function AddressModal({ onClose }) {
-  const states = ["California", "New York", "Texas"];
+  const states = [
+    { value: "California", label: "California" },
+    { value: "New York", label: "New York" },
+    { value: "Texas", label: "Texas" }
+  ];
+
 
   // Example checkbox state (optional: convert to full form state if needed)
   const [residential, setResidential] = useState(false);

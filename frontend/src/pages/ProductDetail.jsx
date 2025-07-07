@@ -2,11 +2,12 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import Modal from "../components/Modal";
-import { Loading, ErrorMessage, ProductImage, Paragraph, InputField, Button, ShowMoreHtml } from "../common";
+import { Loading, ErrorMessage, ProductImage, Paragraph, InputField, Button, ShowMoreHtml, Dropdown } from "../common";
 import api from "../api/api";
 import { addToCart } from "../redux/slices/cartSlice";
 import endpoint from "../api/endpoints";
 import { delayCall } from "../api/util";
+import axios from "axios";
 
 export default function ProductsPage() {
   const { id } = useParams();
@@ -19,7 +20,8 @@ export default function ProductsPage() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  console.log(product)
+  const [shades, setShades] = useState([]);
+  const [selectedShade, setSelectedShade] = useState("");
 
   useEffect(() => {
     async function fetchProduct() {
@@ -39,6 +41,26 @@ export default function ProductsPage() {
     }
     fetchProduct();
   }, [id]);
+
+  useEffect(() => {
+    if (!product || !product.custitem39) return;
+    // Fetch products with the same custitem39 (parent key)
+    async function fetchShades() {
+
+      try {
+        const res = await axios.post('http://localhost:3001/suiteql/item/by-parent', { parent: product.custitem39 });
+        setShades(res.data.items || []);
+      } catch (err) {
+        console.log(err)
+        setShades([]);
+      }
+    }
+    delayCall(fetchShades)
+  }, [product]);
+
+  useEffect(() => {
+    if (product) setSelectedShade(product.id);
+  }, [product]);
 
   const handleAddToCart = () => {
     if (!product) return;
@@ -67,6 +89,12 @@ export default function ProductsPage() {
       setQuantity(value);
     }
   };
+  console.log(shades)
+  // Prepare shade options for Dropdown
+  const shadeOptions = shades.map((item) => ({
+    value: item.id,
+    label: item.custitem38 || item.itemid
+  }));
 
   if (loading) return <Loading text="Loading product..." />;
   if (error) return <ErrorMessage message={error} />;
@@ -103,6 +131,23 @@ export default function ProductsPage() {
           <div className="text-sm text-gray-500 mt-4">
             MPN: {product.mpn}
           </div>
+          {shades.length > 0 && (
+            <Dropdown
+              label="Shade"
+              options={shadeOptions}
+              value={selectedShade}
+              key={selectedShade.value}
+              onChange={e => {
+                console.log(e.target.value)
+                setSelectedShade(e.target.value);
+                if (e.target.value && e.target.value !== product.id) {
+                  navigate(`/product/${e.target.value}`);
+                }
+              }}
+              className="w-48"
+            />
+          )}
+
           <div className="mt-4">
             <label className="block mb-1 font-medium">Quantity:</label>
             <InputField

@@ -73,39 +73,32 @@ export default function Header() {
         </div>
 
         {/* Right: Auth, Cart on top, Search below */}
-        <div className="flex flex-col items-end space-y-2">
-          {/* Top row: Login + Cart */}
-          <div className="flex items-center space-x-4">
-            <div className="hidden lg:block">
-              <React.Suspense fallback={null}>
-                <AuthButton />
-              </React.Suspense>
-            </div>
-            <CartIndicator count={total} />
-          </div>
-
-          {/* Next line: Search Icon */}
-         <button
+        <div className="flex items-center space-x-4">
+          <button
             onClick={() => setShowSearch(prev => !prev)}
-            className="flex flex-col items-center text-gray-700 hover:text-black transition ml-4"
+            className="flex flex-col items-center text-gray-700 hover:text-black transition"
             aria-label="Toggle search bar"
           >
             <FaSearch className="text-xl" />
             <span className="text-xs mt-1">Search</span>
           </button>
-
-
+          <div className="hidden lg:block">
+            <React.Suspense fallback={null}>
+              <AuthButton />
+            </React.Suspense>
+          </div>
+          <CartIndicator count={total} />
         </div>
       </header>
 
       {/* Search Bar Below Header */}
       {showSearch && (
-          <div className="w-full border-t border-gray-200 bg-white py-4 px-4 flex justify-center">
-            <div className="max-w-3xl w-full">
-              <SearchBar onClose={() => setShowSearch(false)} />
-            </div>
+        <div className="w-full border-t border-gray-200 bg-white py-4 px-4 flex justify-center">
+          <div className="max-w-3xl w-full">
+            <SearchBar onClose={() => setShowSearch(false)} />
           </div>
-     )}
+        </div>
+      )}
 
     </>
   );

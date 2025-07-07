@@ -3,6 +3,7 @@ const endpoint = {
     // SuiteQL Endpoints
     GET_ALL_CLASSIFICATIONS: '/suiteql/classification',
     GET_PRODUCT_BY_ID: (id) => `/suiteql/item/by-id?id=${id}`,
+    POST_GET_PRODUCT_BY_PARENT: () => `/suiteql/item/by-parent`,
     GET_ITEMS_BY_CLASS: ({ classId, limit, offset, sort }) => {
         const params = new URLSearchParams();
         if (classId) params.append('classId', classId);
@@ -34,7 +35,13 @@ const endpoint = {
     GET_COUNT_BY_BRAND: (brand) => `/suiteql/item/count-by-brand?brand=${brand}`,
     GET_TRANSACTION_BY_ID: (id) => `/suiteql/transaction/by-id?id=${id}`,
     GET_TRANSACTION_BY_EMAIL: (email) => `/suiteql/transaction/by-email?email=${email}`,
+    GET_ITEMS_BY_NAME_LIKE: ({ limit, offset }) => {
+        const params = new URLSearchParams();
+        if (limit) params.append('limit', limit);
+        if (offset) params.append('offset', offset);
+        return `/suiteql/item/search-by-name?${params.toString()}`
 
+    },
     // NETSUITE REST API Endpoints
     GET_CUSTOMER: (id) => `/netsuite-rest/customer/${id}`,
     GET_SALES_ORDER: (id) => `/netsuite-rest/salesOrder/${id}`,

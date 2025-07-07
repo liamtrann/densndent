@@ -33,7 +33,7 @@ export default function PurchaseHistory() {
       setError(null);
       try {
         const token = await getAccessTokenSilently();
-        const url = endpoint.GET_TRANSACTION_BY_EMAIL("jtnc101@yahoo.com"); // Update as needed
+        const url = endpoint.GET_TRANSACTION_BY_EMAIL(user.email); // Update as needed
         const res = await api.get(url, {
           headers: { Authorization: `Bearer ${token}` },
         });
