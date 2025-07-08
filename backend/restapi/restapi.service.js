@@ -32,6 +32,14 @@ class RestApiService {
             data
         });
     }
+
+    async patchRecord(recordType, id, data) {
+        return this.makeRequest({
+            method: 'PATCH',
+            endpoint: `/services/rest/record/v1/${recordType}/${id}`,
+            data
+        });
+    }
 }
 
 module.exports = new RestApiService();

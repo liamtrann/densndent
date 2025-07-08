@@ -19,7 +19,7 @@ import { URLS } from "../constants/urls";
 import { Link } from "react-router-dom";
 
 const brandKeys = [
-  "d2-healthcare", "3m", "aurelia", "dmg", "kerr",
+  "d2", "3m", "aurelia", "dmg", "kerr",
   "keystone", "microcopy", "johnson-and-johnson", "dentsply",
   "diadent", "medicom", "premier", "surgical-specialties",
   "flight", "mark3"
@@ -39,14 +39,12 @@ const LandingPage = () => {
       <PromotionsGrid />
       <Catalogues />
       <BestSellersSection />
-      <CategoriesSection />
-
       <BlueBanner
         title="Shop By Brands"
         items={brands}
         columns={{ base: 3, md: 4, lg: 6 }}
         renderItem={({ url, name, key }) => (
-          <Link to={`/brands/${key}`}>
+          <Link to={`/products/by-brand/${key}`}>
             <Image
               src={url}
               alt={name}

@@ -3,12 +3,8 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import api from "../api/api";
 import endpoint from "../api/endpoints";
-import {
-  RecentPurchases,
-  SettingsCard,
-  ProfileEditCard,
-} from "../components";
-import { CreateAddressModal, ErrorMessage } from "../common";
+import { RecentPurchases, SettingsCard, ProfileEditCard } from "../components";
+import { CreateAddressModal, ErrorMessage, Loading } from "../common";
 
 export default function ProfilePage() {
   const { user, getAccessTokenSilently } = useAuth0();
@@ -16,27 +12,26 @@ export default function ProfilePage() {
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [customer, setCustomer] = useState(null);
-  const [defaultShipping, setDefaultShipping] = useState(null);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const fetchCustomer = useCallback(async () => {
     if (user?.email) {
+      setLoading(true);
       try {
         const token = await getAccessTokenSilently();
         const res = await api.get(endpoint.GET_CUSTOMER_BY_EMAIL(user.email), {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        const customerData = res.data;
+        const customerData = res.data[0] || null;
         setCustomer(customerData);
-        const addresses = customerData.addresses || [];
-        const defaultShip = addresses.find((a) => a.defaultShipping);
-        setDefaultShipping(defaultShip || null);
         setError(null);
       } catch (err) {
         setCustomer(null);
-        setDefaultShipping(null);
         setError(err.response?.data?.error || "An error occurred");
+      } finally {
+        setLoading(false);
       }
     }
   }, [user?.email, getAccessTokenSilently]);
@@ -45,8 +40,45 @@ export default function ProfilePage() {
     fetchCustomer();
   }, [fetchCustomer]);
 
+  // Handler for creating profile
+  const handleCreateProfile = async (newData) => {
+    const { firstName, lastName, homePhone, mobilePhone } = newData;
+    setLoading(true);
+    try {
+      const token = await getAccessTokenSilently();
+      await api.post(
+        endpoint.POST_CREATE_CUSTOMER(),
+        {
+          firstName: firstName,
+          lastName: lastName,
+          homePhone: homePhone,
+          mobilePhone: mobilePhone,
+          email: user.email,
+          entityStatus: {
+            id: 6
+          },
+          subsidiary: {
+            id: 2
+          },
+          category: {
+            id: 15
+          },
+          isPerson: true
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setShowEditModal(false);
+      fetchCustomer(); // Refresh data
+    } catch (err) {
+      setError("Failed to create profile.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-10">
+      {loading && <Loading />}
       {error && <ErrorMessage message={error} />}
 
       <div className="flex justify-between items-center mb-6">
@@ -64,34 +96,49 @@ export default function ProfilePage() {
           title="Profile"
           description={
             <>
-              <p>{user?.name}</p>
-              <p>{user?.email}</p>
-              {customer?.entityid && <p>Customer #: {customer.entityid}</p>}
+              <div>{[customer?.firstname, customer?.lastname].filter(Boolean).join(' ')}</div>
+              <div>{customer?.email}</div>
+              {customer?.entityid && <div>Customer #: {customer.entityid}</div>}
             </>
           }
-          actionLabel="Edit"
-          onAction={(e) => {
+          actionLabel={customer ? undefined : "Create Profile"}
+          onAction={customer ? undefined : (e => {
             e.preventDefault();
             setShowEditModal(true);
-          }}
+          })}
         />
 
+        {/* Address Card */}
         <SettingsCard
-          title="Shipping"
+          title="Addresses"
           description={
-            defaultShipping ? (
-              <>
-                <p>{defaultShipping.fullName}</p>
-                <p>{defaultShipping.address1}</p>
-                <p>
-                  {defaultShipping.city}, {defaultShipping.state} {defaultShipping.zipCode}
-                </p>
-              </>
-            ) : (
-              "We have no default address on file for this account."
-            )
+            <>
+              {customer?.shipping_address_name && (
+                <div className="mb-2">
+                  <div className="font-semibold">Shipping Address</div>
+                  {customer.shipping_address_name.split('\n').map((line, idx) => (
+                    <div key={idx}>{line}</div>
+                  ))}
+                </div>
+              )}
+              {customer?.billing_address_name && (
+                <div>
+                  <div className="font-semibold">Billing Address</div>
+                  <div>{customer.billing_address_name}</div>
+                  {customer.billing_city || customer.billing_state || customer.billing_zip ? (
+                    <div>
+                      {[customer.billing_city, customer.billing_state, customer.billing_zip].filter(Boolean).join(', ')}
+                    </div>
+                  ) : null}
+                  {customer.billing_country && <div>{customer.billing_country}</div>}
+                </div>
+              )}
+              {!customer?.shipping_address_name && !customer?.billing_address_name && (
+                <div>We have no default address on file for this account.</div>
+              )}
+            </>
           }
-          actionLabel={defaultShipping ? "Edit" : "Create New Address"}
+          actionLabel={customer?.shipping_address_name || customer?.billing_address_name ? "Update Address" : "Create New Address"}
           onAction={(e) => {
             e.preventDefault();
             setShowAddressModal(true);
@@ -108,13 +155,27 @@ export default function ProfilePage() {
       {showAddressModal && (
         <CreateAddressModal
           onClose={() => setShowAddressModal(false)}
-          onAddressCreated={fetchCustomer}
-          isEditing={!!defaultShipping}
-          existingAddress={defaultShipping}
+          onAddressCreated={() => {
+            setShowAddressModal(false);
+            fetchCustomer();
+          }}
+          // Pass current address and mode
+          address={customer?.shipping_address_name || customer?.billing_address_name ? {
+            address1: customer?.shipping_addr1 || "",
+            city: customer?.shipping_city || customer?.billing_city || "",
+            state: customer?.shipping_state || customer?.billing_state || "",
+            zip: customer?.shipping_zip || customer?.billing_zip || "",
+            defaultBilling: !!customer?.billing_address_name,
+            defaultShipping: !!customer?.shipping_address_name,
+            // Add more fields as needed
+          } : null}
+          mode={customer?.shipping_address_name || customer?.billing_address_name ? "update" : "create"}
+          customerId={customer?.id}
         />
       )}
 
-      {showEditModal && (
+      {/* Edit Profile Modal */}
+      {showEditModal && !customer && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
           <div className="bg-white rounded p-6 w-full max-w-xl relative">
             <button
@@ -123,7 +184,7 @@ export default function ProfilePage() {
             >
               &times;
             </button>
-            <ProfileEditCard onClose={() => setShowEditModal(false)} />
+            <ProfileEditCard onClose={() => setShowEditModal(false)} onCreate={handleCreateProfile} />
           </div>
         </div>
       )}

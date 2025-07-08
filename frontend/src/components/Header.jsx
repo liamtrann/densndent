@@ -80,7 +80,6 @@ export default function Header() {
             aria-label="Toggle search bar"
           >
             <FaSearch className="text-xl" />
-            <span className="text-xs mt-1">Search</span>
           </button>
           <div className="hidden lg:block">
             <React.Suspense fallback={null}>

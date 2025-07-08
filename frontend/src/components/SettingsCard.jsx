@@ -17,7 +17,7 @@ export default function SettingsCard({
         </Paragraph>
       ));
     }
-    return <Paragraph className="text-sm mb-4">{description}</Paragraph>;
+    return <div className="text-sm mb-4">{description}</div>;
   };
 
   return (

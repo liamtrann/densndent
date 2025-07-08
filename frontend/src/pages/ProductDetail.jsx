@@ -51,7 +51,6 @@ export default function ProductsPage() {
         const res = await axios.post('http://localhost:3001/suiteql/item/by-parent', { parent: product.custitem39 });
         setShades(res.data.items || []);
       } catch (err) {
-        console.log(err)
         setShades([]);
       }
     }
@@ -89,7 +88,6 @@ export default function ProductsPage() {
       setQuantity(value);
     }
   };
-  console.log(shades)
   // Prepare shade options for Dropdown
   const shadeOptions = shades.map((item) => ({
     value: item.id,
@@ -138,7 +136,6 @@ export default function ProductsPage() {
               value={selectedShade}
               key={selectedShade.value}
               onChange={e => {
-                console.log(e.target.value)
                 setSelectedShade(e.target.value);
                 if (e.target.value && e.target.value !== product.id) {
                   navigate(`/product/${e.target.value}`);

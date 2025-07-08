@@ -2,11 +2,10 @@
 const express = require('express');
 const router = express.Router();
 const checkJwt = require('../auth/middleware');
-const orderRoutes = require('./order/order.route');
+const restApiService = require('./restapi.service');
 
 // Protect all /restapi routes with JWT
-router.use(checkJwt);
-router.use('/order', orderRoutes);
+// router.use(checkJwt);
 
 // Error handler for UnauthorizedError from express-jwt
 router.use((err, req, res, next) => {
@@ -14,6 +13,50 @@ router.use((err, req, res, next) => {
         return res.status(401).json({ error: 'Invalid or missing token' });
     }
     next(err);
+});
+
+// GET a record by type and id
+router.get('/:recordType/:id', async (req, res, next) => {
+    try {
+        const { recordType, id } = req.params;
+        const result = await restApiService.getRecord(recordType, id);
+        res.json(result);
+    } catch (err) {
+        next(err);
+    }
+});
+
+// GET all records of a type (with optional query params)
+router.get('/:recordType', async (req, res, next) => {
+    try {
+        const { recordType } = req.params;
+        const result = await restApiService.searchRecords(recordType, req.query);
+        res.json(result);
+    } catch (err) {
+        next(err);
+    }
+});
+
+// POST a new record
+router.post('/:recordType', async (req, res, next) => {
+    try {
+        const { recordType } = req.params;
+        const result = await restApiService.postRecord(recordType, req.body);
+        res.json(result);
+    } catch (err) {
+        next(err);
+    }
+});
+
+// PATCH update a record by type and id
+router.patch('/:recordType/:id', async (req, res, next) => {
+    try {
+        const { recordType, id } = req.params;
+        const result = await restApiService.patchRecord(recordType, id, req.body);
+        res.json(result);
+    } catch (err) {
+        next(err);
+    }
 });
 
 module.exports = router;

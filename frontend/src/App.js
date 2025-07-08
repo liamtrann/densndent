@@ -8,8 +8,9 @@ import {
   CheckoutPage,
   FAQPage,
   ProfilePage,
-  ListProductPage,
-  ListProductsByBrandPage,
+  ListProductsByClass,
+  ListProductsByBrand,
+  ListProductsByName
 } from "./pages";
 
 import Header from "./components/Header";
@@ -28,11 +29,11 @@ function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/cart" element={<CartPage />} />
-          <Route path="/brands/d2-healthcare" element={<AllList />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/faq" element={<FAQPage />} />
-          <Route path="/products/:name" element={<ListProductPage />} />
-          <Route path="/brands/:brandName" element={<ListProductsByBrandPage />} />
+          <Route path="/products/by-class/:name" element={<ListProductsByClass />} />
+          <Route path="/products/by-brand/:brandName" element={<ListProductsByBrand />} />
+          <Route path="/products/by-name/:name" element={<ListProductsByName />} />
           <Route path="/promotions" element={<div>Promotions Page</div>} />
           <Route path="/clearance" element={<div>Clearance Page</div>} />
           <Route path="/partners" element={<div>Our Partners Page</div>} />

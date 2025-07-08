@@ -61,7 +61,7 @@ function MobileDrawer({
                         return (
                           <Link
                             key={name + (id ? `-${id}` : '')}
-                            to={id ? `/products/${name.toLowerCase()}-${id}` : `/products/${name.toLowerCase()}`}
+                            to={id ? `/products/by-class/${name.toLowerCase()}-${id}` : `/products/by-class/${name.toLowerCase()}`}
                             className="block py-1"
                             onClick={onClose}
                           >
