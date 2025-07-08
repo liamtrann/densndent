@@ -39,8 +39,6 @@ const LandingPage = () => {
       <PromotionsGrid />
       <Catalogues />
       <BestSellersSection />
-      <CategoriesSection />
-
       <BlueBanner
         title="Shop By Brands"
         items={brands}
