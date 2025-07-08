@@ -60,12 +60,6 @@ export default function CreateAddressModal({ onClose, onAddressCreated, address 
     );
   }
 
-  useEffect(() => {
-    if (existingAddress) {
-      setFormData({ ...existingAddress });
-    }
-  }, [existingAddress]);
-
   const stateOptions = [
     { label: "-- Select --", value: "" },
     { label: "California", value: "BC" },
@@ -157,9 +151,23 @@ export default function CreateAddressModal({ onClose, onAddressCreated, address 
           <p className="text-xs text-gray-500">Example: 1234 Main Street</p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <InputField label="City" name="city" value={formData.city} onChange={handleChange} required />
-            <Dropdown label="State" name="state" value={formData.state} onChange={handleChange} options={stateOptions} required />
+            <InputField
+              label="City"
+              name="city"
+              value={formData.city}
+              onChange={handleChange}
+              required
+            />
+            <Dropdown
+              label="State"
+              name="state"
+              value={formData.state}
+              onChange={handleChange}
+              options={stateOptions}
+              required
+            />
           </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <InputField
               label="Zip Code"
