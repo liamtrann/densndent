@@ -23,7 +23,6 @@ export default function AddressModal({ onClose }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Submitted Email Update:", formData);
     onClose();
   };
 

@@ -24,8 +24,6 @@ export default function ProfilePage() {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        console.log("👤 Customer Response:", res.data);
-
         const customerData = res.data[0] || null;
         setCustomer(customerData);
         setError(null);
@@ -44,7 +42,6 @@ export default function ProfilePage() {
 
   // Handler for creating profile
   const handleCreateProfile = async (newData) => {
-    console.log(newData);
     const { firstName, lastName, homePhone, mobilePhone } = newData;
     setLoading(true);
     try {
@@ -73,14 +70,11 @@ export default function ProfilePage() {
       setShowEditModal(false);
       fetchCustomer(); // Refresh data
     } catch (err) {
-      console.log(err)
       setError("Failed to create profile.");
     } finally {
       setLoading(false);
     }
   };
-
-  console.log(customer)
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-10">

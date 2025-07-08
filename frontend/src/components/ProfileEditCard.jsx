@@ -69,8 +69,6 @@ export default function ProfileEditCard({ onClose, onCreate }) {
     if (onCreate) onCreate(formData); // Call parent create
   };
 
-  console.log(errors)
-
   return (
     <div>
       <h3 className="text-lg font-semibold mb-4">Profile Information</h3>
