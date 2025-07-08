@@ -1,5 +1,5 @@
 // src/common/CreateAddressModal.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import InputField from "./InputField";
 import Dropdown from "./Dropdown";
 import Button from "./Button";
@@ -7,7 +7,12 @@ import api from "../api/api";
 import endpoint from "../api/endpoints";
 import { useAuth0 } from "@auth0/auth0-react";
 
-export default function CreateAddressModal({ onClose, onAddressCreated }) {
+export default function CreateAddressModal({
+  onClose,
+  onAddressCreated,
+  isEditing = false,
+  existingAddress = null,
+}) {
   const { user, getAccessTokenSilently } = useAuth0();
 
   const [formData, setFormData] = useState({
@@ -22,6 +27,12 @@ export default function CreateAddressModal({ onClose, onAddressCreated }) {
     defaultBilling: false,
     defaultShipping: false,
   });
+
+  useEffect(() => {
+    if (existingAddress) {
+      setFormData({ ...existingAddress });
+    }
+  }, [existingAddress]);
 
   const stateOptions = [
     { label: "-- Select --", value: "" },
@@ -45,30 +56,31 @@ export default function CreateAddressModal({ onClose, onAddressCreated }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // try {
-    //   const token = await getAccessTokenSilently();
+    try {
+      const token = await getAccessTokenSilently();
       const payload = {
         email: user?.email,
         address: formData,
       };
 
-      console.log("📦 Submitting address payload:", payload);
+      const method = isEditing ? api.put : api.post;
+      const endpointFn = isEditing ? endpoint.UPDATE_ADDRESS() : endpoint.CREATE_NEW_ADDRESS();
 
-    //   const res = await api.post(endpoint.CREATE_NEW_ADDRESS(), payload, {
-    //     headers: {
-    //       Authorization: `Bearer ${token}`,
-    //     },
-    //   });
+      const res = await method(endpointFn, payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    //   console.log("✅ Address saved:", res.data);
-    //   alert("Address saved successfully!");
+      console.log("✅ Address saved:", res.data);
+      alert("Address saved successfully!");
 
-    //   if (onAddressCreated) onAddressCreated(); // Refresh caller
-    //   onClose();
-    // } catch (err) {
-    //   console.error("❌ Error saving address:", err.response?.data || err.message || err);
-    //   alert("Failed to save address. Please try again.");
-    // }
+      if (onAddressCreated) onAddressCreated();
+      onClose();
+    } catch (err) {
+      console.error("❌ Error saving address:", err.response?.data || err.message || err);
+      alert("Failed to save address. Please try again.");
+    }
   };
 
   return (
@@ -81,107 +93,32 @@ export default function CreateAddressModal({ onClose, onAddressCreated }) {
           &times;
         </button>
 
-        <h2 className="text-xl font-semibold mb-4">Add New Address</h2>
+        <h2 className="text-xl font-semibold mb-4">
+          {isEditing ? "Update Address" : "Add New Address"}
+        </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <InputField
-            label="Full Name"
-            name="fullName"
-            value={formData.fullName}
-            onChange={handleChange}
-            required
-          />
-          <InputField
-            label="Address"
-            name="address1"
-            value={formData.address1}
-            onChange={handleChange}
-            required
-          />
-          <p className="text-xs text-gray-500">Example: 1234 Main Street</p>
-
-          <InputField
-            name="address2"
-            value={formData.address2}
-            onChange={handleChange}
-            placeholder="(optional)"
-          />
-          <p className="text-xs text-gray-500">Example: Apt. 3 or Suite #1516</p>
-
+          <InputField label="Full Name" name="fullName" value={formData.fullName} onChange={handleChange} required />
+          <InputField label="Address" name="address1" value={formData.address1} onChange={handleChange} required />
+          <InputField name="address2" value={formData.address2} onChange={handleChange} placeholder="(optional)" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <InputField
-              label="City"
-              name="city"
-              value={formData.city}
-              onChange={handleChange}
-              required
-            />
-            <Dropdown
-              label="State"
-              name="state"
-              value={formData.state}
-              onChange={handleChange}
-              options={stateOptions}
-              required
-            />
+            <InputField label="City" name="city" value={formData.city} onChange={handleChange} required />
+            <Dropdown label="State" name="state" value={formData.state} onChange={handleChange} options={stateOptions} required />
           </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <InputField
-              label="Zip Code"
-              name="zipCode"
-              value={formData.zipCode}
-              onChange={handleChange}
-              required
-            />
-            <InputField
-              label="Phone Number"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              required
-            />
+            <InputField label="Zip Code" name="zipCode" value={formData.zipCode} onChange={handleChange} required />
+            <InputField label="Phone Number" name="phone" value={formData.phone} onChange={handleChange} required />
           </div>
 
           <div className="space-y-2">
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                name="isResidential"
-                checked={formData.isResidential}
-                onChange={handleChange}
-              />
-              <span>This is a Residential Address</span>
-            </label>
-
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                name="defaultBilling"
-                checked={formData.defaultBilling}
-                onChange={handleChange}
-              />
-              <span>Make this my default billing address</span>
-            </label>
-
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                name="defaultShipping"
-                checked={formData.defaultShipping}
-                onChange={handleChange}
-              />
-              <span>Make this my default shipping address</span>
-            </label>
+            <InputField type="checkbox" name="isResidential" checked={formData.isResidential} onChange={handleChange} label="This is a Residential Address" />
+            <InputField type="checkbox" name="defaultBilling" checked={formData.defaultBilling} onChange={handleChange} label="Make this my default billing address" />
+            <InputField type="checkbox" name="defaultShipping" checked={formData.defaultShipping} onChange={handleChange} label="Make this my default shipping address" />
           </div>
 
           <div className="mt-6 flex justify-end gap-4">
-            <Button type="submit" className="bg-red-600 hover:bg-red-700">
-              Save Address
-            </Button>
-            <Button variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
+            <Button type="submit" className="bg-red-600 hover:bg-red-700">Save Address</Button>
+            <Button variant="outline" onClick={onClose}>Cancel</Button>
           </div>
         </form>
       </div>

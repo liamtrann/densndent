@@ -2,19 +2,18 @@
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useAuth0 } from "@auth0/auth0-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import InputField from "../common/InputField";
 import Button from "../common/Button";
 import Dropdown from "../common/Dropdown";
 import Paragraph from "../common/Paragraph";
-import { ProductImage } from "../common";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import CheckoutSummary from "../components/CheckoutSummary";
 
 export default function CheckoutPage() {
   const { isAuthenticated, isLoading, loginWithRedirect, getAccessTokenSilently } = useAuth0();
   const cart = useSelector((state) => state.cart.items);
   const location = useLocation();
   const navigate = useNavigate();
-
   const [promoCode, setPromoCode] = useState("");
   const [addressFilled, setAddressFilled] = useState(false);
 
@@ -42,67 +41,6 @@ export default function CheckoutPage() {
       </div>
     );
   }
-
-  const subtotal = cart.reduce(
-    (sum, item) => sum + (item.unitprice || item.price || 0) * item.quantity,
-    0
-  ).toFixed(2);
-
-  console.log(cart)
-
-  const renderCartSummary = () => (
-    <div className="border p-6 rounded shadow-md bg-white">
-      <h3 className="text-lg font-semibold mb-4">Summary</h3>
-      <div className="mb-2 flex justify-between text-sm">
-        <span>SUBTOTAL {cart.length} ITEM{cart.length !== 1 ? "S" : ""}</span>
-        <span className="font-semibold">${subtotal}</span>
-      </div>
-      <Paragraph className="text-xs text-gray-500 mb-2">
-        Subtotal Does Not Include Shipping Or Tax
-      </Paragraph>
-      <div className="mb-2 flex justify-between text-sm">
-        <span>Shipping</span>
-        <span>$0.00</span>
-      </div>
-      <div className="mb-4 flex justify-between font-semibold">
-        <span>TOTAL</span>
-        <span>${subtotal}</span>
-      </div>
-
-      <div className="mb-4">
-        <h4 className="text-sm font-medium mb-1">Have a Promo Code?</h4>
-        <div className="flex gap-2">
-          <InputField
-            value={promoCode}
-            onChange={(e) => setPromoCode(e.target.value)}
-            placeholder="Enter code"
-          />
-          <Button onClick={() => {}}>Apply</Button>
-        </div>
-      </div>
-
-      <div className="mt-4">
-        <h4 className="text-sm font-medium mb-2">Items to Ship ({cart.length})</h4>
-        <div className="space-y-3 text-sm">
-          {cart.map((item, idx) => (
-            <div key={item.id + "-" + idx} className="p-3 border rounded space-y-1">
-              <div className="font-semibold">{item.itemid || item.displayname}</div>
-              <div>Unit price: ${item.unitprice || item.price}</div>
-              <div>Quantity: {item.quantity}</div>
-              <div className="font-bold">Amount: ${(item.unitprice || item.price) * item.quantity}</div>
-            </div>
-          ))}
-        </div>
-        <Button
-          className="text-blue-600 text-xs underline mt-2"
-          variant="link"
-          onClick={() => navigate("/cart")}
-        >
-          Edit Cart
-        </Button>
-      </div>
-    </div>
-  );
 
   const renderStep = () => {
     const step = location.pathname.split("/")[2] || "shipping";
@@ -138,23 +76,18 @@ export default function CheckoutPage() {
             </div>
           </div>
         );
-
       case "payment":
         return (
           <div>
             <h2 className="text-xl font-semibold mb-4">Payment</h2>
             <Paragraph>Payment form placeholder</Paragraph>
             <div className="flex justify-end mt-6">
-              <Button
-                className="px-6 py-3"
-                onClick={() => navigate("/checkout/review")}
-              >
+              <Button className="px-6 py-3" onClick={() => navigate("/checkout/review")}>
                 Continue to Review
               </Button>
             </div>
           </div>
         );
-
       case "review":
         return (
           <div>
@@ -165,7 +98,6 @@ export default function CheckoutPage() {
             </div>
           </div>
         );
-
       default:
         return null;
     }
@@ -183,11 +115,11 @@ export default function CheckoutPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left */}
+        {/* Left: Steps */}
         <div className="lg:col-span-2">{renderStep()}</div>
 
-        {/* Right */}
-        {renderCartSummary()}
+        {/* Right: Summary */}
+        <CheckoutSummary promoCode={promoCode} setPromoCode={setPromoCode} />
       </div>
     </div>
   );
