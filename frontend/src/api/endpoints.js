@@ -44,8 +44,10 @@ const endpoint = {
 
     },
     // NETSUITE REST API Endpoints
-    GET_CUSTOMER: (id) => `/netsuite-rest/customer/${id}`,
-    GET_SALES_ORDER: (id) => `/netsuite-rest/salesOrder/${id}`,
+    GET_CUSTOMER: (id) => `/restapi/customer/${id}`,
+    GET_SALES_ORDER: (id) => `/restapi/salesOrder/${id}`,
+    PATCH_UPDATE_CUSTOMER: (id) => `/restapi/customer/${id}`,
+    POST_CREATE_CUSTOMER: () => `/restapi/customer`,
 };
 
 export default endpoint;
