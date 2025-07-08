@@ -1,13 +1,15 @@
 // src/pages/ProfilePage.jsx
 import React, { useState, useEffect, useCallback } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
+import { useNavigate } from "react-router-dom";
 import api from "../api/api";
 import endpoint from "../api/endpoints";
 import { RecentPurchases, SettingsCard, ProfileEditCard } from "../components";
-import { CreateAddressModal, ErrorMessage, Loading } from "../common";
+import { CreateAddressModal, ErrorMessage, Loading, TextButton } from "../common";
 
 export default function ProfilePage() {
   const { user, getAccessTokenSilently } = useAuth0();
+  const navigate = useNavigate();
 
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -83,9 +85,7 @@ export default function ProfilePage() {
 
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-lg font-semibold text-gray-800">Recent Purchases</h2>
-        <a href="/profile/history" className="text-sm text-blue-600 hover:underline">
-          View Purchase History →
-        </a>
+        <TextButton onClick={() => navigate("/profile/history")}>View Purchase History →</TextButton>
       </div>
 
       <RecentPurchases />
