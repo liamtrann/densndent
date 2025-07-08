@@ -1,5 +1,4 @@
-// src/pages/ProfilePage.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import api from "../api/api";
 import endpoint from "../api/endpoints";
@@ -8,30 +7,43 @@ import { CreateAddressModal, ErrorMessage } from "../common";
 
 export default function ProfilePage() {
   const { user, getAccessTokenSilently } = useAuth0();
+
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [customer, setCustomer] = useState(null);
+  const [defaultShipping, setDefaultShipping] = useState(null);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    async function fetchCustomer() {
-      if (user?.email) {
-        try {
-          const token = await getAccessTokenSilently();
-          const res = await api.get(
-            endpoint.GET_CUSTOMER_BY_EMAIL(user.email),
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-          setCustomer(res.data);
-          setError(null);
-        } catch (err) {
-          setCustomer(null);
-          setError(err.response?.data?.error || "An error occurred");
-        }
+  // Reusable fetcher
+  const fetchCustomer = useCallback(async () => {
+    if (user?.email) {
+      try {
+        const token = await getAccessTokenSilently();
+        const res = await api.get(endpoint.GET_CUSTOMER_BY_EMAIL(user.email), {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        console.log("👤 Customer Response:", res.data);
+
+        const customerData = res.data;
+        setCustomer(customerData);
+
+        const addresses = customerData.addresses || [];
+        const defaultShip = addresses.find((a) => a.defaultShipping);
+        setDefaultShipping(defaultShip || null);
+
+        setError(null);
+      } catch (err) {
+        setCustomer(null);
+        setDefaultShipping(null);
+        setError(err.response?.data?.error || "An error occurred");
       }
     }
-    fetchCustomer();
   }, [user?.email, getAccessTokenSilently]);
+
+  useEffect(() => {
+    fetchCustomer();
+  }, [fetchCustomer]);
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-10">
@@ -51,6 +63,7 @@ export default function ProfilePage() {
 
       <h2 className="text-lg font-semibold text-gray-800 mt-10 mb-4">My Settings</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Profile Card */}
         <SettingsCard
           title="Profile"
           description={
@@ -67,16 +80,31 @@ export default function ProfilePage() {
           }}
         />
 
+        {/* Shipping Card */}
         <SettingsCard
           title="Shipping"
-          description="We have no default address on file for this account."
-          actionLabel="Create New Address"
+          description={
+            defaultShipping ? (
+              <>
+                <p>{defaultShipping.fullName}</p>
+                <p>{defaultShipping.address1}</p>
+                <p>
+                  {defaultShipping.city}, {defaultShipping.state}{" "}
+                  {defaultShipping.zipCode}
+                </p>
+              </>
+            ) : (
+              "We have no default address on file for this account."
+            )
+          }
+          actionLabel={defaultShipping ? "Update Address" : "Create New Address"}
           onAction={(e) => {
             e.preventDefault();
             setShowAddressModal(true);
           }}
         />
 
+        {/* Payment Card (Placeholder) */}
         <SettingsCard
           title="Payment"
           description="We have no default credit card on file for this account."
@@ -84,9 +112,18 @@ export default function ProfilePage() {
         />
       </div>
 
+      {/* Address Modal */}
       {showAddressModal && (
-        <CreateAddressModal onClose={() => setShowAddressModal(false)} />
+        <CreateAddressModal
+          onClose={() => setShowAddressModal(false)}
+          onAddressCreated={() => {
+            setShowAddressModal(false);
+            fetchCustomer(); // refresh data
+          }}
+        />
       )}
+
+      {/* Edit Profile Modal */}
       {showEditModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
           <div className="bg-white rounded p-6 w-full max-w-xl relative">

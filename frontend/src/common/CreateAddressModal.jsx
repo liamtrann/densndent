@@ -8,7 +8,7 @@ import endpoint from "../api/endpoints";
 import { useAuth0 } from "@auth0/auth0-react";
 
 export default function CreateAddressModal({ onClose, onAddressCreated }) {
-  const { getAccessTokenSilently } = useAuth0();
+  const { user, getAccessTokenSilently } = useAuth0();
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -45,28 +45,30 @@ export default function CreateAddressModal({ onClose, onAddressCreated }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    try {
-      const token = await getAccessTokenSilently();
+    // try {
+    //   const token = await getAccessTokenSilently();
+      const payload = {
+        email: user?.email,
+        address: formData,
+      };
 
-      const res = await api.post(
-        endpoint.CREATE_NEW_ADDRESS(),
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      console.log("📦 Submitting address payload:", payload);
 
-      console.log("✅ Address saved:", res.data);
-      alert("Address saved successfully!");
+    //   const res = await api.post(endpoint.CREATE_NEW_ADDRESS(), payload, {
+    //     headers: {
+    //       Authorization: `Bearer ${token}`,
+    //     },
+    //   });
 
-      if (onAddressCreated) onAddressCreated(); // Optional callback for parent refresh
-      onClose();
-    } catch (err) {
-      console.error("❌ Error saving address:", err);
-      alert("Failed to save address. Please try again.");
-    }
+    //   console.log("✅ Address saved:", res.data);
+    //   alert("Address saved successfully!");
+
+    //   if (onAddressCreated) onAddressCreated(); // Refresh caller
+    //   onClose();
+    // } catch (err) {
+    //   console.error("❌ Error saving address:", err.response?.data || err.message || err);
+    //   alert("Failed to save address. Please try again.");
+    // }
   };
 
   return (
@@ -82,15 +84,38 @@ export default function CreateAddressModal({ onClose, onAddressCreated }) {
         <h2 className="text-xl font-semibold mb-4">Add New Address</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <InputField label="Full Name" name="fullName" value={formData.fullName} onChange={handleChange} required />
-          <InputField label="Address" name="address1" value={formData.address1} onChange={handleChange} required />
+          <InputField
+            label="Full Name"
+            name="fullName"
+            value={formData.fullName}
+            onChange={handleChange}
+            required
+          />
+          <InputField
+            label="Address"
+            name="address1"
+            value={formData.address1}
+            onChange={handleChange}
+            required
+          />
           <p className="text-xs text-gray-500">Example: 1234 Main Street</p>
 
-          <InputField name="address2" value={formData.address2} onChange={handleChange} placeholder="(optional)" />
+          <InputField
+            name="address2"
+            value={formData.address2}
+            onChange={handleChange}
+            placeholder="(optional)"
+          />
           <p className="text-xs text-gray-500">Example: Apt. 3 or Suite #1516</p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <InputField label="City" name="city" value={formData.city} onChange={handleChange} required />
+            <InputField
+              label="City"
+              name="city"
+              value={formData.city}
+              onChange={handleChange}
+              required
+            />
             <Dropdown
               label="State"
               name="state"
@@ -102,18 +127,40 @@ export default function CreateAddressModal({ onClose, onAddressCreated }) {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <InputField label="Zip Code" name="zipCode" value={formData.zipCode} onChange={handleChange} required />
-            <InputField label="Phone Number" name="phone" value={formData.phone} onChange={handleChange} required />
+            <InputField
+              label="Zip Code"
+              name="zipCode"
+              value={formData.zipCode}
+              onChange={handleChange}
+              required
+            />
+            <InputField
+              label="Phone Number"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              required
+            />
           </div>
 
           <div className="space-y-2">
             <label className="flex items-center gap-2">
-              <input type="checkbox" name="isResidential" checked={formData.isResidential} onChange={handleChange} />
+              <input
+                type="checkbox"
+                name="isResidential"
+                checked={formData.isResidential}
+                onChange={handleChange}
+              />
               <span>This is a Residential Address</span>
             </label>
 
             <label className="flex items-center gap-2">
-              <input type="checkbox" name="defaultBilling" checked={formData.defaultBilling} onChange={handleChange} />
+              <input
+                type="checkbox"
+                name="defaultBilling"
+                checked={formData.defaultBilling}
+                onChange={handleChange}
+              />
               <span>Make this my default billing address</span>
             </label>
 
