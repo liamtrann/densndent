@@ -140,27 +140,14 @@ exports.postItemsByIds = async (req, res) => {
 //   }
 // };
 
-exports.getItemsByNameLike = async (req, res) => {
-  try {
-    const { name } = req.query;
-    if (!name) {
-      return res.status(400).json({ error: 'Missing name query parameter' });
-    }
-    const items = await itemsService.findByNameLike(name, );
-    res.json(items);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
 exports.postItemsByNameLike = async (req, res) => {
   try {
-    const { limit, offset } = req.query;
+    const { limit, offset, sort } = req.query;
     const { name } = req.body;
     if (!name) {
       return res.status(400).json({ error: 'Missing name in request body' });
     }
-    const items = await itemsService.findByNameLike(name, limit, offset);
+    const items = await itemsService.findByField("name", name, limit, offset, sort);
     res.json(items);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -174,6 +161,18 @@ exports.getCountByClass = async (req, res) => {
       return res.status(400).json({ error: 'classId is required' });
     }
     const count = await itemsService.countByField('class', classId);
+    res.json({ count });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+exports.getCountByName = async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name) {
+      return res.status(400).json({ error: 'name is required' });
+    }
+    const count = await itemsService.countByField('name', name);
     res.json({ count });
   } catch (error) {
     res.status(500).json({ error: error.message });

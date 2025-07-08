@@ -36,19 +36,6 @@ export default function ProductsDropdown({ categories }) {
         <div className="absolute left-0 top-full mt-2 w-auto bg-white shadow-xl border rounded-md flex z-50">
           {/* Left Column - Categories */}
           <div className="w-48 p-4">
-            {/* {categories.map((cat) => (
-              <Link
-                key={cat.name}
-                to={`/products/${cat.name.toLowerCase()}`}
-                className={`px-4 py-2 text-sm flex justify-between items-center hover:bg-gray-100 cursor-pointer ${hoveredCategory === cat.name ? "bg-gray-100" : ""
-                  }`}
-                onMouseEnter={() => handleCategoryHover(cat.name)}
-                onClick={() => setOpen(false)}
-              >
-                {cat.name}
-                <span className="text-gray-400">&gt;</span>
-              </Link>
-            ))} */}
             {categories.map((cat) => (
               <div
                 key={cat.name}
@@ -74,7 +61,7 @@ export default function ProductsDropdown({ categories }) {
                   return (
                     <Link
                       key={name + (id ? `-${id}` : '')}
-                      to={id ? `/products/${name.toLowerCase()}-${id}` : `/products/${name.toLowerCase()}`}
+                      to={id ? `/products/by-class/${name.toLowerCase()}-${id}` : `/products/by-class/${name.toLowerCase()}`}
                       className="block px-4 py-2 text-sm hover:bg-orange-50"
                       onClick={() => setOpen(false)}
                     >

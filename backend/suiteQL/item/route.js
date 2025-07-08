@@ -11,11 +11,10 @@ router.post('/by-parent', controller.postGetItemsByParent);
 
 router.post('/by-ids', controller.postItemsByIds);
 
-// router.get('/by-name', controller.getItemsByNameLike);
-
-router.post('/search-by-name', controller.postItemsByNameLike);
+router.post('/by-name', controller.postItemsByNameLike);
 
 router.get('/count-by-class', controller.getCountByClass);
+router.post('/count-by-name', controller.getCountByName);
 
 router.get('/by-brand', controller.getItemsByBrand);
 

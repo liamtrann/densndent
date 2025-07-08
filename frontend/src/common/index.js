@@ -20,3 +20,6 @@ export { default as PromotionCard } from "./PromotionCard";
 export { default as QuickOrderForm } from "./QuickOrderForm";
 export { default as SectionTitle } from "./SectionTitle";
 export { default as ShowMoreHtml } from "./ShowMoreHtml";
+export { default as ProductToolbar } from "./ProductToolbar";
+export { default as Breadcrumb } from "./Breadcrumb";
+export { default as Pagination } from "./Pagination";

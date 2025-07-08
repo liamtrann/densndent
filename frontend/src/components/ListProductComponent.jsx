@@ -1,69 +1,55 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import Breadcrumb from "../common/Breadcrumb";
-import FilterSidebar from "../components/FilterSidebar";
-import ProductToolbar from "../common/ProductToolbar";
-import ProductListGrid from "../components/ProductListGrid";
-import { fetchProductsBy, fetchCountBy } from "../redux/slices/productsSlice";
-import Loading from "../common/Loading";
-import Pagination from "../common/Pagination";
-import ErrorMessage from "../common/ErrorMessage";
 import { delayCall } from "../api/util";
-
-export default function ListProductPage() {
-  const { name: nameAndId } = useParams();
-  let name = "";
-  let classId = "";
-  if (nameAndId) {
-    const lastDash = nameAndId.lastIndexOf("-");
-    if (lastDash !== -1) {
-      name = nameAndId.slice(0, lastDash);
-      classId = nameAndId.slice(lastDash + 1);
-    } else {
-      name = nameAndId;
-    }
-  }
-
+import { fetchProductsBy, fetchCountBy } from "../redux/slices/productsSlice";
+import { Breadcrumb, ErrorMessage, Loading, Pagination, ProductToolbar } from "../common";
+import FilterSidebar from "./FilterSidebar";
+import ProductListGrid from "./ProductListGrid";
+export default function ListProductComponent({
+  type,
+  id,
+  breadcrumbPath,
+  headerTitle
+}) {
   const [perPage, setPerPage] = useState(12);
-  const [sort, setSort] = useState(null);
+  const [sort, setSort] = useState("");
   const [page, setPage] = useState(1);
 
   const dispatch = useDispatch();
-  const key = `${classId}_${perPage}_${sort}_${page}`;
+  const key = `${id}_${perPage}_${sort}_${page}`;
   const products = useSelector(state => state.products.productsByPage[key] || []);
   const isLoading = useSelector(state => state.products.isLoading);
   const error = useSelector(state => state.products.error);
-  const total = useSelector(state => state.products.totalByClass?.[classId] || 0);
+  // Use either totalByClass or totalByBrand, fallback to totalByClass
+  const total = useSelector(state => (
+    state.products.totalByClass?.[id] || state.products.totalByBrand?.[id] || 0
+  ));
 
   useEffect(() => {
     setPage(1);
-    setSort("")
-    if (classId) {
-      return delayCall(() => dispatch(fetchCountBy({ type: "classification", id: classId })));
+    setSort("");
+    if (id) {
+      return delayCall(() => dispatch(fetchCountBy({ type, id })));
     }
-  }, [dispatch, classId]);
+  }, [dispatch, type, id]);
 
-  // Fetch products when classId, perPage, sort, or page changes
   useEffect(() => {
-    if (classId) {
+    if (id) {
       if (!products || products.length === 0) {
         return delayCall(() => {
-          dispatch(fetchProductsBy({ type: "classification", id: classId, page: page, limit: perPage, sort: sort }));
+          dispatch(fetchProductsBy({ type, id, page, limit: perPage, sort }));
         });
       }
     }
-  }, [dispatch, classId, perPage, sort, page, products.length]);
+  }, [dispatch, type, id, perPage, sort, page, products.length]);
 
   const totalPages = Math.ceil(total / perPage) || 1;
 
-  console.log(products)
-
   return (
     <div className="px-6 py-8 max-w-screen-xl mx-auto">
-      <Breadcrumb path={["Home", "Products", name]} />
+      <Breadcrumb path={breadcrumbPath} />
       <h1 className="text-3xl font-bold text-smiles-blue mb-6">
-        {name.toUpperCase()}
+        {headerTitle}
       </h1>
       <div className="flex flex-col lg:flex-row gap-8">
         <FilterSidebar />
@@ -76,12 +62,9 @@ export default function ListProductPage() {
             onSortChange={e => setSort(e.target.value)}
             total={total}
           />
-          {/* Pagination Controls */}
           <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
           {isLoading && <Loading message="Loading products..." />}
-          {error && (
-            <ErrorMessage message={error} />
-          )}
+          {error && <ErrorMessage message={error} />}
           {!isLoading && !error && products.length === 0 && (
             <div className="text-gray-500 py-8 text-center">
               No products found for this category.

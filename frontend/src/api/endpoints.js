@@ -32,13 +32,15 @@ const endpoint = {
     POST_ITEMS_BY_NAME: () => '/suiteql/item/by-name',
     GET_COUNT_BY_CLASS: (classId) => `/suiteql/item/count-by-class?classId=${classId}`,
     GET_COUNT_BY_BRAND: (brand) => `/suiteql/item/count-by-brand?brand=${brand}`,
+    POST_GET_COUNT_BY_NAME: () => `/suiteql/item/count-by-name`,
     GET_TRANSACTION_BY_ID: (id) => `/suiteql/transaction/by-id?id=${id}`,
     GET_TRANSACTION_BY_EMAIL: (email) => `/suiteql/transaction/by-email?email=${email}`,
-    GET_ITEMS_BY_NAME_LIKE: ({ limit, offset }) => {
+    POST_GET_ITEMS_BY_NAME: ({ limit, offset, sort }) => {
         const params = new URLSearchParams();
         if (limit) params.append('limit', limit);
         if (offset) params.append('offset', offset);
-        return `/suiteql/item/search-by-name?${params.toString()}`
+        if (sort) params.append('sort', sort);
+        return `/suiteql/item/by-name?${params.toString()}`
 
     },
     // NETSUITE REST API Endpoints

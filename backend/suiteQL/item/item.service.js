@@ -8,7 +8,8 @@ class ItemsService {
     async findByField(field, value, limit, offset, sort) {
         const allowedFields = {
             class: 'i.class',
-            brand: 'i.custitemcustitem_dnd_brand'
+            brand: 'i.custitemcustitem_dnd_brand',
+            name: 'i.itemid'
         };
         const allowedOrders = ['asc', 'desc'];
         let sortBy = '';
@@ -18,10 +19,39 @@ class ItemsService {
         if (!allowedFields[field]) {
             throw new Error('Invalid filter field');
         }
-        const sql = `SELECT i.id, i.itemid, i.totalquantityonhand, ip.price, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url FROM item i JOIN itemprice ip ON i.id = ip.item AND ip.pricelevel = 1 WHERE i.isonline = 'T' AND i.isinactive='F' AND LOWER(${allowedFields[field]}) = LOWER('${value}') ${sortBy}`;
+
+        let condition;
+        if (field === "name") {
+            // Substring search, case-insensitive
+            condition = `LOWER(${allowedFields[field]}) LIKE '%' || LOWER('${value}') || '%'`;
+        } else {
+            // Exact match, case-insensitive
+            condition = `LOWER(${allowedFields[field]}) = LOWER('${value}')`;
+        }
+
+        const sql = `
+        SELECT
+            i.id,
+            i.itemid,
+            i.totalquantityonhand,
+            ip.price,
+            (
+                SELECT f.url
+                FROM file f
+                WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%'
+                ORDER BY f.createddate DESC
+                FETCH FIRST 1 ROWS ONLY
+            ) AS file_url
+        FROM item i
+        JOIN itemprice ip ON i.id = ip.item AND ip.pricelevel = 1
+        WHERE i.isonline = 'T' AND i.isinactive = 'F' AND ${condition}
+        ${sortBy}
+    `;
+
         const results = await runQueryWithPagination(sql, limit, offset);
         return results;
     }
+
 
     // Find items by both class and brand
     async findByClassAndBrand(classId, brand, limit, offset, sort) {
@@ -69,12 +99,25 @@ class ItemsService {
     async countByField(field, value) {
         const allowedFields = {
             class: 'i.class',
-            brand: 'i.custitemcustitem_dnd_brand'
+            brand: 'i.custitemcustitem_dnd_brand',
+            name: 'i.itemid'
         };
-        if (!allowedFields[field]) {
-            throw new Error('Invalid filter field');
+        let sql;
+
+        if (field === "name") {
+            sql = `SELECT COUNT(*) AS count
+               FROM item i
+               WHERE i.isonline = 'T'
+                 AND i.isinactive = 'F'
+                 AND LOWER(${allowedFields[field]}) LIKE '%' || LOWER('${value}') || '%';`;
+        } else {
+            sql = `SELECT COUNT(*) AS count
+               FROM item i
+               WHERE i.isonline = 'T'
+                 AND i.isinactive = 'F'
+                 AND LOWER(${allowedFields[field]}) = LOWER('${value}');`;
         }
-        const sql = `SELECT COUNT(*) AS count FROM item i WHERE i.isonline = 'T' AND i.isinactive='F' AND LOWER(${allowedFields[field]}) = LOWER('${value}');`;
+
         const results = await runQueryWithPagination(sql, 1, 0);
         return results.items?.[0]?.count || 0;
     }
