@@ -19,6 +19,7 @@ import Footer from "./components/Footer";
 import PurchaseHistory from "./pages/PurchaseHistory";
 import ProfileEditCard from "./components/ProfileEditCard"; // ✅ profile edit modal
 import ProtectedRoute from "./common/ProtectedRoute";
+import AboutUs from './pages/AboutUs'; // at top
 
 // Placeholder fallback pages for new links
 const AboutUsPage = () => <div>About Us Page</div>;
@@ -42,7 +43,7 @@ function App() {
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/faq" element={<FAQPage />} />
-          <Route path="/about" element={<AboutUsPage />} />
+          <Route path="/about" element={<AboutUs />} />
           <Route path="/team" element={<TeamPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/blog" element={<BlogPage />} />

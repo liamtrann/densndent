@@ -18,10 +18,11 @@ const promotionsLinks = [
 const aboutLinks = [
   { label: "About Us", path: "/about" },
   { label: "Meet Our Team", path: "/team" },
-  { label: "FAQs", path: "/faqs" },
+  { label: "FAQs", path: "/faq" }, // ✅ Correct route
   { label: "Contact Us", path: "/contact" },
   { label: "Blog", path: "/blog" }
 ];
+
 
 function MobileDrawer({
   isOpen,
@@ -80,7 +81,7 @@ function MobileDrawer({
                         const id = sub.id || '';
                         return (
                           <Link
-                            key={name + (id ? `-${id}` : '')}
+                            key={name + id}
                             to={id ? `/products/by-class/${name.toLowerCase()}-${id}` : `/products/by-class/${name.toLowerCase()}`}
                             className="block py-1"
                             onClick={onClose}
@@ -154,9 +155,6 @@ function MobileDrawer({
             </div>
           )}
         </div>
-
-        {/* Request a Quote */}
-        <Link to="/quote" onClick={onClose}>Request a Quote</Link>
 
         {/* Auth Section */}
         {!isAuthenticated ? (
