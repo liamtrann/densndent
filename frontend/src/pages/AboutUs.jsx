@@ -1,18 +1,20 @@
+// src/pages/AboutUs.jsx
 import React from 'react';
+import Paragraph from '../common/Paragraph';
 
 export default function AboutUs() {
   return (
     <div className="text-center text-gray-800">
       {/* Banner Section */}
       <section className="py-16 px-6">
-        <h1 className="text-5xl font-light text-orange-500 mb-6">ABOUT US</h1>
+        <h1 className="text-5xl font-light text-orange-500 mb-6">About Us</h1>
         <div className="max-w-2xl mx-auto text-lg leading-relaxed">
-          <p>
+          <Paragraph>
             Dens 'N Dente is a Canadian based healthcare company that strives to be the best industry
             leader of healthcare supplies, service and equipment. As a fast-growing company, we are
             committed to providing our customers the best dental and healthcare supplies while adapting
             to trends and needs.
-          </p>
+          </Paragraph>
         </div>
         <img
           src="https://sandbox.densndente.ca/images/about-banner.png"
@@ -29,11 +31,11 @@ export default function AboutUs() {
             alt="Background Graphic"
             className="w-full lg:w-1/2"
           />
-          <p className="text-lg leading-relaxed">
+          <Paragraph className="text-lg leading-relaxed">
             <span className="text-4xl font-semibold">WE</span> offer competitively priced dental and
             medical supplies from all major manufacturers. Dens ‘N Dente is committed to customer
             satisfaction, providing innovative solutions and top-quality products.
-          </p>
+          </Paragraph>
         </div>
       </section>
 
@@ -59,7 +61,7 @@ export default function AboutUs() {
               <div className="bg-orange-300 text-white rounded-full w-52 h-52 mx-auto flex items-center justify-center text-xl font-semibold px-4 text-center">
                 {item.title}
               </div>
-              <p className="mt-4 text-sm">{item.text}</p>
+              <Paragraph className="mt-4 text-sm">{item.text}</Paragraph>
             </div>
           ))}
         </div>
@@ -74,22 +76,26 @@ export default function AboutUs() {
             className="w-full lg:w-1/2"
           />
           <div className="text-left max-w-xl">
-            <p className="mb-4">
+            <Paragraph className="mb-4">
               Companies only have a chance at true greatness when they are driven by a mission.
-            </p>
-            <p className="mb-4">
+            </Paragraph>
+            <Paragraph className="mb-4">
               Our mission is to transform the identity of dental supply companies…
-            </p>
-            <p className="mb-4">
+            </Paragraph>
+            <Paragraph className="mb-4">
               Dens ‘N Dente was created from a simple idea: Dentists should be able to receive quality
               products without compromising service and customer experience. As we embark in this new
               chapter of our existence, our growing company is changing the industry in an
               unprecedented way. We believe hard work and dedication to our clients will evolve the
               relationship between suppliers and customers.
-            </p>
-            <p className="mb-4">We understand, because our company was…</p>
-            <p className="font-semibold italic">Created for Dentists by Dentists</p>
-            <p className="mt-2">– Dr. Azim Parekh, CEO</p>
+            </Paragraph>
+            <Paragraph className="mb-4">
+              We understand, because our company was…
+            </Paragraph>
+            <Paragraph className="font-semibold italic">
+              Created for Dentists by Dentists
+            </Paragraph>
+            <Paragraph className="mt-2">– Dr. Azim Parekh, CEO</Paragraph>
           </div>
         </div>
       </section>

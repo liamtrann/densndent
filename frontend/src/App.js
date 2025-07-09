@@ -17,14 +17,15 @@ import {
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import PurchaseHistory from "./pages/PurchaseHistory";
-import ProfileEditCard from "./components/ProfileEditCard"; // ✅ profile edit modal
+import ProfileEditCard from "./components/ProfileEditCard";
 import ProtectedRoute from "./common/ProtectedRoute";
-import AboutUs from './pages/AboutUs'; // at top
 
-// Placeholder fallback pages for new links
-const AboutUsPage = () => <div>About Us Page</div>;
-const TeamPage = () => <div>Meet Our Team Page</div>;
-const ContactPage = () => <div>Contact Us Page</div>;
+// ✅ Real pages
+import AboutUs from './pages/AboutUs';
+import ContactPage from './pages/ContactPage';
+import MeetOurTeam from './pages/MeetOurTeam'; // ✅ Real component
+
+// ✅ Inline placeholder fallback pages
 const BlogPage = () => <div>Blog Page</div>;
 const PromotionsPage = () => <div>Promotions Page</div>;
 const CataloguesPage = () => <div>Catalogues Page</div>;
@@ -44,7 +45,7 @@ function App() {
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/faq" element={<FAQPage />} />
           <Route path="/about" element={<AboutUs />} />
-          <Route path="/team" element={<TeamPage />} />
+          <Route path="/team" element={<MeetOurTeam />} /> {/* ✅ Updated */}
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/blog" element={<BlogPage />} />
           <Route path="/promotions" element={<PromotionsPage />} />
@@ -62,7 +63,7 @@ function App() {
             <Route path="/profile/history" element={<PurchaseHistory />} />
           </Route>
 
-          {/* Fallback Route */}
+          {/* Fallback */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>

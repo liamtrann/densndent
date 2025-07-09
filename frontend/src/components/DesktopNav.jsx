@@ -55,7 +55,7 @@ export default function DesktopNav({ categories }) {
         onMouseEnter={handlePromoEnter}
         onMouseLeave={handlePromoLeave}
       >
-        <span className={`text-sm font-medium uppercase cursor-pointer ${promoOpen ? 'text-orange-600' : 'text-gray-800 hover:text-orange-600'}`}>
+        <span className={`text-sm font-medium cursor-pointer ${promoOpen ? 'text-orange-600' : 'text-gray-800 hover:text-orange-600'}`}>
           Promotions & Catalogues
         </span>
 
@@ -81,8 +81,8 @@ export default function DesktopNav({ categories }) {
         onMouseEnter={handleAboutEnter}
         onMouseLeave={handleAboutLeave}
       >
-        <span className={`text-sm font-medium uppercase cursor-pointer ${aboutOpen ? 'text-orange-600 border-b-2 border-black' : 'text-gray-800 hover:text-orange-600'}`}>
-          ABOUT US
+        <span className={`text-sm font-medium cursor-pointer ${aboutOpen ? 'text-orange-600 border-b-2 border-black' : 'text-gray-800 hover:text-orange-600'}`}>
+          About Us
         </span>
 
         {aboutOpen && (
