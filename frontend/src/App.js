@@ -23,14 +23,14 @@ import ProtectedRoute from "./common/ProtectedRoute";
 // ✅ Real pages
 import AboutUs from './pages/AboutUs';
 import ContactPage from './pages/ContactPage';
-import MeetOurTeam from './pages/MeetOurTeam'; // ✅ Real component
+import MeetOurTeam from './pages/MeetOurTeam';
+import OurPartners from './pages/OurPartners'; // ✅ Real component
 
 // ✅ Inline placeholder fallback pages
 const BlogPage = () => <div>Blog Page</div>;
 const PromotionsPage = () => <div>Promotions Page</div>;
 const CataloguesPage = () => <div>Catalogues Page</div>;
 const ClearancePage = () => <div>Clearance Page</div>;
-const PartnersPage = () => <div>Our Partners Page</div>;
 
 function App() {
   return (
@@ -45,13 +45,15 @@ function App() {
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/faq" element={<FAQPage />} />
           <Route path="/about" element={<AboutUs />} />
-          <Route path="/team" element={<MeetOurTeam />} /> {/* ✅ Updated */}
+          <Route path="/team" element={<MeetOurTeam />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/blog" element={<BlogPage />} />
           <Route path="/promotions" element={<PromotionsPage />} />
           <Route path="/catalogues" element={<CataloguesPage />} />
           <Route path="/clearance" element={<ClearancePage />} />
-          <Route path="/partners" element={<PartnersPage />} />
+          <Route path="/partners" element={<OurPartners />} /> {/* ✅ Real route */}
+
+          {/* Product listings */}
           <Route path="/products/by-class/:name" element={<ListProductsByClass />} />
           <Route path="/products/by-brand/:brandName" element={<ListProductsByBrand />} />
           <Route path="/products/by-name/:name" element={<ListProductsByName />} />
