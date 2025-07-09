@@ -7,41 +7,39 @@ import Paragraph from "../common/Paragraph";
 import Loading from "../common/Loading";
 import { ErrorMessage } from "../common";
 
-export default function RecentPurchases() {
+export default function RecentPurchases({ setLoading, setError: parentSetError }) {
   const { user, getAccessTokenSilently } = useAuth0();
   const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  // Use parent setError if provided, otherwise local
+  const setErrorToUse = parentSetError || setError;
 
   useEffect(() => {
     async function fetchRecentOrders() {
       if (!user?.email) return;
-      setLoading(true);
-      setError(null);
+      if (setLoading) setLoading(true);
+      setErrorToUse(null);
       try {
         const token = await getAccessTokenSilently();
-        // Add limit=4 to the endpoint if supported, otherwise filter after fetch
-        const url = endpoint.GET_TRANSACTION_BY_EMAIL({ email: user.email, limit: 4 });
+        const url = endpoint.GET_TRANSACTION_BY_EMAIL(user.email, 4);
         const res = await api.get(url, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = res.data.items || res.data || [];
         setOrders(Array.isArray(data) ? data.slice(0, 4) : []);
       } catch (err) {
-        setError(err?.response?.data?.error || "Failed to fetch recent orders");
+        setErrorToUse(err?.response?.data?.error || "Failed to fetch recent orders");
       } finally {
-        setLoading(false);
+        if (setLoading) setLoading(false);
       }
     }
     fetchRecentOrders();
-  }, [user?.email, getAccessTokenSilently]);
+  }, [user?.email, getAccessTokenSilently, setLoading, setErrorToUse]);
 
   return (
     <div className="mb-10">
       <div className="bg-white border rounded shadow-sm max-h-[400px] overflow-y-auto">
-        {loading && <Loading className="text-center py-6" />}
-        {error && <ErrorMessage message={error} className="text-center py-6" />}
-        {!loading && orders.length === 0 && (
+        {orders.length === 0 && (
           <Paragraph className="text-center text-gray-500 py-6">
             You don't have any purchases in your account right now
           </Paragraph>

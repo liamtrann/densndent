@@ -88,7 +88,7 @@ export default function ProfilePage() {
         <TextButton onClick={() => navigate("/profile/history")}>View Purchase History →</TextButton>
       </div>
 
-      <RecentPurchases />
+      <RecentPurchases setLoading={setLoading} setError={setError} />
 
       <h2 className="text-lg font-semibold text-gray-800 mt-10 mb-4">My Settings</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

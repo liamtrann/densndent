@@ -1,3 +1,4 @@
+// src/App.js
 import { Routes, Route } from "react-router-dom";
 import {
   LandingPage,
@@ -16,8 +17,18 @@ import {
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import PurchaseHistory from "./pages/PurchaseHistory";
-import ProfileEditCard from "./components/ProfileEditCard"; // ✅ added edit page component
+import ProfileEditCard from "./components/ProfileEditCard"; // ✅ profile edit modal
 import ProtectedRoute from "./common/ProtectedRoute";
+
+// Placeholder fallback pages for new links
+const AboutUsPage = () => <div>About Us Page</div>;
+const TeamPage = () => <div>Meet Our Team Page</div>;
+const ContactPage = () => <div>Contact Us Page</div>;
+const BlogPage = () => <div>Blog Page</div>;
+const PromotionsPage = () => <div>Promotions Page</div>;
+const CataloguesPage = () => <div>Catalogues Page</div>;
+const ClearancePage = () => <div>Clearance Page</div>;
+const PartnersPage = () => <div>Our Partners Page</div>;
 
 function App() {
   return (
@@ -31,13 +42,17 @@ function App() {
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/faq" element={<FAQPage />} />
+          <Route path="/about" element={<AboutUsPage />} />
+          <Route path="/team" element={<TeamPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/blog" element={<BlogPage />} />
+          <Route path="/promotions" element={<PromotionsPage />} />
+          <Route path="/catalogues" element={<CataloguesPage />} />
+          <Route path="/clearance" element={<ClearancePage />} />
+          <Route path="/partners" element={<PartnersPage />} />
           <Route path="/products/by-class/:name" element={<ListProductsByClass />} />
           <Route path="/products/by-brand/:brandName" element={<ListProductsByBrand />} />
           <Route path="/products/by-name/:name" element={<ListProductsByName />} />
-          <Route path="/promotions" element={<div>Promotions Page</div>} />
-          <Route path="/clearance" element={<div>Clearance Page</div>} />
-          <Route path="/partners" element={<div>Our Partners Page</div>} />
-          <Route path="/about" element={<div>About Us Page</div>} />
 
           {/* Protected Routes */}
           <Route element={<ProtectedRoute />}>
