@@ -1,14 +1,14 @@
 // components/profile/RecentPurchases.jsx
 import React, { useState, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
+import { useSelector } from 'react-redux';
 import api from "../api/api";
 import endpoint from "../api/endpoints";
 import Paragraph from "../common/Paragraph";
-import Loading from "../common/Loading";
-import { ErrorMessage } from "../common";
 
 export default function RecentPurchases({ setLoading, setError: parentSetError }) {
-  const { user, getAccessTokenSilently } = useAuth0();
+  const { getAccessTokenSilently } = useAuth0();
+  const userInfo = useSelector(state => state.user.info);
   const [orders, setOrders] = useState([]);
   const [error, setError] = useState(null);
   // Use parent setError if provided, otherwise local
@@ -16,12 +16,12 @@ export default function RecentPurchases({ setLoading, setError: parentSetError }
 
   useEffect(() => {
     async function fetchRecentOrders() {
-      if (!user?.email) return;
+      if (!userInfo?.id) return;
       if (setLoading) setLoading(true);
       setErrorToUse(null);
       try {
         const token = await getAccessTokenSilently();
-        const url = endpoint.GET_TRANSACTION_BY_EMAIL(user.email, 4);
+        const url = endpoint.GET_TRANSACTION_BY_ID({ id: userInfo.id, limit: 4 });
         const res = await api.get(url, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -34,7 +34,7 @@ export default function RecentPurchases({ setLoading, setError: parentSetError }
       }
     }
     fetchRecentOrders();
-  }, [user?.email, getAccessTokenSilently, setLoading, setErrorToUse]);
+  }, [userInfo?.id, getAccessTokenSilently, setLoading, setErrorToUse]);
 
   return (
     <div className="mb-10">
@@ -65,7 +65,7 @@ export default function RecentPurchases({ setLoading, setError: parentSetError }
             </div>
             <div className="text-right">
               <Paragraph className="text-sm text-gray-600">
-                {order.status || "Pending Fulfillment"}
+                {order.status}
               </Paragraph>
               {order.foreigntotal && (
                 <Paragraph className="text-base font-semibold text-gray-800">

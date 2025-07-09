@@ -9,9 +9,11 @@ import { useAuth0 } from "@auth0/auth0-react";
 import Loading from "../common/Loading";
 import { ErrorMessage } from "../common";
 import Paragraph from "../common/Paragraph";
+import { useSelector } from 'react-redux';
 
 export default function PurchaseHistory() {
   const { user, getAccessTokenSilently } = useAuth0();
+  const userInfo = useSelector(state => state.user.info);
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [status, setStatus] = useState("All");
@@ -24,28 +26,28 @@ export default function PurchaseHistory() {
   const sortValues = ["recent", "oldest"];
 
   const sortOptions = [
-  { value: "recent", label: "Most Recent" },
-  { value: "oldest", label: "Oldest First" }
-];
+    { value: "recent", label: "Most Recent" },
+    { value: "oldest", label: "Oldest First" }
+  ];
 
-const statusOptions = [
-  { value: "all", label: "All" },
-  { value: "open", label: "Open" },
-  { value: "delivered", label: "Delivered" },
-  { value: "pending", label: "Pending Fulfillment" },
-  { value: "billed", label: "Billed" }
-];
+  const statusOptions = [
+    { value: "all", label: "All" },
+    { value: "open", label: "Open" },
+    { value: "delivered", label: "Delivered" },
+    { value: "pending", label: "Pending Fulfillment" },
+    { value: "billed", label: "Billed" }
+  ];
 
 
   // Fetch orders
   useEffect(() => {
     async function fetchOrders() {
-      if (!user?.sub) return;
+      if (!userInfo?.id) return;
       setLoading(true);
       setError(null);
       try {
         const token = await getAccessTokenSilently();
-        const url = endpoint.GET_TRANSACTION_BY_EMAIL(user.email); // Update as needed
+        const url = endpoint.GET_TRANSACTION_BY_ID({ id: userInfo.id });
         const res = await api.get(url, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -60,7 +62,7 @@ const statusOptions = [
     }
 
     fetchOrders();
-  }, [user?.sub, getAccessTokenSilently]);
+  }, [userInfo?.id, getAccessTokenSilently]);
 
   // Filter by date range and status
   useEffect(() => {
@@ -167,7 +169,7 @@ const statusOptions = [
             </div>
             <div className="text-right">
               <Paragraph className="text-sm text-gray-600">
-                {order.status || "Pending Fulfillment"}
+                {order.status}
               </Paragraph>
               {order.foreigntotal && (
                 <Paragraph className="text-base font-semibold text-gray-800">

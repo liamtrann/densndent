@@ -44,28 +44,25 @@ export default function ProfilePage() {
 
   // Handler for creating profile
   const handleCreateProfile = async (newData) => {
-    const { firstName, lastName, homePhone, mobilePhone } = newData;
+    const { firstName, lastName, homePhone, mobilePhone, password, rePassword } = newData;
     setLoading(true);
     try {
       const token = await getAccessTokenSilently();
       await api.post(
         endpoint.POST_CREATE_CUSTOMER(),
         {
-          firstName: firstName,
-          lastName: lastName,
-          homePhone: homePhone,
-          mobilePhone: mobilePhone,
+          firstName,
+          lastName,
+          homePhone,
+          mobilePhone,
           email: user.email,
-          entityStatus: {
-            id: 6
-          },
-          subsidiary: {
-            id: 2
-          },
-          category: {
-            id: 15
-          },
-          isPerson: true
+          entityStatus: { id: 6 },
+          subsidiary: { id: 2 },
+          category: { id: 15 },
+          isPerson: true,
+          giveAccess: true,
+          password,
+          password2: rePassword,
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );

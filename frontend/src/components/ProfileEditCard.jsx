@@ -16,6 +16,8 @@ export default function ProfileEditCard({ onClose, onCreate }) {
     lastName: "",
     homePhone: "",
     mobilePhone: "",
+    password: "",
+    rePassword: "",
   });
 
   const [showModal, setShowModal] = useState(false);
@@ -54,6 +56,10 @@ export default function ProfileEditCard({ onClose, onCreate }) {
   };
 
   const validatePhone = (phone) => !phone || /^\d{10}$/.test(phone.replace(/\D/g, ""));
+  const validatePassword = (password) => {
+    // At least 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char
+    return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/.test(password);
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -63,6 +69,12 @@ export default function ProfileEditCard({ onClose, onCreate }) {
     }
     if (!validatePhone(formData.mobilePhone)) {
       newErrors.mobilePhone = "Mobile phone must be exactly 10 digits if provided.";
+    }
+    if (!validatePassword(formData.password)) {
+      newErrors.password = "Password must be at least 8 characters, include uppercase, lowercase, number, and special character.";
+    }
+    if (formData.password !== formData.rePassword) {
+      newErrors.rePassword = "Passwords do not match.";
     }
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
@@ -93,7 +105,6 @@ export default function ProfileEditCard({ onClose, onCreate }) {
           value={formData.homePhone}
           onChange={handleChange}
           maxLength={14}
-          pattern="[0-9\-\s\(\)]{10,14}"
           placeholder="123-456-7890"
           error={errors?.homePhone}
         />
@@ -103,9 +114,26 @@ export default function ProfileEditCard({ onClose, onCreate }) {
           value={formData.mobilePhone}
           onChange={handleChange}
           maxLength={14}
-          pattern="[0-9\-\s\(\)]{10,14}"
           placeholder="123-456-7890"
           error={errors?.mobilePhone}
+        />
+        <InputField
+          label="Password"
+          name="password"
+          type="password"
+          value={formData.password}
+          onChange={handleChange}
+          required
+          error={errors?.password}
+        />
+        <InputField
+          label="Re-enter Password"
+          name="rePassword"
+          type="password"
+          value={formData.rePassword}
+          onChange={handleChange}
+          required
+          error={errors?.rePassword}
         />
 
         <div className="mt-2 text-sm">

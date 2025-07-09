@@ -9,6 +9,7 @@ export default function InputField({
   type = "text",
   className = "",
   checked,
+  error,
   ...props
 }) {
   const isCheckbox = type === "checkbox";
@@ -37,11 +38,15 @@ export default function InputField({
             onChange={onChange}
             placeholder={placeholder}
             className={classNames(
-              "border rounded px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-smiles-orange transition",
+              "border rounded px-3 py-2 w-full focus:outline-none focus:ring-2 transition",
+              error ? "border-red-500 focus:ring-red-400" : "focus:ring-smiles-orange",
               className
             )}
             {...props}
           />
+          {error && (
+            <div className="text-xs text-red-600 mt-1">{error}</div>
+          )}
         </>
       )}
     </div>

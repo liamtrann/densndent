@@ -33,14 +33,21 @@ const endpoint = {
     GET_COUNT_BY_CLASS: (classId) => `/suiteql/item/count-by-class?classId=${classId}`,
     GET_COUNT_BY_BRAND: (brand) => `/suiteql/item/count-by-brand?brand=${brand}`,
     POST_GET_COUNT_BY_NAME: () => `/suiteql/item/count-by-name`,
-    GET_TRANSACTION_BY_ID: (id) => `/suiteql/transaction/by-id?id=${id}`,
-    GET_TRANSACTION_BY_EMAIL: ({ email, limit, offset }) => {
+    GET_TRANSACTION_BY_ID: ({ id, limit, offset, sort }) => {
         const params = new URLSearchParams();
-        params.append('email', email);
+        if (id) params.append('id', id);
         if (limit) params.append('limit', limit);
         if (offset) params.append('offset', offset);
-        return `/suiteql/transaction/by-email?${params.toString()}`;
+        if (sort) params.append('sort', sort);
+        return `/suiteql/transaction/by-id?${params.toString()}`;
     },
+    // GET_TRANSACTION_BY_EMAIL: ({ email, limit, offset }) => {
+    //     const params = new URLSearchParams();
+    //     if (email) params.append('email', email);
+    //     if (limit) params.append('limit', limit);
+    //     if (offset) params.append('offset', offset);
+    //     return `/suiteql/transaction/by-email?${params.toString()}`;
+    // },
     POST_GET_ITEMS_BY_NAME: ({ limit, offset, sort }) => {
         const params = new URLSearchParams();
         if (limit) params.append('limit', limit);
@@ -49,6 +56,8 @@ const endpoint = {
         return `/suiteql/item/by-name?${params.toString()}`
 
     },
+    GET_SHIPPING_METHOD: (id) => `/suiteql/shipItem/${id}`,
+
     // NETSUITE REST API Endpoints
     GET_CUSTOMER: (id) => `/restapi/customer/${id}`,
     GET_SALES_ORDER: (id) => `/restapi/salesOrder/${id}`,
