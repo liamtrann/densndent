@@ -11,7 +11,7 @@ import {
   ProfilePage,
   ListProductsByClass,
   ListProductsByBrand,
-  ListProductsByName
+  ListProductsByName,
 } from "./pages";
 
 import Header from "./components/Header";
@@ -20,19 +20,22 @@ import PurchaseHistory from "./pages/PurchaseHistory";
 import ProfileEditCard from "./components/ProfileEditCard";
 import ProtectedRoute from "./common/ProtectedRoute";
 
-// ✅ Real pages
-import AboutUs from './pages/AboutUs';
-import ContactPage from './pages/ContactPage';
-import MeetOurTeam from './pages/MeetOurTeam';
-import OurPartners from './pages/OurPartners'; // ✅ Real component
+// Real content pages
+import AboutUs from "./pages/AboutUs";
+import ContactPage from "./pages/ContactPage";
+import MeetOurTeam from "./pages/MeetOurTeam";
+import OurPartners from "./pages/OurPartners";
+import JdiqRaffleWinners from "./pages/JdiqRaffleWinners"; // ✅ New route
+import GiftCardProgramPage from "./pages/GiftCardProgramPage"; // ✅ new import
 
-// ✅ Inline placeholder fallback pages
+
+// Placeholder pages
 const BlogPage = () => <div>Blog Page</div>;
 const PromotionsPage = () => <div>Promotions Page</div>;
 const CataloguesPage = () => <div>Catalogues Page</div>;
 const ClearancePage = () => <div>Clearance Page</div>;
 
-function App() {
+export default function App() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -49,11 +52,13 @@ function App() {
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/blog" element={<BlogPage />} />
           <Route path="/promotions" element={<PromotionsPage />} />
+          <Route path="/promotions/jdiq" element={<JdiqRaffleWinners />} /> {/* ✅ JDIQ route */}
+          <Route path="/promotions/gift-card" element={<GiftCardProgramPage />} />
           <Route path="/catalogues" element={<CataloguesPage />} />
           <Route path="/clearance" element={<ClearancePage />} />
-          <Route path="/partners" element={<OurPartners />} /> {/* ✅ Real route */}
+          <Route path="/partners" element={<OurPartners />} />
 
-          {/* Product listings */}
+          {/* Product Listings */}
           <Route path="/products/by-class/:name" element={<ListProductsByClass />} />
           <Route path="/products/by-brand/:brandName" element={<ListProductsByBrand />} />
           <Route path="/products/by-name/:name" element={<ListProductsByName />} />
@@ -65,7 +70,7 @@ function App() {
             <Route path="/profile/history" element={<PurchaseHistory />} />
           </Route>
 
-          {/* Fallback */}
+          {/* Catch-all */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
@@ -73,5 +78,3 @@ function App() {
     </div>
   );
 }
-
-export default App;

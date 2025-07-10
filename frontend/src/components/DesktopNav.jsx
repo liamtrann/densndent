@@ -13,16 +13,13 @@ export default function DesktopNav({ categories }) {
     clearTimeout(aboutTimer.current);
     setAboutOpen(true);
   };
-
   const handleAboutLeave = () => {
     aboutTimer.current = setTimeout(() => setAboutOpen(false), 200);
   };
-
   const handlePromoEnter = () => {
     clearTimeout(promoTimer.current);
     setPromoOpen(true);
   };
-
   const handlePromoLeave = () => {
     promoTimer.current = setTimeout(() => setPromoOpen(false), 200);
   };
@@ -32,14 +29,33 @@ export default function DesktopNav({ categories }) {
     { label: "Meet Our Team", path: "/team" },
     { label: "FAQs", path: "/faq" },
     { label: "Contact Us", path: "/contact" },
-    { label: "Blog", path: "/blog" },
+    { label: "Blog", path: "/blog" }
   ];
 
   const promoMenuItems = [
     { label: "JDIQ Raffle Winners", path: "/promotions/jdiq" },
     { label: "Monthly Specials", path: "/promotions/monthly" },
     { label: "Q3 D2 Specials (House Brand)", path: "/promotions/q3-d2" },
-    { label: "Q3 Vendor Specials", path: "/promotions/q3-vendor" },
+    {
+      label: "Q3 Vendor Specials",
+      children: [
+        { label: "Solventum", path: "/promotions/q3-vendor/solventum" },
+        { label: "Medicom", path: "/promotions/q3-vendor/medicom" },
+        { label: "4D Rubber", path: "/promotions/q3-vendor/4d-rubber" },
+        { label: "Ansell", path: "/promotions/q3-vendor/ansell" },
+        { label: "Aurelia", path: "/promotions/q3-vendor/aurelia" },
+        { label: "Diadent", path: "/promotions/q3-vendor/diadent" },
+        { label: "DMG", path: "/promotions/q3-vendor/dmg" },
+        { label: "Flight", path: "/promotions/q3-vendor/flight" },
+        { label: "Kuraray", path: "/promotions/q3-vendor/kuraray" },
+        { label: "Morita", path: "/promotions/q3-vendor/morita" },
+        { label: "Palmero", path: "/promotions/q3-vendor/palmero" },
+        { label: "Pulpdent", path: "/promotions/q3-vendor/pulpdent" },
+        { label: "Sable", path: "/promotions/q3-vendor/sable" },
+        { label: "Young", path: "/promotions/q3-vendor/young" },
+        { label: "Zirc", path: "/promotions/q3-vendor/zirc" }
+      ]
+    },
     { label: "Q3 Catalogue", path: "/promotions/q3-catalogue" },
     { label: "DND Gift Card Program", path: "/promotions/gift-card" }
   ];
@@ -49,7 +65,7 @@ export default function DesktopNav({ categories }) {
       <Link to="/" className="text-sm text-gray-800 hover:text-orange-600 font-medium">Home</Link>
       <ProductsDropdown categories={categories} />
 
-      {/* Promotions Dropdown */}
+      {/* Promotions & Catalogues */}
       <div
         className="relative"
         onMouseEnter={handlePromoEnter}
@@ -63,9 +79,30 @@ export default function DesktopNav({ categories }) {
           <div className="absolute top-full left-0 mt-2 bg-white shadow-lg border rounded w-72 z-50 transition duration-200">
             <ul className="py-3 px-4 space-y-2 text-sm text-gray-800">
               {promoMenuItems.map(item => (
-                <li key={item.label}>
-                  <Link to={item.path} className="block hover:underline">{item.label}</Link>
-                </li>
+                <div key={item.label} className="relative group">
+                  {item.children ? (
+                    <>
+                      <span className="block px-4 py-2 cursor-pointer hover:bg-gray-100">
+                        {item.label} &rsaquo;
+                      </span>
+                      <div className="absolute top-0 left-full ml-1 bg-white shadow-lg border rounded w-48 hidden group-hover:block z-50">
+                        {item.children.map(child => (
+                          <Link
+                            key={child.label}
+                            to={child.path}
+                            className="block px-4 py-2 hover:bg-gray-100"
+                          >
+                            {child.label}
+                          </Link>
+                        ))}
+                      </div>
+                    </>
+                  ) : (
+                    <Link to={item.path} className="block px-4 py-2 hover:bg-gray-100">
+                      {item.label}
+                    </Link>
+                  )}
+                </div>
               ))}
             </ul>
           </div>
@@ -75,7 +112,7 @@ export default function DesktopNav({ categories }) {
       <Link to="/clearance" className="text-sm text-gray-800 hover:text-orange-600 font-medium">Clearance</Link>
       <Link to="/partners" className="text-sm text-gray-800 hover:text-orange-600 font-medium">Our Partners</Link>
 
-      {/* ABOUT US Dropdown */}
+      {/* ABOUT US */}
       <div
         className="relative"
         onMouseEnter={handleAboutEnter}
