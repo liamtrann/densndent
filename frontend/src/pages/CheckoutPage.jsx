@@ -53,13 +53,17 @@ export default function CheckoutPage() {
               <InputField label="Address" placeholder="1234 Main Street" />
               <InputField placeholder="(optional)" />
               <InputField label="City *" />
-              <Dropdown label="State *" options={["NY", "CA", "TX"]} />
+              <Dropdown label="State *" options={[
+                { key: "ny", value: "NY", label: "New York" },
+                { key: "ca", value: "CA", label: "California" },
+                { key: "tx", value: "TX", label: "Texas" }
+              ]} />
               <InputField label="Zip Code *" placeholder="94117" />
               <InputField label="Phone Number *" placeholder="555-123-1234" />
               <InputField
                 type="checkbox"
                 checked={false}
-                onChange={() => {}}
+                onChange={() => { }}
                 label="This is a Residential Address"
               />
             </div>
