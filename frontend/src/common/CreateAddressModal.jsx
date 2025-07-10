@@ -6,10 +6,15 @@ import Button from "./Button";
 import api from "../api/api";
 import endpoint from "../api/endpoints";
 import { useAuth0 } from "@auth0/auth0-react";
+import { useDispatch } from 'react-redux';
+import { fetchUserInfo } from '../redux/slices/userSlice';
 import FormSubmit from "./FormSubmit";
+import Loading from "./Loading";
+import ErrorMessage from "./ErrorMessage";
 
-export default function CreateAddressModal({ onClose, onAddressCreated, address = null, customerId }) {
-  const { getAccessTokenSilently } = useAuth0();
+export default function CreateAddressModal({ onClose, onAddressCreated, address = null, customerId, error }) {
+  const { user, getAccessTokenSilently } = useAuth0();
+  const dispatch = useDispatch();
 
   // Always call hooks first
   const [formData, setFormData] = useState({
@@ -43,6 +48,7 @@ export default function CreateAddressModal({ onClose, onAddressCreated, address 
   if (!customerId) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+        {error && <ErrorMessage message={error} />}
         <div className="bg-white w-full max-w-md p-6 rounded shadow-lg relative">
           <button
             className="absolute top-2 right-4 text-xl font-bold text-gray-600 hover:text-gray-800"
@@ -60,15 +66,25 @@ export default function CreateAddressModal({ onClose, onAddressCreated, address 
     );
   }
 
+  // Replace stateOptions with Canadian provinces/territories from provided data
   const stateOptions = [
-    { label: "-- Select --", value: "" },
-    { label: "California", value: "BC" },
-    { label: "New York", value: "NY" },
-    { label: "Texas", value: "TX" },
-    { label: "Ontario", value: "ON" },
-    { label: "Quebec", value: "QC" },
-    { label: "British Columbia", value: "BC" },
-    { label: "Alberta", value: "AB" },
+    { label: '-- Select --', value: '' },
+    { label: 'Alberta (AB)', value: 'AB' },
+    { label: 'British Columbia (BC)', value: 'BC' },
+    { label: 'Manitoba (MB)', value: 'MB' },
+    { label: 'New Brunswick (NB)', value: 'NB' },
+    { label: 'Newfoundland and Labrador (NL)', value: 'NL' },
+    { label: 'Nova Scotia (NS)', value: 'NS' },
+    { label: 'Northwest Territories (NT)', value: 'NT' },
+    { label: 'Nunavut (NU)', value: 'NU' },
+    { label: 'Ontario (ON)', value: 'ON' },
+    { label: 'Prince Edward Island (PE)', value: 'PE' },
+    { label: 'Quebec (QC)', value: 'QC' },
+    { label: 'Saskatchewan (SK)', value: 'SK' },
+    { label: 'Yukon (YT)', value: 'YT' },
+    { label: 'China', value: 'CN' },
+    { label: 'Hong Kong', value: 'HK' },
+    { label: 'India', value: 'IN' },
   ];
 
   const validateZip = (zip) => /^[A-Za-z]\d[A-Za-z]\d[A-Za-z]\d$/.test(zip);
@@ -116,6 +132,7 @@ export default function CreateAddressModal({ onClose, onAddressCreated, address 
           headers: { Authorization: `Bearer ${token}` },
         }
       );
+      dispatch(fetchUserInfo({ user, getAccessTokenSilently })); // Refresh Redux user info
       if (onAddressCreated) onAddressCreated();
       setTimeout(() => {
         onClose();
@@ -140,6 +157,7 @@ export default function CreateAddressModal({ onClose, onAddressCreated, address 
 
         <h2 className="text-xl font-semibold mb-4">Update Address</h2>
 
+        {submitting && <Loading />}
         <FormSubmit onSubmit={handleSubmit} className="space-y-4">
           <InputField
             label="Address"

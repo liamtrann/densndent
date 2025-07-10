@@ -1,4 +1,5 @@
 // src/App.js
+import React from "react";
 import { Routes, Route } from "react-router-dom";
 import {
   LandingPage,
@@ -19,6 +20,9 @@ import Footer from "./components/Footer";
 import PurchaseHistory from "./pages/PurchaseHistory";
 import ProfileEditCard from "./components/ProfileEditCard";
 import ProtectedRoute from "./common/ProtectedRoute";
+import { useAuth0 } from '@auth0/auth0-react';
+import { useDispatch } from 'react-redux';
+import { fetchUserInfo, clearUserInfo } from './redux/slices/userSlice';
 
 // Real content pages
 import AboutUs from "./pages/AboutUs";
@@ -35,7 +39,18 @@ const PromotionsPage = () => <div>Promotions Page</div>;
 const CataloguesPage = () => <div>Catalogues Page</div>;
 const ClearancePage = () => <div>Clearance Page</div>;
 
-export default function App() {
+function App() {
+  const { isAuthenticated, user, getAccessTokenSilently } = useAuth0();
+  const dispatch = useDispatch();
+
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      dispatch(fetchUserInfo({ user, getAccessTokenSilently }));
+    } else {
+      dispatch(clearUserInfo());
+    }
+  }, [isAuthenticated, user, getAccessTokenSilently, dispatch]);
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />

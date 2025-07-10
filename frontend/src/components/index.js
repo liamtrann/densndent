@@ -36,3 +36,4 @@ export { default as SearchBar } from './SearchBar';
 export { default as VerifyEmailModal } from './VerifyEmailModal';
 export { default as ProfileEditCard } from './ProfileEditCard';
 export { default as ListProductComponent } from './ListProductComponent';
+export { default as UserInfoCard } from './UserInfoCard';

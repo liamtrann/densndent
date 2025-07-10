@@ -26,3 +26,4 @@ export { default as Pagination } from "./Pagination";
 export { default as ProductMenuDropdown } from "./ProductMenuDropdown";
 export { default as ProtectedRoute } from "./ProtectedRoute";
 export { default as FormSubmit } from "./FormSubmit";
+export { default as TextButton } from "./TextButton";

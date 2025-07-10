@@ -42,7 +42,7 @@ export default function CheckoutSummary({ promoCode, setPromoCode }) {
       </div>
 
       {/* Promo Code */}
-      <div className="mb-4">
+      {/* <div className="mb-4">
         <h4 className="text-sm font-medium mb-1">Have a Promo Code?</h4>
         <div className="flex gap-2">
           <InputField
@@ -52,7 +52,7 @@ export default function CheckoutSummary({ promoCode, setPromoCode }) {
           />
           <Button onClick={() => {}}>Apply</Button>
         </div>
-      </div>
+      </div> */}
 
       {/* Cart Items */}
       <div className="mt-4">
