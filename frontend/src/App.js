@@ -39,7 +39,7 @@ const PromotionsPage = () => <div>Promotions Page</div>;
 const CataloguesPage = () => <div>Catalogues Page</div>;
 const ClearancePage = () => <div>Clearance Page</div>;
 
-function App() {
+export default function App() {
   const { isAuthenticated, user, getAccessTokenSilently } = useAuth0();
   const dispatch = useDispatch();
 
