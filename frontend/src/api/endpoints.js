@@ -57,6 +57,7 @@ const endpoint = {
 
     },
     GET_SHIPPING_METHOD: (id) => `/suiteql/shipItem/${id}`,
+    POST_CHECK_INVENTORY: () => '/suiteql/inventory/check-inventory',
 
     // NETSUITE REST API Endpoints
     GET_CUSTOMER: (id) => `/restapi/customer/${id}`,

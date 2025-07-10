@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import InputField from "../common/InputField";
 import Modal from "../components/Modal";
 import { removeFromCart, addToCart } from "../redux/slices/cartSlice";
-import { ProductImage } from "../common";
 import { delayCall } from "../api/util";
+import { useInventoryCheck } from "../hooks";
+import { CartProductCard, CartOrderSummary } from "../components";
 
 export default function CartPage() {
   const cart = useSelector((state) => state.cart.items);
@@ -15,6 +15,16 @@ export default function CartPage() {
   const [promoCode, setPromoCode] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+
+  // Inventory check hook
+  const { inventoryStatus, loading: inventoryLoading, error: inventoryError, checkInventory } = useInventoryCheck();
+
+  // Check inventory on cart load/change
+  useEffect(() => {
+    if (cart.length > 0) {
+      checkInventory(cart.map(item => item.id));
+    }
+  }, [cart]);
 
   // Calculate subtotal and total quantity
   const subtotal = cart.reduce((sum, item) => sum + (item.unitprice || item.price || 0) * item.quantity, 0).toFixed(2);
@@ -51,65 +61,52 @@ export default function CartPage() {
     navigate(`/product/${id}`);
   };
 
+  // Check inventory before checkout
+  const handleProceedToCheckout = async () => {
+    const result = await checkInventory(cart.map(item => item.id));
+    if (!result) return;
+    // Check for out of stock or missing items
+    const outOfStock = result.find(r => !r || r.quantityavailable <= 0);
+    if (outOfStock) {
+      alert("Some items in your cart are out of stock or unavailable. Please review your cart.");
+      return;
+    }
+    navigate("/checkout");
+  };
+
+  console.log(inventoryStatus)
+
   return (
     <div className="max-w-6xl mx-auto px-6 py-10">
       <h1 className="text-2xl font-bold mb-6 text-center">
         SHOPPING CART ({cart.length} Product{cart.length !== 1 ? "s" : ""}, {totalQuantity} Item{totalQuantity !== 1 ? "s" : ""})
       </h1>
 
+      {/* Inventory check error/warning */}
+      {inventoryError && <div className="text-red-600 text-center mb-4">{inventoryError}</div>}
+      {inventoryLoading && <div className="text-blue-700 text-center mb-4">Checking inventory...</div>}
+
       {/* Cart Items */}
       {cart.length > 0 ? (
-        cart.map((item) => (
-          <div key={item.id + (item.flavor ? `-${item.flavor}` : "")}
-            className="flex gap-6 border p-4 rounded-md shadow-sm mb-4">
-            <span
-              className="cursor-pointer"
-              onClick={() => handleNavigateToProduct(item.id)}
-            >
-              <ProductImage src={item.file_url} alt={item.itemid || item.displayname || "Product"} className="h-32" />
-            </span>
-            <div className="flex-grow">
-              <h2
-                className="font-semibold mb-1 cursor-pointer hover:underline"
-                onClick={() => handleNavigateToProduct(item.id)}
-              >
-                {item.itemid || item.displayname}
-              </h2>
-              <p className="text-gray-600">${item.unitprice || item.price}</p>
-              {typeof item.totalquantityonhand !== 'undefined' && (
-                <p className={
-                  item.totalquantityonhand > 0
-                    ? "text-green-700 font-semibold text-sm mb-1"
-                    : "text-red-600 font-semibold text-sm mb-1"
-                }>
-                  {item.totalquantityonhand > 0
-                    ? `Current Stock: ${item.totalquantityonhand}`
-                    : "Out of stock"}
-                </p>
+        cart.map((item) => {
+          const inv = inventoryStatus.find(i => i.item === item.id);
+          const missing = !inv;
+          return (
+            <div key={item.id + (item.flavor ? `-${item.flavor}` : "") + "-wrapper"}>
+              <CartProductCard
+                key={item.id + (item.flavor ? `-${item.flavor}` : "")}
+                item={item}
+                inv={inv}
+                onNavigate={handleNavigateToProduct}
+                onQuantityChange={handleQuantityChange}
+                onRemove={handleRemoveClick}
+              />
+              {missing && (
+                <div className="text-red-700 text-xs mb-2 ml-2">This item is no longer available or has been removed from inventory.</div>
               )}
-              <div className="mt-2 w-24">
-                <InputField
-                  label="Quantity:"
-                  type="number"
-                  min={1}
-                  max={item.totalquantityonhand || 9999}
-                  value={item.quantity}
-                  onChange={(e) => handleQuantityChange(item, e.target.value)}
-                />
-              </div>
-              <p className="mt-2 text-sm">
-                <span className="font-medium">Amount:</span>{" "}
-                <span className="font-bold">${((item.unitprice || item.price || 0) * item.quantity).toFixed(2)}</span>
-              </p>
-              <button
-                className="mt-2 text-red-600 underline text-sm"
-                onClick={() => handleRemoveClick(item)}
-              >
-                Remove
-              </button>
             </div>
-          </div>
-        ))
+          );
+        })
       ) : (
         <p className="text-center mt-6 text-sm text-blue-700 font-medium">Your cart is empty.</p>
       )}
@@ -137,50 +134,16 @@ export default function CartPage() {
 
       {/* Order Summary */}
       {cart.length > 0 && (
-        <div className="mt-10 grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2" />
-          <div className="border p-6 rounded shadow-md">
-            <h3 className="text-xl font-semibold mb-4">Order Summary</h3>
-            <div className="flex justify-between mb-2 text-sm">
-              <span>Subtotal {totalQuantity} item{totalQuantity !== 1 ? "s" : ""}</span>
-              <span className="font-semibold">${subtotal}</span>
-            </div>
-            <p className="text-xs text-gray-500 mb-4">
-              Subtotal Does Not Include Shipping Or Tax
-            </p>
-            <div className="mb-4">
-              <h4 className="text-sm font-medium mb-1">Estimate Tax & Shipping</h4>
-              <p className="text-xs mb-2">Ship available only to Canada</p>
-              <InputField
-                placeholder="Postal Code"
-                value={postalCode}
-                onChange={(e) => setPostalCode(e.target.value)}
-              />
-              <button className="w-full bg-gray-700 text-white py-2 rounded hover:bg-gray-800">
-                ESTIMATE
-              </button>
-            </div>
-            <div className="mb-4">
-              <h4 className="text-sm font-medium mb-1">Have a Promo Code?</h4>
-              <div className="flex gap-2">
-                <InputField
-                  value={promoCode}
-                  onChange={(e) => setPromoCode(e.target.value)}
-                  placeholder="Promo Code"
-                />
-                <button className="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-800">
-                  APPLY
-                </button>
-              </div>
-            </div>
-            <button
-              className="w-full mt-4 bg-purple-800 text-white py-3 rounded hover:bg-purple-900"
-              onClick={() => navigate("/checkout")}
-            >
-              PROCEED TO CHECKOUT
-            </button>
-          </div>
-        </div>
+        <CartOrderSummary
+          totalQuantity={totalQuantity}
+          subtotal={subtotal}
+          postalCode={postalCode}
+          setPostalCode={setPostalCode}
+          promoCode={promoCode}
+          setPromoCode={setPromoCode}
+          handleProceedToCheckout={handleProceedToCheckout}
+          inventoryLoading={inventoryLoading}
+        />
       )}
     </div>
   );

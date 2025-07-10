@@ -25,7 +25,6 @@ const cartSlice = createSlice({
     },
     reducers: {
         addToCart: (state, action) => {
-            // Store all product details, only update quantity if exists (by id and flavor if present)
             const { id, flavor, quantity } = action.payload;
             let existing;
             if (flavor !== undefined) {
