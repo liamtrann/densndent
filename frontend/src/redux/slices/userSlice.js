@@ -13,7 +13,7 @@ export const fetchUserInfo = createAsyncThunk(
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             // Assume response is an array, take the first item
-            return res.data[0] || res.data;
+            return res.data[0] || null;
         } catch (err) {
             return rejectWithValue(err?.response?.data || err.message);
         }

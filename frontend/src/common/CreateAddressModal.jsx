@@ -6,10 +6,15 @@ import Button from "./Button";
 import api from "../api/api";
 import endpoint from "../api/endpoints";
 import { useAuth0 } from "@auth0/auth0-react";
+import { useDispatch } from 'react-redux';
+import { fetchUserInfo } from '../redux/slices/userSlice';
 import FormSubmit from "./FormSubmit";
+import Loading from "./Loading";
+import ErrorMessage from "./ErrorMessage";
 
-export default function CreateAddressModal({ onClose, onAddressCreated, address = null, customerId }) {
-  const { getAccessTokenSilently } = useAuth0();
+export default function CreateAddressModal({ onClose, onAddressCreated, address = null, customerId, error }) {
+  const { user, getAccessTokenSilently } = useAuth0();
+  const dispatch = useDispatch();
 
   // Always call hooks first
   const [formData, setFormData] = useState({
@@ -43,6 +48,7 @@ export default function CreateAddressModal({ onClose, onAddressCreated, address 
   if (!customerId) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+        {error && <ErrorMessage message={error} />}
         <div className="bg-white w-full max-w-md p-6 rounded shadow-lg relative">
           <button
             className="absolute top-2 right-4 text-xl font-bold text-gray-600 hover:text-gray-800"
@@ -126,6 +132,7 @@ export default function CreateAddressModal({ onClose, onAddressCreated, address 
           headers: { Authorization: `Bearer ${token}` },
         }
       );
+      dispatch(fetchUserInfo({ user, getAccessTokenSilently })); // Refresh Redux user info
       if (onAddressCreated) onAddressCreated();
       setTimeout(() => {
         onClose();
@@ -150,6 +157,7 @@ export default function CreateAddressModal({ onClose, onAddressCreated, address 
 
         <h2 className="text-xl font-semibold mb-4">Update Address</h2>
 
+        {submitting && <Loading />}
         <FormSubmit onSubmit={handleSubmit} className="space-y-4">
           <InputField
             label="Address"

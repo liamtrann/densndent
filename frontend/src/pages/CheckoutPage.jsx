@@ -8,14 +8,17 @@ import Button from "../common/Button";
 import Dropdown from "../common/Dropdown";
 import Paragraph from "../common/Paragraph";
 import CheckoutSummary from "../components/CheckoutSummary";
+import { Loading } from "../common";
 
 export default function CheckoutPage() {
   const { isAuthenticated, isLoading, loginWithRedirect, getAccessTokenSilently } = useAuth0();
-  const cart = useSelector((state) => state.cart.items);
   const location = useLocation();
   const navigate = useNavigate();
   const [promoCode, setPromoCode] = useState("");
   const [addressFilled, setAddressFilled] = useState(false);
+  const userInfo = useSelector(state => state.user.info);
+
+  console.log(userInfo)
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -34,12 +37,7 @@ export default function CheckoutPage() {
   }, [isAuthenticated, isLoading, loginWithRedirect, getAccessTokenSilently]);
 
   if (isLoading || !isAuthenticated) {
-    return (
-      <div className="max-w-2xl mx-auto px-6 py-10 text-center">
-        <h1 className="text-2xl font-bold mb-6">Checkout</h1>
-        <Paragraph>Checking authentication...</Paragraph>
-      </div>
-    );
+    return <Loading />
   }
 
   const renderStep = () => {

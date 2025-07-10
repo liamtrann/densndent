@@ -171,13 +171,6 @@ function MobileDrawer({
             >
               Login
             </Button>
-            <Link
-              to="/register"
-              onClick={onClose}
-              className="text-sm font-bold uppercase text-black mt-1 block"
-            >
-              Register
-            </Link>
           </div>
         ) : (
           <div className="pt-2">
