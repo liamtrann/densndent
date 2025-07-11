@@ -12,6 +12,7 @@ const transactionRoute = require('./transaction/route');
 const promotionRoute = require('./promotion/route');
 const shipItemRoute = require('./shipItem/shipItem.route');
 const inventoryRoute = require('./inventory/route');
+const commerceCategoryRoute = require('./commerceCategory/route');
 const checkJwt = require('../auth/middleware');
 
 router.use('/classification', classificationRoutes);
@@ -25,6 +26,7 @@ router.use('/transaction', transactionRoute);
 router.use('/promotion', promotionRoute);
 router.use('/shipItem', shipItemRoute);
 router.use('/inventory', inventoryRoute);
+router.use('/commerceCategory', commerceCategoryRoute);
 
 router.use((err, req, res, next) => {
     if (err.name === 'UnauthorizedError') {

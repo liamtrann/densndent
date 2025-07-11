@@ -4,6 +4,7 @@ import { ProductImage } from "../common";
 
 export default function CartProductCard({ item, inv, onNavigate, onQuantityChange, onRemove }) {
     const outOfStock = inv && inv.quantityavailable <= 0;
+    const missing = !inv;
     return (
         <div key={item.id + (item.flavor ? `-${item.flavor}` : "")}
             className={`flex gap-6 border p-4 rounded-md shadow-sm mb-4 ${outOfStock ? "bg-red-50" : ""}`}>
@@ -34,7 +35,16 @@ export default function CartProductCard({ item, inv, onNavigate, onQuantityChang
                 )}
                 {/* Inventory check warning */}
                 {inv && inv.quantityavailable <= 0 && (
-                    <p className="text-red-700 font-semibold text-xs">This item is out of stock.</p>
+                    <div className="flex items-center gap-2 bg-red-100 border border-red-400 rounded px-2 py-1 my-1">
+                        <span className="text-red-700 font-bold text-lg">&#9888;</span>
+                        <p className="text-red-700 font-semibold text-xs">This item is out of stock.</p>
+                    </div>
+                )}
+                {missing && (
+                    <div className="flex items-center gap-2 bg-yellow-100 border border-yellow-400 rounded px-2 py-1 my-1">
+                        <span className="text-yellow-700 font-bold text-lg">&#9888;</span>
+                        <span className="text-yellow-800 font-semibold text-xs">This item is no longer available or has been removed from inventory.</span>
+                    </div>
                 )}
                 <div className="mt-2 w-24">
                     <InputField

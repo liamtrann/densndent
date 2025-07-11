@@ -6,6 +6,7 @@ import { removeFromCart, addToCart } from "../redux/slices/cartSlice";
 import { delayCall } from "../api/util";
 import { useInventoryCheck } from "../hooks";
 import { CartProductCard, CartOrderSummary } from "../components";
+import { ErrorMessage, Loading } from "../common";
 
 export default function CartPage() {
   const cart = useSelector((state) => state.cart.items);
@@ -74,7 +75,9 @@ export default function CartPage() {
     navigate("/checkout");
   };
 
-  console.log(inventoryStatus)
+  // Inventory check error/warning
+  if (inventoryError) return <ErrorMessage message={inventoryError} className="mb-4" />;
+  if (inventoryLoading) return <Loading />;
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-10">
@@ -82,15 +85,10 @@ export default function CartPage() {
         SHOPPING CART ({cart.length} Product{cart.length !== 1 ? "s" : ""}, {totalQuantity} Item{totalQuantity !== 1 ? "s" : ""})
       </h1>
 
-      {/* Inventory check error/warning */}
-      {inventoryError && <div className="text-red-600 text-center mb-4">{inventoryError}</div>}
-      {inventoryLoading && <div className="text-blue-700 text-center mb-4">Checking inventory...</div>}
-
       {/* Cart Items */}
       {cart.length > 0 ? (
         cart.map((item) => {
           const inv = inventoryStatus.find(i => i.item === item.id);
-          const missing = !inv;
           return (
             <div key={item.id + (item.flavor ? `-${item.flavor}` : "") + "-wrapper"}>
               <CartProductCard
@@ -101,9 +99,7 @@ export default function CartPage() {
                 onQuantityChange={handleQuantityChange}
                 onRemove={handleRemoveClick}
               />
-              {missing && (
-                <div className="text-red-700 text-xs mb-2 ml-2">This item is no longer available or has been removed from inventory.</div>
-              )}
+
             </div>
           );
         })
