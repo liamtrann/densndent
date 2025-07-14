@@ -6,9 +6,6 @@ import PromotionGrid from "./PromotionGrid";
 
 
 const promotions = [
-  { img: "/june-flyer.png", label: "June Dental Flyer" },
-  { img: "/10year-warranty.png", label: "10 Year Warranty" },
-  { img: "/garrison.png", label: "Garrison Dental Solutions" },
 ];
 
 export default function MainSection() {
