@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { FiShoppingCart } from "react-icons/fi";
-import { HiPlusSm, HiMinusSm } from "react-icons/hi";
+import { FiShoppingCart } from "react-icons/fi"; // cart icon
 import Button from "../common/Button";
 import { addToCart } from "../redux/slices/cartSlice";
 import CartConfirmationModal from "./CartConfirmationModal";
@@ -12,14 +11,10 @@ export default function ListProduct({ product }) {
   const { id, itemid, file_url, price, totalquantityonhand } = product;
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
-  const [quantity, setQuantity] = useState(1);
   const [showModal, setShowModal] = useState(false);
 
-  const inStock = totalquantityonhand && totalquantityonhand > 0;
-
   const handleAddToCart = () => {
-    const cartItem = { ...product, quantity };
+    const cartItem = { ...product, quantity: 1 };
     dispatch(addToCart(cartItem));
     setShowModal(true);
   };
@@ -28,17 +23,7 @@ export default function ListProduct({ product }) {
     navigate(`/product/${id}`);
   };
 
-  const increaseQty = () => {
-    if (inStock && quantity < totalquantityonhand) {
-      setQuantity((q) => q + 1);
-    }
-  };
-
-  const decreaseQty = () => {
-    if (quantity > 1) {
-      setQuantity((q) => q - 1);
-    }
-  };
+  const inStock = totalquantityonhand && totalquantityonhand > 0;
 
   return (
     <div className="border p-4 rounded shadow hover:shadow-md transition">
@@ -65,41 +50,23 @@ export default function ListProduct({ product }) {
         </Paragraph>
       )}
 
-      {/* Quantity Selector */}
-      <div className="flex items-center justify-center mb-3 space-x-3">
-        <button
-          onClick={decreaseQty}
-          className="bg-gray-200 px-2 py-1 rounded hover:bg-gray-300"
-          disabled={quantity <= 1}
-        >
-          <HiMinusSm />
-        </button>
-        <span className="font-semibold w-6 text-center">{quantity}</span>
-        <button
-          onClick={increaseQty}
-          className="bg-gray-200 px-2 py-1 rounded hover:bg-gray-300"
-          disabled={quantity >= totalquantityonhand}
-        >
-          <HiPlusSm />
-        </button>
-      </div>
-
       {showModal && (
         <CartConfirmationModal
           product={product}
-          quantity={quantity}
+          quantity={1}
           onClose={() => setShowModal(false)}
         />
       )}
 
       <Button
-        className="w-full h-9 py-1 px-0 flex items-center justify-center rounded"
-        disabled={!inStock}
-        onClick={handleAddToCart}
-        aria-label="Add to cart"
-      >
-        <FiShoppingCart size={16} />
-      </Button>
+      className="h-9 w-22 flex items-center justify-center"
+      disabled={!inStock}
+      onClick={handleAddToCart}
+      aria-label="Add to cart"
+    >
+      <FiShoppingCart size={20} />
+    </Button>
+
     </div>
   );
 }
