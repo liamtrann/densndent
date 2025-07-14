@@ -4,6 +4,6 @@ const controller = require('./commerceCategory.controller');
 
 router.get('/', controller.getAllCommerceCategories);
 router.get('/by-id', controller.getCommerceCategoryById);
-router.get('/primary-parent/:id', controller.getPrimaryParentById);
+router.get('/sub-category-by-parent/:id', controller.getSubCategoryByParentById);
 
 module.exports = router;

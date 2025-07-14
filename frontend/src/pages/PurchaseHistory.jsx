@@ -10,6 +10,8 @@ import Loading from "../common/Loading";
 import { ErrorMessage } from "../common";
 import Paragraph from "../common/Paragraph";
 import { useSelector } from 'react-redux';
+import RecentPurchases from "../components/RecentPurchases";
+import TextButton from "../common/TextButton";
 
 export default function PurchaseHistory() {
   const { user, getAccessTokenSilently } = useAuth0();
@@ -96,6 +98,8 @@ export default function PurchaseHistory() {
     setFilteredOrders(filtered);
   }, [fromDate, toDate, status, sort, orders]);
 
+  console.log(orders)
+
   return (
     <div className="max-w-6xl mx-auto px-6 py-10">
       <Breadcrumb path={["Home", "Profile", "Purchase History"]} />
@@ -103,7 +107,7 @@ export default function PurchaseHistory() {
       <h2 className="text-2xl font-bold text-gray-800 mb-6">Purchase History</h2>
 
       {/* Filters */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6 items-end">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-6 items-end">
         <InputField
           type="date"
           label="From"
@@ -134,51 +138,24 @@ export default function PurchaseHistory() {
           onChange={(e) => setStatus(e.target.value)}
           className="min-w-[150px]"
         />
+        <div className="flex justify-end items-end">
+          <TextButton
+            className="w-full"
+            onClick={() => {
+              setFromDate("");
+              setToDate("");
+              setStatus("All");
+              setSort("recent");
+            }}
+          >
+            Reset
+          </TextButton>
+        </div>
       </div>
 
       {/* Scrollable Order List */}
       <div className="bg-white border rounded shadow-sm max-h-[500px] overflow-y-auto">
-        {loading && <Loading className="text-center py-6" />}
-        {error && (
-          <ErrorMessage message={error} className="text-center py-6" />
-        )}
-        {!loading && filteredOrders.length === 0 && (
-          <Paragraph className="text-center text-gray-500 py-6">
-            No orders match your filters.
-          </Paragraph>
-        )}
-
-        {filteredOrders.map((order) => (
-          <div
-            key={order.id}
-            className="p-4 border-b last:border-b-0 flex justify-between items-center"
-          >
-            <div>
-              <Paragraph className="font-medium">
-                {order.trandisplayname}
-              </Paragraph>
-              <Paragraph className="text-sm text-gray-500 mb-1">
-                Placed on {order.trandate || "Unknown"}
-              </Paragraph>
-              {order.shipcarrier && (
-                <Paragraph className="text-sm text-gray-600">
-                  Carrier:{" "}
-                  <span className="font-medium">{order.shipcarrier}</span>
-                </Paragraph>
-              )}
-            </div>
-            <div className="text-right">
-              <Paragraph className="text-sm text-gray-600">
-                {order.status}
-              </Paragraph>
-              {order.foreigntotal && (
-                <Paragraph className="text-base font-semibold text-gray-800">
-                  ${order.foreigntotal}
-                </Paragraph>
-              )}
-            </div>
-          </div>
-        ))}
+        <RecentPurchases orders={filteredOrders} />
       </div>
     </div>
   );

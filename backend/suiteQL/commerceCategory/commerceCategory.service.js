@@ -13,7 +13,7 @@ class CommerceCategoryService {
         return results.items?.[0] || null;
     }
 
-    async getPrimaryParentById(id) {
+    async getSubCategoryByParentById(id) {
         const sql = `SELECT * from CommerceCategory where primaryparent='${id}' AND (enddate IS NULL OR enddate >= TRUNC(SYSDATE)) AND displayinsite = 'T' AND isinactive = 'F'`;
         const results = await runQueryWithPagination(sql);
         return results

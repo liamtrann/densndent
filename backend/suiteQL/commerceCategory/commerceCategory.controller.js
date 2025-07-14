@@ -26,13 +26,13 @@ exports.getCommerceCategoryById = async (req, res) => {
     }
 };
 
-exports.getPrimaryParentById = async (req, res) => {
+exports.getSubCategoryByParentById = async (req, res) => {
     try {
         const { id } = req.params;
         if (!id) {
             return res.status(400).json({ error: 'id is required' });
         }
-        const parent = await commerceCategoryService.getPrimaryParentById(id);
+        const parent = await commerceCategoryService.getSubCategoryByParentById(id);
         res.json({ parent });
     } catch (error) {
         res.status(500).json({ error: error.message });

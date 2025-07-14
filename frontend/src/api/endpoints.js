@@ -29,7 +29,6 @@ const endpoint = {
         return `/suiteql/item/by-class-and-brand?${params.toString()}`;
     },
     GET_CUSTOMER_BY_EMAIL: (email) => `/suiteql/customer/by-email?email=${email}`,
-    POST_ITEMS_BY_NAME: () => '/suiteql/item/by-name',
     GET_COUNT_BY_CLASS: (classId) => `/suiteql/item/count-by-class?classId=${classId}`,
     GET_COUNT_BY_BRAND: (brand) => `/suiteql/item/count-by-brand?brand=${brand}`,
     POST_GET_COUNT_BY_NAME: () => `/suiteql/item/count-by-name`,
@@ -53,7 +52,7 @@ const endpoint = {
         if (limit) params.append('limit', limit);
         if (offset) params.append('offset', offset);
         if (sort) params.append('sort', sort);
-        return `/suiteql/item/by-name?${params.toString()}`
+        return `/suiteql/item/search-by-name?${params.toString()}`
 
     },
     GET_SHIPPING_METHOD: (id) => `/suiteql/shipItem/${id}`,
