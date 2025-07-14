@@ -1,8 +1,5 @@
 import React, { useState } from "react";
-import InputField from "../common/InputField";
-import Paragraph from "../common/Paragraph";
-import Button from "../common/Button";
-import Breadcrumb from "../common/Breadcrumb"; // ✅ import your reusable breadcrumb
+import { InputField, Paragraph, Button, Breadcrumb } from "../common";
 
 export default function ContactPage() {
   const [form, setForm] = useState({
@@ -31,7 +28,10 @@ export default function ContactPage() {
       <div className="grid md:grid-cols-2 gap-8 mb-12">
         <div>
           {[
-            { title: "📍 Address", content: ["91 Granton Drive,", "Richmond Hill ON, L4B 2N5"] },
+            {
+              title: "📍 Address",
+              content: ["91 Granton Drive,", "Richmond Hill ON, L4B 2N5"],
+            },
             { title: "📞 Phone", content: ["1-866-449-9998", "905-475-3367"] },
             { title: "📠 Fax", content: ["905-475-2894"] },
             { title: "📧 Email", content: ["info@densndente.ca"] },
@@ -41,9 +41,13 @@ export default function ContactPage() {
             },
           ].map((block) => (
             <div key={block.title} className="mb-6">
-              <h2 className="text-2xl font-semibold text-orange-600 mb-2">{block.title}</h2>
+              <h2 className="text-2xl font-semibold text-orange-600 mb-2">
+                {block.title}
+              </h2>
               {block.content.map((line, idx) => (
-                <Paragraph key={idx} className="text-lg">{line}</Paragraph>
+                <Paragraph key={idx} className="text-lg">
+                  {line}
+                </Paragraph>
               ))}
             </div>
           ))}
@@ -65,7 +69,9 @@ export default function ContactPage() {
       {/* Contact Form */}
       <div className="bg-white shadow-lg p-6 rounded border">
         <h2 className="text-2xl font-semibold mb-4">Contact us</h2>
-        <Paragraph className="mb-6">Leave us a message, and we will reply shortly.</Paragraph>
+        <Paragraph className="mb-6">
+          Leave us a message, and we will reply shortly.
+        </Paragraph>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid md:grid-cols-2 gap-4">
@@ -104,7 +110,10 @@ export default function ContactPage() {
             className="h-32"
           />
 
-          <Button type="submit" className="bg-blue-900 hover:bg-blue-800 text-white px-6 py-2 rounded">
+          <Button
+            type="submit"
+            className="bg-blue-900 hover:bg-blue-800 text-white px-6 py-2 rounded"
+          >
             SEND
           </Button>
         </form>

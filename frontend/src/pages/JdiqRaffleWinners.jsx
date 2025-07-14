@@ -1,11 +1,12 @@
 import React from "react";
-import Breadcrumb from "../common/Breadcrumb";
-import Paragraph from "../common/Paragraph";
+import { Breadcrumb, Paragraph } from "../common";
 
 export default function JdiqRaffleWinners() {
   return (
     <div className="bg-white text-gray-800 px-6 py-10">
-      <Breadcrumb path={["Home", "Promotions & Catalogues", "JDIQ raffle winners"]} />
+      <Breadcrumb
+        path={["Home", "Promotions & Catalogues", "JDIQ raffle winners"]}
+      />
 
       <h1 className="text-2xl md:text-3xl lg:text-4xl font-semibold text-center text-white bg-[#275c8f] py-4 px-4 mb-8 uppercase tracking-wide">
         JDIQ Raffle Winners
@@ -19,16 +20,21 @@ export default function JdiqRaffleWinners() {
         />
         <div className="text-left text-base space-y-4 max-w-xl">
           <Paragraph>
-            We want to send a big <span className="font-semibold">THANK YOU</span> to everyone who supported Dens 'N Dente during JDIQ 2025!
+            We want to send a big{" "}
+            <span className="font-semibold">THANK YOU</span> to everyone who
+            supported Dens 'N Dente during JDIQ 2025!
           </Paragraph>
           <Paragraph>
-            Even though we weren’t there in person, your engagement, participation, and enthusiasm during the last few weeks truly meant the world to us 💙
+            Even though we weren’t there in person, your engagement,
+            participation, and enthusiasm during the last few weeks truly meant
+            the world to us 💙
           </Paragraph>
           <Paragraph>
             A big congratulations to all of our winners! 📦💳
           </Paragraph>
           <Paragraph>
-            Whether you won or simply joined the fun, thank you for making this JDIQ special.
+            Whether you won or simply joined the fun, thank you for making this
+            JDIQ special.
           </Paragraph>
         </div>
       </div>

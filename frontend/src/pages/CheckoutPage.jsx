@@ -3,16 +3,23 @@ import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useAuth0 } from "@auth0/auth0-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import InputField from "../common/InputField";
-import Button from "../common/Button";
-import Dropdown from "../common/Dropdown";
-import Paragraph from "../common/Paragraph";
+import {
+  InputField,
+  Button,
+  Dropdown,
+  Paragraph,
+  Loading,
+  AddAddressModal,
+} from "../common";
 import CheckoutSummary from "../components/CheckoutSummary";
-import { Loading } from "../common";
-import AddAddressModal from "../common/AddAddressModal";
 
 export default function CheckoutPage() {
-  const { isAuthenticated, isLoading, loginWithRedirect, getAccessTokenSilently } = useAuth0();
+  const {
+    isAuthenticated,
+    isLoading,
+    loginWithRedirect,
+    getAccessTokenSilently,
+  } = useAuth0();
   const location = useLocation();
   const navigate = useNavigate();
   const [promoCode, setPromoCode] = useState("");
@@ -47,7 +54,9 @@ export default function CheckoutPage() {
       case "shipping":
         return (
           <div>
-            <h2 className="text-xl font-semibold mb-4">Choose Shipping Address</h2>
+            <h2 className="text-xl font-semibold mb-4">
+              Choose Shipping Address
+            </h2>
             <div className="bg-white p-6 rounded shadow-md space-y-4">
               <InputField label="Full Name" placeholder="Huzaifa Khan" />
               <InputField label="Address" placeholder="1234 Main Street" />
@@ -71,7 +80,10 @@ export default function CheckoutPage() {
               />
             </div>
             <div className="flex justify-end mt-6">
-              <Button className="px-6 py-3" onClick={() => navigate("/checkout/payment")}>
+              <Button
+                className="px-6 py-3"
+                onClick={() => navigate("/checkout/payment")}
+              >
                 Continue to Payment
               </Button>
             </div>
@@ -83,15 +95,22 @@ export default function CheckoutPage() {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="border rounded shadow-sm p-4 bg-white">
-                <div className="text-sm font-semibold text-green-700 mb-1">✓ Selected</div>
+                <div className="text-sm font-semibold text-green-700 mb-1">
+                  ✓ Selected
+                </div>
                 <div className="space-y-1 text-sm">
                   <div className="font-semibold">
                     {userInfo?.first_name} {userInfo?.last_name}
                   </div>
                   <div>{userInfo?.address_line1 || "20 Teesdale Place"}</div>
-                  <div>{userInfo?.city || "Toronto"} {userInfo?.state || "Ontario"} {userInfo?.zip || "M1L 1L1"}</div>
+                  <div>
+                    {userInfo?.city || "Toronto"} {userInfo?.state || "Ontario"}{" "}
+                    {userInfo?.zip || "M1L 1L1"}
+                  </div>
                   <div>{userInfo?.country || "Canada"}</div>
-                  <div className="text-blue-700">{userInfo?.phone || "(647) 514-7593"}</div>
+                  <div className="text-blue-700">
+                    {userInfo?.phone || "(647) 514-7593"}
+                  </div>
                 </div>
                 <div className="flex gap-4 mt-2 text-sm text-blue-700 underline cursor-pointer">
                   <span>Edit</span>
@@ -113,7 +132,12 @@ export default function CheckoutPage() {
             <div className="bg-white p-4 rounded shadow-sm">
               <h3 className="font-semibold mb-2">Delivery Method</h3>
               <label className="flex items-center border p-3 rounded cursor-pointer hover:border-orange-400 transition">
-                <input type="radio" name="delivery" defaultChecked className="mr-3" />
+                <input
+                  type="radio"
+                  name="delivery"
+                  defaultChecked
+                  className="mr-3"
+                />
                 <div className="text-sm">
                   <div>ICS Ground – Online</div>
                   <div className="text-gray-500 text-xs">$9.99</div>
@@ -122,7 +146,10 @@ export default function CheckoutPage() {
             </div>
 
             <div className="flex justify-end">
-              <Button className="px-6 py-3" onClick={() => navigate("/checkout/review")}>
+              <Button
+                className="px-6 py-3"
+                onClick={() => navigate("/checkout/review")}
+              >
                 Continue to Review
               </Button>
             </div>
