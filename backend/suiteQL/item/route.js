@@ -11,7 +11,7 @@ router.post('/by-parent', controller.postGetItemsByParent);
 
 router.post('/by-ids', controller.postItemsByIds);
 
-router.post('/search-by-name', controller.postItemsByNameLike);
+router.post('/search-by-name-like', controller.postItemsByNameLike);
 
 router.get('/count-by-class', controller.getCountByClass);
 router.post('/count-by-name', controller.getCountByName);

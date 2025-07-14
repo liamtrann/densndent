@@ -1,15 +1,17 @@
 // components/profile/RecentPurchases.jsx
 import React, { useState, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
-import { useSelector } from 'react-redux';
+import { useSelector } from "react-redux";
 import api from "../api/api";
 import endpoint from "../api/endpoints";
-import Paragraph from "../common/Paragraph";
-import Loading from "../common/Loading";
+import { Paragraph, Loading } from "../common";
 
-export default function RecentPurchases({ orders: ordersProp, setError: parentSetError }) {
+export default function RecentPurchases({
+  orders: ordersProp,
+  setError: parentSetError,
+}) {
   const { getAccessTokenSilently } = useAuth0();
-  const userInfo = useSelector(state => state.user.info);
+  const userInfo = useSelector((state) => state.user.info);
   const [orders, setOrders] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -28,14 +30,19 @@ export default function RecentPurchases({ orders: ordersProp, setError: parentSe
       setErrorToUse(null);
       try {
         const token = await getAccessTokenSilently();
-        const url = endpoint.GET_TRANSACTION_BY_ID({ id: userInfo.id, limit: 4 });
+        const url = endpoint.GET_TRANSACTION_BY_ID({
+          id: userInfo.id,
+          limit: 4,
+        });
         const res = await api.get(url, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = res.data.items || res.data || [];
         setOrders(Array.isArray(data) ? data.slice(0, 4) : []);
       } catch (err) {
-        setErrorToUse(err?.response?.data?.error || "Failed to fetch recent orders");
+        setErrorToUse(
+          err?.response?.data?.error || "Failed to fetch recent orders"
+        );
       } finally {
         setLoading(false);
       }
@@ -46,7 +53,9 @@ export default function RecentPurchases({ orders: ordersProp, setError: parentSe
   return (
     <div className="mb-10">
       <div className="bg-white border rounded shadow-sm max-h-[400px] overflow-y-auto">
-        {loading && <Loading message="Loading recent purchases..." className="py-6" />}
+        {loading && (
+          <Loading message="Loading recent purchases..." className="py-6" />
+        )}
         {orders.length === 0 && !loading && (
           <Paragraph className="text-center text-gray-500 py-6">
             You don't have any purchases in your account right now
@@ -66,7 +75,7 @@ export default function RecentPurchases({ orders: ordersProp, setError: parentSe
               </Paragraph>
               {order.shipcarrier && (
                 <Paragraph className="text-sm text-gray-600">
-                  Carrier: {" "}
+                  Carrier:{" "}
                   <span className="font-medium">{order.shipcarrier}</span>
                 </Paragraph>
               )}

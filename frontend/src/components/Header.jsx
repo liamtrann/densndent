@@ -1,13 +1,15 @@
 // src/components/Header.jsx
-import React, { useState, useEffect } from 'react';
-import { FaBars, FaSearch } from 'react-icons/fa';
-import { useSelector, useDispatch } from 'react-redux';
-import Logo from './Logo';
-import MobileDrawer from './MobileDrawer';
-import DesktopNav from './DesktopNav';
-import CartIndicator from "./CartIndicator";
-import AuthButton from "../common/AuthButton";
-import SearchBar from "../components/SearchBar";
+import React, { useState, useEffect } from "react";
+import { FaBars, FaSearch } from "react-icons/fa";
+import { useSelector, useDispatch } from "react-redux";
+import {
+  Logo,
+  MobileDrawer,
+  DesktopNav,
+  CartIndicator,
+  SearchBar,
+} from "../components";
+import { AuthButton } from "../common";
 import { fetchClassifications } from "../redux/slices/classificationSlice";
 import { delayCall } from "../api/util";
 
@@ -15,26 +17,28 @@ export default function Header() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState({});
   const [showSearch, setShowSearch] = useState(false);
-  const cartItems = useSelector(s => s.cart.items);
+  const cartItems = useSelector((s) => s.cart.items);
   const total = cartItems.length;
 
   const dispatch = useDispatch();
-  const { classes: categories = [] } = useSelector(s => s.classification || {});
+  const { classes: categories = [] } = useSelector(
+    (s) => s.classification || {}
+  );
 
   useEffect(() => {
     if (!categories.length) delayCall(() => dispatch(fetchClassifications()));
   }, [dispatch, categories.length]);
 
   const navCategories = categories
-    .filter(cat => Array.isArray(cat.child) && cat.child.length > 0)
-    .map(cat => ({
+    .filter((cat) => Array.isArray(cat.child) && cat.child.length > 0)
+    .map((cat) => ({
       name: cat.name,
       id: cat.id,
-      subcategories: cat.child.map(sub => ({ name: sub.name, id: sub.id }))
+      subcategories: cat.child.map((sub) => ({ name: sub.name, id: sub.id })),
     }));
 
-  const toggleMenu = key =>
-    setExpandedMenus(m => ({ ...m, [key]: !m[key] }));
+  const toggleMenu = (key) =>
+    setExpandedMenus((m) => ({ ...m, [key]: !m[key] }));
 
   return (
     <>
@@ -47,7 +51,7 @@ export default function Header() {
       <MobileDrawer
         isOpen={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        categories={navCategories}
+        classification={navCategories}
         expandedMenus={expandedMenus}
         toggleMenu={toggleMenu}
       />
@@ -69,13 +73,13 @@ export default function Header() {
             />
           </div>
           <Logo />
-          <DesktopNav categories={navCategories} />
+          <DesktopNav classification={navCategories} />
         </div>
 
         {/* Right: Auth, Cart on top, Search below */}
         <div className="flex items-center space-x-4">
           <button
-            onClick={() => setShowSearch(prev => !prev)}
+            onClick={() => setShowSearch((prev) => !prev)}
             className="flex flex-col items-center text-gray-700 hover:text-black transition"
             aria-label="Toggle search bar"
           >
@@ -98,7 +102,6 @@ export default function Header() {
           </div>
         </div>
       )}
-
     </>
   );
 }

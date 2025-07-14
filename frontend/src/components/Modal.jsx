@@ -1,13 +1,23 @@
 import React from "react";
-import Button from "../common/Button";
+import { Button } from "../common";
 import { ProductSummary } from "../common";
 
-export default function Modal({ title, onClose, image, product = [], onSubmit, onCloseText = "Close", onSubmitText = "Submit" }) {
+export default function Modal({
+  title,
+  onClose,
+  image,
+  product = [],
+  onSubmit,
+  onCloseText = "Close",
+  onSubmitText = "Submit",
+}) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
       <div className="bg-white w-full max-w-lg p-6 rounded shadow-lg relative">
         {onClose && (
-          <button onClick={onClose} className="absolute top-3 right-4 text-xl">×</button>
+          <button onClick={onClose} className="absolute top-3 right-4 text-xl">
+            ×
+          </button>
         )}
         <h2 className="text-2xl font-semibold mb-4">{title}</h2>
         {Array.isArray(product) && product.length > 0 && (
@@ -19,7 +29,11 @@ export default function Modal({ title, onClose, image, product = [], onSubmit, o
         )}
         {(onClose || onSubmit) && (
           <div className="flex justify-end mt-6 gap-4">
-            {onClose && <Button variant="secondary" onClick={onClose}>{onCloseText}</Button>}
+            {onClose && (
+              <Button variant="secondary" onClick={onClose}>
+                {onCloseText}
+              </Button>
+            )}
             {onSubmit && <Button onClick={onSubmit}>{onSubmitText}</Button>}
           </div>
         )}

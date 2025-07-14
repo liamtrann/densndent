@@ -1,20 +1,23 @@
 // src/components/ProfileEditCard.jsx
 import React, { useState } from "react";
-import InputField from "../common/InputField";
-import Button from "../common/Button";
-import AddressModal from "../common/AddressModal";
+import {
+  InputField,
+  Button,
+  AddressModal,
+  FormSubmit,
+  ErrorMessage,
+  Loading,
+} from "../common";
 import { useAuth0 } from "@auth0/auth0-react";
 import api from "../api/api";
 import endpoint from "../api/endpoints";
-import FormSubmit from "../common/FormSubmit";
-import { ErrorMessage, Loading } from "../common";
-import { useDispatch, useSelector } from 'react-redux';
-import { fetchUserInfo } from '../redux/slices/userSlice';
+import { useDispatch, useSelector } from "react-redux";
+import { fetchUserInfo } from "../redux/slices/userSlice";
 
 export default function ProfileEditCard({ onClose, error }) {
   const { user, getAccessTokenSilently } = useAuth0();
   const dispatch = useDispatch();
-  const customer = useSelector(state => state.user.info);
+  const customer = useSelector((state) => state.user.info);
 
   const [formData, setFormData] = useState({
     firstName: customer?.firstname || "",
@@ -35,10 +38,13 @@ export default function ProfileEditCard({ onClose, error }) {
     setErrors((prev) => ({ ...prev, [name]: undefined }));
   };
 
-  const validatePhone = (phone) => !phone || /^\d{10}$/.test(phone.replace(/\D/g, ""));
+  const validatePhone = (phone) =>
+    !phone || /^\d{10}$/.test(phone.replace(/\D/g, ""));
   const validatePassword = (password) => {
     // At least 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char
-    return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/.test(password);
+    return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/.test(
+      password
+    );
   };
 
   const handleSubmit = async (e) => {
@@ -48,10 +54,12 @@ export default function ProfileEditCard({ onClose, error }) {
       newErrors.homePhone = "Home phone must be exactly 10 digits if provided.";
     }
     if (!validatePhone(formData.mobilePhone)) {
-      newErrors.mobilePhone = "Mobile phone must be exactly 10 digits if provided.";
+      newErrors.mobilePhone =
+        "Mobile phone must be exactly 10 digits if provided.";
     }
     if (!validatePassword(formData.password)) {
-      newErrors.password = "Password must be at least 8 characters, include uppercase, lowercase, number, and special character.";
+      newErrors.password =
+        "Password must be at least 8 characters, include uppercase, lowercase, number, and special character.";
     }
     if (formData.password !== formData.rePassword) {
       newErrors.rePassword = "Passwords do not match.";

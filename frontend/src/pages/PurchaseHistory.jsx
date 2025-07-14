@@ -1,21 +1,23 @@
 // src/pages/PurchaseHistory.jsx
 import React, { useState, useEffect } from "react";
-import InputField from "../common/InputField";
-import Dropdown from "../common/Dropdown";
-import Breadcrumb from "../common/Breadcrumb";
+import {
+  InputField,
+  Dropdown,
+  Breadcrumb,
+  Loading,
+  ErrorMessage,
+  Paragraph,
+  TextButton,
+} from "../common";
 import api from "../api/api";
 import endpoint from "../api/endpoints";
 import { useAuth0 } from "@auth0/auth0-react";
-import Loading from "../common/Loading";
-import { ErrorMessage } from "../common";
-import Paragraph from "../common/Paragraph";
-import { useSelector } from 'react-redux';
+import { useSelector } from "react-redux";
 import RecentPurchases from "../components/RecentPurchases";
-import TextButton from "../common/TextButton";
 
 export default function PurchaseHistory() {
   const { user, getAccessTokenSilently } = useAuth0();
-  const userInfo = useSelector(state => state.user.info);
+  const userInfo = useSelector((state) => state.user.info);
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [status, setStatus] = useState("All");
@@ -29,7 +31,7 @@ export default function PurchaseHistory() {
 
   const sortOptions = [
     { value: "recent", label: "Most Recent" },
-    { value: "oldest", label: "Oldest First" }
+    { value: "oldest", label: "Oldest First" },
   ];
 
   const statusOptions = [
@@ -37,9 +39,8 @@ export default function PurchaseHistory() {
     { value: "open", label: "Open" },
     { value: "delivered", label: "Delivered" },
     { value: "pending", label: "Pending Fulfillment" },
-    { value: "billed", label: "Billed" }
+    { value: "billed", label: "Billed" },
   ];
-
 
   // Fetch orders
   useEffect(() => {
@@ -84,8 +85,10 @@ export default function PurchaseHistory() {
     });
 
     if (status !== "All") {
-      filtered = filtered.filter((o) =>
-        (o.status || "Pending Fulfillment").toLowerCase() === status.toLowerCase()
+      filtered = filtered.filter(
+        (o) =>
+          (o.status || "Pending Fulfillment").toLowerCase() ===
+          status.toLowerCase()
       );
     }
 
@@ -98,13 +101,15 @@ export default function PurchaseHistory() {
     setFilteredOrders(filtered);
   }, [fromDate, toDate, status, sort, orders]);
 
-  console.log(orders)
+  console.log(orders);
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-10">
       <Breadcrumb path={["Home", "Profile", "Purchase History"]} />
 
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">Purchase History</h2>
+      <h2 className="text-2xl font-bold text-gray-800 mb-6">
+        Purchase History
+      </h2>
 
       {/* Filters */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-6 items-end">
