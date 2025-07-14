@@ -27,7 +27,7 @@ const aboutLinks = [
 function MobileDrawer({
   isOpen,
   onClose,
-  categories,
+  classification,
   expandedMenus,
   toggleMenu
 }) {
@@ -64,7 +64,7 @@ function MobileDrawer({
           </Button>
           {isExpanded('Products') && (
             <div className="ml-4 space-y-1">
-              {categories.map(cat => (
+              {classification.map(cat => (
                 <div key={cat.name}>
                   <Button
                     variant="link"

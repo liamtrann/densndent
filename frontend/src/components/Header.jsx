@@ -47,7 +47,7 @@ export default function Header() {
       <MobileDrawer
         isOpen={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        categories={navCategories}
+        classification={navCategories}
         expandedMenus={expandedMenus}
         toggleMenu={toggleMenu}
       />
@@ -69,7 +69,7 @@ export default function Header() {
             />
           </div>
           <Logo />
-          <DesktopNav categories={navCategories} />
+          <DesktopNav classification={navCategories} />
         </div>
 
         {/* Right: Auth, Cart on top, Search below */}

@@ -10,13 +10,11 @@ import {
   CheckoutPage,
   FAQPage,
   ProfilePage,
-  ListProductsByClass,
-  ListProductsByBrand,
-  ListProductsByName,
 } from "./pages";
 
 import Header from "./components/Header";
 import Footer from "./components/Footer";
+import { ListProductPage } from "./components";
 import PurchaseHistory from "./pages/PurchaseHistory";
 import ProfileEditCard from "./components/ProfileEditCard";
 import ProtectedRoute from "./common/ProtectedRoute";
@@ -68,9 +66,10 @@ export default function App() {
           <Route path="/catalogues" element={<CataloguesPage />} />
           <Route path="/clearance" element={<ClearancePage />} />
           <Route path="/partners" element={<OurPartners />} />
-          <Route path="/products/by-class/:name" element={<ListProductsByClass />} />
-          <Route path="/products/by-brand/:brandName" element={<ListProductsByBrand />} />
-          <Route path="/products/by-name/:name" element={<ListProductsByName />} />
+          <Route path="/products/by-class/:nameAndId" element={<ListProductPage by="class" />} />
+          <Route path="/products/by-brand/:brandName" element={<ListProductPage by="brand" />} />
+          <Route path="/products/by-name/:name" element={<ListProductPage by="name" />} />
+          <Route path="/products/by-category/:categoryNameAndId" element={<ListProductPage by="category" />} />
 
           <Route element={<ProtectedRoute />}>
             <Route path="/profile" element={<ProfilePage />} />

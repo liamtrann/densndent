@@ -28,6 +28,14 @@ const endpoint = {
         if (sort) params.append('sort', sort);
         return `/suiteql/item/by-class-and-brand?${params.toString()}`;
     },
+    GET_ITEMS_BY_CATEGORY: ({ category, limit, offset, sort }) => {
+        const params = new URLSearchParams();
+        if (category) params.append('category', category);
+        if (limit) params.append('limit', limit);
+        if (offset) params.append('offset', offset);
+        if (sort) params.append('sort', sort);
+        return `/suiteql/item/by-category?${params.toString()}`;
+    },
     GET_CUSTOMER_BY_EMAIL: (email) => `/suiteql/customer/by-email?email=${email}`,
     GET_COUNT_BY_CLASS: (classId) => `/suiteql/item/count-by-class?classId=${classId}`,
     GET_COUNT_BY_BRAND: (brand) => `/suiteql/item/count-by-brand?brand=${brand}`,
@@ -52,7 +60,7 @@ const endpoint = {
         if (limit) params.append('limit', limit);
         if (offset) params.append('offset', offset);
         if (sort) params.append('sort', sort);
-        return `/suiteql/item/search-by-name?${params.toString()}`
+        return `/suiteql/item/search-by-name-like?${params.toString()}`
 
     },
     GET_SHIPPING_METHOD: (id) => `/suiteql/shipItem/${id}`,

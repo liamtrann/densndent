@@ -6,8 +6,5 @@ export { default as CartPage } from './CartPage';
 export { default as CheckoutPage } from './CheckoutPage';
 export { default as ProfilePage } from './ProfilePage';
 export { default as FAQPage } from './FAQPage';
-export { default as ListProductsByClass } from './ListProductsByClass';
 export { default as ProductDetail } from './ProductDetail';
 export { default as PurchaseHistory } from './PurchaseHistory';
-export { default as ListProductsByBrand } from './ListProductsByBrand';
-export { default as ListProductsByName } from './ListProductsByName';
