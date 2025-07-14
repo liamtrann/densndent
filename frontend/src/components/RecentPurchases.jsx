@@ -5,19 +5,26 @@ import { useSelector } from 'react-redux';
 import api from "../api/api";
 import endpoint from "../api/endpoints";
 import Paragraph from "../common/Paragraph";
+import Loading from "../common/Loading";
 
-export default function RecentPurchases({ setLoading, setError: parentSetError }) {
+export default function RecentPurchases({ orders: ordersProp, setError: parentSetError }) {
   const { getAccessTokenSilently } = useAuth0();
   const userInfo = useSelector(state => state.user.info);
   const [orders, setOrders] = useState([]);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
   // Use parent setError if provided, otherwise local
   const setErrorToUse = parentSetError || setError;
 
   useEffect(() => {
+    if (ordersProp) {
+      setOrders(ordersProp);
+      setLoading(false);
+      return;
+    }
     async function fetchRecentOrders() {
       if (!userInfo?.id) return;
-      if (setLoading) setLoading(true);
+      setLoading(true);
       setErrorToUse(null);
       try {
         const token = await getAccessTokenSilently();
@@ -30,16 +37,17 @@ export default function RecentPurchases({ setLoading, setError: parentSetError }
       } catch (err) {
         setErrorToUse(err?.response?.data?.error || "Failed to fetch recent orders");
       } finally {
-        if (setLoading) setLoading(false);
+        setLoading(false);
       }
     }
     fetchRecentOrders();
-  }, [userInfo?.id, getAccessTokenSilently, setLoading, setErrorToUse]);
+  }, [userInfo?.id, getAccessTokenSilently, setErrorToUse, ordersProp]);
 
   return (
     <div className="mb-10">
       <div className="bg-white border rounded shadow-sm max-h-[400px] overflow-y-auto">
-        {orders.length === 0 && (
+        {loading && <Loading message="Loading recent purchases..." className="py-6" />}
+        {orders.length === 0 && !loading && (
           <Paragraph className="text-center text-gray-500 py-6">
             You don't have any purchases in your account right now
           </Paragraph>

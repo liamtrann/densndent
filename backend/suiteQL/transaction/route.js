@@ -13,5 +13,6 @@ router.use((err, req, res, next) => {
 
 router.get('/by-id', controller.getTransactionById);
 router.get('/by-email', controller.getTransactionByEmail);
+router.get('/items-by-transaction/:id', controller.getItemsByTransaction);
 
 module.exports = router;

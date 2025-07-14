@@ -17,8 +17,5 @@
   "bugs": {
     "url": "https://github.com/liamtrann/densndent/issues"
   },
-  "homepage": "https://github.com/liamtrann/densndent#readme",
-  "dependencies": {
-    "react-modal": "^3.16.3"
-  }
+  "homepage": "https://github.com/liamtrann/densndent#readme"
 }

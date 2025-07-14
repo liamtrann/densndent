@@ -191,3 +191,19 @@ exports.getCountByBrand = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+exports.getItemsByCategory = async (req, res) => {
+  try {
+    const { category, limit, offset, sort } = req.query;
+    if (!category) {
+      return res.status(400).json({ error: 'category is required' });
+    }
+    const items = await itemsService.findByCategory(category, limit, offset, sort);
+    if (!items) {
+      return res.status(404).json({ error: 'Items not found' });
+    }
+    res.json(items);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

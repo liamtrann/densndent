@@ -37,3 +37,5 @@ export { default as VerifyEmailModal } from './VerifyEmailModal';
 export { default as ProfileEditCard } from './ProfileEditCard';
 export { default as ListProductComponent } from './ListProductComponent';
 export { default as UserInfoCard } from './UserInfoCard';
+export { default as CartProductCard } from './CartProductCard';
+export { default as CartOrderSummary } from './CartOrderSummary';
