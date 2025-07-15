@@ -33,6 +33,16 @@ export default function ListProduct({ product }) {
     navigate(`/product/${id}`);
   };
 
+  const increment = () => {
+    setQuantity((prev) => Number(prev) + 1);
+  };
+
+  const decrement = () => {
+    if (Number(quantity) > 1) {
+      setQuantity((prev) => Number(prev) - 1);
+    }
+  };
+
   const inStock = totalquantityonhand && totalquantityonhand > 0;
 
   return (
@@ -78,20 +88,38 @@ export default function ListProduct({ product }) {
       )}
 
       <div className="flex justify-between items-center mt-auto">
-        <InputField
-          type="number"
-          min="1"
-          max={999}
-          value={quantity}
-          onChange={handleQuantityChange}
-          className="w-16 h-9 text-center text-sm"
-          disabled={!inStock}
-        />
+        {/* Quantity selector with decrease/increase buttons */}
+        <div className="flex items-center border rounded overflow-hidden h-9">
+          <button
+            onClick={decrement}
+            className="px-2 h-9 text-sm hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+            disabled={!inStock || Number(quantity) <= 1}
+          >
+            –
+          </button>
+          <InputField
+            type="number"
+            min="1"
+            max={999}
+            value={quantity}
+            onChange={handleQuantityChange}
+            className="w-12 h-9 text-center text-sm border-0 focus:ring-1 focus:ring-blue-500"
+            disabled={!inStock}
+          />
+          <button
+            onClick={increment}
+            className="px-2 h-9 text-sm hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+            disabled={!inStock}
+          >
+            +
+          </button>
+        </div>
+
         <FiShoppingCart
-          size={20}
-          className={`cursor-pointer ${
+          size={30}
+          className={`transition-all duration-200 ${
             inStock
-              ? "text-primary-blue hover:text-smiles-blue"
+              ? "text-primary-blue hover:text-smiles-blue hover:scale-150 cursor-pointer"
               : "text-gray-400 cursor-not-allowed"
           }`}
           onClick={inStock ? handleAddToCart : undefined}
