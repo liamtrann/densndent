@@ -1,6 +1,6 @@
 // src/pages/AboutUs.jsx
-import React from 'react';
-import Paragraph from '../common/Paragraph';
+import React from "react";
+import { Paragraph } from "../common";
 
 export default function AboutUs() {
   return (
@@ -10,9 +10,10 @@ export default function AboutUs() {
         <h1 className="text-5xl font-light text-orange-500 mb-6">About Us</h1>
         <div className="max-w-2xl mx-auto text-lg leading-relaxed">
           <Paragraph>
-            Dens 'N Dente is a Canadian based healthcare company that strives to be the best industry
-            leader of healthcare supplies, service and equipment. As a fast-growing company, we are
-            committed to providing our customers the best dental and healthcare supplies while adapting
+            Dens 'N Dente is a Canadian based healthcare company that strives to
+            be the best industry leader of healthcare supplies, service and
+            equipment. As a fast-growing company, we are committed to providing
+            our customers the best dental and healthcare supplies while adapting
             to trends and needs.
           </Paragraph>
         </div>
@@ -32,30 +33,33 @@ export default function AboutUs() {
             className="w-full lg:w-1/2"
           />
           <Paragraph className="text-lg leading-relaxed">
-            <span className="text-4xl font-semibold">WE</span> offer competitively priced dental and
-            medical supplies from all major manufacturers. Dens ‘N Dente is committed to customer
-            satisfaction, providing innovative solutions and top-quality products.
+            <span className="text-4xl font-semibold">WE</span> offer
+            competitively priced dental and medical supplies from all major
+            manufacturers. Dens ‘N Dente is committed to customer satisfaction,
+            providing innovative solutions and top-quality products.
           </Paragraph>
         </div>
       </section>
 
       {/* Our Process Section */}
       <section className="py-16 px-6">
-        <h2 className="text-4xl text-orange-500 font-light mb-10">OUR PROCESS</h2>
+        <h2 className="text-4xl text-orange-500 font-light mb-10">
+          OUR PROCESS
+        </h2>
         <div className="flex flex-wrap justify-center gap-12 max-w-5xl mx-auto">
           {[
             {
               title: "STRESS FREE ORDERING",
-              text: "Select the product(s) or equipment you would like to order and add to cart"
+              text: "Select the product(s) or equipment you would like to order and add to cart",
             },
             {
               title: "HASSLE FREE PAYMENTS",
-              text: "At checkout, pay with your Credit or Debit Card."
+              text: "At checkout, pay with your Credit or Debit Card.",
             },
             {
               title: "FAST DELIVERY",
-              text: "Orders are fulfilled immediately"
-            }
+              text: "Orders are fulfilled immediately",
+            },
           ].map((item) => (
             <div className="text-center max-w-xs" key={item.title}>
               <div className="bg-orange-300 text-white rounded-full w-52 h-52 mx-auto flex items-center justify-center text-xl font-semibold px-4 text-center">
@@ -77,17 +81,21 @@ export default function AboutUs() {
           />
           <div className="text-left max-w-xl">
             <Paragraph className="mb-4">
-              Companies only have a chance at true greatness when they are driven by a mission.
+              Companies only have a chance at true greatness when they are
+              driven by a mission.
             </Paragraph>
             <Paragraph className="mb-4">
-              Our mission is to transform the identity of dental supply companies…
+              Our mission is to transform the identity of dental supply
+              companies…
             </Paragraph>
             <Paragraph className="mb-4">
-              Dens ‘N Dente was created from a simple idea: Dentists should be able to receive quality
-              products without compromising service and customer experience. As we embark in this new
-              chapter of our existence, our growing company is changing the industry in an
-              unprecedented way. We believe hard work and dedication to our clients will evolve the
-              relationship between suppliers and customers.
+              Dens ‘N Dente was created from a simple idea: Dentists should be
+              able to receive quality products without compromising service and
+              customer experience. As we embark in this new chapter of our
+              existence, our growing company is changing the industry in an
+              unprecedented way. We believe hard work and dedication to our
+              clients will evolve the relationship between suppliers and
+              customers.
             </Paragraph>
             <Paragraph className="mb-4">
               We understand, because our company was…

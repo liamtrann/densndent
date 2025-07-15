@@ -1,30 +1,46 @@
-export { default as AddressModal } from "./AddressModal";
-export { default as CreateAddressModal } from "./CreateAddressModal"; // ✅ required
-export { default as AnimatedCard } from "./AnimatedCard";
-export { default as AppLink } from "./AppLink";
-export { default as AuthButton } from "./AuthButton";
-export { default as BestSellerCard } from "./BestSellerCard";
-export { default as Button } from "./Button";
-export { default as CategoryTile } from "./CategoryTile";
-export { default as Dropdown } from "./Dropdown";
-export { default as ErrorMessage } from "./ErrorMessage";
-export { default as FooterSection } from "./FooterSection";
-export { default as Image } from "./Image";
-export { default as InfoBanner } from "./InfoBanner";
-export { default as InputField } from "./InputField";
-export { default as Loading } from "./Loading";
-export { default as Paragraph } from "./Paragraph";
-export { default as ProductImage } from "./ProductImage";
-export { default as ProductSummary } from "./ProductSummary";
-export { default as PromotionCard } from "./PromotionCard";
-export { default as QuickOrderForm } from "./QuickOrderForm";
-export { default as SectionTitle } from "./SectionTitle";
-export { default as ShowMoreHtml } from "./ShowMoreHtml";
-export { default as ProductToolbar } from "./ProductToolbar";
-export { default as Breadcrumb } from "./Breadcrumb";
-export { default as Pagination } from "./Pagination";
-export { default as ProductMenuDropdown } from "./ProductMenuDropdown";
-export { default as ProtectedRoute } from "./ProtectedRoute";
-export { default as FormSubmit } from "./FormSubmit";
-export { default as TextButton } from "./TextButton";
-export { default as AddAddressModal } from "./AddAddressModal";
+// Modal components
+export { default as AddressModal } from "./modals/AddressModal";
+export { default as CreateAddressModal } from "./modals/CreateAddressModal";
+export { default as AddAddressModal } from "./modals/AddAddressModal";
+
+// UI components
+export { default as Button } from "./ui/Button";
+export { default as InputField } from "./ui/InputField";
+export { default as Dropdown } from "./ui/Dropdown";
+export { default as Loading } from "./ui/Loading";
+export { default as ErrorMessage } from "./ui/ErrorMessage";
+export { default as Image } from "./ui/Image";
+export { default as Paragraph } from "./ui/Paragraph";
+
+// Product components
+export { default as ProductImage } from "./product/ProductImage";
+export { default as ProductSummary } from "./product/ProductSummary";
+export { default as ProductMenuDropdown } from "./product/ProductMenuDropdown";
+export { default as ProductToolbar } from "./product/ProductToolbar";
+
+// Form components
+export { default as FormSubmit } from "./forms/FormSubmit";
+export { default as QuickOrderForm } from "./forms/QuickOrderForm";
+export { default as AuthButton } from "./forms/AuthButton";
+
+// Navigation components
+export { default as Breadcrumb } from "./navigation/Breadcrumb";
+export { default as Pagination } from "./navigation/Pagination";
+export { default as AppLink } from "./navigation/AppLink";
+
+// Card components
+export { default as AnimatedCard } from "./cards/AnimatedCard";
+export { default as BestSellerCard } from "./cards/BestSellerCard";
+export { default as CategoryTile } from "./cards/CategoryTile";
+export { default as PromotionCard } from "./cards/PromotionCard";
+
+// Layout components
+export { default as FooterSection } from "./layout/FooterSection";
+export { default as InfoBanner } from "./layout/InfoBanner";
+export { default as SectionTitle } from "./layout/SectionTitle";
+
+// Utility components
+export { default as ProtectedRoute } from "./utils/ProtectedRoute";
+export { default as ShowMoreHtml } from "./utils/ShowMoreHtml";
+export { default as TextButton } from "./utils/TextButton";
+// export { default as reactQuery } from "./utils/reactQuery"; // Commented out until @tanstack/react-query is installed

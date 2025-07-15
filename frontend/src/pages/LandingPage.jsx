@@ -11,26 +11,36 @@ import {
   CategoryTiles,
   Modal,
   BestSellersSection,
-  CategoriesSection
+  CategoriesSection,
 } from "../components";
-import HeroCarousel from "../components/HeroCarousel";
-
+import { HeroCarousel } from "../components";
 
 import { Image } from "../common";
 import { URLS } from "../constants/urls";
 import { Link } from "react-router-dom";
 
 const brandKeys = [
-  "d2", "3m", "aurelia", "dmg", "kerr",
-  "keystone", "microcopy", "johnson-and-johnson", "dentsply",
-  "diadent", "medicom", "premier", "surgical-specialties",
-  "flight", "mark3"
+  "d2",
+  "3m",
+  "aurelia",
+  "dmg",
+  "kerr",
+  "keystone",
+  "microcopy",
+  "johnson-and-johnson",
+  "dentsply",
+  "diadent",
+  "medicom",
+  "premier",
+  "surgical-specialties",
+  "flight",
+  "mark3",
 ];
 
-const brands = brandKeys.map(key => ({
+const brands = brandKeys.map((key) => ({
   key,
   url: URLS.BRANDS[key],
-  name: key.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+  name: key.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()),
 }));
 
 const LandingPage = () => {

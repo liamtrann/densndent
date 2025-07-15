@@ -12,12 +12,9 @@ import {
   ProfilePage,
 } from "./pages";
 
-import Header from "./components/Header";
-import Footer from "./components/Footer";
-import { ListProductPage, LayoutWithCart } from "./components";
+import { Header, Footer, ListProductPage, LayoutWithCart, ProfileEditCard } from "./components";
 import PurchaseHistory from "./pages/PurchaseHistory";
-import ProfileEditCard from "./components/ProfileEditCard";
-import ProtectedRoute from "./common/ProtectedRoute";
+import { ProtectedRoute } from "./common";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useDispatch } from "react-redux";
 import { fetchUserInfo, clearUserInfo } from "./redux/slices/userSlice";
