@@ -1,8 +1,10 @@
-// components/CartSummaryPanel.jsx
 import React from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { Button, ProductImage } from "../../common";
+import Button from "../../common/ui/Button";
+import { ProductImage } from "../../common";
+import { updateQuantity, removeFromCart } from "../../redux/slices/cartSlice";
+
 
 export default function CartSummaryPanel() {
   const cartItems = useSelector((state) => state.cart.items);
@@ -14,19 +16,16 @@ export default function CartSummaryPanel() {
     0
   );
 
-  const handleIncrement = (item) => {
-    dispatch(updateQuantity({ id: item.id, quantity: item.quantity + 1 }));
-  };
+  if (cartItems.length === 0) return null;
 
-  const handleDecrement = (item) => {
-    if (item.quantity > 1) {
-      dispatch(updateQuantity({ id: item.id, quantity: item.quantity - 1 }));
+  const handleQtyChange = (item, type) => {
+    const newQty = type === "inc" ? item.quantity + 1 : item.quantity - 1;
+    if (newQty > 0) {
+      dispatch(updateQuantity({ id: item.id, quantity: newQty }));
     } else {
       dispatch(removeFromCart(item.id));
     }
   };
-
-  if (cartItems.length === 0) return null;
 
   return (
     <aside className="hidden lg:block w-80 bg-white border border-gray-200 p-4 rounded shadow sticky top-28 h-fit">
@@ -43,38 +42,38 @@ export default function CartSummaryPanel() {
         <span>${subtotal.toFixed(2)}</span>
       </div>
 
-      <h3 className="text-lg font-semibold mb-3">Cart Summary</h3>
+      <h3 className="text-lg font-semibold my-3">Cart Summary</h3>
 
       <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
         {cartItems.map((item) => (
           <div
             key={item.id}
-            className="flex items-start gap-3 border-b pb-3"
+            className="flex items-start gap-3 border-b pb-2"
           >
             <ProductImage
               src={item.file_url}
               className="w-12 h-12 object-cover"
             />
-            <div className="flex flex-col text-sm flex-1">
-              <span className="font-medium mb-1">{item.itemid}</span>
-              <div className="flex items-center gap-2 mb-1">
+            <div className="flex-1 text-sm">
+              <div className="font-medium">{item.itemid}</div>
+              <div className="flex items-center gap-2 mt-1">
                 <button
-                  className="px-2 border rounded hover:bg-gray-100"
-                  onClick={() => handleDecrement(item)}
+                  onClick={() => handleQtyChange(item, "dec")}
+                  className="px-2 py-1 border rounded hover:bg-gray-100"
                 >
                   -
                 </button>
                 <span>{item.quantity}</span>
                 <button
-                  className="px-2 border rounded hover:bg-gray-100"
-                  onClick={() => handleIncrement(item)}
+                  onClick={() => handleQtyChange(item, "inc")}
+                  className="px-2 py-1 border rounded hover:bg-gray-100"
                 >
                   +
                 </button>
               </div>
-              <span className="text-gray-800 font-semibold">
+              <div className="text-gray-800 font-semibold mt-1">
                 ${(item.price * item.quantity).toFixed(2)}
-              </span>
+              </div>
             </div>
           </div>
         ))}
