@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 
-export default function ProductsDropdown({ categories }) {
+export default function ProductsDropdown({ classification }) {
   const [open, setOpen] = useState(false);
   const [hoveredCategory, setHoveredCategory] = useState(null);
   const timer = useRef();
@@ -36,7 +36,7 @@ export default function ProductsDropdown({ categories }) {
         <div className="absolute left-0 top-full mt-2 w-auto bg-white shadow-xl border rounded-md flex z-50">
           {/* Left Column - Categories */}
           <div className="w-48 p-4">
-            {categories.map((cat) => (
+            {classification.map((cat) => (
               <div
                 key={cat.name}
                 onMouseEnter={() => handleCategoryHover(cat.name)}
@@ -53,7 +53,7 @@ export default function ProductsDropdown({ categories }) {
           {hoveredCategory && (
             <div className="w-60 border-l p-4">
               {(() => {
-                const hoveredCat = categories.find((cat) => cat.name === hoveredCategory);
+                const hoveredCat = classification.find((cat) => cat.name === hoveredCategory);
                 if (!hoveredCat || !Array.isArray(hoveredCat.subcategories)) return null;
                 return hoveredCat.subcategories.map((sub) => {
                   const name = (sub.name || '').replace(/\s+/g, '');

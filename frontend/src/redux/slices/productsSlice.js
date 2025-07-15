@@ -11,6 +11,8 @@ const buildProductUrl = ({ type, id, limit, offset = 0, sort }) => {
       return { url: endpoint.GET_ITEMS_BY_BRAND({ brand: id, limit, offset, sort }), method: "get" };
     case "name":
       return { url: endpoint.POST_GET_ITEMS_BY_NAME({ limit, offset, sort }), method: "post" };
+    case "orderHistory":
+      return { url: endpoint.GET_ITEMS_ORDER_HISTORY_BY_USER({ id, limit, offset }), method: "get" };
     default:
       throw new Error("Unknown product type");
   }
@@ -33,6 +35,7 @@ const buildCountUrl = ({ type, id }) => {
 export const fetchProductsBy = createAsyncThunk(
   'products/fetchPage',
   async ({ type, id, page, limit, sort }, { rejectWithValue }) => {
+    console.log(id, page, limit, sort);
     try {
       const offset = (page - 1) * limit;
       const { url, method } = buildProductUrl({ type, id, limit, offset, sort });

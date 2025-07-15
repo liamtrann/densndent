@@ -24,4 +24,6 @@ router.get('/by-class-and-brand', controller.getItemsByClassAndBrand);
 
 router.get('/by-category', controller.getItemsByCategory);
 
+router.get('/by-user-order-history', controller.getItemsByUserOrderHistory);
+
 module.exports = router;

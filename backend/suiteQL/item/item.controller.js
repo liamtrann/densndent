@@ -207,3 +207,19 @@ exports.getItemsByCategory = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+exports.getItemsByUserOrderHistory = async (req, res) => {
+  try {
+    const { id, limit, offset } = req.query;
+    if (!id) {
+      return res.status(400).json({ error: 'id is required' });
+    }
+    const items = await itemsService.findByUserOrderHistory(id, limit, offset);
+    if (!items) {
+      return res.status(404).json({ error: 'Items not found' });
+    }
+    res.json(items);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

@@ -4,7 +4,7 @@ import { ListProductComponent } from "../components";
 
 
 export default function ListProductPage({ by }) {
-  const { name, brandName, nameAndId, categoryNameAndId } = useParams();
+  const { name, brandName, nameAndId, categoryNameAndId, userId } = useParams();
 
   // Parse name and ID based on the 'by' prop
   const parseNameAndId = () => {
@@ -69,6 +69,15 @@ export default function ListProductPage({ by }) {
           headerTitle: parsedName.toUpperCase(),
         };
       }
+      case "orderHistory": {
+        // For order history, use userId parameter
+        const userIdValue = userId || "";
+        return {
+          displayName: "Order History",
+          id: userIdValue,
+          headerTitle: "ORDER HISTORY",
+        };
+      }
       default: {
         // Fallback for any other cases
         return {
@@ -93,12 +102,12 @@ export default function ListProductPage({ by }) {
         return "brand";
       case "name":
         return "name";
+      case "orderHistory":
+        return "orderHistory";
       default:
         return by;
     }
   };
-
-  console.log(id);
 
   return (
     <ListProductComponent
