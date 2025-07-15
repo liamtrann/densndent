@@ -1,7 +1,7 @@
 // restapi.route.js
 const express = require('express');
 const router = express.Router();
-const checkJwt = require('../auth/middleware');
+const { checkJwt } = require('../auth/middleware');
 const restApiService = require('./restapi.service');
 
 // Protect all /restapi routes with JWT

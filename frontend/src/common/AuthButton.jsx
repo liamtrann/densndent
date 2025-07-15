@@ -6,14 +6,8 @@ import Modal from "../components/Modal";
 import VerifyEmailModal from "../components/VerifyEmailModal";
 
 export default function AuthButton() {
-  const {
-    loginWithRedirect,
-    logout,
-    isAuthenticated,
-    user,
-    isLoading,
-    error,
-  } = useAuth0();
+  const { loginWithRedirect, logout, isAuthenticated, user, isLoading, error } =
+    useAuth0();
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -75,6 +69,15 @@ export default function AuthButton() {
                 }}
               >
                 Profile
+              </button>
+              <button
+                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                onClick={() => {
+                  setDropdownOpen(false);
+                  navigate("/profile/history");
+                }}
+              >
+                Your Orders
               </button>
               <button
                 className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"

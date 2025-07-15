@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useAuth0 } from "@auth0/auth0-react";
 import { delayCall } from "../api/util";
 import { fetchProductsBy, fetchCountBy } from "../redux/slices/productsSlice";
 import {
@@ -23,7 +22,6 @@ export default function ListProductComponent({
   const [page, setPage] = useState(1);
 
   const dispatch = useDispatch();
-  const { getAccessTokenSilently } = useAuth0();
   const key = `${id}_${perPage}_${sort}_${page}`;
   const products = useSelector(
     (state) => state.products.productsByPage[key] || []
@@ -50,24 +48,11 @@ export default function ListProductComponent({
     if (id) {
       if (!products || products.length === 0) {
         return delayCall(() => {
-          const params = { type, id, page, limit: perPage, sort };
-          if (type === "orderHistory") {
-            params.getAccessTokenSilently = getAccessTokenSilently;
-          }
-          dispatch(fetchProductsBy(params));
+          dispatch(fetchProductsBy({ type, id, page, limit: perPage, sort }));
         });
       }
     }
-  }, [
-    dispatch,
-    type,
-    id,
-    perPage,
-    sort,
-    page,
-    products.length,
-    getAccessTokenSilently,
-  ]);
+  }, [dispatch, type, id, perPage, sort, page, products.length]);
 
   const totalPages = Math.ceil(total / perPage) || 1;
 

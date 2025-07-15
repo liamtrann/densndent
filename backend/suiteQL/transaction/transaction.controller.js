@@ -31,3 +31,20 @@ exports.getTransactionByEmail = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
+exports.getItemsByUserOrderHistory = async (req, res) => {
+    try {
+        const { userId, limit, offset } = req.query;
+
+        // User validation already done by middleware, customer info available in req.validatedCustomer
+        const transaction = await transactionService.findByUserOrderHistory(userId, limit, offset);
+
+        if (!transaction) {
+            return res.status(404).json({ error: 'Transaction not found' });
+        }
+        res.json(transaction);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+

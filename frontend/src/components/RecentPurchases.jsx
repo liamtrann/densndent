@@ -4,7 +4,8 @@ import { useAuth0 } from "@auth0/auth0-react";
 import { useSelector } from "react-redux";
 import api from "../api/api";
 import endpoint from "../api/endpoints";
-import { Paragraph, Loading } from "../common";
+import { Loading } from "../common";
+import ListOrdersHistory from "./ListOrdersHistory";
 
 export default function RecentPurchases({
   orders: ordersProp,
@@ -50,49 +51,17 @@ export default function RecentPurchases({
     fetchRecentOrders();
   }, [userInfo?.id, getAccessTokenSilently, setErrorToUse, ordersProp]);
 
+  if (loading) {
+    return (
+      <div className="mb-10">
+        <Loading message="Loading recent purchases..." className="py-6" />
+      </div>
+    );
+  }
+
   return (
     <div className="mb-10">
-      <div className="bg-white border rounded shadow-sm max-h-[400px] overflow-y-auto">
-        {loading && (
-          <Loading message="Loading recent purchases..." className="py-6" />
-        )}
-        {orders.length === 0 && !loading && (
-          <Paragraph className="text-center text-gray-500 py-6">
-            You don't have any purchases in your account right now
-          </Paragraph>
-        )}
-        {orders.map((order) => (
-          <div
-            key={order.id}
-            className="p-4 border-b last:border-b-0 flex justify-between items-center"
-          >
-            <div>
-              <Paragraph className="font-medium">
-                {order.trandisplayname}
-              </Paragraph>
-              <Paragraph className="text-sm text-gray-500 mb-1">
-                Placed on {order.trandate || "Unknown"}
-              </Paragraph>
-              {order.shipcarrier && (
-                <Paragraph className="text-sm text-gray-600">
-                  Carrier:{" "}
-                  <span className="font-medium">{order.shipcarrier}</span>
-                </Paragraph>
-              )}
-            </div>
-            <div className="text-right">
-              <Paragraph className="text-sm text-gray-600">
-                {order.status}
-              </Paragraph>
-              {order.foreigntotal && (
-                <Paragraph className="text-base font-semibold text-gray-800">
-                  ${order.foreigntotal}
-                </Paragraph>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
+      <ListOrdersHistory orders={orders} />
     </div>
   );
 }

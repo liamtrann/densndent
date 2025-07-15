@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const controller = require('./item.controller');
-const checkJwt = require('../../auth/middleware');
 
 router.get('/by-class', controller.getItemsByClass);
 
@@ -24,7 +23,5 @@ router.get('/count-by-brand', controller.getCountByBrand);
 router.get('/by-class-and-brand', controller.getItemsByClassAndBrand);
 
 router.get('/by-category', controller.getItemsByCategory);
-
-router.get('/by-user-order-history', checkJwt, controller.getItemsByUserOrderHistory);
 
 module.exports = router;

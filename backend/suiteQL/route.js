@@ -13,7 +13,7 @@ const promotionRoute = require('./promotion/route');
 const shipItemRoute = require('./shipItem/shipItem.route');
 const inventoryRoute = require('./inventory/route');
 const commerceCategoryRoute = require('./commerceCategory/route');
-const checkJwt = require('../auth/middleware');
+const { checkJwt } = require('../auth/middleware');
 
 router.use('/classification', classificationRoutes);
 router.use('/item', itemsRoute);

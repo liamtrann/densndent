@@ -20,6 +20,8 @@ export { default as ProductSummary } from '../common/ProductSummary';
 export { default as ProductImage } from '../common/ProductImage';
 export { default as ShowMoreHtml } from '../common/ShowMoreHtml';
 export { default as RecentPurchases } from './RecentPurchases';
+export { default as ListOrdersHistory } from './ListOrdersHistory';
+export { default as ListProductHistory } from './ListProductHistory';
 export { default as SettingsCard } from './SettingsCard';
 export { default as CartConfirmationModal } from './CartConfirmationModal';
 export { default as CartIndicator } from './CartIndicator';

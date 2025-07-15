@@ -1,5 +1,6 @@
 // src/pages/PurchaseHistory.jsx
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   InputField,
   Dropdown,
@@ -13,11 +14,12 @@ import api from "../api/api";
 import endpoint from "../api/endpoints";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useSelector } from "react-redux";
-import RecentPurchases from "../components/RecentPurchases";
+import { ListOrdersHistory, ListProductHistory } from "../components";
 
 export default function PurchaseHistory() {
-  const { user, getAccessTokenSilently } = useAuth0();
+  const { getAccessTokenSilently } = useAuth0();
   const userInfo = useSelector((state) => state.user.info);
+  const [activeTab, setActiveTab] = useState("orders");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [status, setStatus] = useState("All");
@@ -27,19 +29,19 @@ export default function PurchaseHistory() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const sortValues = ["recent", "oldest"];
+  console.log(orders);
 
   const sortOptions = [
     { value: "recent", label: "Most Recent" },
     { value: "oldest", label: "Oldest First" },
   ];
 
+  // Generate status options from actual data
   const statusOptions = [
-    { value: "all", label: "All" },
-    { value: "open", label: "Open" },
-    { value: "delivered", label: "Delivered" },
-    { value: "pending", label: "Pending Fulfillment" },
-    { value: "billed", label: "Billed" },
+    { value: "All", label: "All" },
+    ...Array.from(
+      new Set(orders.map((order) => order.status || "Pending Fulfillment"))
+    ).map((status) => ({ value: status, label: status })),
   ];
 
   // Fetch orders
@@ -69,7 +71,10 @@ export default function PurchaseHistory() {
 
   // Filter by date range and status
   useEffect(() => {
-    if (!orders.length) return;
+    if (!orders.length) {
+      setFilteredOrders([]);
+      return;
+    }
 
     const from = fromDate ? new Date(fromDate) : null;
     const to = toDate ? new Date(toDate) : null;
@@ -84,11 +89,9 @@ export default function PurchaseHistory() {
       return true;
     });
 
-    if (status !== "All") {
+    if (status !== "All" && status !== "") {
       filtered = filtered.filter(
-        (o) =>
-          (o.status || "Pending Fulfillment").toLowerCase() ===
-          status.toLowerCase()
+        (o) => (o.status || "Pending Fulfillment") === status
       );
     }
 
@@ -111,57 +114,97 @@ export default function PurchaseHistory() {
         Purchase History
       </h2>
 
-      {/* Filters */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-6 items-end">
-        <InputField
-          type="date"
-          label="From"
-          value={fromDate}
-          onChange={(e) => setFromDate(e.target.value)}
-          className="min-w-[150px]"
-        />
-        <InputField
-          type="date"
-          label="To"
-          value={toDate}
-          onChange={(e) => setToDate(e.target.value)}
-          className="min-w-[150px]"
-        />
-        <Dropdown
-          label="Sort By"
-          options={sortOptions}
-          value={sortOptions[sortValues.indexOf(sort)]}
-          onChange={(e) =>
-            setSort(sortValues[sortOptions.indexOf(e.target.value)])
-          }
-          className="min-w-[150px]"
-        />
-        <Dropdown
-          label="Status"
-          options={statusOptions}
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-          className="min-w-[150px]"
-        />
-        <div className="flex justify-end items-end">
-          <TextButton
-            className="w-full"
-            onClick={() => {
-              setFromDate("");
-              setToDate("");
-              setStatus("All");
-              setSort("recent");
-            }}
-          >
-            Reset
-          </TextButton>
-        </div>
+      {/* Tabs */}
+      <div className="flex border-b border-gray-200 mb-6">
+        <button
+          className={`px-6 py-3 font-medium border-b-2 transition-colors ${
+            activeTab === "orders"
+              ? "border-smiles-orange text-smiles-orange"
+              : "border-transparent text-gray-500 hover:text-gray-700"
+          }`}
+          onClick={() => setActiveTab("orders")}
+        >
+          Your Orders
+        </button>
+        <button
+          className={`px-6 py-3 font-medium border-b-2 transition-colors ${
+            activeTab === "buyAgain"
+              ? "border-smiles-orange text-smiles-orange"
+              : "border-transparent text-gray-500 hover:text-gray-700"
+          }`}
+          onClick={() => setActiveTab("buyAgain")}
+        >
+          Buy Again
+        </button>
       </div>
 
-      {/* Scrollable Order List */}
-      <div className="bg-white border rounded shadow-sm max-h-[500px] overflow-y-auto">
-        <RecentPurchases orders={filteredOrders} />
-      </div>
+      {/* Tab Content */}
+      {activeTab === "orders" ? (
+        <>
+          {/* Filters */}
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-6 items-end">
+            <InputField
+              type="date"
+              label="From"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+              className="min-w-[150px]"
+            />
+            <InputField
+              type="date"
+              label="To"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+              className="min-w-[150px]"
+            />
+            <Dropdown
+              label="Sort By"
+              options={sortOptions}
+              value={sort}
+              onChange={(e) => setSort(e.target.value)}
+              className="min-w-[150px]"
+            />
+            <Dropdown
+              label="Status"
+              options={statusOptions}
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              className="min-w-[150px]"
+            />
+            <div className="flex justify-end items-end">
+              <TextButton
+                className="w-full"
+                onClick={() => {
+                  setFromDate("");
+                  setToDate("");
+                  setStatus("All");
+                  setSort("recent");
+                }}
+              >
+                Reset
+              </TextButton>
+            </div>
+          </div>
+
+          {/* Orders List */}
+          {loading ? (
+            <Loading message="Loading purchase history..." className="py-6" />
+          ) : error ? (
+            <ErrorMessage message={error} />
+          ) : (
+            <ListOrdersHistory orders={filteredOrders} />
+          )}
+        </>
+      ) : (
+        /* Buy Again Tab */
+        <div>
+          {userInfo?.id ? (
+            <ListProductHistory userId={userInfo.id} />
+          ) : (
+            <Loading message="Loading user information..." className="py-6" />
+          )}
+        </div>
+      )}
     </div>
   );
 }

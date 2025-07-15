@@ -70,7 +70,6 @@ export default function App() {
           <Route path="/products/by-brand/:brandName" element={<ListProductPage by="brand" />} />
           <Route path="/products/by-name/:name" element={<ListProductPage by="name" />} />
           <Route path="/products/by-category/:categoryNameAndId" element={<ListProductPage by="category" />} />
-          <Route path="/products/by-order-history/:userId" element={<ListProductPage by="orderHistory" />} />
 
           <Route element={<ProtectedRoute />}>
             <Route path="/profile" element={<ProfilePage />} />

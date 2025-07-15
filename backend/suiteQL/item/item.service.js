@@ -107,12 +107,6 @@ class ItemsService {
         return results.items || [];
     }
 
-    // Find items by user order history
-    async findByUserOrderHistory(id, limit, offset) {
-        const sql = `SELECT i.id, i.itemid, i.totalquantityonhand, ip.price, tli.linecreateddate, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url FROM (SELECT tl.item, MAX(tl.linecreateddate) AS linecreateddate FROM transactionLine tl WHERE tl.itemtype = 'InvtPart' AND tl.entity = '${id}' GROUP BY tl.item) tli JOIN item i ON tli.item = i.id LEFT JOIN itemprice ip ON i.id = ip.item AND ip.pricelevel = 1 ORDER BY tli.linecreateddate DESC`;
-        const results = await runQueryWithPagination(sql, limit, offset);
-        return results.items || [];
-    }
 }
 
 module.exports = new ItemsService();
