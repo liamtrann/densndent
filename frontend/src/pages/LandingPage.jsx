@@ -13,6 +13,8 @@ import {
   BestSellersSection,
   CategoriesSection
 } from "../components";
+import HeroCarousel from "../components/HeroCarousel";
+
 
 import { Image } from "../common";
 import { URLS } from "../constants/urls";
@@ -35,6 +37,7 @@ const LandingPage = () => {
   return (
     <div className="bg-gray-50 min-h-screen font-sans">
       <MainSection />
+      <HeroCarousel />
       <CategoryTiles />
       <PromotionsGrid />
       <Catalogues />

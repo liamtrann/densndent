@@ -19,3 +19,6 @@ export default function Image({ src, alt, className = "", ...props }) {
     />
   );
 }
+
+
+

@@ -11,6 +11,7 @@ import {
 } from "../common";
 import FilterSidebar from "./FilterSidebar";
 import ProductListGrid from "./ProductListGrid";
+import CartSummaryPanel from "./CartSummaryPanel"; // 👈 Import here
 export default function ListProductComponent({
   type,
   id,
@@ -56,45 +57,50 @@ export default function ListProductComponent({
 
   const totalPages = Math.ceil(total / perPage) || 1;
 
-  return (
-    <div className="px-6 py-8 max-w-screen-xl mx-auto">
-      <Breadcrumb path={breadcrumbPath} />
-      <h1 className="text-3xl font-bold text-smiles-blue mb-6">
-        {headerTitle}
-      </h1>
-      <div className="flex flex-col lg:flex-row gap-8">
+
+return (
+  <div className="px-6 py-8 max-w-screen-2xl mx-auto">
+    <Breadcrumb path={breadcrumbPath} />
+    <h1 className="text-3xl font-bold text-smiles-blue mb-6">
+      {headerTitle}
+    </h1>
+
+    {/* 3-column layout here */}
+    <div className="flex gap-6 items-start">
+      {/* Left Column: Filters */}
+      <div className="w-[240px] shrink-0">
         <FilterSidebar />
-        <main className="flex-1">
-          <ProductToolbar
-            perPageOptions={[12, 24, 48]}
-            onPerPageChange={(e) => {
-              setPerPage(Number(e.target.value));
-              setPage(1);
-            }}
-            perPage={perPage}
-            sort={sort}
-            onSortChange={(e) => setSort(e.target.value)}
-            total={total}
-          />
-          <Pagination
-            page={page}
-            totalPages={totalPages}
-            onPageChange={setPage}
-          />
-          {isLoading && <Loading message="Loading products..." />}
-          {error && (
-            <ErrorMessage message="Failed to load products. Please try again later." />
-          )}
-          {!isLoading && !error && products.length === 0 && (
-            <div className="text-gray-500 py-8 text-center">
-              No products found for this category.
-            </div>
-          )}
-          {!isLoading && !error && products.length > 0 && (
-            <ProductListGrid products={products} />
-          )}
-        </main>
+      </div>
+
+      {/* Center Column: Main product area */}
+      <div className="flex-1">
+        <ProductToolbar
+          perPageOptions={[12, 24, 48]}
+          onPerPageChange={e => { setPerPage(Number(e.target.value)); setPage(1); }}
+          perPage={perPage}
+          sort={sort}
+          onSortChange={e => setSort(e.target.value)}
+          total={total}
+        />
+        <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+        {isLoading && <Loading message="Loading products..." />}
+        {error && <ErrorMessage message={error} />}
+        {!isLoading && !error && products.length === 0 && (
+          <div className="text-gray-500 py-8 text-center">
+            No products found for this category.
+          </div>
+        )}
+        {!isLoading && !error && products.length > 0 && (
+          <ProductListGrid products={products} />
+        )}
+      </div>
+
+      {/* Right Column: Cart summary */}
+      <div className="w-[300px] shrink-0">
+        <CartSummaryPanel />
       </div>
     </div>
-  );
+  </div>
+);
+
 }
