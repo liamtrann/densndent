@@ -1,51 +1,71 @@
-export { default as FAQs } from './FAQs';
-export { default as ProductGrid } from './ProductGrid';
-export { default as Catalogues } from './Catalogues';
-export { default as PromotionsGrid } from './PromotionsGrid';
-export { default as MailingList } from './MailingList';
-export { default as GlovesHighlight } from './GlovesHighlight';
-export { default as MainSection } from './MainSection';
-export { default as Header } from './Header';
-export { default as BlueBanner } from './BlueBanner';
-export { default as Footer } from './Footer';
-export { default as Banner } from './Banner';
-export { default as Sidebar } from './Sidebar';
-export { default as HeroPromotion } from './HeroPromotion';
-export { default as PromotionGrid } from './PromotionGrid';
-export { default as CategoryTiles } from './CategoryTiles';
-export { default as Modal } from './Modal';
-export { default as BestSellersSection } from './BestSellersSection';
-export { default as CategoriesSection } from './CategoriesSection';
-export { default as ProductSummary } from '../common/ProductSummary';
-export { default as ProductImage } from '../common/ProductImage';
-export { default as ShowMoreHtml } from '../common/ShowMoreHtml';
-export { default as RecentPurchases } from './RecentPurchases';
-export { default as ListOrdersHistory } from './ListOrdersHistory';
-export { default as ListProductHistory } from './ListProductHistory';
-export { default as SettingsCard } from './SettingsCard';
-export { default as CartConfirmationModal } from './CartConfirmationModal';
-export { default as CartIndicator } from './CartIndicator';
-export { default as DesktopNav } from './DesktopNav';
-export { default as FAQItem } from './FAQItem';
-export { default as FAQSection } from './FAQSection';
-export { default as FilterSidebar } from './FilterSidebar';
-export { default as FilterOption } from './FilterOption';
-export { default as LayoutWithCart } from './LayoutWithCart';
-export { default as ListProduct } from './ListProduct';
-export { default as Logo } from './Logo';
-export { default as MobileDrawer } from './MobileDrawer';
-export { default as ProductListGrid } from './ProductListGrid';
-export { default as ProductsDropdown } from './ProductsDropdown';
-export { default as SearchBar } from './SearchBar';
-export { default as VerifyEmailModal } from './VerifyEmailModal';
-export { default as ProfileEditCard } from './ProfileEditCard';
-export { default as ListProductComponent } from './ListProductComponent';
-export { default as UserInfoCard } from './UserInfoCard';
-export { default as CartProductCard } from './CartProductCard';
-export { default as CartOrderSummary } from './CartOrderSummary';
-export { default as ListProductPage } from './ListProductPage';
-export { default as CheckoutSummary } from './CheckoutSummary';
-export { default as DndGiftCardSection } from './DndGiftCardSection';
-export { default as EGiftCardSection } from './EGiftCardSection';
-export { default as GiftCardRules } from './GiftCardRules';
-export { default as GiftCardTable } from './GiftCardTable';
+// Cart components
+export { default as CartSummaryPanel } from './cart/CartSummaryPanel';
+export { default as CartIndicator } from './cart/CartIndicator';
+export { default as CartOrderSummary } from './cart/CartOrderSummary';
+export { default as CartProductCard } from './cart/CartProductCard';
+export { default as CartConfirmationModal } from './cart/CartConfirmationModal';
+
+// Layout components
+export { default as LayoutWithCart } from './layout/LayoutWithCart';
+export { default as Modal } from './layout/Modal';
+export { default as VerifyEmailModal } from './layout/VerifyEmailModal';
+export { default as Header } from './layout/Header';
+export { default as Footer } from './layout/Footer';
+export { default as Banner } from './layout/Banner';
+export { default as MainSection } from './layout/MainSection';
+
+// Product components
+export { default as ListProduct } from './product/ListProduct';
+export { default as ListProductComponent } from './product/ListProductComponent';
+export { default as ListProductPage } from './product/ListProductPage';
+export { default as ProductGrid } from './product/ProductGrid';
+export { default as ProductListGrid } from './product/ProductListGrid';
+
+// Promotion components
+export { default as HeroPromotion } from './promotions/HeroPromotion';
+export { default as PromotionGrid } from './promotions/PromotionGrid';
+export { default as PromotionsGrid } from './promotions/PromotionsGrid';
+
+// Navigation components
+export { default as DesktopNav } from './navigation/DesktopNav';
+export { default as Logo } from './navigation/Logo';
+export { default as MobileDrawer } from './navigation/MobileDrawer';
+export { default as ProductsDropdown } from './navigation/ProductsDropdown';
+export { default as SearchBar } from './navigation/SearchBar';
+
+// Section components
+export { default as BestSellersSection } from './sections/BestSellersSection';
+export { default as BlueBanner } from './sections/BlueBanner';
+export { default as CategoriesSection } from './sections/CategoriesSection';
+export { default as CategoryTiles } from './sections/CategoryTiles';
+export { default as GlovesHighlight } from './sections/GlovesHighlight';
+export { default as HeroCarousel } from './sections/HeroCarousel';
+export { default as MailingList } from './sections/MailingList';
+export { default as Sidebar } from './sections/Sidebar';
+export { default as Catalogues } from './sections/Catalogues';
+
+// Profile components
+export { default as ListOrdersHistory } from './profile/ListOrdersHistory';
+export { default as ListProductHistory } from './profile/ListProductHistory';
+export { default as ProfileEditCard } from './profile/ProfileEditCard';
+export { default as RecentPurchases } from './profile/RecentPurchases';
+export { default as SettingsCard } from './profile/SettingsCard';
+export { default as UserInfoCard } from './profile/UserInfoCard';
+
+// FAQ components
+export { default as FAQItem } from './faq/FAQItem';
+export { default as FAQs } from './faq/FAQs';
+export { default as FAQSection } from './faq/FAQSection';
+
+// Gift card components
+export { default as DndGiftCardSection } from './gift-cards/DndGiftCardSection';
+export { default as EGiftCardSection } from './gift-cards/EGiftCardSection';
+export { default as GiftCardRules } from './gift-cards/GiftCardRules';
+export { default as GiftCardTable } from './gift-cards/GiftCardTable';
+
+// Filter components
+export { default as FilterOption } from './filters/FilterOption';
+export { default as FilterSidebar } from './filters/FilterSidebar';
+
+// Checkout components
+export { default as CheckoutSummary } from './checkout/CheckoutSummary';

@@ -11,7 +11,7 @@ import {
   Loading,
   AddAddressModal,
 } from "../common";
-import CheckoutSummary from "../components/CheckoutSummary";
+import { CheckoutSummary } from "../components/checkout";
 
 export default function CheckoutPage() {
   const {
