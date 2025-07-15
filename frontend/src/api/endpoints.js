@@ -47,9 +47,9 @@ const endpoint = {
         if (offset) params.append('offset', offset);
         return `/suiteql/transaction/by-user-order-history?${params.toString()}`;
     },
-    GET_TRANSACTION_BY_ID: ({ id, limit, offset, sort }) => {
+    GET_TRANSACTION_BY_ID: ({ userId, limit, offset, sort }) => {
         const params = new URLSearchParams();
-        if (id) params.append('id', id);
+        if (userId) params.append('userId', userId);
         if (limit) params.append('limit', limit);
         if (offset) params.append('offset', offset);
         if (sort) params.append('sort', sort);

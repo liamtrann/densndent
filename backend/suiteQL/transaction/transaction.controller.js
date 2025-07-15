@@ -3,11 +3,11 @@ const transactionService = require('./transaction.service');
 
 exports.getTransactionById = async (req, res) => {
     try {
-        const { id, limit, offset } = req.query;
-        if (!id) {
-            return res.status(400).json({ error: 'id is required' });
+        const { userId, limit, offset } = req.query;
+        if (!userId) {
+            return res.status(400).json({ error: 'userId is required' });
         }
-        const transaction = await transactionService.findByEntityId(id, limit, offset);
+        const transaction = await transactionService.findByEntityId(userId, limit, offset);
         if (!transaction) {
             return res.status(404).json({ error: 'Transaction not found' });
         }

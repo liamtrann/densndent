@@ -32,7 +32,7 @@ export default function RecentPurchases({
       try {
         const token = await getAccessTokenSilently();
         const url = endpoint.GET_TRANSACTION_BY_ID({
-          id: userInfo.id,
+          userId: userInfo.id,
           limit: 4,
         });
         const res = await api.get(url, {
