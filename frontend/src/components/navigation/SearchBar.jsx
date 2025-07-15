@@ -41,7 +41,8 @@ export default function SearchBar({ onClose }) {
     };
   }, [query]);
 
-  const showDropdown = query.trim() && (results.length > 0 || (!loading && results.length === 0));
+  const showDropdown =
+    query.trim() && (results.length > 0 || (!loading && results.length === 0));
 
   return (
     <form className="flex items-center w-full relative" autoComplete="off">
@@ -62,7 +63,7 @@ export default function SearchBar({ onClose }) {
           <div className="absolute left-0 right-0 top-full mt-2 bg-white border rounded shadow z-50">
             {results.length > 0 ? (
               <>
-                {results.map(item => (
+                {results.map((item) => (
                   <div
                     key={item.id}
                     className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
@@ -86,12 +87,15 @@ export default function SearchBar({ onClose }) {
                     if (onClose) onClose();
                   }}
                 >
-                  Search all results for "<span className="font-semibold">{query}</span>"
+                  Search all results for "
+                  <span className="font-semibold">{query}</span>"
                 </div>
               </>
             ) : (
               // Show "No results" if query is non-empty and not loading
-              <div className="px-4 py-2 text-gray-500 text-sm">No results found</div>
+              <div className="px-4 py-2 text-gray-500 text-sm">
+                No results found
+              </div>
             )}
           </div>
         )}

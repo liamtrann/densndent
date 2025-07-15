@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { delayCall } from "../../api/util";
-import { fetchProductsBy, fetchCountBy } from "../../redux/slices/productsSlice";
+import {
+  fetchProductsBy,
+  fetchCountBy,
+} from "../../redux/slices/productsSlice";
 import {
   Breadcrumb,
   ErrorMessage,

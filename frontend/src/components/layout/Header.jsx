@@ -2,12 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { FaBars, FaSearch } from "react-icons/fa";
 import { useSelector, useDispatch } from "react-redux";
-import {
-  Logo,
-  MobileDrawer,
-  DesktopNav,
-  SearchBar,
-} from "../navigation";
+import { Logo, MobileDrawer, DesktopNav, SearchBar } from "../navigation";
 import { CartIndicator } from "../cart";
 import { AuthButton } from "../../common";
 import { fetchClassifications } from "../../redux/slices/classificationSlice";

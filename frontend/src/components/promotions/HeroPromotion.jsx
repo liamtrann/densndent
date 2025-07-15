@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, Image, Paragraph } from '../../common';
+import { Button, Image, Paragraph } from "../../common";
 
 export default function HeroPromotion({
   title,
@@ -9,7 +9,7 @@ export default function HeroPromotion({
   buttonText,
   promoCode,
   imageSrc,
-  imageAlt
+  imageAlt,
 }) {
   return (
     <div className="">
@@ -17,7 +17,9 @@ export default function HeroPromotion({
         <h1 className="text-3xl font-bold text-smiles-orange mb-2">{title}</h1>
         <Paragraph className="text-lg text-smiles-orange">{offer}</Paragraph>
         <Paragraph className="text-gray-600 mb-3">{description}</Paragraph>
-        <Paragraph className="text-xs text-gray-500 mt-1">{promoCode}</Paragraph>
+        <Paragraph className="text-xs text-gray-500 mt-1">
+          {promoCode}
+        </Paragraph>
       </div>
 
       {/* Only render image if imageSrc exists */}

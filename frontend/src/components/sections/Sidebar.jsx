@@ -1,5 +1,5 @@
 import React from "react";
-import { QuickOrderForm } from '../../common';
+import { QuickOrderForm } from "../../common";
 
 export default function Sidebar({ title, navItems }) {
   return (
@@ -8,7 +8,9 @@ export default function Sidebar({ title, navItems }) {
       <QuickOrderForm />
       <nav className="space-y-2 text-smiles-blue text-sm">
         {navItems.map((item) => (
-          <li key={item} className="hover:underline cursor-pointer">{item}</li>
+          <li key={item} className="hover:underline cursor-pointer">
+            {item}
+          </li>
         ))}
       </nav>
     </aside>

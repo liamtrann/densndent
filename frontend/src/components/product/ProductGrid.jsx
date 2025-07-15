@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, Image, Paragraph } from '../../common';
+import { Button, Image, Paragraph } from "../../common";
 
 export default function ProductGrid() {
   return (
@@ -24,7 +24,10 @@ export default function ProductGrid() {
           cta: "Get Protected with A-dec",
         },
       ].map(({ title, desc, img, cta }) => (
-        <div key={title} className="bg-white shadow-md rounded-lg overflow-hidden">
+        <div
+          key={title}
+          className="bg-white shadow-md rounded-lg overflow-hidden"
+        >
           <Image src={img} alt={title} className="w-full h-36 object-cover" />
           <div className="p-4">
             <h3 className="font-semibold text-lg text-gray-800">{title}</h3>

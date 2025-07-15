@@ -6,13 +6,19 @@ import Button from "../ui/Button";
 import api from "../../api/api";
 import endpoint from "../../api/endpoints";
 import { useAuth0 } from "@auth0/auth0-react";
-import { useDispatch } from 'react-redux';
-import { fetchUserInfo } from '../../redux/slices/userSlice';
+import { useDispatch } from "react-redux";
+import { fetchUserInfo } from "../../redux/slices/userSlice";
 import FormSubmit from "../forms/FormSubmit";
 import Loading from "../ui/Loading";
 import ErrorMessage from "../ui/ErrorMessage";
 
-export default function CreateAddressModal({ onClose, onAddressCreated, address = null, customerId, error }) {
+export default function CreateAddressModal({
+  onClose,
+  onAddressCreated,
+  address = null,
+  customerId,
+  error,
+}) {
   const { user, getAccessTokenSilently } = useAuth0();
   const dispatch = useDispatch();
 
@@ -57,9 +63,13 @@ export default function CreateAddressModal({ onClose, onAddressCreated, address 
             &times;
           </button>
           <h2 className="text-xl font-semibold mb-4">Update Address</h2>
-          <div className="text-red-600 mb-4">You need to create your profile before you can update your address.</div>
+          <div className="text-red-600 mb-4">
+            You need to create your profile before you can update your address.
+          </div>
           <div className="flex justify-end">
-            <Button variant="outline" onClick={onClose}>Close</Button>
+            <Button variant="outline" onClick={onClose}>
+              Close
+            </Button>
           </div>
         </div>
       </div>
@@ -68,23 +78,23 @@ export default function CreateAddressModal({ onClose, onAddressCreated, address 
 
   // Replace stateOptions with Canadian provinces/territories from provided data
   const stateOptions = [
-    { label: '-- Select --', value: '' },
-    { label: 'Alberta (AB)', value: 'AB' },
-    { label: 'British Columbia (BC)', value: 'BC' },
-    { label: 'Manitoba (MB)', value: 'MB' },
-    { label: 'New Brunswick (NB)', value: 'NB' },
-    { label: 'Newfoundland and Labrador (NL)', value: 'NL' },
-    { label: 'Nova Scotia (NS)', value: 'NS' },
-    { label: 'Northwest Territories (NT)', value: 'NT' },
-    { label: 'Nunavut (NU)', value: 'NU' },
-    { label: 'Ontario (ON)', value: 'ON' },
-    { label: 'Prince Edward Island (PE)', value: 'PE' },
-    { label: 'Quebec (QC)', value: 'QC' },
-    { label: 'Saskatchewan (SK)', value: 'SK' },
-    { label: 'Yukon (YT)', value: 'YT' },
-    { label: 'China', value: 'CN' },
-    { label: 'Hong Kong', value: 'HK' },
-    { label: 'India', value: 'IN' },
+    { label: "-- Select --", value: "" },
+    { label: "Alberta (AB)", value: "AB" },
+    { label: "British Columbia (BC)", value: "BC" },
+    { label: "Manitoba (MB)", value: "MB" },
+    { label: "New Brunswick (NB)", value: "NB" },
+    { label: "Newfoundland and Labrador (NL)", value: "NL" },
+    { label: "Nova Scotia (NS)", value: "NS" },
+    { label: "Northwest Territories (NT)", value: "NT" },
+    { label: "Nunavut (NU)", value: "NU" },
+    { label: "Ontario (ON)", value: "ON" },
+    { label: "Prince Edward Island (PE)", value: "PE" },
+    { label: "Quebec (QC)", value: "QC" },
+    { label: "Saskatchewan (SK)", value: "SK" },
+    { label: "Yukon (YT)", value: "YT" },
+    { label: "China", value: "CN" },
+    { label: "Hong Kong", value: "HK" },
+    { label: "India", value: "IN" },
   ];
 
   const validateZip = (zip) => /^[A-Za-z]\d[A-Za-z]\d[A-Za-z]\d$/.test(zip);
@@ -101,7 +111,8 @@ export default function CreateAddressModal({ onClose, onAddressCreated, address 
     e.preventDefault();
     const newErrors = {};
     if (!validateZip(formData.zip)) {
-      newErrors.zip = "Zip code must be 6 characters, alternating letter and number (e.g., A1B2C3).";
+      newErrors.zip =
+        "Zip code must be 6 characters, alternating letter and number (e.g., A1B2C3).";
     }
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
@@ -138,7 +149,10 @@ export default function CreateAddressModal({ onClose, onAddressCreated, address 
         onClose();
       }, 0);
     } catch (err) {
-      console.error("❌ Error saving address:", err?.response?.data || err?.message || err);
+      console.error(
+        "❌ Error saving address:",
+        err?.response?.data || err?.message || err
+      );
       alert("Failed to save address. Please try again.");
     } finally {
       setSubmitting(false);

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Image } from '../../common';
+import { Image } from "../../common";
 import BlueBanner from "./BlueBanner";
 import axios from "axios";
 
@@ -8,22 +8,22 @@ export default function CategoriesSection() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-//   useEffect(() => {
-//     async function fetchCategories() {
-//       try {
-//         setLoading(true);
-//         setError(null);
-//         // Replace with your actual API endpoint
-//         const res = await axios.get("/api/categories");
-//         setCategories(res.data);
-//       } catch (err) {
-//         setError("Failed to load categories.");
-//       } finally {
-//         setLoading(false);
-//       }
-//     }
-//     fetchCategories();
-//   }, []);
+  //   useEffect(() => {
+  //     async function fetchCategories() {
+  //       try {
+  //         setLoading(true);
+  //         setError(null);
+  //         // Replace with your actual API endpoint
+  //         const res = await axios.get("/api/categories");
+  //         setCategories(res.data);
+  //       } catch (err) {
+  //         setError("Failed to load categories.");
+  //       } finally {
+  //         setLoading(false);
+  //       }
+  //     }
+  //     fetchCategories();
+  //   }, []);
 
   return (
     <BlueBanner
@@ -32,7 +32,11 @@ export default function CategoriesSection() {
       columns={{ base: 2, md: 4, lg: 5 }}
       renderItem={({ name, img }) => (
         <>
-          <Image src={img} alt={name} className="mx-auto h-20 object-contain mb-2" />
+          <Image
+            src={img}
+            alt={name}
+            className="mx-auto h-20 object-contain mb-2"
+          />
           <p className="text-sm font-medium text-gray-800">{name}</p>
         </>
       )}
