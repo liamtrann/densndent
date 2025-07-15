@@ -40,9 +40,9 @@ const endpoint = {
     GET_COUNT_BY_CLASS: (classId) => `/suiteql/item/count-by-class?classId=${classId}`,
     GET_COUNT_BY_BRAND: (brand) => `/suiteql/item/count-by-brand?brand=${brand}`,
     POST_GET_COUNT_BY_NAME: () => `/suiteql/item/count-by-name`,
-    GET_ITEMS_ORDER_HISTORY_BY_USER: ({ id, limit, offset }) => {
+    GET_ITEMS_ORDER_HISTORY_BY_USER: ({ userId, limit, offset }) => {
         const params = new URLSearchParams();
-        if (id) params.append('id', id);
+        if (userId) params.append('userId', userId);
         if (limit) params.append('limit', limit);
         if (offset) params.append('offset', offset);
         return `/suiteql/item/by-user-order-history?${params.toString()}`;

@@ -12,7 +12,11 @@ const buildProductUrl = ({ type, id, limit, offset = 0, sort }) => {
     case "name":
       return { url: endpoint.POST_GET_ITEMS_BY_NAME({ limit, offset, sort }), method: "post" };
     case "orderHistory":
-      return { url: endpoint.GET_ITEMS_ORDER_HISTORY_BY_USER({ id, limit, offset }), method: "get" };
+      return {
+        url: endpoint.GET_ITEMS_ORDER_HISTORY_BY_USER({ userId: id, limit, offset }),
+        method: "get",
+        requiresAuth: true
+      };
     default:
       throw new Error("Unknown product type");
   }
@@ -34,16 +38,28 @@ const buildCountUrl = ({ type, id }) => {
 // Async thunk to fetch a page of products
 export const fetchProductsBy = createAsyncThunk(
   'products/fetchPage',
-  async ({ type, id, page, limit, sort }, { rejectWithValue }) => {
-    console.log(id, page, limit, sort);
+  async ({ type, id, page, limit, sort, getAccessTokenSilently }, { rejectWithValue }) => {
+
     try {
       const offset = (page - 1) * limit;
-      const { url, method } = buildProductUrl({ type, id, limit, offset, sort });
+      const { url, method, requiresAuth } = buildProductUrl({ type, id, limit, offset, sort });
       let res;
+
+      // Set up headers for authenticated requests
+      const headers = {};
+      if (requiresAuth && getAccessTokenSilently) {
+        try {
+          const token = await getAccessTokenSilently();
+          headers.Authorization = `Bearer ${token}`;
+        } catch (tokenError) {
+          return rejectWithValue("Failed to get authentication token");
+        }
+      }
+
       if (method === "post") {
-        res = await api.post(url, { name: id });
+        res = await api.post(url, { name: id }, { headers });
       } else {
-        res = await api.get(url);
+        res = await api.get(url, { headers });
       }
       return {
         id,
