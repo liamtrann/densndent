@@ -9,7 +9,7 @@ import {
   Pagination,
   ProductToolbar,
 } from "../common";
-import FilterSidebar from "./FilterSidebar";
+import FilterOption from "./FilterOption";
 import ProductListGrid from "./ProductListGrid";
 import CartSummaryPanel from "./CartSummaryPanel"; // 👈 Import here
 export default function ListProductComponent({
@@ -21,6 +21,13 @@ export default function ListProductComponent({
   const [perPage, setPerPage] = useState(12);
   const [sort, setSort] = useState("");
   const [page, setPage] = useState(1);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    minPrice: "",
+    maxPrice: "",
+    selectedCategories: [],
+    selectedBrands: [],
+  });
 
   const dispatch = useDispatch();
   const key = `${id}_${perPage}_${sort}_${page}`;
@@ -57,50 +64,119 @@ export default function ListProductComponent({
 
   const totalPages = Math.ceil(total / perPage) || 1;
 
+  const handleFiltersChange = (newFilters) => {
+    setFilters(newFilters);
+    setPage(1); // Reset to first page when filters change
+  };
 
-return (
-  <div className="px-6 py-8 max-w-screen-2xl mx-auto">
-    <Breadcrumb path={breadcrumbPath} />
-    <h1 className="text-3xl font-bold text-smiles-blue mb-6">
-      {headerTitle}
-    </h1>
+  const handleApplyFilters = () => {
+    // Here you can trigger a new search with the applied filters
+    console.log("Applied filters:", filters);
+    // You might want to dispatch a new fetchProductsBy with filters
+  };
 
-    {/* 3-column layout here */}
-    <div className="flex gap-6 items-start">
-      {/* Left Column: Filters */}
-      <div className="w-[240px] shrink-0">
-        <FilterSidebar />
-      </div>
+  return (
+    <div className="px-4 lg:px-6 py-6 lg:py-8 max-w-screen-2xl mx-auto">
+      <Breadcrumb path={breadcrumbPath} />
+      <h1 className="text-2xl lg:text-3xl font-bold text-smiles-blue mb-4 lg:mb-6">
+        {headerTitle}
+      </h1>
 
-      {/* Center Column: Main product area */}
-      <div className="flex-1">
-        <ProductToolbar
-          perPageOptions={[12, 24, 48]}
-          onPerPageChange={e => { setPerPage(Number(e.target.value)); setPage(1); }}
-          perPage={perPage}
-          sort={sort}
-          onSortChange={e => setSort(e.target.value)}
-          total={total}
+      {/* Desktop: 3-column layout, Mobile: Single column stack */}
+      <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 items-start">
+        {/* Left Column: Filters - Hidden on mobile, shown on desktop */}
+        <FilterOption
+          className="hidden lg:block"
+          filters={filters}
+          onFiltersChange={handleFiltersChange}
+          onApplyFilters={handleApplyFilters}
         />
-        <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
-        {isLoading && <Loading message="Loading products..." />}
-        {error && <ErrorMessage message={error} />}
-        {!isLoading && !error && products.length === 0 && (
-          <div className="text-gray-500 py-8 text-center">
-            No products found for this category.
-          </div>
-        )}
-        {!isLoading && !error && products.length > 0 && (
-          <ProductListGrid products={products} />
-        )}
-      </div>
 
-      {/* Right Column: Cart summary */}
-      <div className="w-[300px] shrink-0">
-        <CartSummaryPanel />
+        {/* Center Column: Main product area */}
+        <div className="flex-1 w-full">
+          {/* Mobile filter toggle button */}
+          <div className="lg:hidden mb-4">
+            <button
+              onClick={() => setShowMobileFilters(!showMobileFilters)}
+              className="w-full bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg text-left flex items-center justify-between"
+            >
+              <span className="font-medium">Filters & Sort</span>
+              <svg
+                className={`w-5 h-5 transform transition-transform ${
+                  showMobileFilters ? "rotate-180" : ""
+                }`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
+
+            {/* Mobile filters dropdown */}
+            {showMobileFilters && (
+              <div className="mt-2 bg-white border rounded-lg shadow-lg p-4">
+                <FilterOption
+                  filters={filters}
+                  onFiltersChange={handleFiltersChange}
+                  onApplyFilters={() => {
+                    handleApplyFilters();
+                    setShowMobileFilters(false);
+                  }}
+                  className="w-full"
+                />
+              </div>
+            )}
+          </div>
+
+          <ProductToolbar
+            perPageOptions={[12, 24, 48]}
+            onPerPageChange={(e) => {
+              setPerPage(Number(e.target.value));
+              setPage(1);
+            }}
+            perPage={perPage}
+            sort={sort}
+            onSortChange={(e) => setSort(e.target.value)}
+            total={total}
+          />
+          <div className="mb-4">
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+            />
+          </div>
+          {isLoading && <Loading message="Loading products..." />}
+          {error && <ErrorMessage message={error} />}
+          {!isLoading && !error && products.length === 0 && (
+            <div className="text-gray-500 py-8 text-center">
+              No products found for this category.
+            </div>
+          )}
+          {!isLoading && !error && products.length > 0 && (
+            <ProductListGrid products={products} />
+          )}
+          {/* Bottom pagination for mobile */}
+          <div className="mt-6">
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+            />
+          </div>
+        </div>
+
+        {/* Right Column: Cart summary - Hidden on mobile, shown on desktop */}
+        <div className="hidden lg:block w-[300px] shrink-0">
+          <CartSummaryPanel />
+        </div>
       </div>
     </div>
-  </div>
-);
-
+  );
 }

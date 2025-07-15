@@ -158,7 +158,6 @@ export default function CheckoutPage() {
               isOpen={isAddModalOpen}
               onClose={() => setAddModalOpen(false)}
               onSave={(data) => {
-                console.log("Saved address:", data);
                 setAddModalOpen(false);
               }}
             />

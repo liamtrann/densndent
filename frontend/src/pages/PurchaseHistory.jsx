@@ -29,8 +29,6 @@ export default function PurchaseHistory() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  console.log(orders);
-
   const sortOptions = [
     { value: "recent", label: "Most Recent" },
     { value: "oldest", label: "Oldest First" },
@@ -103,8 +101,6 @@ export default function PurchaseHistory() {
 
     setFilteredOrders(filtered);
   }, [fromDate, toDate, status, sort, orders]);
-
-  console.log(orders);
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-10">

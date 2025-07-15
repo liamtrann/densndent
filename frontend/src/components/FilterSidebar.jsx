@@ -1,8 +1,12 @@
-import React, { useState } from "react";
+import React from "react";
 
-export default function FilterSidebar() {
-  const [minPrice, setMinPrice] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
+export default function FilterSidebar({ filters, onFiltersChange }) {
+  const {
+    minPrice = "",
+    maxPrice = "",
+    selectedCategories = [],
+    selectedBrands = [],
+  } = filters || {};
 
   const predefinedRanges = [
     { label: "Under $100", min: 0, max: 100 },
@@ -12,8 +16,40 @@ export default function FilterSidebar() {
   ];
 
   const handleRangeClick = (range) => {
-    setMinPrice(range.min === 0 ? "" : range.min);
-    setMaxPrice(range.max === Infinity ? "" : range.max);
+    onFiltersChange?.({
+      ...filters,
+      minPrice: range.min === 0 ? "" : range.min,
+      maxPrice: range.max === Infinity ? "" : range.max,
+    });
+  };
+
+  const handlePriceChange = (field, value) => {
+    onFiltersChange?.({
+      ...filters,
+      [field]: value,
+    });
+  };
+
+  const handleCategoryChange = (category, checked) => {
+    const newCategories = checked
+      ? [...selectedCategories, category]
+      : selectedCategories.filter((c) => c !== category);
+
+    onFiltersChange?.({
+      ...filters,
+      selectedCategories: newCategories,
+    });
+  };
+
+  const handleBrandChange = (brand, checked) => {
+    const newBrands = checked
+      ? [...selectedBrands, brand]
+      : selectedBrands.filter((b) => b !== brand);
+
+    onFiltersChange?.({
+      ...filters,
+      selectedBrands: newBrands,
+    });
   };
 
   return (
@@ -30,7 +66,7 @@ export default function FilterSidebar() {
             type="number"
             placeholder="Min"
             value={minPrice}
-            onChange={(e) => setMinPrice(e.target.value)}
+            onChange={(e) => handlePriceChange("minPrice", e.target.value)}
             className="w-full border text-sm px-2 py-1 rounded"
           />
           <span className="text-gray-500">-</span>
@@ -38,7 +74,7 @@ export default function FilterSidebar() {
             type="number"
             placeholder="Max"
             value={maxPrice}
-            onChange={(e) => setMaxPrice(e.target.value)}
+            onChange={(e) => handlePriceChange("maxPrice", e.target.value)}
             className="w-full border text-sm px-2 py-1 rounded"
           />
         </div>
@@ -62,7 +98,13 @@ export default function FilterSidebar() {
         <h3 className="font-semibold text-sm mb-2">CATEGORIES</h3>
         {["Dental", "Amalgam", "Alloys"].map((cat) => (
           <label key={cat} className="block text-sm">
-            <input type="checkbox" className="mr-2" /> {cat}
+            <input
+              type="checkbox"
+              className="mr-2"
+              checked={selectedCategories.includes(cat)}
+              onChange={(e) => handleCategoryChange(cat, e.target.checked)}
+            />
+            {cat}
           </label>
         ))}
       </div>
@@ -72,7 +114,13 @@ export default function FilterSidebar() {
         <h3 className="font-semibold text-sm mb-2">BRAND</h3>
         {["Ivoclar", "SDI", "Silmet"].map((brand) => (
           <label key={brand} className="block text-sm">
-            <input type="checkbox" className="mr-2" /> {brand}
+            <input
+              type="checkbox"
+              className="mr-2"
+              checked={selectedBrands.includes(brand)}
+              onChange={(e) => handleBrandChange(brand, e.target.checked)}
+            />
+            {brand}
           </label>
         ))}
       </div>

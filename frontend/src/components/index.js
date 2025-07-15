@@ -29,6 +29,7 @@ export { default as DesktopNav } from './DesktopNav';
 export { default as FAQItem } from './FAQItem';
 export { default as FAQSection } from './FAQSection';
 export { default as FilterSidebar } from './FilterSidebar';
+export { default as FilterOption } from './FilterOption';
 export { default as ListProduct } from './ListProduct';
 export { default as Logo } from './Logo';
 export { default as MobileDrawer } from './MobileDrawer';

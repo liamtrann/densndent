@@ -5,18 +5,28 @@ import { FiShoppingCart } from "react-icons/fi"; // cart icon
 import Button from "../common/Button";
 import { addToCart } from "../redux/slices/cartSlice";
 import CartConfirmationModal from "./CartConfirmationModal";
-import { ProductImage, Paragraph } from "../common";
+import { ProductImage, Paragraph, InputField } from "../common";
 
 export default function ListProduct({ product }) {
   const { id, itemid, file_url, price, totalquantityonhand } = product;
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
+  const [quantity, setQuantity] = useState(1);
 
   const handleAddToCart = () => {
-    const cartItem = { ...product, quantity: 1 };
+    const cartItem = { ...product, quantity: Number(quantity) };
     dispatch(addToCart(cartItem));
     setShowModal(true);
+  };
+
+  const handleQuantityChange = (e) => {
+    const value = e.target.value;
+    if (Number(value) < 1) {
+      setQuantity(1);
+    } else {
+      setQuantity(value);
+    }
   };
 
   const handleNavigate = () => {
@@ -26,47 +36,68 @@ export default function ListProduct({ product }) {
   const inStock = totalquantityonhand && totalquantityonhand > 0;
 
   return (
-    <div className="border p-4 rounded shadow hover:shadow-md transition">
+    <div className="border p-4 rounded shadow hover:shadow-md transition flex flex-col h-full">
       <div className="cursor-pointer" onClick={handleNavigate}>
         <ProductImage src={file_url} />
       </div>
 
       <h3
-        className="text-sm font-medium text-gray-900 mb-1 cursor-pointer hover:underline"
+        className="text-sm font-medium text-gray-900 mb-1 cursor-pointer hover:underline line-clamp-2 min-h-[2.5rem]"
         onClick={handleNavigate}
       >
         {itemid}
       </h3>
 
-      <p className="font-semibold text-gray-800 mb-2">${price}</p>
+      <div className="mb-2">
+        <span className="text-xl font-bold text-gray-800">
+          ${Math.floor(price)}
+        </span>
+        <span className="text-sm font-semibold text-gray-600 align-top">
+          .{(price % 1).toFixed(2).slice(2)}
+        </span>
+      </div>
 
-      {inStock ? (
-        <Paragraph className="text-green-700 font-semibold mb-2">
-          Current Stock: {totalquantityonhand}
-        </Paragraph>
-      ) : (
-        <Paragraph className="text-red-600 font-semibold mb-2">
-          Out of stock
-        </Paragraph>
-      )}
+      <div className="flex-grow">
+        {inStock ? (
+          <Paragraph className="text-green-700 font-semibold mb-2">
+            Current Stock: {totalquantityonhand}
+          </Paragraph>
+        ) : (
+          <Paragraph className="text-red-600 font-semibold mb-2">
+            Out of stock
+          </Paragraph>
+        )}
+      </div>
 
       {showModal && (
         <CartConfirmationModal
           product={product}
-          quantity={1}
+          quantity={Number(quantity)}
           onClose={() => setShowModal(false)}
         />
       )}
 
-      <Button
-      className="h-9 w-22 flex items-center justify-center"
-      disabled={!inStock}
-      onClick={handleAddToCart}
-      aria-label="Add to cart"
-    >
-      <FiShoppingCart size={20} />
-    </Button>
-
+      <div className="flex justify-between items-center mt-auto">
+        <InputField
+          type="number"
+          min="1"
+          max={999}
+          value={quantity}
+          onChange={handleQuantityChange}
+          className="w-16 h-9 text-center text-sm"
+          disabled={!inStock}
+        />
+        <FiShoppingCart
+          size={20}
+          className={`cursor-pointer ${
+            inStock
+              ? "text-primary-blue hover:text-smiles-blue"
+              : "text-gray-400 cursor-not-allowed"
+          }`}
+          onClick={inStock ? handleAddToCart : undefined}
+          aria-label="Add to cart"
+        />
+      </div>
     </div>
   );
 }
