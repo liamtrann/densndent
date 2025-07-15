@@ -52,7 +52,7 @@ export default function PurchaseHistory() {
       setError(null);
       try {
         const token = await getAccessTokenSilently();
-        const url = endpoint.GET_TRANSACTION_BY_ID({ id: userInfo.id });
+        const url = endpoint.GET_TRANSACTION_BY_ID({ userId: userInfo.id });
         const res = await api.get(url, {
           headers: { Authorization: `Bearer ${token}` },
         });
