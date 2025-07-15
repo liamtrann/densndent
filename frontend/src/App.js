@@ -14,7 +14,7 @@ import {
 
 import Header from "./components/Header";
 import Footer from "./components/Footer";
-import { ListProductPage } from "./components";
+import { ListProductPage, LayoutWithCart } from "./components";
 import PurchaseHistory from "./pages/PurchaseHistory";
 import ProfileEditCard from "./components/ProfileEditCard";
 import ProtectedRoute from "./common/ProtectedRoute";
@@ -51,8 +51,36 @@ export default function App() {
       <Header />
       <main className="flex-grow">
         <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/product/:id" element={<ProductDetail />} />
+          <Route path="/" element={<LayoutWithCart><LandingPage /></LayoutWithCart>} />
+
+          {/* Routes WITH Cart Panel */}
+          <Route path="/product/:id" element={
+            <LayoutWithCart>
+              <ProductDetail />
+            </LayoutWithCart>
+          } />
+          <Route path="/products/by-class/:nameAndId" element={
+            <LayoutWithCart>
+              <ListProductPage by="class" />
+            </LayoutWithCart>
+          } />
+          <Route path="/products/by-brand/:brandName" element={
+            <LayoutWithCart>
+              <ListProductPage by="brand" />
+            </LayoutWithCart>
+          } />
+          <Route path="/products/by-name/:name" element={
+            <LayoutWithCart>
+              <ListProductPage by="name" />
+            </LayoutWithCart>
+          } />
+          <Route path="/products/by-category/:categoryNameAndId" element={
+            <LayoutWithCart>
+              <ListProductPage by="category" />
+            </LayoutWithCart>
+          } />
+
+          {/* Routes WITHOUT Cart Panel */}
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout/*" element={<CheckoutPage />} />
           <Route path="/faq" element={<FAQPage />} />
@@ -66,10 +94,6 @@ export default function App() {
           <Route path="/catalogues" element={<CataloguesPage />} />
           <Route path="/clearance" element={<ClearancePage />} />
           <Route path="/partners" element={<OurPartners />} />
-          <Route path="/products/by-class/:nameAndId" element={<ListProductPage by="class" />} />
-          <Route path="/products/by-brand/:brandName" element={<ListProductPage by="brand" />} />
-          <Route path="/products/by-name/:name" element={<ListProductPage by="name" />} />
-          <Route path="/products/by-category/:categoryNameAndId" element={<ListProductPage by="category" />} />
 
           <Route element={<ProtectedRoute />}>
             <Route path="/profile" element={<ProfilePage />} />

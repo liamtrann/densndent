@@ -90,6 +90,17 @@ export default function ProductsPage() {
       setQuantity(value);
     }
   };
+
+  const increment = () => {
+    setQuantity((prev) => Number(prev) + 1);
+  };
+
+  const decrement = () => {
+    if (Number(quantity) > 1) {
+      setQuantity((prev) => Number(prev) - 1);
+    }
+  };
+
   // Prepare shade options for Dropdown
   const shadeOptions = shades.map((item) => ({
     value: item.id,
@@ -159,13 +170,40 @@ export default function ProductsPage() {
 
           <div className="mt-4">
             <label className="block mb-1 font-medium">Quantity:</label>
-            <InputField
-              type="number"
-              min="1"
-              value={quantity}
-              onChange={handleQuantityChange}
-              className="px-2 py-1 w-24"
-            />
+            <div className="flex items-center border rounded overflow-hidden h-9 w-32">
+              <button
+                onClick={decrement}
+                className="px-2 h-9 text-sm hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                disabled={
+                  !product.totalquantityonhand ||
+                  product.totalquantityonhand <= 0 ||
+                  Number(quantity) <= 1
+                }
+              >
+                –
+              </button>
+              <InputField
+                type="number"
+                min="1"
+                value={quantity}
+                onChange={handleQuantityChange}
+                className="flex-1 h-9 text-center text-sm border-0 focus:ring-1 focus:ring-blue-500"
+                disabled={
+                  !product.totalquantityonhand ||
+                  product.totalquantityonhand <= 0
+                }
+              />
+              <button
+                onClick={increment}
+                className="px-2 h-9 text-sm hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                disabled={
+                  !product.totalquantityonhand ||
+                  product.totalquantityonhand <= 0
+                }
+              >
+                +
+              </button>
+            </div>
           </div>
 
           <Button

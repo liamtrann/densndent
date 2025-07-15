@@ -171,11 +171,6 @@ export default function ListProductComponent({
             />
           </div>
         </div>
-
-        {/* Right Column: Cart summary - Hidden on mobile, shown on desktop */}
-        <div className="hidden lg:block w-[300px] shrink-0">
-          <CartSummaryPanel />
-        </div>
       </div>
     </div>
   );
