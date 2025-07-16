@@ -117,8 +117,6 @@ export default function ListProductComponent({
   };
 
   const handleApplyFilters = () => {
-    // Update applied filters and trigger new search
-    console.log("Applied filters:", filters);
 
     // Set the applied filters (this will trigger useEffect to fetch new data)
     setAppliedFilters(filters);

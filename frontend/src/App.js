@@ -3,7 +3,7 @@ import { useAuth0 } from "@auth0/auth0-react";
 import React from "react";
 import { useDispatch } from "react-redux";
 import { Routes, Route } from "react-router-dom";
-import Q3CataloguePage from "./pages/Q3CataloguePage";
+
 
 
 import { ProtectedRoute } from "./common";
@@ -24,6 +24,7 @@ import JdiqRaffleWinners from "./pages/JdiqRaffleWinners";
 import MeetOurTeam from "./pages/MeetOurTeam";
 import OurPartners from "./pages/OurPartners";
 import PurchaseHistory from "./pages/PurchaseHistory";
+import Q3CataloguePage from "./pages/Q3CataloguePage";
 import { fetchUserInfo, clearUserInfo } from "./redux/slices/userSlice";
 
 const BlogPage = () => <div>Blog Page</div>;

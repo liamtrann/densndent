@@ -144,6 +144,7 @@ exports.postItemsByNameLike = async (req, res) => {
   try {
     const { limit, offset, sort, minPrice, maxPrice } = req.query;
     const { name } = req.body;
+    
     if (!name) {
       return res.status(400).json({ error: 'Missing name in request body' });
     }

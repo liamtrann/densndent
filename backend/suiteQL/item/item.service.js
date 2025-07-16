@@ -52,7 +52,7 @@ class ItemsService {
         const sortBy = this._getSortBy(sort);
 
         // SQL Query
-        const sql = `SELECT i.id, i.itemid, i.totalquantityonhand, ip.price, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url FROM item i JOIN itemprice ip ON i.id = ip.item AND ip.pricelevel = 1 WHERE i.isonline = 'T' AND i.isinactive = 'F' AND ${conditions.join(' AND ')} ${sortBy}`;
+        const sql = `SELECT i.id, i.itemid, i.totalquantityonhand, i.stockdescription, ip.price, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url FROM item i JOIN itemprice ip ON i.id = ip.item AND ip.pricelevel = 1 WHERE i.isonline = 'T' AND i.isinactive = 'F' AND ${conditions.join(' AND ')} ${sortBy}`;
 
         // Run with standard function signature
         const results = await runQueryWithPagination(sql, limit, offset);
@@ -63,19 +63,19 @@ class ItemsService {
     // Find items by both class and brand
     async findByClassAndBrand(classId, brand, limit, offset, sort) {
         const sortBy = this._getSortBy(sort);
-        const sql = `SELECT i.id, i.itemid, i.totalquantityonhand, ip.price, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url FROM item i JOIN itemprice ip ON i.id = ip.item AND ip.pricelevel = 1 WHERE i.isonline = 'T' AND i.isinactive='F' AND i.class='${classId}' AND i.custitemcustitem_dnd_brand='${brand}' ${sortBy}`;
+        const sql = `SELECT i.id, i.itemid, i.totalquantityonhand, i.stockdescription, ip.price, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url FROM item i JOIN itemprice ip ON i.id = ip.item AND ip.pricelevel = 1 WHERE i.isonline = 'T' AND i.isinactive='F' AND i.class='${classId}' AND i.custitemcustitem_dnd_brand='${brand}' ${sortBy}`;
         const results = await runQueryWithPagination(sql, limit, offset);
         return results.items || [];
     }
 
     async findById(itemId) {
-        const sql = `SELECT i.id, i.class, i.manufacturer, i.mpn, i.itemid, i.itemType, i.subsidiary, i.isonline, i.displayname, i.storedetaileddescription, i.custitemcustitem_dnd_brand AS branditem, i.totalquantityonhand, i.stockdescription, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url, ip.item, ip.price FROM item i LEFT JOIN itemprice ip ON ip.item = i.id AND ip.pricelevel = 1 WHERE i.id = '${itemId}' AND i.isinactive='F' AND i.isonline = 'T'`;
+        const sql = `SELECT i.custitem38, i.custitem39,i.id, i.class, i.manufacturer, i.mpn, i.itemid, i.itemType, i.subsidiary, i.isonline, i.displayname, i.storedetaileddescription, i.custitemcustitem_dnd_brand AS branditem, i.totalquantityonhand, i.stockdescription, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url, ip.item, ip.price FROM item i LEFT JOIN itemprice ip ON ip.item = i.id AND ip.pricelevel = 1 WHERE i.id = '${itemId}' AND i.isinactive='F' `;
 
         const result = await runQueryWithPagination(sql, 1, 0);
         return result.items?.[0] || null;
     }
     async findByParent(parent) {
-        const sql = `SELECT i.id, i.itemid, i.custitem38 FROM item i WHERE i.custitem39 = '${parent}' AND i.isinactive = 'F' AND i.isonline = 'T' ORDER BY i.custitem40`;
+        const sql = `SELECT i.id, i.itemid, i.custitem38 FROM item i WHERE i.custitem39 = '${parent}' AND i.isinactive = 'F'ORDER BY i.custitem40`;
 
         const result = await runQueryWithPagination(sql);
         return result.items || [];
@@ -93,7 +93,7 @@ class ItemsService {
 
     async findByNameLike(name, limit, offset) {
         // Use the same fields as other item queries
-        const sql = `SELECT i.id, i.itemid FROM item i WHERE LOWER(i.itemid) LIKE '%' || LOWER('${name}') || '%' AND i.isinactive='F' AND i.isonline = 'T' ORDER BY i.itemid ASC`;
+        const sql = `SELECT i.id, i.itemid, i.stockdescription FROM item i WHERE LOWER(i.itemid) LIKE '%' || LOWER('${name}') || '%' AND i.isinactive='F' AND i.isonline = 'T' ORDER BY i.itemid ASC`;
         const results = await runQueryWithPagination(sql, limit, offset);
         return results;
     }
@@ -152,7 +152,7 @@ class ItemsService {
             priceConditions += ` AND ip.price <= ${parseFloat(maxPrice)}`;
         }
 
-        const sql = `SELECT i.id, i.itemid, i.totalquantityonhand, ip.price, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url FROM item i INNER JOIN CommerceCategoryItemAssociation cc ON cc.item = i.id INNER JOIN itemprice ip ON ip.item = i.id AND ip.pricelevel = 1 WHERE cc.category = '${category}' AND i.isonline = 'T' AND i.isinactive = 'F'${priceConditions} ${sortBy}`;
+        const sql = `SELECT i.id, i.itemid, i.totalquantityonhand, i.stockdescription, ip.price, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url FROM item i INNER JOIN CommerceCategoryItemAssociation cc ON cc.item = i.id INNER JOIN itemprice ip ON ip.item = i.id AND ip.pricelevel = 1 WHERE cc.category = '${category}' AND i.isonline = 'T' AND i.isinactive = 'F'${priceConditions} ${sortBy}`;
         const results = await runQueryWithPagination(sql, limit, offset);
         return results.items || [];
     }

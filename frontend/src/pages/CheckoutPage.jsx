@@ -61,8 +61,6 @@ export default function CheckoutPage() {
     fetchShippingMethods(20412);
   }, []);
 
-  console.log(shippingMethods);
-
   const renderStep = () => {
     const step = location.pathname.split("/")[2] || "shipping";
 
