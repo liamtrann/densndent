@@ -2,6 +2,7 @@ import React from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Button, ProductImage } from "common";
+import { updateQuantity, removeFromCart } from "@/redux/slices/cartSlice";
 
 export default function CartSummaryPanel() {
   const cartItems = useSelector((state) => state.cart.items);
@@ -43,10 +44,7 @@ export default function CartSummaryPanel() {
 
       <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
         {cartItems.map((item) => (
-          <div
-            key={item.id}
-            className="flex items-start gap-3 border-b pb-2"
-          >
+          <div key={item.id} className="flex items-start gap-3 border-b pb-2">
             <ProductImage
               src={item.file_url}
               className="w-12 h-12 object-cover"
