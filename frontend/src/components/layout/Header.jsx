@@ -10,7 +10,7 @@ import {
 } from "components/navigation";
 import { CartIndicator } from "components/cart";
 import { AuthButton } from "common";
-import { fetchClassifications } from "../../redux/slices/classificationSlice";
+import { fetchClassifications } from "store/slices/classificationSlice";
 import { delayCall } from "api/util";
 
 export default function Header() {

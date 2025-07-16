@@ -1,5 +1,5 @@
-import React, { useState } from "react";
 import classNames from "classnames";
+import { useState } from "react";
 
 // Default base path for NetSuite from environment variable
 const base_file_url = process.env.BASE_FILE_URL_FOR_IMG || "https://4571901-sb1.app.netsuite.com";

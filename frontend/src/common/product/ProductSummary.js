@@ -1,4 +1,3 @@
-import React from "react";
 import ProductImage from "./ProductImage";
 
 export default function ProductSummary({ image, product }) {

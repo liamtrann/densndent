@@ -1,4 +1,3 @@
-import React from "react";
 import classNames from "classnames";
 
 export default function AppLink({ href, children, className = "", ...props }) {

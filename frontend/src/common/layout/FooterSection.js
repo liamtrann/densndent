@@ -1,5 +1,3 @@
-import React from "react";
-
 export default function FooterSection({ title, children, className = "", items, itemRender }) {
   return (
     <div className={className}>
