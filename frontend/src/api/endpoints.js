@@ -72,6 +72,14 @@ const endpoint = {
     },
     GET_SHIPPING_METHOD: (id) => `/suiteql/shipItem/${id}`,
     POST_CHECK_INVENTORY: () => '/suiteql/inventory/check-inventory',
+    GET_ACTIVE_PROMOTIONS: () => '/suiteql/promotion',
+    GET_PROMOTIONS_BY_PRODUCT: ({ productId, limit, offset }) => {
+        const params = new URLSearchParams();
+        if (productId) params.append('productId', productId);
+        if (limit) params.append('limit', limit);
+        if (offset) params.append('offset', offset);
+        return `/suiteql/promotion/by-product?${params.toString()}`;
+    },
 
     // NETSUITE REST API Endpoints
     GET_CUSTOMER: (id) => `/restapi/customer/${id}`,
