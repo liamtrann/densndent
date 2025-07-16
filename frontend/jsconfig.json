@@ -1,6 +1,17 @@
 {
   "compilerOptions": {
-    "baseUrl": "src"
+    "baseUrl": "src",
+    "paths": {
+      "src/*": ["*"],
+      "components/*": ["components/*"],
+      "common/*": ["common/*"],
+      "pages/*": ["pages/*"],
+      "api/*": ["api/*"],
+      "redux/*": ["store/*"],
+      "constants/*": ["constants/*"],
+      "hooks/*": ["hooks/*"]
+    }
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": ["node_modules"]
 }
