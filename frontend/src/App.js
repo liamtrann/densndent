@@ -11,7 +11,6 @@ import {
   LandingPage,
   ProductDetail,
   CartPage,
-  AllList,
   NotFound,
   CheckoutPage,
   FAQPage,
