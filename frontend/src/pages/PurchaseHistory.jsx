@@ -9,12 +9,12 @@ import {
   ErrorMessage,
   Paragraph,
   TextButton,
-} from "../common";
-import api from "../api/api";
-import endpoint from "../api/endpoints";
+} from "common";
+import api from "api/api";
+import endpoint from "api/endpoints";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useSelector } from "react-redux";
-import { ListOrdersHistory, ListProductHistory } from "../components";
+import { ListOrdersHistory, ListProductHistory } from "components";
 
 export default function PurchaseHistory() {
   const { getAccessTokenSilently } = useAuth0();

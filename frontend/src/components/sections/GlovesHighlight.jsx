@@ -1,5 +1,5 @@
 import React from "react";
-import { InfoBanner } from "../../common";
+import { InfoBanner } from "common";
 
 export default function GlovesHighlight() {
   return (

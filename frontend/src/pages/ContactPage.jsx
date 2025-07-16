@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { InputField, Paragraph, Button, Breadcrumb } from "../common";
+import { InputField, Paragraph, Button, Breadcrumb } from "common";
 
 export default function ContactPage() {
   const [form, setForm] = useState({

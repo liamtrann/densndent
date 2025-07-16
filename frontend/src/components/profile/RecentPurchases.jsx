@@ -2,9 +2,9 @@
 import React, { useState, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useSelector } from "react-redux";
-import api from "../../api/api";
-import endpoint from "../../api/endpoints";
-import { Loading } from "../../common";
+import api from "api/api";
+import endpoint from "api/endpoints";
+import { Loading } from "common";
 import ListOrdersHistory from "./ListOrdersHistory";
 
 export default function RecentPurchases({

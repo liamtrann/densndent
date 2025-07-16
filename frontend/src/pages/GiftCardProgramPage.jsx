@@ -1,11 +1,11 @@
 import React from "react";
-import { Breadcrumb, Paragraph } from "../common";
+import { Breadcrumb, Paragraph } from "common";
 import {
   GiftCardTable,
   EGiftCardSection,
   DndGiftCardSection,
   GiftCardRules,
-} from "../components";
+} from "components";
 
 export default function GiftCardProgramPage() {
   return (

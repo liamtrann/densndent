@@ -1,6 +1,6 @@
 // src/components/PromotionsGrid.jsx
 import React from "react";
-import { PromotionCard } from "../../common";
+import { PromotionCard } from "common";
 
 const promotions = [
   {

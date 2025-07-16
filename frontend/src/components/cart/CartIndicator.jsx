@@ -2,7 +2,7 @@ import React, { useState, useRef } from "react";
 import { useSelector } from "react-redux";
 import { FaShoppingCart } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
-import { ProductImage } from "../../common";
+import { ProductImage } from "common";
 
 export default function CartIndicator() {
   const cartItems = useSelector((state) => state.cart.items);

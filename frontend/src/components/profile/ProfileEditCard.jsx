@@ -7,10 +7,10 @@ import {
   FormSubmit,
   ErrorMessage,
   Loading,
-} from "../../common";
+} from "common";
 import { useAuth0 } from "@auth0/auth0-react";
-import api from "../../api/api";
-import endpoint from "../../api/endpoints";
+import api from "api/api";
+import endpoint from "api/endpoints";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchUserInfo } from "../../redux/slices/userSlice";
 

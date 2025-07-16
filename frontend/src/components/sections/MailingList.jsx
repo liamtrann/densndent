@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, InputField } from "../../common";
+import { Button, InputField } from "common";
 
 export default function MailingList() {
   return (

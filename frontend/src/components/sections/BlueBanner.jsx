@@ -1,6 +1,6 @@
 // components/BlueBanner.jsx
 import React from "react";
-import { Button, SectionTitle, Loading, ErrorMessage } from "../../common";
+import { Button, SectionTitle, Loading, ErrorMessage } from "common";
 
 export default function BlueBanner({
   title,

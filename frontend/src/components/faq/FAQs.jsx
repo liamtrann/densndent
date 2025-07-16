@@ -1,7 +1,7 @@
 // components/FAQs.jsx
 
 import React from "react";
-import { InfoBanner } from "../../common";
+import { InfoBanner } from "common";
 
 export default function FAQs() {
   return (

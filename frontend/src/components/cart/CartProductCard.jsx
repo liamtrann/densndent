@@ -1,5 +1,5 @@
 import React from "react";
-import { InputField, ProductImage } from "../../common";
+import { InputField, ProductImage } from "common";
 
 export default function CartProductCard({
   item,

@@ -1,5 +1,5 @@
 import React from "react";
-import { PromotionCard } from "../../common";
+import { PromotionCard } from "common";
 
 export default function PromotionGrid({ promotions }) {
   return (

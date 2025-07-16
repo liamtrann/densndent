@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { delayCall } from "../../api/util";
+import { delayCall } from "api/util";
 import {
   fetchProductsBy,
   fetchCountBy,
@@ -11,7 +11,7 @@ import {
   Loading,
   Pagination,
   ProductToolbar,
-} from "../../common";
+} from "common";
 import FilterOption from "../filters/FilterOption";
 import ProductListGrid from "./ProductListGrid";
 import CartSummaryPanel from "../cart/CartSummaryPanel"; // 👈 Import here

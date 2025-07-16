@@ -2,9 +2,9 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { RecentPurchases } from "../components";
-import { TextButton } from "../common";
-import { UserInfoCard } from "../components";
+import { RecentPurchases } from "components";
+import { TextButton } from "common";
+import { UserInfoCard } from "components";
 
 export default function ProfilePage() {
   const navigate = useNavigate();

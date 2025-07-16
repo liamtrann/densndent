@@ -7,8 +7,8 @@ import {
   FaLinkedinIn,
   FaGooglePlusG,
 } from "react-icons/fa";
-import { URLS } from "../../constants/urls";
-import { Image, AppLink } from "../../common";
+import { URLS } from "constants/urls";
+import { Image, AppLink } from "common";
 
 export default function Footer() {
   return (

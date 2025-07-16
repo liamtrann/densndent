@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import api from '../../api/api';
-import endpoint from '../../api/endpoints';
+import api from 'api/api';
+import endpoint from 'api/endpoints';
 
 // Async thunk to fetch user info from backend
 export const fetchUserInfo = createAsyncThunk(
