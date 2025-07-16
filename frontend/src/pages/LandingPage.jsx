@@ -1,3 +1,4 @@
+// src/pages/LandingPage.jsx
 import React from "react";
 import {
   Banner,
@@ -11,10 +12,8 @@ import {
   CategoryTiles,
   Modal,
   BestSellersSection,
-  CategoriesSection,
 } from "components";
 import { HeroCarousel } from "components";
-
 import { Image } from "common";
 import { URLS } from "constants/urls";
 import { Link } from "react-router-dom";
@@ -50,7 +49,10 @@ const LandingPage = () => {
       <HeroCarousel />
       <CategoryTiles />
       <PromotionsGrid />
-      <Catalogues />
+
+      {/* ✅ Catalogues section */}
+      <Catalogues buttonLink="/promotions/q3-catalogue" />
+
       <BestSellersSection />
       <BlueBanner
         title="Shop By Brands"
@@ -66,10 +68,7 @@ const LandingPage = () => {
           </Link>
         )}
       />
-
       <GlovesHighlight />
-
-      {/* ✅ FAQs Preview + Learn More */}
       <FAQs />
       <MailingList />
     </div>

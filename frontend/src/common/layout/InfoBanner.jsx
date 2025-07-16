@@ -1,7 +1,8 @@
+// src/common/InfoBanner.jsx
 import React from "react";
 import Button from "../ui/Button";
 import Paragraph from "../ui/Paragraph";
-import { Link } from "react-router-dom"; // ✅ Add at the top
+import { Link } from "react-router-dom";
 
 export default function InfoBanner({
   title,
@@ -12,7 +13,7 @@ export default function InfoBanner({
   imageAlt = "",
   buttonText,
   buttonClass = "",
-  onButtonClick,
+  buttonLink = "#",
   sectionClass = "",
   titleColorClass = "text-smiles-blue",
 }) {
@@ -27,7 +28,6 @@ export default function InfoBanner({
         }}
         aria-label={imageAlt}
       >
-        {/* OVERLAID TEXT BOX ON LEFT */}
         <div className="bg-white/90 p-8 m-6 rounded-lg max-w-xl">
           <h2 className={`text-3xl font-bold mb-4 ${titleColorClass}`}>
             {title}
@@ -38,7 +38,7 @@ export default function InfoBanner({
             </Paragraph>
           )}
           {buttonText && (
-            <Link to="/faq">
+            <Link to={buttonLink}>
               <Button variant="primary" className={`px-6 py-2 ${buttonClass}`}>
                 {buttonText}
               </Button>

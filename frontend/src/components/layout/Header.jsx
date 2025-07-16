@@ -1,4 +1,3 @@
-// src/components/Header.jsx
 import React, { useState, useEffect } from "react";
 import { FaBars, FaSearch } from "react-icons/fa";
 import { useSelector, useDispatch } from "react-redux";
@@ -76,7 +75,7 @@ export default function Header() {
           <DesktopNav classification={navCategories} />
         </div>
 
-        {/* Right: Auth, Cart on top, Search below */}
+        {/* Right: Search, Auth, Cart */}
         <div className="flex items-center space-x-4">
           <button
             onClick={() => setShowSearch((prev) => !prev)}

@@ -3,6 +3,7 @@ import { useAuth0 } from "@auth0/auth0-react";
 import React from "react";
 import { useDispatch } from "react-redux";
 import { Routes, Route } from "react-router-dom";
+import Q3CataloguePage from "./pages/Q3CataloguePage";
 
 
 import { ProtectedRoute } from "./common";
@@ -11,7 +12,6 @@ import {
   LandingPage,
   ProductDetail,
   CartPage,
-  AllList,
   NotFound,
   CheckoutPage,
   FAQPage,
@@ -90,6 +90,7 @@ export default function App() {
           <Route path="/catalogues" element={<CataloguesPage />} />
           <Route path="/clearance" element={<ClearancePage />} />
           <Route path="/partners" element={<OurPartners />} />
+          <Route path="/promotions/q3-catalogue" element={<Q3CataloguePage />} />
 
           <Route element={<ProtectedRoute />}>
             <Route path="/checkout/*" element={<CheckoutPage />} />
