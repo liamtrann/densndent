@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Image } from "../../common";
+import { Image } from "common";
 import BlueBanner from "./BlueBanner";
 import axios from "axios";
 

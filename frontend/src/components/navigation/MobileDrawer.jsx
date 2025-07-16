@@ -3,7 +3,7 @@ import React, { useRef } from "react";
 import { Link } from "react-router-dom";
 import { FaTimes } from "react-icons/fa";
 import { useAuth0 } from "@auth0/auth0-react";
-import { Paragraph, Button } from "../../common";
+import { Paragraph, Button } from "common";
 
 const promotionsLinks = [
   { label: "JDIQ Raffle Winners", path: "/promotions/jdiq" },

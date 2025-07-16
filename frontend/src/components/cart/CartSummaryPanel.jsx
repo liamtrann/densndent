@@ -2,7 +2,7 @@
 import React from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { Button, ProductImage } from "../../common";
+import { Button, ProductImage } from "common";
 
 export default function CartSummaryPanel() {
   const cartItems = useSelector((state) => state.cart.items);

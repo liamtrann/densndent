@@ -1,6 +1,6 @@
 // components/ListOrdersHistory.jsx
 import React from "react";
-import { Paragraph } from "../../common";
+import { Paragraph } from "common";
 
 export default function ListOrdersHistory({ orders = [] }) {
   // Group orders by transaction date

@@ -1,5 +1,5 @@
 import React from "react";
-import { CategoryTile } from "../../common";
+import { CategoryTile } from "common";
 
 const categoryData = [
   /*

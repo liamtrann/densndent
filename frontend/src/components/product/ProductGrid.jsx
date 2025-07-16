@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, Image, Paragraph } from "../../common";
+import { Button, Image, Paragraph } from "common";
 
 export default function ProductGrid() {
   return (

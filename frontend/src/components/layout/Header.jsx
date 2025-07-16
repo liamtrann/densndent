@@ -2,11 +2,16 @@
 import React, { useState, useEffect } from "react";
 import { FaBars, FaSearch } from "react-icons/fa";
 import { useSelector, useDispatch } from "react-redux";
-import { Logo, MobileDrawer, DesktopNav, SearchBar } from "../navigation";
-import { CartIndicator } from "../cart";
-import { AuthButton } from "../../common";
-import { fetchClassifications } from "../../redux/slices/classificationSlice";
-import { delayCall } from "../../api/util";
+import {
+  Logo,
+  MobileDrawer,
+  DesktopNav,
+  SearchBar,
+} from "components/navigation";
+import { CartIndicator } from "components/cart";
+import { AuthButton } from "common";
+import { fetchClassifications } from "redux/slices/classificationSlice";
+import { delayCall } from "api/util";
 
 export default function Header() {
   const [drawerOpen, setDrawerOpen] = useState(false);

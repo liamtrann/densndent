@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { STATUS } from '../status';
+import { STATUS } from 'redux/status';
 
 const loadCartFromStorage = () => {
     try {

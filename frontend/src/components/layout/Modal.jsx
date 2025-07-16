@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, ProductSummary } from "../../common";
+import { Button, ProductSummary } from "common";
 
 export default function Modal({
   title,

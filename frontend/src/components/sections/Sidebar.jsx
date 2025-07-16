@@ -1,5 +1,5 @@
 import React from "react";
-import { QuickOrderForm } from "../../common";
+import { QuickOrderForm } from "common";
 
 export default function Sidebar({ title, navItems }) {
   return (

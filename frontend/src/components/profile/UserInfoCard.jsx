@@ -1,7 +1,7 @@
 // src/components/UserInfoCard.jsx
 import React, { useState } from "react";
 import SettingsCard from "./SettingsCard";
-import { CreateAddressModal } from "../../common";
+import { CreateAddressModal } from "common";
 import ProfileEditCard from "./ProfileEditCard";
 
 export default function UserInfoCard({ customer }) {

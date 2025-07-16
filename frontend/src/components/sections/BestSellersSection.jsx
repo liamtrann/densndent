@@ -1,11 +1,11 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { BestSellerCard, AnimatedCard } from "../../common";
+import { BestSellerCard, AnimatedCard } from "common";
 import BlueBanner from "./BlueBanner";
-import { fetchBestSellers } from "../../redux/slices/bestSellersSlice";
-import { STATUS } from "../../redux/status";
-import { delayCall } from "../../api/util";
+import { fetchBestSellers } from "store/slices/bestSellersSlice";
+import { STATUS } from "store/status";
+import { delayCall } from "api/util";
 
 export default function BestSellersSection() {
   const dispatch = useDispatch();

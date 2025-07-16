@@ -10,8 +10,8 @@ import {
   Paragraph,
   Loading,
   AddAddressModal,
-} from "../common";
-import { CheckoutSummary } from "../components/checkout";
+} from "common";
+import { CheckoutSummary } from "components/checkout";
 
 export default function CheckoutPage() {
   const {

@@ -1,5 +1,5 @@
 import React from "react";
-import { Button } from "../../common";
+import { Button } from "common";
 
 export default function VerifyEmailModal({ open, onClose, onSubmit }) {
   if (!open) return null;

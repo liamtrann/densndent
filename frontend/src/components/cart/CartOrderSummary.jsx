@@ -1,5 +1,5 @@
 import React from "react";
-import { InputField } from "../../common";
+import { InputField } from "common";
 
 export default function CartOrderSummary({
   totalQuantity,

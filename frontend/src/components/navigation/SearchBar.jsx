@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaSearch, FaTimes } from "react-icons/fa";
-import endpoint from "../../api/endpoints";
-import { InputField, Button, Loading } from "../../common";
-import api from "../../api/api";
-import { delayCall } from "../../api/util";
+import endpoint from "api/endpoints";
+import { InputField, Button, Loading } from "common";
+import api from "api/api";
+import { delayCall } from "api/util";
 
 export default function SearchBar({ onClose }) {
   const [query, setQuery] = useState("");

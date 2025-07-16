@@ -12,11 +12,11 @@ import {
   Modal,
   BestSellersSection,
   CategoriesSection,
-} from "../components";
-import { HeroCarousel } from "../components";
+} from "components";
+import { HeroCarousel } from "components";
 
-import { Image } from "../common";
-import { URLS } from "../constants/urls";
+import { Image } from "common";
+import { URLS } from "constants/urls";
 import { Link } from "react-router-dom";
 
 const brandKeys = [

@@ -1,5 +1,5 @@
 import React from "react";
-import { Breadcrumb, Paragraph } from "../common";
+import { Breadcrumb, Paragraph } from "common";
 
 export default function JdiqRaffleWinners() {
   return (

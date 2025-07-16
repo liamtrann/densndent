@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { Modal } from "../components";
+import { Modal } from "components";
 import {
   Loading,
   ErrorMessage,
@@ -11,11 +11,11 @@ import {
   Button,
   ShowMoreHtml,
   Dropdown,
-} from "../common";
-import api from "../api/api";
-import { addToCart } from "../redux/slices/cartSlice";
-import endpoint from "../api/endpoints";
-import { delayCall } from "../api/util";
+} from "common";
+import api from "api/api";
+import { addToCart } from "store/slices/cartSlice";
+import endpoint from "api/endpoints";
+import { delayCall } from "api/util";
 import axios from "axios";
 
 export default function ProductsPage() {

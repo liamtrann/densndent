@@ -1,17 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { delayCall } from "../../api/util";
-import {
-  fetchProductsBy,
-  fetchCountBy,
-} from "../../redux/slices/productsSlice";
+import { delayCall } from "api/util";
+import { fetchProductsBy, fetchCountBy } from "store/slices/productsSlice";
 import {
   Breadcrumb,
   ErrorMessage,
   Loading,
   Pagination,
   ProductToolbar,
-} from "../../common";
+} from "common";
 import FilterOption from "../filters/FilterOption";
 import ProductListGrid from "./ProductListGrid";
 import CartSummaryPanel from "../cart/CartSummaryPanel"; // 👈 Import here

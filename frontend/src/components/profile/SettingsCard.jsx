@@ -1,6 +1,6 @@
 // components/profile/SettingsCard.jsx
 import React from "react";
-import { Paragraph } from "../../common";
+import { Paragraph } from "common";
 
 export default function SettingsCard({
   title,

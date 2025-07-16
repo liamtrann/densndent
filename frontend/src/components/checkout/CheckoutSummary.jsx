@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { Button, InputField, Paragraph, ProductImage } from "../../common";
+import { Button, InputField, Paragraph, ProductImage } from "common";
 
 export default function CheckoutSummary({ promoCode, setPromoCode }) {
   const cart = useSelector((state) => state.cart.items);

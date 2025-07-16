@@ -1,6 +1,6 @@
 import { useState } from "react";
-import api from "../api/api";
-import endpoint from "../api/endpoints";
+import api from "api/api";
+import endpoint from "api/endpoints";
 
 export default function useInventoryCheck() {
     const [inventoryStatus, setInventoryStatus] = useState([]);

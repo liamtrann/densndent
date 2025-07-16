@@ -2,10 +2,10 @@ import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { FiShoppingCart } from "react-icons/fi"; // cart icon
-import { Button } from "../../common";
-import { addToCart } from "../../redux/slices/cartSlice";
+import { Button } from "common";
+import { addToCart } from "store/slices/cartSlice";
 import CartConfirmationModal from "../cart/CartConfirmationModal";
-import { ProductImage, Paragraph, InputField } from "../../common";
+import { ProductImage, Paragraph, InputField } from "common";
 
 export default function ListProduct({ product }) {
   const { id, itemid, file_url, price, totalquantityonhand } = product;
