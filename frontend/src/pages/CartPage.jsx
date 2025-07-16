@@ -6,7 +6,7 @@ import { delayCall } from "../api/util";
 import { useInventoryCheck } from "../hooks";
 import { CartProductCard, CartOrderSummary } from "../components";
 import { ErrorMessage, Loading } from "../common";
-import { addToCart, removeFromCart } from "../redux/slices/cartSlice";
+import { addToCart, removeFromCart } from "store/slices/cartSlice";
 
 export default function CartPage() {
   const cart = useSelector((state) => state.cart.items);

@@ -1,6 +1,12 @@
 // src/App.js
+import { useAuth0 } from "@auth0/auth0-react";
 import React from "react";
+import { useDispatch } from "react-redux";
 import { Routes, Route } from "react-router-dom";
+
+
+import { ProtectedRoute } from "./common";
+import { Header, Footer, ListProductPage, LayoutWithCart, ProfileEditCard } from "./components";
 import {
   LandingPage,
   ProductDetail,
@@ -11,20 +17,14 @@ import {
   FAQPage,
   ProfilePage,
 } from "./pages";
-
-import { Header, Footer, ListProductPage, LayoutWithCart, ProfileEditCard } from "./components";
-import PurchaseHistory from "./pages/PurchaseHistory";
-import { ProtectedRoute } from "./common";
-import { useAuth0 } from "@auth0/auth0-react";
-import { useDispatch } from "react-redux";
-import { fetchUserInfo, clearUserInfo } from "./redux/slices/userSlice";
-
 import AboutUs from "./pages/AboutUs";
 import ContactPage from "./pages/ContactPage";
+import GiftCardProgramPage from "./pages/GiftCardProgramPage";
+import JdiqRaffleWinners from "./pages/JdiqRaffleWinners";
 import MeetOurTeam from "./pages/MeetOurTeam";
 import OurPartners from "./pages/OurPartners";
-import JdiqRaffleWinners from "./pages/JdiqRaffleWinners";
-import GiftCardProgramPage from "./pages/GiftCardProgramPage";
+import PurchaseHistory from "./pages/PurchaseHistory";
+import { fetchUserInfo, clearUserInfo } from "./redux/slices/userSlice";
 
 const BlogPage = () => <div>Blog Page</div>;
 const PromotionsPage = () => <div>Promotions Page</div>;

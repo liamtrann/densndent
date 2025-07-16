@@ -2,14 +2,14 @@
   "compilerOptions": {
     "baseUrl": "src",
     "paths": {
-      "src/*": ["*"],
+      "@/*": ["*"],
       "components/*": ["components/*"],
       "common/*": ["common/*"],
-      "pages/*": ["pages/*"],
+      "store/*": ["redux/*"],
       "api/*": ["api/*"],
-      "redux/*": ["store/*"],
       "constants/*": ["constants/*"],
-      "hooks/*": ["hooks/*"]
+      "hooks/*": ["hooks/*"],
+      "pages/*": ["pages/*"]
     }
   },
   "include": ["src"],
