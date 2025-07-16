@@ -21,8 +21,8 @@ export default function Pagination({ page, totalPages, onPageChange }) {
 
     // Pagination window logic
     const windowSize = 6;
-    let start = Math.floor((page - 1) / windowSize) * windowSize + 1;
-    let end = Math.min(start + windowSize - 1, totalPages);
+    const start = Math.floor((page - 1) / windowSize) * windowSize + 1;
+    const end = Math.min(start + windowSize - 1, totalPages);
 
     // If at the end, show the last windowSize pages
     if (end - start + 1 < windowSize && totalPages >= windowSize) {

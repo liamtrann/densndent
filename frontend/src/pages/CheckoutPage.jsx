@@ -1,8 +1,11 @@
 // src/pages/CheckoutPage.jsx
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useAuth0 } from "@auth0/auth0-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+
+import api from "api/api";
+import endpoint from "api/endpoints";
 import {
   InputField,
   Button,
@@ -14,38 +17,50 @@ import {
 import { CheckoutSummary } from "components/checkout";
 
 export default function CheckoutPage() {
-  const {
-    isAuthenticated,
-    isLoading,
-    loginWithRedirect,
-    getAccessTokenSilently,
-  } = useAuth0();
+  const { getAccessTokenSilently } = useAuth0();
   const location = useLocation();
   const navigate = useNavigate();
   const [promoCode, setPromoCode] = useState("");
   const [isAddModalOpen, setAddModalOpen] = useState(false);
   const [isResidential, setIsResidential] = useState(false);
+  const [shippingMethods, setShippingMethods] = useState([]);
+  const [selectedShippingMethod, setSelectedShippingMethod] = useState("");
+  const [loadingShipping, setLoadingShipping] = useState(false);
   const userInfo = useSelector((state) => state.user.info);
 
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      loginWithRedirect();
-    } else if (isAuthenticated) {
-      (async () => {
-        try {
-          await getAccessTokenSilently({
-            audience: process.env.REACT_APP_AUTH0_AUDIENCE,
-          });
-        } catch (err) {
-          console.error("Error getting access token:", err);
-        }
-      })();
+  const fetchShippingMethods = async (itemId) => {
+    try {
+      setLoadingShipping(true);
+      const response = await api.get(endpoint.GET_SHIPPING_METHOD(itemId));
+      setShippingMethods(response.data);
+      if (response.data.length > 0) {
+        setSelectedShippingMethod(response.data[0].id);
+      }
+    } catch (error) {
+      console.error("Error fetching shipping methods:", error);
+    } finally {
+      setLoadingShipping(false);
     }
-  }, [isAuthenticated, isLoading, loginWithRedirect, getAccessTokenSilently]);
+  };
+  useEffect(() => {
+    (async () => {
+      try {
+        await getAccessTokenSilently({
+          audience: process.env.REACT_APP_AUTH0_AUDIENCE,
+        });
+      } catch (err) {
+        console.error("Error getting access token:", err);
+      }
+    })();
+  }, [getAccessTokenSilently]);
 
-  if (isLoading || !isAuthenticated) {
-    return <Loading />;
-  }
+  // Fetch shipping methods independently (public API)
+  useEffect(() => {
+    // GET ICS Ground for Woo Commerce - Flat Shipping Rate
+    fetchShippingMethods(20412);
+  }, []);
+
+  console.log(shippingMethods);
 
   const renderStep = () => {
     const step = location.pathname.split("/")[2] || "shipping";
@@ -131,18 +146,54 @@ export default function CheckoutPage() {
 
             <div className="bg-white p-4 rounded shadow-sm">
               <h3 className="font-semibold mb-2">Delivery Method</h3>
-              <label className="flex items-center border p-3 rounded cursor-pointer hover:border-orange-400 transition">
-                <input
-                  type="radio"
-                  name="delivery"
-                  defaultChecked
-                  className="mr-3"
-                />
-                <div className="text-sm">
-                  <div>ICS Ground – Online</div>
-                  <div className="text-gray-500 text-xs">$9.99</div>
+              {loadingShipping ? (
+                <Loading text="Loading shipping methods..." />
+              ) : (
+                <div className="space-y-2">
+                  {shippingMethods.length > 0 ? (
+                    shippingMethods.map((method, index) => (
+                      <label
+                        key={method.id || index}
+                        className="flex items-center border p-3 rounded cursor-pointer hover:border-orange-400 transition"
+                      >
+                        <InputField
+                          type="radio"
+                          name="delivery"
+                          value={method.id}
+                          checked={selectedShippingMethod === method.id}
+                          onChange={(e) =>
+                            setSelectedShippingMethod(e.target.value)
+                          }
+                          className="mr-3"
+                        />
+                        <div className="text-sm">
+                          <div>
+                            {method.name ||
+                              method.method ||
+                              "ICS Ground – Online"}
+                          </div>
+                          <div className="text-gray-500 text-xs">
+                            ${method.cost || method.price || "9.99"}
+                          </div>
+                        </div>
+                      </label>
+                    ))
+                  ) : (
+                    <label className="flex items-center border p-3 rounded cursor-pointer hover:border-orange-400 transition">
+                      <InputField
+                        type="radio"
+                        name="delivery"
+                        defaultChecked
+                        className="mr-3"
+                      />
+                      <div className="text-sm">
+                        <div>ICS Ground – Online</div>
+                        <div className="text-gray-500 text-xs">$9.99</div>
+                      </div>
+                    </label>
+                  )}
                 </div>
-              </label>
+              )}
             </div>
 
             <div className="flex justify-end">

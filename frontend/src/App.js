@@ -79,7 +79,6 @@ export default function App() {
 
           {/* Routes WITHOUT Cart Panel */}
           <Route path="/cart" element={<CartPage />} />
-          <Route path="/checkout/*" element={<CheckoutPage />} />
           <Route path="/faq" element={<FAQPage />} />
           <Route path="/about" element={<AboutUs />} />
           <Route path="/team" element={<MeetOurTeam />} />
@@ -93,6 +92,7 @@ export default function App() {
           <Route path="/partners" element={<OurPartners />} />
 
           <Route element={<ProtectedRoute />}>
+            <Route path="/checkout/*" element={<CheckoutPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/profile/edit" element={<ProfileEditCard />} />
             <Route path="/profile/history" element={<PurchaseHistory />} />
