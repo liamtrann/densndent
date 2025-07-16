@@ -14,7 +14,6 @@ import {
 } from "common";
 import FilterOption from "../filters/FilterOption";
 import ProductListGrid from "./ProductListGrid";
-import CartSummaryPanel from "../cart/CartSummaryPanel"; // 👈 Import here
 export default function ListProductComponent({
   type,
   id,
@@ -25,6 +24,12 @@ export default function ListProductComponent({
   const [sort, setSort] = useState("");
   const [page, setPage] = useState(1);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [appliedFilters, setAppliedFilters] = useState({
+    minPrice: "",
+    maxPrice: "",
+    selectedCategories: [],
+    selectedBrands: [],
+  });
   const [filters, setFilters] = useState({
     minPrice: "",
     maxPrice: "",
@@ -33,17 +38,20 @@ export default function ListProductComponent({
   });
 
   const dispatch = useDispatch();
-  const key = `${id}_${perPage}_${sort}_${page}`;
+  const { minPrice, maxPrice } = appliedFilters;
+  const priceKey = `${minPrice || ""}_${maxPrice || ""}`;
+  const key = `${id}_${perPage}_${sort}_${priceKey}_${page}`;
+  const countKey = `${id}_${priceKey}`;
   const products = useSelector(
     (state) => state.products.productsByPage[key] || []
   );
   const isLoading = useSelector((state) => state.products.isLoading);
   const error = useSelector((state) => state.products.error);
-  // Use either totalByClass or totalByBrand, fallback to totalByClass
+  // Use price-aware count key for filtered totals
   const total = useSelector(
     (state) =>
+      state.products.totalByClass?.[countKey] ||
       state.products.totalByClass?.[id] ||
-      state.products.totalByBrand?.[id] ||
       0
   );
 
@@ -55,27 +63,80 @@ export default function ListProductComponent({
     }
   }, [dispatch, type, id]);
 
+  // Separate useEffect for fetching filtered count when filters are applied
+  useEffect(() => {
+    if (id && (appliedFilters.minPrice || appliedFilters.maxPrice)) {
+      return delayCall(() =>
+        dispatch(
+          fetchCountBy({
+            type,
+            id,
+            minPrice: appliedFilters.minPrice,
+            maxPrice: appliedFilters.maxPrice,
+          })
+        )
+      );
+    }
+  }, [dispatch, type, id, appliedFilters.minPrice, appliedFilters.maxPrice]);
+
   useEffect(() => {
     if (id) {
       if (!products || products.length === 0) {
         return delayCall(() => {
-          dispatch(fetchProductsBy({ type, id, page, limit: perPage, sort }));
+          dispatch(
+            fetchProductsBy({
+              type,
+              id,
+              page,
+              limit: perPage,
+              sort,
+              minPrice: appliedFilters.minPrice,
+              maxPrice: appliedFilters.maxPrice,
+            })
+          );
         });
       }
     }
-  }, [dispatch, type, id, perPage, sort, page, products.length]);
+  }, [
+    dispatch,
+    type,
+    id,
+    perPage,
+    sort,
+    page,
+    products.length,
+    appliedFilters.minPrice,
+    appliedFilters.maxPrice,
+  ]);
 
   const totalPages = Math.ceil(total / perPage) || 1;
 
   const handleFiltersChange = (newFilters) => {
     setFilters(newFilters);
-    setPage(1); // Reset to first page when filters change
+    // Don't reset page or trigger API call here - only on Apply
   };
 
   const handleApplyFilters = () => {
-    // Here you can trigger a new search with the applied filters
+    // Update applied filters and trigger new search
     console.log("Applied filters:", filters);
-    // You might want to dispatch a new fetchProductsBy with filters
+
+    // Set the applied filters (this will trigger useEffect to fetch new data)
+    setAppliedFilters(filters);
+
+    // Reset to first page when applying filters
+    setPage(1);
+
+    // Fetch updated count with filters
+    if (filters.minPrice || filters.maxPrice) {
+      dispatch(
+        fetchCountBy({
+          type,
+          id,
+          minPrice: filters.minPrice,
+          maxPrice: filters.maxPrice,
+        })
+      );
+    }
   };
 
   return (

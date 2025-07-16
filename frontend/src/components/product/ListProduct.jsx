@@ -87,7 +87,7 @@ export default function ListProduct({ product }) {
         />
       )}
 
-      <div className="flex justify-between items-center mt-auto">
+      <div className="flex justify-between items-center mt-auto gap-2">
         {/* Quantity selector with decrease/increase buttons */}
         <div className="flex items-center border rounded overflow-hidden h-9">
           <button
