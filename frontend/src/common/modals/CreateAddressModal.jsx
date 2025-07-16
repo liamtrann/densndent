@@ -7,10 +7,10 @@ import api from "api/api";
 import endpoint from "api/endpoints";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useDispatch } from "react-redux";
-import { fetchUserInfo } from "redux/slices/userSlice";
 import FormSubmit from "../forms/FormSubmit";
 import Loading from "../ui/Loading";
 import ErrorMessage from "../ui/ErrorMessage";
+import { fetchUserInfo } from "../../redux/slices/userSlice";
 
 export default function CreateAddressModal({
   onClose,

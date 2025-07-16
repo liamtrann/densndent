@@ -12,7 +12,7 @@ import { useAuth0 } from "@auth0/auth0-react";
 import api from "api/api";
 import endpoint from "api/endpoints";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchUserInfo } from "store/slices/userSlice";
+import { fetchUserInfo } from "../../redux/slices/userSlice";
 
 export default function ProfileEditCard({ onClose, error }) {
   const { user, getAccessTokenSilently } = useAuth0();

@@ -3,7 +3,7 @@ import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { FiShoppingCart } from "react-icons/fi"; // cart icon
 import { Button } from "common";
-import { addToCart } from "store/slices/cartSlice";
+import { addToCart } from "../../redux/slices/cartSlice";
 import CartConfirmationModal from "../cart/CartConfirmationModal";
 import { ProductImage, Paragraph, InputField } from "common";
 

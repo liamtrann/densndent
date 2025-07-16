@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
-import { STATUS } from 'redux/status';
+import { STATUS } from '../status';
 
 export const fetchBestSellers = createAsyncThunk(
     'bestSellers/fetchBestSellers',

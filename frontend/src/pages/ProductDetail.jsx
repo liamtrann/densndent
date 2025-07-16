@@ -13,10 +13,10 @@ import {
   Dropdown,
 } from "common";
 import api from "api/api";
-import { addToCart } from "store/slices/cartSlice";
 import endpoint from "api/endpoints";
 import { delayCall } from "api/util";
 import axios from "axios";
+import { addToCart } from "../redux/slices/cartSlice";
 
 export default function ProductsPage() {
   const { id } = useParams();
