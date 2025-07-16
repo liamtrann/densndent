@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Modal } from "../components";
 import { delayCall } from "../api/util";
-import { useInventoryCheck } from "../hooks";
+import { useInventoryCheck } from "../config";
 import { CartProductCard, CartOrderSummary } from "../components";
 import { ErrorMessage, Loading } from "../common";
 import { addToCart, removeFromCart } from "store/slices/cartSlice";
