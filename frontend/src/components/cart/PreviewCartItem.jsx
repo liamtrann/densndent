@@ -7,6 +7,7 @@ import {
   selectPriceDataByKey,
   selectHasDiscount,
   selectFinalPrice,
+  selectPriceDataExists,
 } from "@/redux/slices";
 
 export default function PreviewCartItem({
@@ -32,10 +33,13 @@ export default function PreviewCartItem({
   const finalPrice = useSelector((state) =>
     selectFinalPrice(state, item.id, unitPrice, item.quantity)
   );
+  const priceDataExists = useSelector((state) =>
+    selectPriceDataExists(state, item.id, unitPrice, item.quantity)
+  );
 
-  // Calculate discount on component mount or when item changes
+  // Only calculate discount if data doesn't exist
   useEffect(() => {
-    if (item.id && unitPrice && item.quantity) {
+    if (item.id && unitPrice && item.quantity && !priceDataExists) {
       dispatch(
         calculatePriceAfterDiscount({
           productId: item.id,
@@ -44,7 +48,7 @@ export default function PreviewCartItem({
         })
       );
     }
-  }, [dispatch, item.id, unitPrice, item.quantity]);
+  }, [dispatch, item.id, unitPrice, item.quantity, priceDataExists]);
 
   const handleDecrease = () => {
     if (onQuantityChange) {
@@ -57,9 +61,6 @@ export default function PreviewCartItem({
       onQuantityChange(item, "inc");
     }
   };
-
-  console.log(priceData)
-  console.log(hasDiscount)
 
   return (
     <div
@@ -91,7 +92,7 @@ export default function PreviewCartItem({
 
         {!compact && (
           <div className="text-gray-600 mt-1">
-            Unit price: ${(item.unitprice || item.price).toFixed(2)}
+            Unit price: ${Number(item.unitprice || item.price || 0).toFixed(2)}
           </div>
         )}
 

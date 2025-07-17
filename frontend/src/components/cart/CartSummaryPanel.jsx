@@ -1,9 +1,15 @@
-import React from "react";
+import React, { useEffect, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Button } from "common";
 import { updateQuantity, removeFromCart } from "@/redux/slices/cartSlice";
 import { formatCurrency } from "config/config";
+import {
+  calculatePriceAfterDiscount,
+  selectFinalPrice,
+  selectCartSubtotalWithDiscounts,
+  selectPriceDataExists,
+} from "@/redux/slices";
 import PreviewCartItem from "./PreviewCartItem";
 
 export default function CartSummaryPanel() {
@@ -11,9 +17,9 @@ export default function CartSummaryPanel() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const subtotal = cartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
+  // Calculate subtotal with discounted prices
+  const subtotal = useSelector((state) =>
+    selectCartSubtotalWithDiscounts(state, cartItems)
   );
 
   if (cartItems.length === 0) return null;

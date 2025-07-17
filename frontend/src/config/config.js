@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react';
+
 function extractBuyGet(str) {
     const numbers = str.match(/\d+/g);
     return {
@@ -236,6 +238,79 @@ async function fetchLocationByPostalCode(country, code) {
     }
 }
 
+// Quantity handling utilities for Buy X Get Y promotions
+function calculateActualQuantity(selectedQuantity, stockdescription) {
+    const { buy, get } = extractBuyGet(stockdescription || '');
+
+    if (!buy || !get) {
+        return selectedQuantity;
+    }
+
+    // Calculate how many complete "buy" sets the user has selected
+    const buyMultiplier = Math.floor(selectedQuantity / buy);
+    const remainder = selectedQuantity % buy;
+
+    // Calculate total quantity: (buy + get) * multiplier + remainder
+    return buyMultiplier * (buy + get) + remainder;
+}
+
+// Create quantity handler functions
+function createQuantityHandlers(quantity, setQuantity, setActualQuantity, stockdescription) {
+    const updateQuantities = (newQuantity) => {
+        setQuantity(newQuantity);
+        setActualQuantity(calculateActualQuantity(newQuantity, stockdescription));
+    };
+
+    return {
+        handleQuantityChange: (e) => {
+            const value = e.target.value;
+            if (Number(value) < 1) {
+                updateQuantities(1);
+            } else {
+                updateQuantities(Number(value));
+            }
+        },
+
+        increment: () => {
+            const newQuantity = Number(quantity) + 1;
+            updateQuantities(newQuantity);
+        },
+
+        decrement: () => {
+            if (Number(quantity) > 1) {
+                const newQuantity = Number(quantity) - 1;
+                updateQuantities(newQuantity);
+            }
+        }
+    };
+}
+
+// Hook-like utility for quantity management with Buy X Get Y logic
+function useQuantityHandlers(initialQuantity = 1, stockdescription = '') {
+    const [quantity, setQuantity] = useState(initialQuantity);
+    const [actualQuantity, setActualQuantity] = useState(
+        calculateActualQuantity(initialQuantity, stockdescription)
+    );
+
+    const handlers = createQuantityHandlers(quantity, setQuantity, setActualQuantity, stockdescription);
+
+    // Update actual quantity when stockdescription changes
+    useEffect(() => {
+        setActualQuantity(calculateActualQuantity(quantity, stockdescription));
+    }, [quantity, stockdescription]);
+
+    return {
+        quantity,
+        actualQuantity,
+        setQuantity: (newQuantity) => {
+            setQuantity(newQuantity);
+            setActualQuantity(calculateActualQuantity(newQuantity, stockdescription));
+        },
+        setActualQuantity,
+        ...handlers
+    };
+}
+
 export {
     extractBuyGet,
     getMatrixInfo,
@@ -244,5 +319,8 @@ export {
     calculateTotalPrice,
     calculateTotalCurrency,
     getTotalPriceAfterDiscount,
-    fetchLocationByPostalCode
+    fetchLocationByPostalCode,
+    calculateActualQuantity,
+    createQuantityHandlers,
+    useQuantityHandlers
 };

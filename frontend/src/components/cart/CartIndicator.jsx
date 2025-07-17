@@ -33,7 +33,7 @@ export default function CartIndicator() {
 
   const handleQuantityChange = (item, type) => {
     const newQuantity = type === "inc" ? item.quantity + 1 : item.quantity - 1;
-    
+
     if (newQuantity === 0) {
       dispatch(removeFromCart(item.id));
     } else {

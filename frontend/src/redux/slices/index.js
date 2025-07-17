@@ -17,11 +17,14 @@ export {
     clearProductPriceData,
     clearAllPriceData,
     updatePriceData,
+    shouldRecalculatePrice,
     selectPriceDataByKey,
     selectAllPriceData,
     selectPriceStatus,
     selectPriceError,
     selectHasDiscount,
     selectDiscountAmount,
-    selectFinalPrice
+    selectFinalPrice,
+    selectPriceDataExists,
+    selectCartSubtotalWithDiscounts
 } from './itemPriceAfterDiscountSlice';

@@ -105,6 +105,12 @@ const itemPriceAfterDiscountSlice = createSlice({
             const { productId, priceInfo } = action.payload;
             state.priceData[productId] = priceInfo;
         },
+        // Check if price data should be recalculated
+        shouldRecalculatePrice: (state, action) => {
+            const { productId, unitPrice, quantity } = action.payload;
+            const priceKey = `${productId}-${unitPrice}-${quantity}`;
+            return !state.priceData[priceKey];
+        },
     },
     extraReducers: (builder) => {
         builder
@@ -141,6 +147,7 @@ export const {
     clearProductPriceData,
     clearAllPriceData,
     updatePriceData,
+    shouldRecalculatePrice,
 } = itemPriceAfterDiscountSlice.actions;
 
 export default itemPriceAfterDiscountSlice.reducer;
@@ -170,4 +177,19 @@ export const selectDiscountAmount = (state, productId, unitPrice, quantity) => {
 export const selectFinalPrice = (state, productId, unitPrice, quantity) => {
     const priceData = selectPriceDataByKey(state, productId, unitPrice, quantity);
     return priceData ? priceData.discountedPrice : (unitPrice * quantity);
+};
+
+// Selector to check if price data exists for a specific combination
+export const selectPriceDataExists = (state, productId, unitPrice, quantity) => {
+    const priceKey = `${productId}-${unitPrice}-${quantity}`;
+    return !!state.itemPriceAfterDiscount.priceData[priceKey];
+};
+
+// Selector to calculate total cart subtotal with discounts
+export const selectCartSubtotalWithDiscounts = (state, cartItems) => {
+    return cartItems.reduce((total, item) => {
+        const unitPrice = item.unitprice || item.price || 0;
+        const finalPrice = selectFinalPrice(state, item.id, unitPrice, item.quantity);
+        return total + finalPrice;
+    }, 0);
 };

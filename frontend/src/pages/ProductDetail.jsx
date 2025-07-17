@@ -16,13 +16,15 @@ import api from "api/api";
 import endpoint from "api/endpoints";
 import { delayCall } from "api/util";
 import { addToCart } from "store/slices/cartSlice";
-import { getMatrixInfo, formatCurrency } from "config/config";
+import {
+  getMatrixInfo,
+  formatCurrency,
+  useQuantityHandlers,
+} from "config/config";
 
 export default function ProductsPage() {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
-  const [quantity, setQuantity] = useState(1);
-  const [showModal, setShowModal] = useState(false);
   const [alertModal, setAlertModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -31,6 +33,15 @@ export default function ProductsPage() {
 
   const [matrixOptions, setMatrixOptions] = useState([]);
   const [selectedMatrixOption, setSelectedMatrixOption] = useState("");
+
+  // Use reusable quantity handlers with Buy X Get Y logic
+  const {
+    quantity,
+    actualQuantity,
+    handleQuantityChange,
+    increment,
+    decrement,
+  } = useQuantityHandlers(1, product?.stockdescription);
 
   useEffect(() => {
     async function fetchProduct() {
@@ -71,33 +82,14 @@ export default function ProductsPage() {
 
   const handleAddToCart = () => {
     if (!product) return;
-    // Store all product details, only change quantity
-    const cartItem = { ...product, quantity: Number(quantity) };
+    // Store all product details, use actualQuantity which includes Buy X Get Y bonus
+    const cartItem = { ...product, quantity: Number(actualQuantity) };
     delayCall(() => dispatch(addToCart(cartItem)));
-    setShowModal(true);
+    // setShowModal(true);
   };
 
   const handleViewCart = () => {
     navigate("/cart");
-  };
-
-  const handleQuantityChange = (e) => {
-    const value = e.target.value;
-    if (Number(value) < 1) {
-      setQuantity(1);
-    } else {
-      setQuantity(value);
-    }
-  };
-
-  const increment = () => {
-    setQuantity((prev) => Number(prev) + 1);
-  };
-
-  const decrement = () => {
-    if (Number(quantity) > 1) {
-      setQuantity((prev) => Number(prev) - 1);
-    }
   };
 
   const { matrixType, options: matrixOptionsList } =
@@ -202,6 +194,18 @@ export default function ProductsPage() {
                 </span>
               )}
             </div>
+
+            {/* Show promotion preview */}
+            {actualQuantity > quantity && (
+              <div className="mt-2 text-sm">
+                <span className="text-gray-600">
+                  Selected: {quantity} items
+                </span>
+                <span className="text-green-600 font-medium ml-2">
+                  → Total with bonus: {actualQuantity} items
+                </span>
+              </div>
+            )}
           </div>
 
           <Button
@@ -225,7 +229,7 @@ export default function ProductsPage() {
       </div>
 
       {/* Modal for cart confirmation */}
-      {showModal && (
+      {/* {showModal && (
         <Modal
           title="Added to Cart"
           onClose={() => setShowModal(false)}
@@ -242,7 +246,7 @@ export default function ProductsPage() {
           onCloseText="Continue Shopping"
           onSubmitText="View Cart"
         />
-      )}
+      )} */}
       {/* Alert Modal for stock limit */}
       {alertModal && (
         <Modal

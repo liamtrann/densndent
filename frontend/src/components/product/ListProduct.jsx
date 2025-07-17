@@ -4,44 +4,34 @@ import { useNavigate } from "react-router-dom";
 import { FiShoppingCart } from "react-icons/fi"; // cart icon
 import { Button } from "common";
 import { addToCart } from "../../redux/slices/cartSlice";
-import CartConfirmationModal from "../cart/CartConfirmationModal";
+// import CartConfirmationModal from "../cart/CartConfirmationModal";
 import { ProductImage, Paragraph, InputField } from "common";
-import { formatCurrency } from "config/config";
+import { formatCurrency, useQuantityHandlers } from "config/config";
 
 export default function ListProduct({ product }) {
   const { id, itemid, file_url, price, totalquantityonhand } = product;
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [showModal, setShowModal] = useState(false);
-  const [quantity, setQuantity] = useState(1);
+  // const [showModal, setShowModal] = useState(false);
+
+  // Use reusable quantity handlers with Buy X Get Y logic
+  const {
+    quantity,
+    actualQuantity,
+    handleQuantityChange,
+    increment,
+    decrement,
+  } = useQuantityHandlers(1, product?.stockdescription);
 
   const handleAddToCart = () => {
-    const cartItem = { ...product, quantity: Number(quantity) };
+    // Use actualQuantity which includes Buy X Get Y bonus
+    const cartItem = { ...product, quantity: Number(actualQuantity) };
     dispatch(addToCart(cartItem));
-    setShowModal(true);
-  };
-
-  const handleQuantityChange = (e) => {
-    const value = e.target.value;
-    if (Number(value) < 1) {
-      setQuantity(1);
-    } else {
-      setQuantity(value);
-    }
+    // setShowModal(true);
   };
 
   const handleNavigate = () => {
     navigate(`/product/${id}`);
-  };
-
-  const increment = () => {
-    setQuantity((prev) => Number(prev) + 1);
-  };
-
-  const decrement = () => {
-    if (Number(quantity) > 1) {
-      setQuantity((prev) => Number(prev) - 1);
-    }
   };
 
   const inStock = totalquantityonhand && totalquantityonhand > 0;
@@ -67,6 +57,16 @@ export default function ListProduct({ product }) {
         </div>
       )}
 
+      {/* Show promotion preview */}
+      {actualQuantity > quantity && (
+        <div className="mb-2 text-xs">
+          <span className="text-gray-600">Selected: {quantity}</span>
+          <span className="text-green-600 font-medium ml-1">
+            → Total: {actualQuantity} items
+          </span>
+        </div>
+      )}
+
       <div className="mb-2">
         <span className="text-xl font-bold text-gray-800">
           ${Math.floor(price)}
@@ -88,13 +88,13 @@ export default function ListProduct({ product }) {
         )}
       </div>
 
-      {showModal && (
+      {/* {showModal && (
         <CartConfirmationModal
           product={product}
           quantity={Number(quantity)}
           onClose={() => setShowModal(false)}
         />
-      )}
+      )} */}
 
       <div className="flex justify-between items-center mt-auto gap-2">
         {/* Quantity selector with decrease/increase buttons */}

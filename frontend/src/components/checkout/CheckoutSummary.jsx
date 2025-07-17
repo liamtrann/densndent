@@ -1,19 +1,23 @@
-import React from "react";
+import React, { useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { Button, InputField, Paragraph } from "common";
 import { formatCurrency } from "config/config";
+import {
+  calculatePriceAfterDiscount,
+  selectFinalPrice,
+  selectCartSubtotalWithDiscounts,
+} from "@/redux/slices";
 import PreviewCartItem from "../cart/PreviewCartItem";
 
 export default function CheckoutSummary({ promoCode, setPromoCode }) {
   const cart = useSelector((state) => state.cart.items);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  const subtotal = formatCurrency(
-    cart.reduce(
-      (sum, item) => sum + (item.unitprice || item.price || 0) * item.quantity,
-      0
-    )
+  // Calculate subtotal with discounted prices
+  const subtotal = useSelector((state) =>
+    selectCartSubtotalWithDiscounts(state, cart)
   );
 
   const handleNavigateToProduct = (id) => {
@@ -28,7 +32,7 @@ export default function CheckoutSummary({ promoCode, setPromoCode }) {
         <span>
           SUBTOTAL {cart.length} ITEM{cart.length !== 1 ? "S" : ""}
         </span>
-        <span className="font-semibold">{subtotal}</span>
+        <span className="font-semibold">{formatCurrency(subtotal)}</span>
       </div>
 
       <Paragraph className="text-xs text-gray-500 mb-2">
@@ -42,7 +46,7 @@ export default function CheckoutSummary({ promoCode, setPromoCode }) {
 
       <div className="mb-4 flex justify-between font-semibold">
         <span>TOTAL</span>
-        <span>{subtotal}</span>
+        <span>{formatCurrency(subtotal)}</span>
       </div>
 
       {/* Promo Code */}
