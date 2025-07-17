@@ -5,7 +5,7 @@ import { Modal } from "../components";
 import { delayCall } from "../api/util";
 import { useInventoryCheck } from "../config";
 import { CartOrderSummary } from "../components";
-import { ErrorMessage, Loading } from "../common";
+import { ErrorMessage, Loading, PreviewCartItem } from "../common";
 import {
   addToCart,
   removeFromCart,
@@ -17,7 +17,6 @@ import {
   selectFinalPrice,
   selectCartSubtotalWithDiscounts,
 } from "@/redux/slices";
-import PreviewCartItem from "../components/cart/PreviewCartItem";
 
 export default function CartPage() {
   const cart = useSelector((state) => state.cart.items);

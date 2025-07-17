@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { Modal } from "components";
+import { Toast } from "common";
 import {
   Loading,
   ErrorMessage,
@@ -20,6 +21,7 @@ import {
   getMatrixInfo,
   formatCurrency,
   useQuantityHandlers,
+  extractBuyGet,
 } from "config/config";
 
 export default function ProductsPage() {
@@ -82,14 +84,16 @@ export default function ProductsPage() {
 
   const handleAddToCart = () => {
     if (!product) return;
+
     // Store all product details, use actualQuantity which includes Buy X Get Y bonus
     const cartItem = { ...product, quantity: Number(actualQuantity) };
-    delayCall(() => dispatch(addToCart(cartItem)));
-    // setShowModal(true);
-  };
 
-  const handleViewCart = () => {
-    navigate("/cart");
+    delayCall(() => {
+      dispatch(addToCart(cartItem));
+
+      // Show simple success notification
+      Toast.success(`Added ${actualQuantity} ${product.itemid} to cart!`);
+    });
   };
 
   const { matrixType, options: matrixOptionsList } =
@@ -98,6 +102,7 @@ export default function ProductsPage() {
   if (loading) return <Loading text="Loading product..." />;
   if (error) return <ErrorMessage message={error} />;
   if (!product) return null;
+
   return (
     <div className="max-w-6xl mx-auto px-6 py-10">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
@@ -228,25 +233,6 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      {/* Modal for cart confirmation */}
-      {/* {showModal && (
-        <Modal
-          title="Added to Cart"
-          onClose={() => setShowModal(false)}
-          image={product.file_url}
-          product={[
-            {
-              name: product.displayname || product.itemid,
-              price: formatCurrency(product.price),
-              stockdescription: product.stockdescription,
-              quantity,
-            },
-          ]}
-          onSubmit={handleViewCart}
-          onCloseText="Continue Shopping"
-          onSubmitText="View Cart"
-        />
-      )} */}
       {/* Alert Modal for stock limit */}
       {alertModal && (
         <Modal

@@ -7,6 +7,7 @@ import { addToCart } from "../../redux/slices/cartSlice";
 // import CartConfirmationModal from "../cart/CartConfirmationModal";
 import { ProductImage, Paragraph, InputField } from "common";
 import { formatCurrency, useQuantityHandlers } from "config/config";
+import { Toast } from "common";
 
 export default function ListProduct({ product }) {
   const { id, itemid, file_url, price, totalquantityonhand } = product;
@@ -27,6 +28,9 @@ export default function ListProduct({ product }) {
     // Use actualQuantity which includes Buy X Get Y bonus
     const cartItem = { ...product, quantity: Number(actualQuantity) };
     dispatch(addToCart(cartItem));
+    
+    // Show success toast notification
+    Toast.success(`Added ${actualQuantity} ${itemid} to cart!`);
     // setShowModal(true);
   };
 
@@ -78,8 +82,8 @@ export default function ListProduct({ product }) {
 
       <div className="flex-grow">
         {inStock ? (
-          <Paragraph className="text-green-700 font-semibold mb-2">
-            Current Stock: {totalquantityonhand}
+          <Paragraph className="text-green-700 font-semibold mb-2"> 
+            Current Stock  
           </Paragraph>
         ) : (
           <Paragraph className="text-red-600 font-semibold mb-2">

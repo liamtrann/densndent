@@ -4,7 +4,6 @@ export { default as CartIndicator } from './cart/CartIndicator';
 export { default as CartOrderSummary } from './cart/CartOrderSummary';
 export { default as CartProductCard } from './cart/CartProductCard';
 export { default as CartSummaryPanel } from './cart/CartSummaryPanel';
-export { default as PreviewCartItem } from './cart/PreviewCartItem';
 
 // Checkout components
 export { default as CheckoutSummary } from './checkout/CheckoutSummary';

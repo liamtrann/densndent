@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { Button } from "common";
+import { Button, PreviewCartItem } from "common";
 import { updateQuantity, removeFromCart } from "@/redux/slices/cartSlice";
 import { formatCurrency } from "config/config";
 import {
@@ -10,7 +10,6 @@ import {
   selectCartSubtotalWithDiscounts,
   selectPriceDataExists,
 } from "@/redux/slices";
-import PreviewCartItem from "./PreviewCartItem";
 
 export default function CartSummaryPanel() {
   const cartItems = useSelector((state) => state.cart.items);

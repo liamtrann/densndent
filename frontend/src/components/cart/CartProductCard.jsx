@@ -49,7 +49,7 @@ export default function CartProductCard({
             }
           >
             {item.totalquantityonhand > 0
-              ? `Current Stock: ${item.totalquantityonhand}`
+              ? `Current Stock: ` //${item.totalquantityonhand} could add later
               : "Out of stock"}
           </p>
         )}

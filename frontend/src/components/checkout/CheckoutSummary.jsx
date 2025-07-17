@@ -1,14 +1,13 @@
 import React, { useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { Button, InputField, Paragraph } from "common";
+import { Button, InputField, Paragraph, PreviewCartItem } from "common";
 import { formatCurrency } from "config/config";
 import {
   calculatePriceAfterDiscount,
   selectFinalPrice,
   selectCartSubtotalWithDiscounts,
 } from "@/redux/slices";
-import PreviewCartItem from "../cart/PreviewCartItem";
 
 export default function CheckoutSummary({ promoCode, setPromoCode }) {
   const cart = useSelector((state) => state.cart.items);

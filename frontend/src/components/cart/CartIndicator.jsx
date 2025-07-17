@@ -4,7 +4,7 @@ import { FaShoppingCart } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import { formatCurrency } from "config/config";
 import { updateQuantity, removeFromCart } from "@/redux/slices/cartSlice";
-import PreviewCartItem from "./PreviewCartItem";
+import { PreviewCartItem } from "@/common";
 
 export default function CartIndicator() {
   const cartItems = useSelector((state) => state.cart.items);
