@@ -80,6 +80,80 @@ function calculateTotalCurrency(unitPrice, quantity, currency = '$') {
     return `${currency}${calculateTotalPrice(unitPrice, quantity)}`;
 }
 
+// Calculate total price after discount based on promotions
+async function getTotalPriceAfterDiscount(productId, unitPrice, quantity) {
+    try {
+        // Import api and endpoints here to avoid circular dependency
+        const { default: api } = await import('../api/api.js');
+        const { default: endpoint } = await import('../api/endpoints.js');
+
+        // Fetch promotions for the product
+        const promotionUrl = endpoint.GET_PROMOTIONS_BY_PRODUCT({
+            productId
+        });
+
+        const response = await api.get(promotionUrl);
+        const promotions = response.data;
+
+        if (!promotions || promotions.length === 0) {
+            return {
+                originalPrice: Number(unitPrice) * Number(quantity),
+                discountedPrice: Number(unitPrice) * Number(quantity),
+                discount: 0,
+                promotionApplied: null
+            };
+        }
+
+        const originalTotal = Number(unitPrice) * Number(quantity);
+        let bestDiscount = 0;
+        let bestPromotion = null;
+
+        // Check each promotion to find the best discount
+        for (const promotion of promotions) {
+            const { fixedprice, itemquantifier } = promotion;
+
+            // Skip if promotion doesn't have required fields
+            if (!fixedprice || !itemquantifier) continue;
+
+            // Check if quantity meets the minimum requirement
+            if (Number(quantity) >= Number(itemquantifier)) {
+                // Calculate how many promotion sets can be applied
+                const promotionSets = Math.floor(Number(quantity) / Number(itemquantifier));
+                const remainingItems = Number(quantity) % Number(itemquantifier);
+
+                // Calculate discounted price
+                const discountedTotal = (promotionSets * Number(fixedprice)) + (remainingItems * Number(unitPrice));
+                const discount = originalTotal - discountedTotal;
+
+                // Keep track of best discount
+                if (discount > bestDiscount) {
+                    bestDiscount = discount;
+                    bestPromotion = promotion;
+                }
+            }
+        }
+
+        return {
+            originalPrice: originalTotal,
+            discountedPrice: originalTotal - bestDiscount,
+            discount: bestDiscount,
+            promotionApplied: bestPromotion
+        };
+
+    } catch (error) {
+        console.error('Error calculating discount:', error);
+        // Return original price if error occurs
+        const originalTotal = Number(unitPrice) * Number(quantity);
+        return {
+            originalPrice: originalTotal,
+            discountedPrice: originalTotal,
+            discount: 0,
+            promotionApplied: null,
+            error: error.message
+        };
+    }
+}
+
 // Postal code lookup function
 async function fetchLocationByPostalCode(country, code) {
     if (!code || !code.trim()) {
@@ -169,5 +243,6 @@ export {
     formatCurrency,
     calculateTotalPrice,
     calculateTotalCurrency,
+    getTotalPriceAfterDiscount,
     fetchLocationByPostalCode
 };

@@ -1,15 +1,17 @@
 import React, { useState, useRef } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { FaShoppingCart } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
-import { ProductImage } from "common";
 import { formatCurrency } from "config/config";
+import { updateQuantity, removeFromCart } from "@/redux/slices/cartSlice";
+import PreviewCartItem from "./PreviewCartItem";
 
 export default function CartIndicator() {
   const cartItems = useSelector((state) => state.cart.items);
   const [isHovered, setHovered] = useState(false);
   const closeTimeout = useRef(null); // 👈 Ref for delay timer
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const handleMouseEnter = () => {
     if (closeTimeout.current) {
@@ -23,6 +25,20 @@ export default function CartIndicator() {
     closeTimeout.current = setTimeout(() => {
       setHovered(false);
     }, 250); // 250ms delay before hiding
+  };
+
+  const handleNavigateToProduct = (id) => {
+    navigate(`/product/${id}`);
+  };
+
+  const handleQuantityChange = (item, type) => {
+    const newQuantity = type === "inc" ? item.quantity + 1 : item.quantity - 1;
+    
+    if (newQuantity === 0) {
+      dispatch(removeFromCart(item.id));
+    } else {
+      dispatch(updateQuantity({ id: item.id, quantity: newQuantity }));
+    }
   };
 
   const hasItems = cartItems.length > 0;
@@ -57,30 +73,16 @@ export default function CartIndicator() {
       >
         <h4 className="text-sm font-semibold mb-2">Cart Preview</h4>
         {cartItems.slice(0, 3).map((item, idx) => (
-          <div
+          <PreviewCartItem
             key={item.id + "-" + idx}
-            className="flex gap-3 items-start hover:bg-gray-50 p-2 rounded transition cursor-pointer"
-            onClick={() => navigate(`/product/${item.id}`)}
-          >
-            <ProductImage
-              src={item.file_url || item.img1}
-              className="w-12 h-12 object-contain border rounded"
-            />
-            <div className="text-sm">
-              <div className="font-medium text-blue-700 hover:underline">
-                {item.displayname || item.itemid}
-              </div>
-              <div>Qty: {item.quantity}</div>
-              <div className="text-gray-500 text-xs">
-                {formatCurrency(item.unitprice || item.price)} each
-              </div>
-              {item.stockdescription && (
-                <span className="text-xs text-blue-600 font-medium bg-blue-50 px-1 py-0.5 rounded inline-block mt-1">
-                  {item.stockdescription}
-                </span>
-              )}
-            </div>
-          </div>
+            item={item}
+            onQuantityChange={handleQuantityChange}
+            onItemClick={handleNavigateToProduct}
+            showQuantityControls={true}
+            compact={true}
+            imageSize="w-12 h-12"
+            textSize="text-sm"
+          />
         ))}
         <div className="text-right">
           <Link

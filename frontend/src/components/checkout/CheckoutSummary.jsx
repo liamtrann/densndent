@@ -1,8 +1,9 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { Button, InputField, Paragraph, ProductImage } from "common";
-import { formatCurrency, calculateTotalCurrency } from "config/config";
+import { Button, InputField, Paragraph } from "common";
+import { formatCurrency } from "config/config";
+import PreviewCartItem from "../cart/PreviewCartItem";
 
 export default function CheckoutSummary({ promoCode, setPromoCode }) {
   const cart = useSelector((state) => state.cart.items);
@@ -64,43 +65,16 @@ export default function CheckoutSummary({ promoCode, setPromoCode }) {
         </h4>
         <div className="space-y-3 text-sm">
           {cart.map((item, idx) => (
-            <div
+            <PreviewCartItem
               key={item.id + "-" + idx}
-              className="p-3 border rounded flex items-start gap-3"
-            >
-              <ProductImage
-                src={item.file_url || item.img1 || item.imageurl}
-                alt={item.itemid || item.displayname}
-                className="w-16 h-16 object-contain border rounded"
-              />
-              <div className="space-y-1">
-                {/* 🔗 Clickable title */}
-                <div
-                  onClick={() => handleNavigateToProduct(item.id)}
-                  className="font-semibold text-blue-700 hover:underline cursor-pointer"
-                >
-                  {item.itemid || item.displayname}
-                </div>
-
-                {item.stockdescription && (
-                  <span className="text-sm text-blue-600 font-medium bg-blue-50 px-2 py-1 rounded inline-block mt-1 mb-1">
-                    {item.stockdescription}
-                  </span>
-                )}
-
-                <div>
-                  Unit price: {formatCurrency(item.unitprice || item.price)}
-                </div>
-                <div>Quantity: {item.quantity}</div>
-                <div className="font-bold">
-                  Amount:{" "}
-                  {calculateTotalCurrency(
-                    item.unitprice || item.price,
-                    item.quantity
-                  )}
-                </div>
-              </div>
-            </div>
+              item={item}
+              onQuantityChange={null}
+              onItemClick={handleNavigateToProduct}
+              showQuantityControls={false}
+              compact={false}
+              imageSize="w-16 h-16"
+              textSize="text-sm"
+            />
           ))}
         </div>
 
