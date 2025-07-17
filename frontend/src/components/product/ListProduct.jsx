@@ -68,9 +68,12 @@ export default function ListProduct({ product }) {
       )}
 
       <div className="mb-2">
-        <div className="text-xl font-bold text-gray-800">
-          {formatCurrency(price)}
-        </div>
+        <span className="text-xl font-bold text-gray-800">
+          ${Math.floor(price)}
+        </span>
+        <span className="text-sm font-semibold text-gray-600 align-top">
+          .{(price % 1).toFixed(2).slice(2)}
+        </span>
       </div>
 
       <div className="flex-grow">
