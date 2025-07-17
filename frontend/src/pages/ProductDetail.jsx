@@ -197,7 +197,7 @@ export default function ProductsPage() {
                 </button>
               </div>
               {product.stockdescription && (
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-blue-600 font-medium bg-blue-50 px-2 py-1 rounded">
                   {product.stockdescription}
                 </span>
               )}

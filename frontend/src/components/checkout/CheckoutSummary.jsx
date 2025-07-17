@@ -82,6 +82,12 @@ export default function CheckoutSummary({ promoCode, setPromoCode }) {
                   {item.itemid || item.displayname}
                 </div>
 
+                {item.stockdescription && (
+                  <span className="text-sm text-blue-600 font-medium bg-blue-50 px-2 py-1 rounded inline-block mt-1 mb-1">
+                    {item.stockdescription}
+                  </span>
+                )}
+
                 <div>
                   Unit price: {formatCurrency(item.unitprice || item.price)}
                 </div>

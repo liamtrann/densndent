@@ -59,6 +59,14 @@ export default function ListProduct({ product }) {
         {itemid}
       </h3>
 
+      {product.stockdescription && (
+        <div className="mb-2">
+          <span className="text-sm text-blue-600 font-medium bg-blue-50 px-2 py-1 rounded">
+            {product.stockdescription}
+          </span>
+        </div>
+      )}
+
       <div className="mb-2">
         <div className="text-xl font-bold text-gray-800">
           {formatCurrency(price)}

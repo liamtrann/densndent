@@ -35,6 +35,11 @@ export default function CartProductCard({
         <p className="text-gray-600">
           {formatCurrency(item.unitprice || item.price)}
         </p>
+        {item.stockdescription && (
+          <span className="text-sm text-blue-600 font-medium bg-blue-50 px-2 py-1 rounded inline-block mt-1 mb-1">
+            {item.stockdescription}
+          </span>
+        )}
         {typeof item.totalquantityonhand !== "undefined" && (
           <p
             className={

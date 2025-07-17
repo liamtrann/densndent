@@ -74,6 +74,11 @@ export default function CartIndicator() {
               <div className="text-gray-500 text-xs">
                 {formatCurrency(item.unitprice || item.price)} each
               </div>
+              {item.stockdescription && (
+                <span className="text-xs text-blue-600 font-medium bg-blue-50 px-1 py-0.5 rounded inline-block mt-1">
+                  {item.stockdescription}
+                </span>
+              )}
             </div>
           </div>
         ))}
