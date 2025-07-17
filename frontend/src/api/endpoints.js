@@ -114,6 +114,17 @@ const endpoint = {
         return `/suiteql/promotion/by-product?${params.toString()}`;
     },
 
+    // Tax Endpoints
+    GET_TAX_RATES: ({ country, province, city }) => {
+        const params = new URLSearchParams();
+        if (country) params.append('country', country);
+        if (province) params.append('province', province);
+        if (city) params.append('city', city);
+        return `/suiteql/tax/rates?${params.toString()}`;
+    },
+    POST_CALCULATE_TAX: () => '/suiteql/tax/calculate',
+    GET_TAX_RATES_BY_POSTAL_CODE: (country, postalCode) => `/suiteql/tax/rates/${country}/${postalCode}`,
+
     // NETSUITE REST API Endpoints
     GET_CUSTOMER: (id) => `/restapi/customer/${id}`,
     GET_SALES_ORDER: (id) => `/restapi/salesOrder/${id}`,
