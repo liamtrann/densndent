@@ -1,23 +1,26 @@
+// src/pages/CartPage.jsx
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Modal } from "../components";
 import { delayCall } from "../api/util";
-import { useInventoryCheck } from "../config";
+import { useInventoryCheck, fetchRegionByPostalCode } from "../config";
 import { CartProductCard, CartOrderSummary } from "../components";
 import { ErrorMessage, Loading } from "../common";
 import { addToCart, removeFromCart } from "store/slices/cartSlice";
+import axios from "axios";
 
 export default function CartPage() {
   const cart = useSelector((state) => state.cart.items);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
   const [postalCode, setPostalCode] = useState("");
   const [promoCode, setPromoCode] = useState("");
+  const [regionInfo, setRegionInfo] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
-  // Inventory check hook
   const {
     inventoryStatus,
     loading: inventoryLoading,
@@ -25,28 +28,57 @@ export default function CartPage() {
     checkInventory,
   } = useInventoryCheck();
 
-  // Check inventory on cart load/change
   useEffect(() => {
     if (cart.length > 0) {
       checkInventory(cart.map((item) => item.id));
     }
   }, [cart]);
 
-  // Calculate subtotal and total quantity
-  const subtotal = cart
-    .reduce(
-      (sum, item) => sum + (item.unitprice || item.price || 0) * item.quantity,
-      0
-    )
-    .toFixed(2);
+  const subtotal = cart.reduce((sum, item) => sum + (item.unitprice || item.price || 0) * item.quantity, 0).toFixed(2);
   const totalQuantity = cart.reduce((sum, item) => sum + item.quantity, 0);
 
-  // Handle quantity change
+  const handleEstimate = async () => {
+    try {
+      const cleanedPostalCode = postalCode.replace(/\s/g, "").toUpperCase();
+      const fsa = cleanedPostalCode.substring(0, 3);
+      console.log("📮 Postal Code Input:", postalCode);
+      console.log("🔎 FSA (First 3 characters):", fsa);
+
+      const result = await axios.get(`https://api.zippopotam.us/ca/${fsa}`);
+      const data = result.data;
+
+      if (!data || !data.places || data.places.length === 0) {
+        alert("Invalid postal code or failed to fetch region info.");
+        setRegionInfo(null);
+      } else {
+        const province = data.places[0].state;
+        console.log("📦 Estimated Province:", province);
+        setRegionInfo({
+          fsa,
+          province,
+          raw: data,
+        });
+      }
+    } catch (error) {
+      console.error("❌ Failed to fetch region info:", error);
+      alert("Failed to fetch region info.");
+      setRegionInfo(null);
+    }
+  };
+
+  const handleProceedToCheckout = async () => {
+    const result = await checkInventory(cart.map((item) => item.id));
+    if (!result) return;
+    const outOfStock = result.find((r) => !r || r.quantityavailable <= 0);
+    if (outOfStock) {
+      alert("Some items in your cart are out of stock or unavailable. Please review your cart.");
+      return;
+    }
+    navigate("/checkout");
+  };
+
   const handleQuantityChange = (item, value) => {
-    const newQuantity = Math.max(
-      1,
-      Math.min(Number(value), item.totalquantityonhand || 9999)
-    );
+    const newQuantity = Math.max(1, Math.min(Number(value), item.totalquantityonhand || 9999));
     if (newQuantity !== item.quantity) {
       delayCall(() =>
         dispatch(addToCart({ ...item, quantity: newQuantity - item.quantity }))
@@ -54,7 +86,6 @@ export default function CartPage() {
     }
   };
 
-  // Handle remove
   const handleRemoveClick = (item) => {
     setSelectedProduct(item);
     setModalOpen(true);
@@ -73,30 +104,6 @@ export default function CartPage() {
     setSelectedProduct(null);
   };
 
-  const handleNavigateToProduct = (id) => {
-    navigate(`/product/${id}`);
-  };
-
-  // Check inventory before checkout
-  const handleProceedToCheckout = async () => {
-    const result = await checkInventory(cart.map((item) => item.id));
-    if (!result) return;
-    // Check for out of stock or missing items
-    const outOfStock = result.find((r) => !r || r.quantityavailable <= 0);
-    if (outOfStock) {
-      alert(
-        "Some items in your cart are out of stock or unavailable. Please review your cart."
-      );
-      return;
-    }
-    navigate("/checkout");
-  };
-
-  // Inventory check error/warning
-  if (inventoryError)
-    return <ErrorMessage message={inventoryError} className="mb-4" />;
-  if (inventoryLoading) return <Loading />;
-
   return (
     <div className="max-w-6xl mx-auto px-6 py-10">
       <h1 className="text-2xl font-bold mb-6 text-center">
@@ -104,21 +111,15 @@ export default function CartPage() {
         {totalQuantity} Item{totalQuantity !== 1 ? "s" : ""})
       </h1>
 
-      {/* Cart Items */}
       {cart.length > 0 ? (
         cart.map((item) => {
           const inv = inventoryStatus.find((i) => i.item === item.id);
           return (
-            <div
-              key={
-                item.id + (item.flavor ? `-${item.flavor}` : "") + "-wrapper"
-              }
-            >
+            <div key={item.id + (item.flavor ? `-${item.flavor}` : "") + "-wrapper"}>
               <CartProductCard
-                key={item.id + (item.flavor ? `-${item.flavor}` : "")}
                 item={item}
                 inv={inv}
-                onNavigate={handleNavigateToProduct}
+                onNavigate={() => navigate(`/product/${item.id}`)}
                 onQuantityChange={handleQuantityChange}
                 onRemove={handleRemoveClick}
               />
@@ -131,7 +132,6 @@ export default function CartPage() {
         </p>
       )}
 
-      {/* Remove Confirmation Modal */}
       {modalOpen && selectedProduct && (
         <Modal
           title="Remove Product"
@@ -140,19 +140,16 @@ export default function CartPage() {
           onCloseText="Cancel"
           onSubmitText="Remove"
           image={selectedProduct.file_url}
-          product={[
-            {
-              name: selectedProduct.displayname || selectedProduct.itemid,
-              price: selectedProduct.unitprice || selectedProduct.price,
-              quantity: selectedProduct.quantity,
-            },
-          ]}
+          product={[{
+            name: selectedProduct.displayname || selectedProduct.itemid,
+            price: selectedProduct.unitprice || selectedProduct.price,
+            quantity: selectedProduct.quantity,
+          }]}
         >
           <p>Are you sure you want to remove this product from your cart?</p>
         </Modal>
       )}
 
-      {/* Order Summary */}
       {cart.length > 0 && (
         <CartOrderSummary
           totalQuantity={totalQuantity}
@@ -163,6 +160,8 @@ export default function CartPage() {
           setPromoCode={setPromoCode}
           handleProceedToCheckout={handleProceedToCheckout}
           inventoryLoading={inventoryLoading}
+          onEstimateClick={handleEstimate}
+          regionInfo={regionInfo}
         />
       )}
     </div>
