@@ -1,6 +1,7 @@
 // components/ListOrdersHistory.jsx
 import React from "react";
 import { Paragraph } from "common";
+import { formatCurrency } from "config/config";
 
 export default function ListOrdersHistory({ orders = [] }) {
   // Group orders by transaction date
@@ -56,7 +57,7 @@ export default function ListOrdersHistory({ orders = [] }) {
                 </Paragraph>
                 {order.foreigntotal && (
                   <Paragraph className="text-base font-semibold text-gray-800">
-                    ${order.foreigntotal}
+                    {formatCurrency(order.foreigntotal)}
                   </Paragraph>
                 )}
               </div>

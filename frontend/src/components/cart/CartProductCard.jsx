@@ -1,5 +1,6 @@
 import React from "react";
 import { InputField, ProductImage } from "common";
+import { formatCurrency, calculateTotalCurrency } from "config/config";
 
 export default function CartProductCard({
   item,
@@ -31,7 +32,9 @@ export default function CartProductCard({
         >
           {item.itemid || item.displayname}
         </h2>
-        <p className="text-gray-600">${item.unitprice || item.price}</p>
+        <p className="text-gray-600">
+          {formatCurrency(item.unitprice || item.price)}
+        </p>
         {typeof item.totalquantityonhand !== "undefined" && (
           <p
             className={
@@ -76,7 +79,10 @@ export default function CartProductCard({
         <p className="mt-2 text-sm">
           <span className="font-medium">Amount:</span>{" "}
           <span className="font-bold">
-            ${((item.unitprice || item.price || 0) * item.quantity).toFixed(2)}
+            {calculateTotalCurrency(
+              item.unitprice || item.price,
+              item.quantity
+            )}
           </span>
         </p>
         <button

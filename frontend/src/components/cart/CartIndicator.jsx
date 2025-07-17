@@ -3,6 +3,7 @@ import { useSelector } from "react-redux";
 import { FaShoppingCart } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import { ProductImage } from "common";
+import { formatCurrency } from "config/config";
 
 export default function CartIndicator() {
   const cartItems = useSelector((state) => state.cart.items);
@@ -47,9 +48,11 @@ export default function CartIndicator() {
         className={`
           absolute right-0 top-8 w-80 bg-white shadow-xl border rounded-md z-50 p-4 space-y-3
           transition-all duration-300 ease-in-out transform
-          ${isHovered && hasItems
-            ? "opacity-100 scale-100 pointer-events-auto translate-y-0"
-            : "opacity-0 scale-95 pointer-events-none -translate-y-2"}
+          ${
+            isHovered && hasItems
+              ? "opacity-100 scale-100 pointer-events-auto translate-y-0"
+              : "opacity-0 scale-95 pointer-events-none -translate-y-2"
+          }
         `}
       >
         <h4 className="text-sm font-semibold mb-2">Cart Preview</h4>
@@ -69,7 +72,7 @@ export default function CartIndicator() {
               </div>
               <div>Qty: {item.quantity}</div>
               <div className="text-gray-500 text-xs">
-                ${item.unitprice || item.price} each
+                {formatCurrency(item.unitprice || item.price)} each
               </div>
             </div>
           </div>

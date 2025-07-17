@@ -6,6 +6,7 @@ import { Button } from "common";
 import { addToCart } from "../../redux/slices/cartSlice";
 import CartConfirmationModal from "../cart/CartConfirmationModal";
 import { ProductImage, Paragraph, InputField } from "common";
+import { formatCurrency } from "config/config";
 
 export default function ListProduct({ product }) {
   const { id, itemid, file_url, price, totalquantityonhand } = product;
@@ -59,12 +60,9 @@ export default function ListProduct({ product }) {
       </h3>
 
       <div className="mb-2">
-        <span className="text-xl font-bold text-gray-800">
-          ${Math.floor(price)}
-        </span>
-        <span className="text-sm font-semibold text-gray-600 align-top">
-          .{(price % 1).toFixed(2).slice(2)}
-        </span>
+        <div className="text-xl font-bold text-gray-800">
+          {formatCurrency(price)}
+        </div>
       </div>
 
       <div className="flex-grow">

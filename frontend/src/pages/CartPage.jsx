@@ -7,6 +7,7 @@ import { useInventoryCheck } from "../config";
 import { CartProductCard, CartOrderSummary } from "../components";
 import { ErrorMessage, Loading } from "../common";
 import { addToCart, removeFromCart } from "store/slices/cartSlice";
+import { formatPrice, formatCurrency } from "config/config";
 
 export default function CartPage() {
   const cart = useSelector((state) => state.cart.items);
@@ -33,12 +34,12 @@ export default function CartPage() {
   }, [cart]);
 
   // Calculate subtotal and total quantity
-  const subtotal = cart
-    .reduce(
+  const subtotal = formatPrice(
+    cart.reduce(
       (sum, item) => sum + (item.unitprice || item.price || 0) * item.quantity,
       0
     )
-    .toFixed(2);
+  );
   const totalQuantity = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   // Handle quantity change
@@ -143,7 +144,9 @@ export default function CartPage() {
           product={[
             {
               name: selectedProduct.displayname || selectedProduct.itemid,
-              price: selectedProduct.unitprice || selectedProduct.price,
+              price: formatCurrency(
+                selectedProduct.unitprice || selectedProduct.price
+              ),
               quantity: selectedProduct.quantity,
             },
           ]}

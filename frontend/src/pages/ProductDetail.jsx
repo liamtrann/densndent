@@ -16,7 +16,7 @@ import api from "api/api";
 import endpoint from "api/endpoints";
 import { delayCall } from "api/util";
 import { addToCart } from "store/slices/cartSlice";
-import { getMatrixInfo } from "config/config";
+import { getMatrixInfo, formatCurrency } from "config/config";
 
 export default function ProductsPage() {
   const { id } = useParams();
@@ -131,14 +131,9 @@ export default function ProductsPage() {
           )}
           <div className="mt-2 mb-4">
             {product.price ? (
-              <>
-                <span className="text-3xl font-bold text-gray-800">
-                  ${Math.floor(product.price)}
-                </span>
-                <span className="text-lg font-semibold text-gray-600 align-top">
-                  .{(product.price % 1).toFixed(2).slice(2)}
-                </span>
-              </>
+              <div className="text-3xl font-bold text-gray-800">
+                {formatCurrency(product.price)}
+              </div>
             ) : null}
           </div>
           {product.storedetaileddescription && (
@@ -238,7 +233,7 @@ export default function ProductsPage() {
           product={[
             {
               name: product.displayname || product.itemid,
-              price: product.price ? `$${product.price}` : "",
+              price: formatCurrency(product.price),
               stockdescription: product.stockdescription,
               quantity,
             },

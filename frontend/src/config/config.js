@@ -51,4 +51,123 @@ function getMatrixInfo(matrixOptions) {
     };
 }
 
-export { extractBuyGet, getMatrixInfo };
+// Format price with proper rounding to 2 decimal places
+function formatPrice(price) {
+    // Handle null, undefined, or invalid values
+    if (price === null || price === undefined || isNaN(price)) {
+        return '0.00';
+    }
+
+    // Convert to number and format to 2 decimal places
+    return Number(price).toFixed(2);
+}
+
+// Format price with currency symbol
+function formatCurrency(price, currency = '$') {
+    return `${currency}${formatPrice(price)}`;
+}
+
+// Calculate total price for quantity
+function calculateTotalPrice(unitPrice, quantity) {
+    if (!unitPrice || !quantity) return '0.00';
+
+    const total = Number(unitPrice) * Number(quantity);
+    return formatPrice(total);
+}
+
+// Calculate total price with currency symbol
+function calculateTotalCurrency(unitPrice, quantity, currency = '$') {
+    return `${currency}${calculateTotalPrice(unitPrice, quantity)}`;
+}
+
+// Postal code lookup function
+async function fetchLocationByPostalCode(country, code) {
+    if (!code || !code.trim()) {
+        return {
+            success: false,
+            error: 'Postal code is required'
+        };
+    }
+
+    try {
+        const cleanCode = code.replace(/\s/g, '').toUpperCase();
+        let apiUrl = '';
+
+        switch (country) {
+            case 'us':
+                // US ZIP code (5 digits)
+                if (!/^\d{5}$/.test(cleanCode)) {
+                    return {
+                        success: false,
+                        error: 'Invalid US ZIP code format. Must be 5 digits.'
+                    };
+                }
+                apiUrl = `https://api.zippopotam.us/us/${cleanCode}`;
+                break;
+
+            case 'ca':
+                // Canadian postal code (first 3 characters: A1A format)
+                if (!/^[A-Z]\d[A-Z]/.test(cleanCode)) {
+                    return {
+                        success: false,
+                        error: 'Invalid Canadian postal code format. Must start with A1A format.'
+                    };
+                }
+                const firstThree = cleanCode.slice(0, 3);
+                apiUrl = `https://api.zippopotam.us/ca/${firstThree}`;
+                break;
+
+            default:
+                return {
+                    success: false,
+                    error: 'Country not supported. Only "us" and "ca" are supported.'
+                };
+        }
+
+        const response = await fetch(apiUrl);
+
+        if (!response.ok) {
+            return {
+                success: false,
+                error: `Postal code not found (${response.status})`
+            };
+        }
+
+        const data = await response.json();
+
+        if (data.places && data.places.length > 0) {
+            return {
+                success: true,
+                data: {
+                    city: data.places[0]['place name'],
+                    province: data.places[0]['state abbreviation'],
+                    state: data.places[0]['state abbreviation'], // Alias for province
+                    country: data.country,
+                    latitude: data.places[0]['latitude'],
+                    longitude: data.places[0]['longitude']
+                }
+            };
+        } else {
+            return {
+                success: false,
+                error: 'No location data found'
+            };
+        }
+
+    } catch (error) {
+        return {
+            success: false,
+            error: error.message || 'Failed to fetch location data'
+        };
+    }
+}
+
+export {
+    extractBuyGet,
+    getMatrixInfo,
+    formatPrice,
+    formatCurrency,
+    calculateTotalPrice,
+    calculateTotalCurrency,
+    fetchLocationByPostalCode
+};

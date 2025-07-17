@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Button, ProductImage } from "common";
 import { updateQuantity, removeFromCart } from "@/redux/slices/cartSlice";
+import { formatCurrency, calculateTotalCurrency } from "config/config";
 
 export default function CartSummaryPanel() {
   const cartItems = useSelector((state) => state.cart.items);
@@ -37,7 +38,7 @@ export default function CartSummaryPanel() {
 
       <div className="mt-4 font-medium flex justify-between">
         <span>Subtotal:</span>
-        <span>${subtotal.toFixed(2)}</span>
+        <span>{formatCurrency(subtotal)}</span>
       </div>
 
       <h3 className="text-lg font-semibold my-3">Cart Summary</h3>
@@ -67,7 +68,7 @@ export default function CartSummaryPanel() {
                 </button>
               </div>
               <div className="text-gray-800 font-semibold mt-1">
-                ${(item.price * item.quantity).toFixed(2)}
+                {calculateTotalCurrency(item.price, item.quantity)}
               </div>
             </div>
           </div>
