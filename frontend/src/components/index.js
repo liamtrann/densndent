@@ -68,4 +68,5 @@ export { default as Catalogues } from './sections/Catalogues';
 export { default as GlovesHighlight } from './sections/GlovesHighlight';
 export { default as HeroCarousel } from './sections/HeroCarousel';
 export { default as MailingList } from './sections/MailingList';
+export { default as ShopByBrand } from './sections/ShopByBrand';
 export { default as Sidebar } from './sections/Sidebar';

@@ -28,6 +28,7 @@ export default function BestSellersSection() {
     <BlueBanner
       title="Best Sellers"
       items={bestSellers}
+      enableHorizontalScroll={true}
       renderItem={(item) => (
         <AnimatedCard>
           <div onClick={() => handleClick(item)} className="cursor-pointer">
@@ -38,7 +39,6 @@ export default function BestSellersSection() {
       showButton={false}
       loading={status === STATUS.LOADING}
       error={status === STATUS.FAILED ? error : null}
-      gridClassName="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 auto-rows-fr"
     />
   );
 }

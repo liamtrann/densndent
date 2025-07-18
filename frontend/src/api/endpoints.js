@@ -103,7 +103,7 @@ const endpoint = {
         return `/suiteql/item/search-by-name-like?${params.toString()}`
 
     },
-    GET_SHIPPING_METHOD: (id) => `/suiteql/shipItem/${id}`,
+    GET_SHIPPING_METHOD: (id) => `/suiteql/shipItem/${id}`, // get id = 20412
     POST_CHECK_INVENTORY: () => '/suiteql/inventory/check-inventory',
     GET_ACTIVE_PROMOTIONS: () => '/suiteql/promotion',
     GET_PROMOTIONS_BY_PRODUCT: ({ productId, limit, offset }) => {

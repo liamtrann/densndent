@@ -27,7 +27,7 @@ export default function CartOrderSummary({
         </p>
         <div className="mb-4">
           <h4 className="text-sm font-medium mb-1">Estimate Tax & Shipping</h4>
-          <p className="text-xs mb-2">Ship available only to Canada</p>
+          <p className="text-xs mb-2">Ship available only to Canada or USA</p>
           <InputField
             placeholder="Postal Code"
             value={postalCode}
