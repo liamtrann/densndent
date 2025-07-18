@@ -60,6 +60,7 @@ export { default as PromotionGrid } from './promotions/PromotionGrid';
 export { default as PromotionsGrid } from './promotions/PromotionsGrid';
 
 // Section components
+export { default as CenteredContent } from './CenteredContent';
 export { default as BestSellersSection } from './sections/BestSellersSection';
 export { default as BlueBanner } from './sections/BlueBanner';
 export { default as CategoriesSection } from './sections/CategoriesSection';

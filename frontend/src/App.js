@@ -5,7 +5,7 @@ import { useDispatch } from "react-redux";
 import { Routes, Route } from "react-router-dom";
 
 import { ProtectedRoute, ToastProvider } from "./common";
-import { Header, Footer, ListProductPage, LayoutWithCart, ProfileEditCard } from "./components";
+import { Header, Footer, ListProductPage, LayoutWithCart, ProfileEditCard, CenteredContent } from "./components";
 import {
   LandingPage,
   ProductDetail,
@@ -41,65 +41,73 @@ export default function App() {
       dispatch(clearUserInfo());
     }
   }, [isAuthenticated, user, getAccessTokenSilently, dispatch]);
-
   return (
     <ToastProvider>
       <div className="min-h-screen flex flex-col">
         <Header />
         <main className="flex-grow">
           <Routes>
-            <Route path="/" element={<LayoutWithCart><LandingPage /></LayoutWithCart>} />
-
+            <Route path="/" element={<LayoutWithCart><CenteredContent><LandingPage /></CenteredContent></LayoutWithCart>} />
             {/* Routes WITH Cart Panel */}
             <Route path="/product/:id" element={
               <LayoutWithCart>
-                <ProductDetail />
+                <CenteredContent>
+                  <ProductDetail />
+                </CenteredContent>
               </LayoutWithCart>
             } />
             <Route path="/products/by-class/:nameAndId" element={
               <LayoutWithCart>
-                <ListProductPage by="class" />
+                <CenteredContent>
+                  <ListProductPage by="class" />
+                </CenteredContent>
               </LayoutWithCart>
             } />
             <Route path="/products/by-brand/:brandName" element={
               <LayoutWithCart>
-                <ListProductPage by="brand" />
+                <CenteredContent>
+                  <ListProductPage by="brand" />
+                </CenteredContent>
               </LayoutWithCart>
             } />
             <Route path="/products/by-name/:name" element={
               <LayoutWithCart>
-                <ListProductPage by="name" />
+                <CenteredContent>
+                  <ListProductPage by="name" />
+                </CenteredContent>
               </LayoutWithCart>
             } />
             <Route path="/products/by-category/:categoryNameAndId" element={
               <LayoutWithCart>
-                <ListProductPage by="category" />
+                <CenteredContent>
+                  <ListProductPage by="category" />
+                </CenteredContent>
               </LayoutWithCart>
             } />
 
             {/* Routes WITHOUT Cart Panel */}
-            <Route path="/cart" element={<CartPage />} />
-            <Route path="/faq" element={<FAQPage />} />
-            <Route path="/about" element={<AboutUs />} />
-            <Route path="/team" element={<MeetOurTeam />} />
-            <Route path="/contact" element={<ContactPage />} />
-            <Route path="/blog" element={<BlogPage />} />
-            <Route path="/promotions" element={<PromotionsPage />} />
-            <Route path="/promotions/jdiq" element={<JdiqRaffleWinners />} />
-            <Route path="/promotions/gift-card" element={<GiftCardProgramPage />} />
-            <Route path="/catalogues" element={<CataloguesPage />} />
-            <Route path="/clearance" element={<ClearancePage />} />
-            <Route path="/partners" element={<OurPartners />} />
-            <Route path="/promotions/q3-catalogue" element={<Q3CataloguePage />} />
+            <Route path="/cart" element={<CenteredContent><CartPage /></CenteredContent>} />
+            <Route path="/faq" element={<CenteredContent><FAQPage /></CenteredContent>} />
+            <Route path="/about" element={<CenteredContent><AboutUs /></CenteredContent>} />
+            <Route path="/team" element={<CenteredContent><MeetOurTeam /></CenteredContent>} />
+            <Route path="/contact" element={<CenteredContent><ContactPage /></CenteredContent>} />
+            <Route path="/blog" element={<CenteredContent><BlogPage /></CenteredContent>} />
+            <Route path="/promotions" element={<CenteredContent><PromotionsPage /></CenteredContent>} />
+            <Route path="/promotions/jdiq" element={<CenteredContent><JdiqRaffleWinners /></CenteredContent>} />
+            <Route path="/promotions/gift-card" element={<CenteredContent><GiftCardProgramPage /></CenteredContent>} />
+            <Route path="/catalogues" element={<CenteredContent><CataloguesPage /></CenteredContent>} />
+            <Route path="/clearance" element={<CenteredContent><ClearancePage /></CenteredContent>} />
+            <Route path="/partners" element={<CenteredContent><OurPartners /></CenteredContent>} />
+            <Route path="/promotions/q3-catalogue" element={<CenteredContent><Q3CataloguePage /></CenteredContent>} />
 
             <Route element={<ProtectedRoute />}>
-              <Route path="/checkout/*" element={<CheckoutPage />} />
-              <Route path="/profile" element={<ProfilePage />} />
-              <Route path="/profile/edit" element={<ProfileEditCard />} />
-              <Route path="/profile/history" element={<PurchaseHistory />} />
+              <Route path="/checkout/*" element={<CenteredContent><CheckoutPage /></CenteredContent>} />
+              <Route path="/profile" element={<CenteredContent><ProfilePage /></CenteredContent>} />
+              <Route path="/profile/edit" element={<CenteredContent><ProfileEditCard /></CenteredContent>} />
+              <Route path="/profile/history" element={<CenteredContent><PurchaseHistory /></CenteredContent>} />
             </Route>
 
-            <Route path="*" element={<NotFound />} />
+            <Route path="*" element={<CenteredContent><NotFound /></CenteredContent>} />
           </Routes>
         </main>
         <Footer />

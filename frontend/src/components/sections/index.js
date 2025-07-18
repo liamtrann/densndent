@@ -1,3 +1,4 @@
+export { default as CenteredContent } from "../CenteredContent";
 export { default as BestSellersSection } from "./BestSellersSection.jsx";
 export { default as BlueBanner } from "./BlueBanner.jsx";
 export { default as Catalogues } from "./Catalogues.jsx";
