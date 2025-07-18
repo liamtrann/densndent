@@ -123,7 +123,7 @@ const endpoint = {
         return `/suiteql/tax/rates?${params.toString()}`;
     },
     POST_CALCULATE_TAX: () => '/suiteql/tax/calculate',
-    GET_TAX_RATES_BY_POSTAL_CODE: (country, postalCode) => `/suiteql/tax/rates/${country}/${postalCode}`,
+    // GET_TAX_RATES_BY_POSTAL_CODE: (country, postalCode) => `/suiteql/tax/rates/${country}/${postalCode}`,
 
     // NETSUITE REST API Endpoints
     GET_CUSTOMER: (id) => `/restapi/customer/${id}`,

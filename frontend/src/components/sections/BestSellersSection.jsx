@@ -17,8 +17,10 @@ export default function BestSellersSection() {
   } = useSelector((state) => state.bestSellers);
 
   useEffect(() => {
-    return delayCall(() => dispatch(fetchBestSellers()));
-  }, [dispatch]);
+    if (!bestSellers || bestSellers.length === 0) {
+      return delayCall(() => dispatch(fetchBestSellers()));
+    }
+  }, [dispatch, bestSellers]);
 
   const handleClick = (item) => {
     navigate(`/product/${item.id}`);

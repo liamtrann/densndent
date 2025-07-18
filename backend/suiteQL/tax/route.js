@@ -9,6 +9,6 @@ router.get('/rates', taxController.getTaxRates);
 router.post('/calculate', taxController.calculateTax);
 
 // Get tax rates by postal code
-router.get('/rates/:country/:postalCode', taxController.getTaxRatesByPostalCode);
+// router.get('/rates/:country/:postalCode', taxController.getTaxRatesByPostalCode);
 
 module.exports = router;

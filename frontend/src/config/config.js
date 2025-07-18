@@ -1,16 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
+import api from "../api/api.js";
 
 function extractBuyGet(str) {
     const numbers = str.match(/\d+/g);
     return {
         buy: numbers ? parseInt(numbers[0], 10) : null,
-        get: numbers ? parseInt(numbers[1], 10) : null
+        get: numbers ? parseInt(numbers[1], 10) : null,
     };
 }
 
 // Parse custitem38 to get matrix type and options
 function getMatrixInfo(matrixOptions) {
-    if (matrixOptions.length === 0) return { matrixType: '', options: [] };
+    if (matrixOptions.length === 0) return { matrixType: "", options: [] };
 
     try {
         // Get the first item to determine the matrix type
@@ -45,11 +46,11 @@ function getMatrixInfo(matrixOptions) {
     }
 
     return {
-        matrixType: 'Options',
+        matrixType: "Options",
         options: matrixOptions.map((item) => ({
             value: item.id,
             label: item.custitem38 || item.itemid,
-        }))
+        })),
     };
 }
 
@@ -57,7 +58,7 @@ function getMatrixInfo(matrixOptions) {
 function formatPrice(price) {
     // Handle null, undefined, or invalid values
     if (price === null || price === undefined || isNaN(price)) {
-        return '0.00';
+        return "0.00";
     }
 
     // Convert to number and format to 2 decimal places
@@ -65,20 +66,20 @@ function formatPrice(price) {
 }
 
 // Format price with currency symbol
-function formatCurrency(price, currency = '$') {
+function formatCurrency(price, currency = "$") {
     return `${currency}${formatPrice(price)}`;
 }
 
 // Calculate total price for quantity
 function calculateTotalPrice(unitPrice, quantity) {
-    if (!unitPrice || !quantity) return '0.00';
+    if (!unitPrice || !quantity) return "0.00";
 
     const total = Number(unitPrice) * Number(quantity);
     return formatPrice(total);
 }
 
 // Calculate total price with currency symbol
-function calculateTotalCurrency(unitPrice, quantity, currency = '$') {
+function calculateTotalCurrency(unitPrice, quantity, currency = "$") {
     return `${currency}${calculateTotalPrice(unitPrice, quantity)}`;
 }
 
@@ -86,12 +87,12 @@ function calculateTotalCurrency(unitPrice, quantity, currency = '$') {
 async function getTotalPriceAfterDiscount(productId, unitPrice, quantity) {
     try {
         // Import api and endpoints here to avoid circular dependency
-        const { default: api } = await import('../api/api.js');
-        const { default: endpoint } = await import('../api/endpoints.js');
+        const { default: api } = await import("../api/api.js");
+        const { default: endpoint } = await import("../api/endpoints.js");
 
         // Fetch promotions for the product
         const promotionUrl = endpoint.GET_PROMOTIONS_BY_PRODUCT({
-            productId
+            productId,
         });
 
         const response = await api.get(promotionUrl);
@@ -102,7 +103,7 @@ async function getTotalPriceAfterDiscount(productId, unitPrice, quantity) {
                 originalPrice: Number(unitPrice) * Number(quantity),
                 discountedPrice: Number(unitPrice) * Number(quantity),
                 discount: 0,
-                promotionApplied: null
+                promotionApplied: null,
             };
         }
 
@@ -120,11 +121,15 @@ async function getTotalPriceAfterDiscount(productId, unitPrice, quantity) {
             // Check if quantity meets the minimum requirement
             if (Number(quantity) >= Number(itemquantifier)) {
                 // Calculate how many promotion sets can be applied
-                const promotionSets = Math.floor(Number(quantity) / Number(itemquantifier));
+                const promotionSets = Math.floor(
+                    Number(quantity) / Number(itemquantifier)
+                );
                 const remainingItems = Number(quantity) % Number(itemquantifier);
 
                 // Calculate discounted price
-                const discountedTotal = (promotionSets * Number(fixedprice)) + (remainingItems * Number(unitPrice));
+                const discountedTotal =
+                    promotionSets * Number(fixedprice) +
+                    remainingItems * Number(unitPrice);
                 const discount = originalTotal - discountedTotal;
 
                 // Keep track of best discount
@@ -139,11 +144,10 @@ async function getTotalPriceAfterDiscount(productId, unitPrice, quantity) {
             originalPrice: originalTotal,
             discountedPrice: originalTotal - bestDiscount,
             discount: bestDiscount,
-            promotionApplied: bestPromotion
+            promotionApplied: bestPromotion,
         };
-
     } catch (error) {
-        console.error('Error calculating discount:', error);
+        console.error("Error calculating discount:", error);
         // Return original price if error occurs
         const originalTotal = Number(unitPrice) * Number(quantity);
         return {
@@ -151,7 +155,7 @@ async function getTotalPriceAfterDiscount(productId, unitPrice, quantity) {
             discountedPrice: originalTotal,
             discount: 0,
             promotionApplied: null,
-            error: error.message
+            error: error.message,
         };
     }
 }
@@ -161,32 +165,33 @@ async function fetchLocationByPostalCode(country, code) {
     if (!code || !code.trim()) {
         return {
             success: false,
-            error: 'Postal code is required'
+            error: "Postal code is required",
         };
     }
 
     try {
-        const cleanCode = code.replace(/\s/g, '').toUpperCase();
-        let apiUrl = '';
+        const cleanCode = code.replace(/\s/g, "").toUpperCase();
+        let apiUrl = "";
 
         switch (country) {
-            case 'us':
+            case "us":
                 // US ZIP code (5 digits)
                 if (!/^\d{5}$/.test(cleanCode)) {
                     return {
                         success: false,
-                        error: 'Invalid US ZIP code format. Must be 5 digits.'
+                        error: "Invalid US ZIP code format. Must be 5 digits.",
                     };
                 }
                 apiUrl = `https://api.zippopotam.us/us/${cleanCode}`;
                 break;
 
-            case 'ca':
+            case "ca":
                 // Canadian postal code (first 3 characters: A1A format)
                 if (!/^[A-Z]\d[A-Z]/.test(cleanCode)) {
                     return {
                         success: false,
-                        error: 'Invalid Canadian postal code format. Must start with A1A format.'
+                        error:
+                            "Invalid Canadian postal code format. Must start with A1A format.",
                     };
                 }
                 const firstThree = cleanCode.slice(0, 3);
@@ -196,7 +201,7 @@ async function fetchLocationByPostalCode(country, code) {
             default:
                 return {
                     success: false,
-                    error: 'Country not supported. Only "us" and "ca" are supported.'
+                    error: 'Country not supported. Only "us" and "ca" are supported.',
                 };
         }
 
@@ -205,7 +210,7 @@ async function fetchLocationByPostalCode(country, code) {
         if (!response.ok) {
             return {
                 success: false,
-                error: `Postal code not found (${response.status})`
+                error: `Postal code not found (${response.status})`,
             };
         }
 
@@ -215,32 +220,31 @@ async function fetchLocationByPostalCode(country, code) {
             return {
                 success: true,
                 data: {
-                    city: data.places[0]['place name'],
-                    province: data.places[0]['state abbreviation'],
-                    state: data.places[0]['state abbreviation'], // Alias for province
+                    city: data.places[0]["place name"],
+                    province: data.places[0]["state abbreviation"],
+                    state: data.places[0]["state abbreviation"], // Alias for province
                     country: data.country,
-                    latitude: data.places[0]['latitude'],
-                    longitude: data.places[0]['longitude']
-                }
+                    latitude: data.places[0]["latitude"],
+                    longitude: data.places[0]["longitude"],
+                },
             };
         } else {
             return {
                 success: false,
-                error: 'No location data found'
+                error: "No location data found",
             };
         }
-
     } catch (error) {
         return {
             success: false,
-            error: error.message || 'Failed to fetch location data'
+            error: error.message || "Failed to fetch location data",
         };
     }
 }
 
 // Quantity handling utilities for Buy X Get Y promotions
 function calculateActualQuantity(selectedQuantity, stockdescription) {
-    const { buy, get } = extractBuyGet(stockdescription || '');
+    const { buy, get } = extractBuyGet(stockdescription || "");
 
     if (!buy || !get) {
         return selectedQuantity;
@@ -255,7 +259,12 @@ function calculateActualQuantity(selectedQuantity, stockdescription) {
 }
 
 // Create quantity handler functions
-function createQuantityHandlers(quantity, setQuantity, setActualQuantity, stockdescription) {
+function createQuantityHandlers(
+    quantity,
+    setQuantity,
+    setActualQuantity,
+    stockdescription
+) {
     const updateQuantities = (newQuantity) => {
         setQuantity(newQuantity);
         setActualQuantity(calculateActualQuantity(newQuantity, stockdescription));
@@ -281,18 +290,23 @@ function createQuantityHandlers(quantity, setQuantity, setActualQuantity, stockd
                 const newQuantity = Number(quantity) - 1;
                 updateQuantities(newQuantity);
             }
-        }
+        },
     };
 }
 
 // Hook-like utility for quantity management with Buy X Get Y logic
-function useQuantityHandlers(initialQuantity = 1, stockdescription = '') {
+function useQuantityHandlers(initialQuantity = 1, stockdescription = "") {
     const [quantity, setQuantity] = useState(initialQuantity);
     const [actualQuantity, setActualQuantity] = useState(
         calculateActualQuantity(initialQuantity, stockdescription)
     );
 
-    const handlers = createQuantityHandlers(quantity, setQuantity, setActualQuantity, stockdescription);
+    const handlers = createQuantityHandlers(
+        quantity,
+        setQuantity,
+        setActualQuantity,
+        stockdescription
+    );
 
     // Update actual quantity when stockdescription changes
     useEffect(() => {
@@ -307,8 +321,25 @@ function useQuantityHandlers(initialQuantity = 1, stockdescription = '') {
             setActualQuantity(calculateActualQuantity(newQuantity, stockdescription));
         },
         setActualQuantity,
-        ...handlers
+        ...handlers,
     };
+}
+
+async function fetchRegionByCode(country, code) {
+    try {
+        // Only allow 'ca' or 'us'
+        if (country !== 'ca' && country !== 'us') {
+            throw new Error('Country not supported. Only "ca" and "us" are allowed.');
+        }
+        let cleanCode = code.replace(/\s/g, "").toUpperCase();
+        if (country === 'ca') {
+            cleanCode = cleanCode.slice(0, 3); // Use only first 3 characters for Canada
+        }
+        const response = await api.get(`https://api.zippopotam.us/${country}/${cleanCode}`);
+        return response.data;
+    } catch (error) {
+        return null;
+    }
 }
 
 export {
@@ -322,5 +353,6 @@ export {
     fetchLocationByPostalCode,
     calculateActualQuantity,
     createQuantityHandlers,
-    useQuantityHandlers
+    useQuantityHandlers,
+    fetchRegionByCode
 };
