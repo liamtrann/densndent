@@ -18,6 +18,7 @@ export default function CartOrderSummary({
   const [country, setCountry] = React.useState("ca");
   const [estimatedTax, setEstimatedTax] = React.useState(null);
   const [shippingCost, setShippingCost] = React.useState(null);
+  const [taxRate, setTaxRate] = React.useState(null);
   const { fetchRegionByCode } = require("../../config/config.js");
 
   const handleEstimate = async () => {
@@ -25,6 +26,7 @@ export default function CartOrderSummary({
     try {
       setEstimatedTax(null);
       setShippingCost(null);
+      setTaxRate(null);
       const result = await fetchRegionByCode(country, postalCode);
       ToastNotification.dismiss(toastId);
 
@@ -37,6 +39,7 @@ export default function CartOrderSummary({
           ToastNotification.success("Tax rates loaded!");
           // Calculate estimated tax
           const totalTaxRate = taxRates.data?.rates?.total;
+          setTaxRate(totalTaxRate);
           if (totalTaxRate && subtotal) {
             const taxAmount = Number(subtotal) * Number(totalTaxRate);
             setEstimatedTax(taxAmount);
@@ -70,7 +73,9 @@ export default function CartOrderSummary({
           <span className="text-gray-700">
             Subtotal {totalQuantity} item{totalQuantity !== 1 ? "s" : ""}
           </span>
-          <span className="text-gray-900">{formatPrice(subtotal)}</span>
+          <span className="text-gray-900">
+            {calculateTotalCurrency(subtotal, 1, "$")}
+          </span>
         </div>
         <p className="text-xs text-gray-500 mb-4">
           Subtotal Does Not Include Shipping Or Tax
@@ -104,26 +109,39 @@ export default function CartOrderSummary({
             <React.Fragment>
               {/* Estimated Tax Row */}
               <div className="flex justify-between items-center py-2 border-t border-gray-200 text-base font-semibold">
-                <span className="text-gray-700">Estimated Tax</span>
+                <span className="text-gray-700 flex items-center gap-2">
+                  Estimated Tax
+                  {taxRate && (
+                    <span className="text-xs text-gray-500">
+                      ({(taxRate * 100).toFixed(2)}%)
+                    </span>
+                  )}
+                </span>
                 <span className="text-gray-900">
-                  {formatPrice(estimatedTax)}
+                  {calculateTotalCurrency(estimatedTax, 1, "$")}
                 </span>
               </div>
               {/* Shipping Row */}
               <div className="flex justify-between items-center py-2 border-t border-gray-200 text-base font-semibold">
                 <span className="text-gray-700">Shipping</span>
                 <span className="text-gray-900">
-                  {formatPrice(shippingCost !== null ? shippingCost : 9.99)}
+                  {calculateTotalCurrency(
+                    shippingCost !== null ? shippingCost : 9.99,
+                    1,
+                    "$"
+                  )}
                 </span>
               </div>
               {/* Estimated Total Row */}
               <div className="flex justify-between items-center py-2 border-t border-gray-300 text-lg font-bold">
                 <span className="text-gray-800">Estimated Total</span>
                 <span className="text-black-800">
-                  {formatPrice(
+                  {calculateTotalCurrency(
                     Number(subtotal) +
                       Number(estimatedTax) +
-                      Number(shippingCost ?? 9.99)
+                      Number(shippingCost ?? 9.99),
+                    1,
+                    "$"
                   )}
                 </span>
               </div>
