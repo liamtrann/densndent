@@ -117,7 +117,6 @@ export default function ListProductComponent({
   };
 
   const handleApplyFilters = () => {
-
     // Set the applied filters (this will trigger useEffect to fetch new data)
     setAppliedFilters(filters);
 
@@ -147,73 +146,81 @@ export default function ListProductComponent({
       {/* Desktop: 3-column layout, Mobile: Single column stack */}
       <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 items-start">
         {/* Left Column: Filters - Hidden on mobile, shown on desktop */}
-        <FilterOption
-          className="hidden lg:block"
-          filters={filters}
-          onFiltersChange={handleFiltersChange}
-          onApplyFilters={handleApplyFilters}
-        />
+        {products.length > 0 && (
+          <FilterOption
+            className="hidden lg:block"
+            filters={filters}
+            onFiltersChange={handleFiltersChange}
+            onApplyFilters={handleApplyFilters}
+          />
+        )}
 
         {/* Center Column: Main product area */}
         <div className="flex-1 w-full">
           {/* Mobile filter toggle button */}
-          <div className="lg:hidden mb-4">
-            <button
-              onClick={() => setShowMobileFilters(!showMobileFilters)}
-              className="w-full bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg text-left flex items-center justify-between"
-            >
-              <span className="font-medium">Filters & Sort</span>
-              <svg
-                className={`w-5 h-5 transform transition-transform ${
-                  showMobileFilters ? "rotate-180" : ""
-                }`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+          {products.length > 0 && (
+            <div className="lg:hidden mb-4">
+              <button
+                onClick={() => setShowMobileFilters(!showMobileFilters)}
+                className="w-full bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg text-left flex items-center justify-between"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </button>
+                <span className="font-medium">Filters & Sort</span>
+                <svg
+                  className={`w-5 h-5 transform transition-transform ${
+                    showMobileFilters ? "rotate-180" : ""
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
 
-            {/* Mobile filters dropdown */}
-            {showMobileFilters && (
-              <div className="mt-2 bg-white border rounded-lg shadow-lg p-4">
-                <FilterOption
-                  filters={filters}
-                  onFiltersChange={handleFiltersChange}
-                  onApplyFilters={() => {
-                    handleApplyFilters();
-                    setShowMobileFilters(false);
-                  }}
-                  className="w-full"
-                />
-              </div>
-            )}
-          </div>
+              {/* Mobile filters dropdown */}
+              {showMobileFilters && (
+                <div className="mt-2 bg-white border rounded-lg shadow-lg p-4">
+                  <FilterOption
+                    filters={filters}
+                    onFiltersChange={handleFiltersChange}
+                    onApplyFilters={() => {
+                      handleApplyFilters();
+                      setShowMobileFilters(false);
+                    }}
+                    className="w-full"
+                  />
+                </div>
+              )}
+            </div>
+          )}
 
-          <ProductToolbar
-            perPageOptions={[12, 24, 48]}
-            onPerPageChange={(e) => {
-              setPerPage(Number(e.target.value));
-              setPage(1);
-            }}
-            perPage={perPage}
-            sort={sort}
-            onSortChange={(e) => setSort(e.target.value)}
-            total={total}
-          />
-          <div className="mb-4">
-            <Pagination
-              page={page}
-              totalPages={totalPages}
-              onPageChange={setPage}
+          {products.length > 0 && (
+            <ProductToolbar
+              perPageOptions={[12, 24, 48]}
+              onPerPageChange={(e) => {
+                setPerPage(Number(e.target.value));
+                setPage(1);
+              }}
+              perPage={perPage}
+              sort={sort}
+              onSortChange={(e) => setSort(e.target.value)}
+              total={total}
             />
-          </div>
+          )}
+          {products.length > 0 && (
+            <div className="mb-4">
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                onPageChange={setPage}
+              />
+            </div>
+          )}
           {isLoading && <Loading message="Loading products..." />}
           {error && <ErrorMessage message={error} />}
           {!isLoading && !error && products.length === 0 && (
@@ -225,13 +232,15 @@ export default function ListProductComponent({
             <ProductListGrid products={products} />
           )}
           {/* Bottom pagination for mobile */}
-          <div className="mt-6">
-            <Pagination
-              page={page}
-              totalPages={totalPages}
-              onPageChange={setPage}
-            />
-          </div>
+          {products.length > 0 && (
+            <div className="mt-6">
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                onPageChange={setPage}
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>
