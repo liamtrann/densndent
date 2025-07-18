@@ -7,6 +7,7 @@ import {
   FormSubmit,
   ErrorMessage,
   Loading,
+  Toast,
 } from "common";
 import { useAuth0 } from "@auth0/auth0-react";
 import api from "api/api";
@@ -88,9 +89,11 @@ export default function ProfileEditCard({ onClose, error }) {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       dispatch(fetchUserInfo({ user, getAccessTokenSilently }));
+      Toast.success("Profile created successfully!");
       if (onClose) onClose();
     } catch (err) {
       setErrors({ form: "Failed to create profile." });
+      Toast.error("Failed to create profile. Please try again.");
     } finally {
       setSubmitting(false);
     }
