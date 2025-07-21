@@ -331,6 +331,28 @@ async function fetchRegionByCode(country, code) {
     }
 }
 
+// Phone validation function
+function validatePhone(phone) {
+    // Allow empty/null phone numbers (optional field)
+    if (!phone || phone.trim() === "") {
+        return true;
+    }
+
+    // Remove all non-digit characters
+    const digitsOnly = phone.replace(/\D/g, "");
+
+    // Check if it's exactly 10 digits (US/Canada format)
+    return digitsOnly.length === 10;
+}
+
+// Password validation function
+function validatePassword(password) {
+    // At least 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char
+    return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/.test(
+        password
+    );
+}
+
 // Postal code validation functions
 function validateCanadianPostalCode(code) {
     // Canadian postal code format: A1A 1A1 (letter-digit-letter space digit-letter-digit)
@@ -457,6 +479,8 @@ export {
     createQuantityHandlers,
     useQuantityHandlers,
     fetchRegionByCode,
+    validatePhone,
+    validatePassword,
     validateCanadianPostalCode,
     validateUSZipCode,
     validatePostalCode,

@@ -14,6 +14,7 @@ import api from "api/api";
 import endpoint from "api/endpoints";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchUserInfo } from "store/slices/userSlice";
+import { validatePhone, validatePassword } from "../../config/config";
 
 export default function ProfileEditCard({ onClose, error }) {
   const { user, getAccessTokenSilently } = useAuth0();
@@ -39,8 +40,6 @@ export default function ProfileEditCard({ onClose, error }) {
     setErrors((prev) => ({ ...prev, [name]: undefined }));
   };
 
-  const validatePhone = (phone) =>
-    !phone || /^\d{10}$/.test(phone.replace(/\D/g, ""));
   const validatePassword = (password) => {
     // At least 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char
     return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/.test(
