@@ -1,7 +1,7 @@
 // Modal components
 export { default as AddressModal } from "./modals/AddressModal";
 export { default as CreateAddressModal } from "./modals/CreateAddressModal";
-export { default as AddAddressModal } from "./modals/AddAddressModal";
+
 
 // UI components
 export { default as Button } from "./ui/Button";

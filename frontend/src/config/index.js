@@ -12,6 +12,7 @@ export {
     createQuantityHandlers,
     useQuantityHandlers,
     fetchRegionByCode,
+    validatePhone,   
     validateCanadianPostalCode,
     validateUSZipCode,
     validatePostalCode,
