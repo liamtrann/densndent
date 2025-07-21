@@ -8,8 +8,15 @@ import {
   selectFinalPrice,
   selectCartSubtotalWithDiscounts,
 } from "@/redux/slices";
+import { EstimateTotal } from "components";
 
-export default function CheckoutSummary({ promoCode, setPromoCode }) {
+export default function CheckoutSummary({
+  promoCode,
+  setPromoCode,
+  shippingCost = 0,
+  estimatedTax = null,
+  taxRate = null,
+}) {
   const cart = useSelector((state) => state.cart.items);
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -38,15 +45,15 @@ export default function CheckoutSummary({ promoCode, setPromoCode }) {
         Subtotal Does Not Include Shipping Or Tax
       </Paragraph>
 
-      <div className="mb-2 flex justify-between text-sm">
-        <span>Shipping</span>
-        <span>$0.00</span>
-      </div>
-
-      <div className="mb-4 flex justify-between font-semibold">
-        <span>TOTAL</span>
-        <span>{formatCurrency(subtotal)}</span>
-      </div>
+      <EstimateTotal
+        subtotal={subtotal}
+        shippingCost={shippingCost}
+        estimatedTax={estimatedTax}
+        taxRate={taxRate}
+        currency="$"
+        showBreakdown={true}
+        className="mb-4"
+      />
 
       {/* Promo Code */}
       {/* <div className="mb-4">
