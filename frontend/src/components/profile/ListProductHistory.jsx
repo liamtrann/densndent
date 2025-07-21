@@ -12,7 +12,14 @@ export default function ListProductHistory({ userId }) {
 
   const dispatch = useDispatch();
   const { getAccessTokenSilently } = useAuth0();
-  const key = `${userId}_${perPage}_undefined_${page}`;
+
+  // Key structure must match what productsSlice expects
+  const sort = ""; // No sorting for order history
+  const minPrice = "";
+  const maxPrice = "";
+  const priceKey = `${minPrice}_${maxPrice}`;
+  const key = `${userId}_${perPage}_${sort}_${priceKey}_${page}`;
+
   const products = useSelector(
     (state) => state.products.productsByPage[key] || []
   );
@@ -28,6 +35,9 @@ export default function ListProductHistory({ userId }) {
             id: userId,
             page,
             limit: perPage,
+            sort: "",
+            minPrice: "",
+            maxPrice: "",
             getAccessTokenSilently,
           })
         );
@@ -40,7 +50,6 @@ export default function ListProductHistory({ userId }) {
     page,
     getAccessTokenSilently,
     products.length,
-    isLoading,
   ]);
 
   // Calculate total pages - assuming we get total from API response

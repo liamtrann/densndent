@@ -2,7 +2,8 @@ import React, { useState, useRef, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useNavigate } from "react-router-dom";
 import Button from "../ui/Button";
-import { Modal, VerifyEmailModal } from "components";
+import Toast from "../toast/Toast";
+import { Modal } from "components";
 
 export default function AuthButton() {
   const { loginWithRedirect, logout, isAuthenticated, user, isLoading, error } =
@@ -10,16 +11,21 @@ export default function AuthButton() {
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [showVerifyModal, setShowVerifyModal] = useState(false);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
-  // Trigger email verification modal
+  // Show toast for email verification and logout
   useEffect(() => {
     if (error?.message?.toLowerCase().includes("verify your email")) {
-      setShowVerifyModal(true);
+      Toast.error(
+        "Please verify your email address to continue. Check your inbox for a verification link."
+      );
+      // Wait for toast to be visible before logging out
+      setTimeout(() => {
+        logout({ returnTo: window.location.origin });
+      }, 5000); 
     }
-  }, [error]);
+  }, [error, logout]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -37,16 +43,11 @@ export default function AuthButton() {
   }, [dropdownOpen]);
 
   if (isLoading) return null;
+  console.log(isAuthenticated);
+  console.log(error);
 
   return (
     <>
-      {/* Email verification modal */}
-      <VerifyEmailModal
-        open={showVerifyModal}
-        onClose={() => setShowVerifyModal(false)}
-        onSubmit={() => setShowVerifyModal(false)}
-      />
-
       {isAuthenticated ? (
         <div className="relative" ref={dropdownRef}>
           <span

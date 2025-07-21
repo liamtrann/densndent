@@ -28,6 +28,17 @@ export default function BlueBanner({
           <div className="col-span-full">
             <ErrorMessage message={error} />
           </div>
+        ) : enableHorizontalScroll ? (
+          // Horizontal scroll layout - responsive widths
+          <div className="overflow-x-auto scrollbar-hide">
+            <div className="flex gap-4 pb-4">
+              {items.map((item, idx) => (
+                <div key={idx} className="flex-shrink-0">
+                  {renderItem(item)}
+                </div>
+              ))}
+            </div>
+          </div>
         ) : (
           // Grid layout (default)
           <div
