@@ -11,7 +11,7 @@ import FormSubmit from "../forms/FormSubmit";
 import Loading from "../ui/Loading";
 import ErrorMessage from "../ui/ErrorMessage";
 import Toast from "../toast/Toast";
-import { fetchUserInfo } from "../../redux/slices/userSlice";
+import { fetchUserInfo } from "store/slices/userSlice";
 
 export default function CreateAddressModal({
   onClose,

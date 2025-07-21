@@ -160,7 +160,7 @@ async function getTotalPriceAfterDiscount(productId, unitPrice, quantity) {
     }
 }
 
-// Postal code lookup function
+// Postal code lookup function (simplified - now uses separate validation)
 async function fetchLocationByPostalCode(country, code) {
     if (!code || !code.trim()) {
         return {
@@ -169,40 +169,29 @@ async function fetchLocationByPostalCode(country, code) {
         };
     }
 
+    // Use the new validation function
+    const validationError = validatePostalCode(code, country);
+    if (validationError) {
+        return {
+            success: false,
+            error: validationError,
+        };
+    }
+
     try {
         const cleanCode = code.replace(/\s/g, "").toUpperCase();
         let apiUrl = "";
 
-        switch (country) {
-            case "us":
-                // US ZIP code (5 digits)
-                if (!/^\d{5}$/.test(cleanCode)) {
-                    return {
-                        success: false,
-                        error: "Invalid US ZIP code format. Must be 5 digits.",
-                    };
-                }
-                apiUrl = `https://api.zippopotam.us/us/${cleanCode}`;
-                break;
-
-            case "ca":
-                // Canadian postal code (first 3 characters: A1A format)
-                if (!/^[A-Z]\d[A-Z]/.test(cleanCode)) {
-                    return {
-                        success: false,
-                        error:
-                            "Invalid Canadian postal code format. Must start with A1A format.",
-                    };
-                }
-                const firstThree = cleanCode.slice(0, 3);
-                apiUrl = `https://api.zippopotam.us/ca/${firstThree}`;
-                break;
-
-            default:
-                return {
-                    success: false,
-                    error: 'Country not supported. Only "us" and "ca" are supported.',
-                };
+        if (country === "us") {
+            apiUrl = `https://api.zippopotam.us/us/${cleanCode}`;
+        } else if (country === "ca") {
+            const firstThree = cleanCode.slice(0, 3);
+            apiUrl = `https://api.zippopotam.us/ca/${firstThree}`;
+        } else {
+            return {
+                success: false,
+                error: 'Country not supported. Only "us" and "ca" are supported.',
+            };
         }
 
         const response = await fetch(apiUrl);
@@ -342,6 +331,119 @@ async function fetchRegionByCode(country, code) {
     }
 }
 
+// Postal code validation functions
+function validateCanadianPostalCode(code) {
+    // Canadian postal code format: A1A 1A1 (letter-digit-letter space digit-letter-digit)
+    const canadianPattern = /^[A-Za-z]\d[A-Za-z]\s?\d[A-Za-z]\d$/;
+    return canadianPattern.test(code);
+}
+
+function validateUSZipCode(code) {
+    // US zip code format: 12345 or 12345-6789
+    const usPattern = /^\d{5}(-\d{4})?$/;
+    return usPattern.test(code);
+}
+
+function validatePostalCode(code, selectedCountry) {
+    if (!code.trim()) {
+        return "Postal/Zip code is required";
+    }
+
+    if (selectedCountry === "ca") {
+        return validateCanadianPostalCode(code) ? "" : "Please enter a valid Canadian postal code (e.g., A1A 1A1)";
+    } else if (selectedCountry === "us") {
+        return validateUSZipCode(code) ? "" : "Please enter a valid US zip code (e.g., 12345 or 12345-6789)";
+    }
+
+    return "";
+}
+
+// Reusable estimate tax and shipping function
+async function handleTaxShippingEstimate({
+    country,
+    postalCode,
+    subtotal,
+    onSuccess,
+    onError,
+    onLoading,
+    onDismiss,
+}) {
+    // Import modules dynamically to avoid circular dependencies
+    const { default: endpoint } = await import("../api/endpoints.js");
+
+    try {
+        // Validate postal code before making API call
+        const validationError = validatePostalCode(postalCode, country);
+        if (validationError) {
+            if (onError) onError(validationError);
+            return { success: false, error: validationError };
+        }
+
+        if (onLoading) onLoading("Estimating region...");
+
+        const result = await fetchRegionByCode(country, postalCode);
+
+        if (onDismiss) onDismiss();
+
+        if (result) {
+            const province = result.places[0]?.state || result.places[0]?.state_abbreviation;
+
+            if (province) {
+                try {
+                    // Get tax rates
+                    const taxUrl = endpoint.GET_TAX_RATES({ country, province });
+                    const taxRates = await api.get(taxUrl);
+
+                    // Calculate estimated tax
+                    const totalTaxRate = taxRates.data?.rates?.total;
+                    let estimatedTax = null;
+
+                    if (totalTaxRate && subtotal) {
+                        estimatedTax = Number(subtotal) * Number(totalTaxRate);
+                    }
+
+                    // Get shipping cost
+                    const shippingRes = await api.get(endpoint.GET_SHIPPING_METHOD(20412));
+                    const shippingCost = shippingRes.data?.shippingflatrateamount ?? 9.99;
+
+                    const estimateData = {
+                        estimatedTax,
+                        shippingCost,
+                        taxRate: totalTaxRate,
+                        province,
+                        country
+                    };
+
+                    if (onSuccess) onSuccess("Tax rates loaded!", estimateData);
+
+                    return {
+                        success: true,
+                        data: estimateData
+                    };
+
+                } catch (taxError) {
+                    const errorMessage = "Failed to get tax rates or shipping cost.";
+                    if (onError) onError(errorMessage);
+                    return { success: false, error: errorMessage };
+                }
+            } else {
+                const errorMessage = "Province not found in region lookup.";
+                if (onError) onError(errorMessage);
+                return { success: false, error: errorMessage };
+            }
+        } else {
+            const errorMessage = "Region lookup failed.";
+            if (onError) onError(errorMessage);
+            return { success: false, error: errorMessage };
+        }
+    } catch (err) {
+        if (onDismiss) onDismiss();
+        const errorMessage = err.message || "Region lookup failed.";
+        if (onError) onError(errorMessage);
+        return { success: false, error: errorMessage };
+    }
+}
+
 export {
     extractBuyGet,
     getMatrixInfo,
@@ -354,5 +456,9 @@ export {
     calculateActualQuantity,
     createQuantityHandlers,
     useQuantityHandlers,
-    fetchRegionByCode
+    fetchRegionByCode,
+    validateCanadianPostalCode,
+    validateUSZipCode,
+    validatePostalCode,
+    handleTaxShippingEstimate
 };

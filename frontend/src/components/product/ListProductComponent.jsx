@@ -4,7 +4,7 @@ import { delayCall } from "api/util";
 import {
   fetchProductsBy,
   fetchCountBy,
-} from "../../redux/slices/productsSlice";
+} from "store/slices/productsSlice";
 import {
   Breadcrumb,
   ErrorMessage,

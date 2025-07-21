@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useAuth0 } from "@auth0/auth0-react";
 import { delayCall } from "api/util";
-import { fetchProductsBy } from "../../redux/slices/productsSlice";
+import { fetchProductsBy } from "store/slices/productsSlice";
 import { ErrorMessage, Loading, Pagination } from "common";
 import ProductListGrid from "../product/ProductListGrid";
 

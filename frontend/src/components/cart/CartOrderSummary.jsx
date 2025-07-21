@@ -1,17 +1,17 @@
 import React from "react";
 import { Dropdown, InputField } from "common";
-import { formatPrice, calculateTotalCurrency } from "../../config/config";
-import ToastNotification from "../../common/toast/Toast";
-import endpoint from "api/endpoints";
-import api from "api/api";
+import {
+  calculateTotalCurrency,
+  validatePostalCode,
+  handleTaxShippingEstimate,
+} from "config";
+import ToastNotification from "@/common/toast/Toast";
 
 export default function CartOrderSummary({
   totalQuantity,
   subtotal,
   postalCode,
   setPostalCode,
-  promoCode,
-  setPromoCode,
   handleProceedToCheckout,
   inventoryLoading,
 }) {
@@ -19,48 +19,59 @@ export default function CartOrderSummary({
   const [estimatedTax, setEstimatedTax] = React.useState(null);
   const [shippingCost, setShippingCost] = React.useState(null);
   const [taxRate, setTaxRate] = React.useState(null);
-  const { fetchRegionByCode } = require("../../config/config.js");
+  const [postalCodeError, setPostalCodeError] = React.useState("");
+
+  const handlePostalCodeChange = (e) => {
+    const value = e.target.value;
+    setPostalCode(value);
+
+    // Clear previous error and validate
+    setPostalCodeError("");
+    const error = validatePostalCode(value, country);
+    setPostalCodeError(error);
+  };
+
+  const handleCountryChange = (e) => {
+    const selectedCountry = e.target.value;
+    setCountry(selectedCountry);
+
+    // Revalidate postal code for new country
+    if (postalCode) {
+      const error = validatePostalCode(postalCode, selectedCountry);
+      setPostalCodeError(error);
+    }
+  };
 
   const handleEstimate = async () => {
-    const toastId = ToastNotification.loading("Estimating region...");
-    try {
+    let toastId;
+
+    const result = await handleTaxShippingEstimate({
+      country,
+      postalCode,
+      subtotal,
+      onSuccess: (message, data) => {
+        ToastNotification.success(message);
+        setEstimatedTax(data.estimatedTax);
+        setShippingCost(data.shippingCost);
+        setTaxRate(data.taxRate);
+      },
+      onError: (errorMessage) => {
+        setPostalCodeError(errorMessage);
+        ToastNotification.error(errorMessage);
+      },
+      onLoading: (message) => {
+        toastId = ToastNotification.loading(message);
+      },
+      onDismiss: () => {
+        if (toastId) ToastNotification.dismiss(toastId);
+      },
+    });
+
+    if (!result.success) {
+      // Reset states on error
       setEstimatedTax(null);
       setShippingCost(null);
       setTaxRate(null);
-      const result = await fetchRegionByCode(country, postalCode);
-      ToastNotification.dismiss(toastId);
-
-      if (result) {
-        const province =
-          result.places[0]?.state || result.places[0]?.state_abbreviation;
-        if (province) {
-          const taxUrl = endpoint.GET_TAX_RATES({ country, province });
-          const taxRates = await api.get(taxUrl);
-          ToastNotification.success("Tax rates loaded!");
-          // Calculate estimated tax
-          const totalTaxRate = taxRates.data?.rates?.total;
-          setTaxRate(totalTaxRate);
-          if (totalTaxRate && subtotal) {
-            const taxAmount = Number(subtotal) * Number(totalTaxRate);
-            setEstimatedTax(taxAmount);
-          } else {
-            setEstimatedTax(null);
-          }
-          // Get shipping cost
-          const shippingRes = await api.get(
-            endpoint.GET_SHIPPING_METHOD(20412)
-          );
-          const shippingAmount = shippingRes.data?.shippingflatrateamount;
-          setShippingCost(shippingAmount ?? 9.99);
-        } else {
-          ToastNotification.error("Province not found in region lookup.");
-        }
-      } else {
-        ToastNotification.error(result?.error || "Region lookup failed.");
-      }
-    } catch (err) {
-      ToastNotification.dismiss(toastId);
-      ToastNotification.error(err.message || "Region lookup failed.");
     }
   };
 
@@ -90,18 +101,28 @@ export default function CartOrderSummary({
                 { value: "us", label: "USA" },
               ]}
               value={country}
-              onChange={(e) => setCountry(e.target.value)}
+              onChange={handleCountryChange}
               className="min-w-[100px]"
             />
-            <InputField
-              placeholder="Post Code / Zip Code"
-              value={postalCode}
-              onChange={(e) => setPostalCode(e.target.value)}
-            />
+            <div className="flex-1">
+              <InputField
+                placeholder={
+                  country === "ca" ? "A1A 1A1" : "12345 or 12345-6789"
+                }
+                value={postalCode}
+                onChange={handlePostalCodeChange}
+                error={postalCodeError}
+              />
+            </div>
           </div>
           <button
-            className="w-full bg-gray-700 text-white py-2 rounded hover:bg-gray-800"
+            className={`w-full py-2 rounded transition-colors ${
+              postalCodeError || !postalCode.trim()
+                ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                : "bg-gray-700 text-white hover:bg-gray-800"
+            }`}
             onClick={handleEstimate}
+            disabled={postalCodeError || !postalCode.trim()}
           >
             ESTIMATE
           </button>
