@@ -8,7 +8,7 @@ class CommerceCategoryService {
     }
 
     async findById(id) {
-        const sql = `SELECT id, name, parent, description FROM commerceCategory WHERE id = '${id}'`;
+        const sql = `SELECT id, name, description FROM commerceCategory WHERE id = '${id}'`;
         const results = await runQueryWithPagination(sql, 1, 0);
         return results.items?.[0] || null;
     }
