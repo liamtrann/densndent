@@ -40,13 +40,6 @@ export default function ProfileEditCard({ onClose, error }) {
     setErrors((prev) => ({ ...prev, [name]: undefined }));
   };
 
-  const validatePassword = (password) => {
-    // At least 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char
-    return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/.test(
-      password
-    );
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = {};
