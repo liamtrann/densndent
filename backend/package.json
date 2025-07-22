@@ -15,9 +15,11 @@
     "express": "^4.18.2",
     "express-jwt": "^8.5.1",
     "jwks-rsa": "^3.2.0",
+    "kafkajs": "^2.2.4",
     "morgan": "^1.10.0",
     "oauth-1.0a": "^2.2.6",
-    "qs": "^6.14.0"
+    "qs": "^6.14.0",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"
