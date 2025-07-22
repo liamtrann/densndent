@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import InputField from "common/ui/InputField";
@@ -8,52 +8,91 @@ import CheckoutSummary from "components/checkout/CheckoutSummary";
 export default function CheckoutReview() {
   const navigate = useNavigate();
   const userInfo = useSelector((state) => state.user.info);
+  const cartItems = useSelector((state) => state.cart.items || []);
   const [showCardNumber, setShowCardNumber] = useState(false);
   const [cardNumber, setCardNumber] = useState("1234567812341234");
-  const [nameOnCard, setNameOnCard] = useState(userInfo.firstname + ' ' + userInfo.lastname);
+  const [nameOnCard, setNameOnCard] = useState(() => {
+  if (userInfo && userInfo.firstname && userInfo.lastname) {
+    return `${userInfo.firstname} ${userInfo.lastname}`;
+  }
+  return "";
+});
+
   const [expMonth, setExpMonth] = useState("07");
   const [expYear, setExpYear] = useState("2025");
   const [securityCode, setSecurityCode] = useState("");
   const [sameAsShipping, setSameAsShipping] = useState(true);
+  const [billingAddress, setBillingAddress] = useState(null);
 
-  const billingAddress = {
-    fullName: `${userInfo.firstname} ${userInfo.lastname}`,
-    address: userInfo.shipping_address_name?.split("\n")[0] || "Billing Address",
-    city: userInfo.shipping_city,
-    state: userInfo.shipping_state,
-    zip: userInfo.shipping_zip,
-    country: userInfo.shipping_country === "CA" ? "Canada" : userInfo.shipping_country,
-    phone: userInfo.phone || "Phone not available",
+  useEffect(() => {
+    const stored = JSON.parse(localStorage.getItem("checkoutAddresses") || "[]");
+    const selected = Number(localStorage.getItem("selectedAddressId"));
+    const selectedAddress = stored.find((addr) => addr.id === selected);
+    setBillingAddress(selectedAddress);
+  }, []);
+
+  const handlePlaceOrder = () => {
+    const orderPayload = {
+      entity: {
+        id: userInfo?.netsuiteCustomerId || "615449",
+        type: "customer"
+      },
+      item: {
+        items: cartItems.map((item) => ({
+          item: {
+            id: item.netsuiteId || item.id
+          },
+          quantity: item.quantity
+        }))
+      },
+      toBeEmailed: true,
+      shipMethod: {
+        id: "20412"
+      },
+      billingAddress: billingAddress && {
+        addr1: billingAddress.address,
+        addressee: billingAddress.fullName,
+        city: billingAddress.city,
+        country: { id: "CA" },
+        state: billingAddress.state,
+        zip: billingAddress.zip
+      },
+      shippingAddress: sameAsShipping
+        ? billingAddress && {
+          addr1: billingAddress.address,
+          addressee: billingAddress.fullName,
+          city: billingAddress.city,
+          country: { id: "CA" },
+          state: billingAddress.state,
+          zip: billingAddress.zip
+        }
+        : null // replace if you handle custom shipping address
+    };
+
+    console.log("create an order");
+    console.log(JSON.stringify(orderPayload, null, 2));
+
+    // Optionally send to API here:
+    // api.post('/order/create', orderPayload).then(...)
   };
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold mb-4">Checkout</h1>
-      <div className="mb-6 text-sm text-gray-600">
-        <span className="text-blue-600 hover:underline cursor-pointer" onClick={() => navigate("/checkout/shipping")}>1. Shipping Address</span>
-        <span> / </span>
-        <span className="text-blue-600 hover:underline cursor-pointer" onClick={() => navigate("/checkout/payment")}>2. Payment</span>
-        <span> / </span>
-        <span className="text-blue-600">3. Review</span>
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* LEFT COLUMN */}
         <div className="lg:col-span-2 space-y-6">
-
-          {/* Billing Address */}
-          <div className="border rounded shadow-sm p-4 bg-white">
-            <h3 className="font-semibold mb-2">Billing Address</h3>
-            <div className="text-sm space-y-1">
-              <div className="font-semibold">{billingAddress.fullName}</div>
-              <div>{billingAddress.address}</div>
-              <div>{[billingAddress.city, billingAddress.state, billingAddress.zip].filter(Boolean).join(", ")}</div>
-              <div>{billingAddress.country}</div>
-              <div className="text-blue-700">{billingAddress.phone}</div>
+          {billingAddress && (
+            <div className="border rounded shadow-sm p-4 bg-white">
+              <h3 className="font-semibold mb-2">Billing Address</h3>
+              <div className="text-sm space-y-1">
+                <div className="font-semibold">{billingAddress.fullName}</div>
+                <div>{billingAddress.address}</div>
+                <div>{[billingAddress.city, billingAddress.state, billingAddress.zip].filter(Boolean).join(", ")}</div>
+                <div>{billingAddress.country}</div>
+                <div className="text-blue-700">{billingAddress.phone || "Phone not available"}</div>
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Same as shipping checkbox */}
           <div className="text-sm">
             <label className="flex items-center">
               <input
@@ -66,7 +105,6 @@ export default function CheckoutReview() {
             </label>
           </div>
 
-          {/* Credit Card Form */}
           <div className="border rounded shadow-sm p-4 bg-white space-y-4">
             <h3 className="font-semibold mb-2">Payment Method</h3>
             <InputField
@@ -76,10 +114,7 @@ export default function CheckoutReview() {
               onChange={(e) => setCardNumber(e.target.value)}
               placeholder="•••• •••• •••• 1234"
             />
-            <Button
-              variant="secondary"
-              onClick={() => setShowCardNumber(!showCardNumber)}
-            >
+            <Button variant="secondary" onClick={() => setShowCardNumber(!showCardNumber)}>
               {showCardNumber ? "Hide" : "Show"}
             </Button>
             <InputField
@@ -110,14 +145,20 @@ export default function CheckoutReview() {
             </div>
           </div>
 
-          {/* Navigation Buttons */}
           <div className="flex justify-between">
-            <Button variant="secondary" onClick={() => navigate("/checkout/payment")}>Back</Button>
-            <Button onClick={() => alert("Order Placed!")}>Place Order</Button>
+            <Button variant="secondary" onClick={() => navigate("/checkout/payment")}>
+              Back
+            </Button>
+            <Button onClick={handlePlaceOrder}>
+              Place Order
+            </Button>
           </div>
         </div>
 
-   
+        {/* Summary Panel */}
+        <div className="hidden lg:block">
+
+        </div>
       </div>
     </div>
   );

@@ -12,7 +12,7 @@ import { Image, AppLink } from "common";
 
 export default function Footer() {
   return (
-    <footer className="bg-gray-100 mt-12 py-10 border-t">
+    <footer className="bg-gray-100 dark:bg-gray-800 mt-12 py-10 border-t dark:border-gray-700 text-gray-700 dark:text-gray-300">
       <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-8 text-sm text-gray-700">
         {/* Logo and Social */}
         <div className="flex flex-col items-center w-full max-w-[160px] mx-auto">
@@ -79,7 +79,7 @@ export default function Footer() {
       </div>
 
       {/* Bottom copyright */}
-      <div className="text-center text-xs text-gray-500 mt-8">
+      <div className="text-center text-xs text-gray-500 dark:text-gray-400 mt-8">
         © {new Date().getFullYear()} Smiles First Corporation. All rights
         reserved.
       </div>

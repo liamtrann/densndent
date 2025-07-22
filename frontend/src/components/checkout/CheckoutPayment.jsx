@@ -1,16 +1,15 @@
-
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { Button } from "common";
-import { AddressModal } from "common";
-
+import AddressModal from "common/modals/AddressModal";
 import AddressCard from "common/ui/AddressCard";
 import useInitialAddress from "hooks/useInitialAddress";
 
-export default function CheckoutPayment({ isAddModalOpen, setAddModalOpen }) {
+export default function CheckoutPayment() {
   const userInfo = useSelector((state) => state.user.info);
   const navigate = useNavigate();
+  const [isAddModalOpen, setAddModalOpen] = useState(false);
 
   const {
     addresses,
@@ -32,7 +31,7 @@ export default function CheckoutPayment({ isAddModalOpen, setAddModalOpen }) {
   const handleRemoveAddress = (id) => {
     setAddresses((prev) => prev.filter((addr) => addr.id !== id));
     if (selectedId === id && addresses.length > 1) {
-      setSelectedId(addresses[0].id); // fallback to first
+      setSelectedId(addresses[0].id);
     }
   };
 
@@ -48,11 +47,13 @@ export default function CheckoutPayment({ isAddModalOpen, setAddModalOpen }) {
       setSelectedId(id);
     }
     setAddModalOpen(false);
+
+    console.log(newAddress)
   };
 
   return (
     <div className="space-y-6">
-      {/* Address Section */}
+      {/* Address List */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {addresses.map((addr) => (
           <AddressCard
@@ -88,7 +89,7 @@ export default function CheckoutPayment({ isAddModalOpen, setAddModalOpen }) {
         </label>
       </div>
 
-      {/* Continue Button */}
+      {/* Continue to Review */}
       <div className="flex justify-end">
         <Button
           className="px-6 py-3"
@@ -99,13 +100,12 @@ export default function CheckoutPayment({ isAddModalOpen, setAddModalOpen }) {
         </Button>
       </div>
 
-      {/* Modal */}
+      {/* Address Modal */}
       <AddressModal
         isOpen={isAddModalOpen}
         onClose={() => setAddModalOpen(false)}
         onSave={handleSaveAddress}
       />
-
     </div>
   );
 }

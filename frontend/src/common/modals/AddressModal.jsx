@@ -7,7 +7,7 @@ import stateMappings from "../../config/states";
 import {
   validatePhone,
   validatePostalCode,
-} from "../../config/config"; // Assumes these are exported
+} from "../../config/config";
 
 Modal.setAppElement("#root");
 
@@ -17,11 +17,11 @@ export default function AddressModal({ isOpen, onClose, onSave }) {
     address: "",
     address2: "",
     city: "",
-    state: "",
+    state: "on",
     zip: "",
     phone: "",
     isResidential: false,
-    country: "us",
+    country: "ca",
   });
 
   const [errors, setErrors] = useState({});
@@ -42,22 +42,45 @@ export default function AddressModal({ isOpen, onClose, onSave }) {
     if (!formData.city) newErrors.city = "City is required";
     if (!formData.state) newErrors.state = "State/Province is required";
 
-    // Validate zip/postal code
     const zipError = validatePostalCode(formData.zip, formData.country);
     if (zipError) newErrors.zip = zipError;
 
-    // Validate phone
     if (!validatePhone(formData.phone)) {
       newErrors.phone = "Phone number must be 10 digits";
     }
+
+    console.log(newErrors)
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSave = () => {
-    if (!validateForm()) return;
-    onSave(formData);
+
+    const isValid = validateForm();
+
+    if (!isValid) return;
+
+    if (onSave) {
+      onSave(formData);
+
+      // Reset form
+      setFormData({
+        fullName: "",
+        address: "",
+        address2: "",
+        city: "",
+        state: "",
+        zip: "",
+        phone: "",
+        isResidential: false,
+        country: "us",
+      });
+      setErrors({});
+      onClose(); // Close modal after successful save
+    }
+
+    console.log(formData)
   };
 
   const states = stateMappings[formData.country?.toLowerCase?.()] || {};
