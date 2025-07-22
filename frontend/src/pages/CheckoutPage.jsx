@@ -6,11 +6,11 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import api from "api/api";
 import endpoint from "api/endpoints";
-import {
-  Loading,
-} from "common";
+import { Loading } from "common";
 import CheckoutSummary from "components/checkout/CheckoutSummary";
-
+import { handleTaxShippingEstimate } from "config";
+import { selectCartSubtotalWithDiscounts } from "@/redux/slices";
+import ToastNotification from "@/common/toast/Toast";
 
 // Import the new modular sections
 import CheckoutShipping from "../components/checkout/CheckoutShipping";
@@ -27,7 +27,21 @@ export default function CheckoutPage() {
   const [shippingMethods, setShippingMethods] = useState([]);
   const [selectedShippingMethod, setSelectedShippingMethod] = useState("");
   const [loadingShipping, setLoadingShipping] = useState(false);
+
+  // Tax and shipping estimation state
+  const [estimatedTax, setEstimatedTax] = useState(null);
+  const [shippingCost, setShippingCost] = useState(null);
+  const [taxRate, setTaxRate] = useState(null);
+  const [country, setCountry] = useState("ca");
+  const [postalCode, setPostalCode] = useState("");
+
   const userInfo = useSelector((state) => state.user.info);
+  const cart = useSelector((state) => state.cart.items);
+
+  // Calculate subtotal with discounted prices
+  const subtotal = useSelector((state) =>
+    selectCartSubtotalWithDiscounts(state, cart)
+  );
 
   const fetchShippingMethods = async (itemId) => {
     try {
@@ -41,6 +55,41 @@ export default function CheckoutPage() {
       console.error("Error fetching shipping methods:", error);
     } finally {
       setLoadingShipping(false);
+    }
+  };
+
+  const estimateTaxAndShipping = async (userCountry, userPostalCode) => {
+    if (!userCountry || !userPostalCode || !subtotal) return;
+
+    let toastId;
+
+    const result = await handleTaxShippingEstimate({
+      country: userCountry.toLowerCase(),
+      postalCode: userPostalCode,
+      subtotal,
+      onSuccess: (message, data) => {
+        ToastNotification.success(message);
+        setEstimatedTax(data.estimatedTax);
+        setShippingCost(data.shippingCost);
+        setTaxRate(data.taxRate);
+      },
+      onError: (errorMessage) => {
+        console.error("Tax estimation error:", errorMessage);
+        ToastNotification.error(errorMessage);
+      },
+      onLoading: (message) => {
+        toastId = ToastNotification.loading(message);
+      },
+      onDismiss: () => {
+        if (toastId) ToastNotification.dismiss(toastId);
+      },
+    });
+
+    if (!result.success) {
+      // Reset states on error
+      setEstimatedTax(null);
+      setShippingCost(null);
+      setTaxRate(null);
     }
   };
   useEffect(() => {
@@ -60,6 +109,23 @@ export default function CheckoutPage() {
     // GET ICS Ground for Woo Commerce - Flat Shipping Rate
     fetchShippingMethods(20412);
   }, []);
+
+  // Auto-estimate tax and shipping when user info is available
+  useEffect(() => {
+    if (userInfo && subtotal > 0) {
+      // Extract country and postal code from user info
+      const userCountry =
+        userInfo.addressbook?.[0]?.country || userInfo.defaultaddress?.country;
+      const userPostalCode =
+        userInfo.addressbook?.[0]?.zip || userInfo.defaultaddress?.zip;
+
+      if (userCountry && userPostalCode) {
+        setCountry(userCountry.toLowerCase());
+        setPostalCode(userPostalCode);
+        estimateTaxAndShipping(userCountry, userPostalCode);
+      }
+    }
+  }, [userInfo, subtotal]);
 
   const renderStep = () => {
     const step = location.pathname.split("/")[2] || "shipping";
@@ -108,7 +174,13 @@ export default function CheckoutPage() {
       {/* Page layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">{renderStep()}</div>
-        <CheckoutSummary promoCode={promoCode} setPromoCode={setPromoCode} />
+        <CheckoutSummary
+          promoCode={promoCode}
+          setPromoCode={setPromoCode}
+          shippingCost={shippingCost}
+          estimatedTax={estimatedTax}
+          taxRate={taxRate}
+        />
       </div>
     </div>
   );

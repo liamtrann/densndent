@@ -8,6 +8,9 @@ export { default as CartSummaryPanel } from './cart/CartSummaryPanel';
 // Checkout components
 export { default as CheckoutSummary } from './checkout/CheckoutSummary';
 
+// Common components
+export { default as EstimateTotal } from './EstimateTotal';
+
 // FAQ components
 export { default as FAQItem } from './faq/FAQItem';
 export { default as FAQs } from './faq/FAQs';

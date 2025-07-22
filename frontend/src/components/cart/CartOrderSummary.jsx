@@ -6,6 +6,7 @@ import {
   handleTaxShippingEstimate,
 } from "config";
 import ToastNotification from "@/common/toast/Toast";
+import { EstimateTotal } from "components";
 
 export default function CartOrderSummary({
   totalQuantity,
@@ -127,46 +128,14 @@ export default function CartOrderSummary({
             ESTIMATE
           </button>
           {estimatedTax !== null && (
-            <React.Fragment>
-              {/* Estimated Tax Row */}
-              <div className="flex justify-between items-center py-2 border-t border-gray-200 text-base font-semibold">
-                <span className="text-gray-700 flex items-center gap-2">
-                  Estimated Tax
-                  {taxRate && (
-                    <span className="text-xs text-gray-500">
-                      ({(taxRate * 100).toFixed(2)}%)
-                    </span>
-                  )}
-                </span>
-                <span className="text-gray-900">
-                  {calculateTotalCurrency(estimatedTax, 1, "$")}
-                </span>
-              </div>
-              {/* Shipping Row */}
-              <div className="flex justify-between items-center py-2 border-t border-gray-200 text-base font-semibold">
-                <span className="text-gray-700">Shipping</span>
-                <span className="text-gray-900">
-                  {calculateTotalCurrency(
-                    shippingCost !== null ? shippingCost : 9.99,
-                    1,
-                    "$"
-                  )}
-                </span>
-              </div>
-              {/* Estimated Total Row */}
-              <div className="flex justify-between items-center py-2 border-t border-gray-300 text-lg font-bold">
-                <span className="text-gray-800">Estimated Total</span>
-                <span className="text-black-800">
-                  {calculateTotalCurrency(
-                    Number(subtotal) +
-                      Number(estimatedTax) +
-                      Number(shippingCost ?? 9.99),
-                    1,
-                    "$"
-                  )}
-                </span>
-              </div>
-            </React.Fragment>
+            <EstimateTotal
+              subtotal={subtotal}
+              shippingCost={shippingCost}
+              estimatedTax={estimatedTax}
+              taxRate={taxRate}
+              currency="$"
+              showBreakdown={true}
+            />
           )}
         </div>
         <button
