@@ -6,7 +6,7 @@ const suiteqlRoutes = require('./suiteQL/route');
 const netsuiteRestRoute = require('./netsuiteRest/route');
 const restapiRoutes = require('./restapi/restapi.route');
 const bodyParser = require('body-parser');
-const kafkaServicesManager = require('./kafka/services.manager');
+// const kafkaServicesManager = require('./kafka/services.manager');
 
 const app = express();
 
@@ -21,11 +21,21 @@ app.use('/suiteql', suiteqlRoutes);
 app.use('/netsuite-rest', netsuiteRestRoute);
 app.use('/restapi', restapiRoutes);
 
-// Kafka health check endpoint
-app.get('/kafka/health', (req, res) => {
-  const health = kafkaServicesManager.getServicesHealth();
-  res.json(health);
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    service: 'DensNDent Backend'
+  });
 });
+
+// Kafka health check endpoint
+// app.get('/kafka/health', (req, res) => {
+//   const health = kafkaServicesManager.getServicesHealth();
+//   res.json(health);
+// });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -35,21 +45,28 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 3001;
 
-// Start server and Kafka services
-async function startServer() {
-  try {
-    // Start Kafka microservices
-    await kafkaServicesManager.startAllServices();
-    
-    // Start Express server
-    app.listen(PORT, () => {
-      console.log(`🌟 Server running on port ${PORT}`);
-      console.log(`🔍 Kafka health check: http://localhost:${PORT}/kafka/health`);
-    });
-  } catch (error) {
-    console.error('❌ Failed to start server:', error);
-    process.exit(1);
-  }
-}
+// Simple server start (uncomment Kafka version below when ready)
+app.listen(PORT, () => {
+  console.log(`🌟 Server running on port ${PORT}`);
+  console.log(`🔍 Health check: http://localhost:${PORT}/health`);
+});
 
-startServer();
+// Start server and Kafka services (uncomment when ready to use Kafka)
+// const kafkaServicesManager = require('./kafka/services.manager');
+// async function startServer() {
+//   try {
+//     // Start Kafka microservices
+//     await kafkaServicesManager.startAllServices();
+
+//     // Start Express server
+//     app.listen(PORT, () => {
+//       console.log(`🌟 Server running on port ${PORT}`);
+//       console.log(`🔍 Kafka health check: http://localhost:${PORT}/kafka/health`);
+//     });
+//   } catch (error) {
+//     console.error('❌ Failed to start server:', error);
+//     process.exit(1);
+//   }
+// }
+
+// startServer();

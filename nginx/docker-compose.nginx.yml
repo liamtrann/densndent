@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  # Frontend Nginx
+  nginx-frontend:
+    image: nginx:alpine
+    container_name: densndent-frontend-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/frontend.conf:/etc/nginx/conf.d/default.conf
+      - ./frontend/build:/var/www/densndent/frontend/build
+      - ./ssl:/etc/ssl/certs  # Mount SSL certificates
+    depends_on:
+      - nginx-backend
+    restart: unless-stopped
+    networks:
+      - densndent-network
+
+  # Backend Nginx
+  nginx-backend:
+    image: nginx:alpine
+    container_name: densndent-backend-nginx
+    ports:
+      - "8080:8080"
+      - "8443:8443"
+    volumes:
+      - ./nginx/backend.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - backend-app
+    restart: unless-stopped
+    networks:
+      - densndent-network
+
+  # Backend Application
+  backend-app:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: densndent-backend-app
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    restart: unless-stopped
+    networks:
+      - densndent-network
+
+  # Kafka (for message processing)
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: densndent-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - densndent-network
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: densndent-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: true
+    networks:
+      - densndent-network
+
+networks:
+  densndent-network:
+    driver: bridge
+
+volumes:
+  kafka-data:
+  zookeeper-data:
