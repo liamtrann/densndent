@@ -21,6 +21,15 @@ app.use('/suiteql', suiteqlRoutes);
 app.use('/netsuite-rest', netsuiteRestRoute);
 app.use('/restapi', restapiRoutes);
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
