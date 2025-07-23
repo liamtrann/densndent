@@ -1,0 +1,11 @@
+node_modules
+.git
+.env
+*.log
+.DS_Store
+Dockerfile
+.dockerignore
+README.md
+build
+dist
+.eslintcache
