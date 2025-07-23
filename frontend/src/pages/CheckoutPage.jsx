@@ -13,7 +13,6 @@ import { selectCartSubtotalWithDiscounts } from "@/redux/slices";
 import ToastNotification from "@/common/toast/Toast";
 
 // Import the new modular sections
-import CheckoutShipping from "../components/checkout/CheckoutShipping";
 import CheckoutPayment from "../components/checkout/CheckoutPayment";
 import CheckoutReview from "../components/checkout/CheckoutReview";
 
@@ -23,7 +22,6 @@ export default function CheckoutPage() {
   const navigate = useNavigate();
   const [promoCode, setPromoCode] = useState("");
   const [isAddModalOpen, setAddModalOpen] = useState(false);
-  const [isResidential, setIsResidential] = useState(false);
   const [shippingMethods, setShippingMethods] = useState([]);
   const [selectedShippingMethod, setSelectedShippingMethod] = useState("");
   const [loadingShipping, setLoadingShipping] = useState(false);
@@ -128,16 +126,9 @@ export default function CheckoutPage() {
   }, [userInfo, subtotal]);
 
   const renderStep = () => {
-    const step = location.pathname.split("/")[2] || "shipping";
+    const step = location.pathname.split("/")[2] || "payment";
 
     switch (step) {
-      case "shipping":
-        return (
-          <CheckoutShipping
-            isResidential={isResidential}
-            setIsResidential={setIsResidential}
-          />
-        );
       case "payment":
         return (
           <CheckoutPayment
@@ -158,16 +149,12 @@ export default function CheckoutPage() {
 
       {/* Step navigation */}
       <div className="mb-6 text-sm text-gray-600">
-        <Link to="/checkout/shipping" className="text-blue-600 hover:underline">
-          1. Shipping Address
-        </Link>
-        <span> / </span>
         <Link to="/checkout/payment" className="text-blue-600 hover:underline">
-          2. Payment
+          1. Payment
         </Link>
         <span> / </span>
         <Link to="/checkout/review" className="text-blue-600 hover:underline">
-          3. Review
+          2. Review
         </Link>
       </div>
 

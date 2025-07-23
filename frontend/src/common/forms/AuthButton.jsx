@@ -43,8 +43,6 @@ export default function AuthButton() {
   }, [dropdownOpen]);
 
   if (isLoading) return null;
-  console.log(isAuthenticated);
-  console.log(error);
 
   return (
     <>
