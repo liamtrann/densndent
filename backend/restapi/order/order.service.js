@@ -10,7 +10,7 @@ module.exports = {
         try {
             // Generate unique order ID
             const orderId = orderData.id || uuidv4();
-            
+
             // Create order object
             const order = {
                 id: orderId,
@@ -43,7 +43,7 @@ module.exports = {
 
             console.log(`Order ${orderId} created and published to Kafka`);
             return { success: true, order };
-            
+
         } catch (error) {
             console.error('Error creating order:', error);
             throw error;
@@ -64,7 +64,7 @@ module.exports = {
         try {
             // Update order status in database
             // await updateOrderInDatabase(orderId, { status });
-            
+
             console.log(`Order ${orderId} status updated to: ${status}`);
             return { success: true, orderId, status };
         } catch (error) {
