@@ -5,49 +5,49 @@ import classNames from "classnames";
 
 const slides = [
   {
-    desktopImage: "https://www.densndente.ca/Mobile Image Views/JDIQ_Raffle_Prize_WINNERS_Web_Banners_20252_mobile.jpg",
+    desktopImage: "https://www.densndente.ca/SSP Applications/NetSuite Inc. - SCS/SuiteCommerce Standard/home-page/JDIQ_Raffle_Prize_WINNERS_Web_Banners_20252.jpg",
     mobileImage: "https://www.densndente.ca/Mobile Image Views/JDIQ_Raffle_Prize_WINNERS_Web_Banners_20252_mobile.jpg",
     button: { text: "VIEW NOW", link: "/promotions/jdiq" },
     duration: 7000,
   },
   {
-    desktopImage: "https://www.densndente.ca/Mobile Image Views/DND_July_Mobile_2025.jpg",
+    desktopImage: "https://www.densndente.ca/SSP Applications/NetSuite Inc. - SCS/SuiteCommerce Standard/home-page/DND_July_Web_2025.jpg",
     mobileImage: "https://www.densndente.ca/Mobile Image Views/DND_July_Mobile_2025.jpg",
     button: { text: "BROWSE NOW", link: "/promotions/q3-vendor" },
     duration: 7000,
   },
   {
-    desktopImage: "https://www.densndente.ca/Mobile Image Views/DND_Q3_Social_Media_2025_new2.jpg",
+    desktopImage: "https://www.densndente.ca/SSP Applications/NetSuite Inc. - SCS/SuiteCommerce Standard/home-page/DND_Q3_Social_Media_2025_new.jpg",
     mobileImage: "https://www.densndente.ca/Mobile Image Views/DND_Q3_Social_Media_2025_new2.jpg",
     button: { text: "VIEW NOW", link: "/promotions/q3-vendor" },
     duration: 7000,
   },
   {
-    desktopImage: "https://www.densndente.ca/Mobile Image Views/Medicom_Web_Banners_Available_Now_1_Mobile.jpg",
+    desktopImage: "https://www.densndente.ca/SSP Applications/NetSuite Inc. - SCS/SuiteCommerce Standard/home-page/Medicom_Web_Banners_Available_Now_1.jpg",
     mobileImage: "https://www.densndente.ca/Mobile Image Views/Medicom_Web_Banners_Available_Now_1_Mobile.jpg",
     button: { text: "SHOP NOW", link: "/products/by-brand/medicom" },
     duration: 7000,
   },
   {
-    desktopImage: "https://www.densndente.ca/Mobile Image Views/[JPEG]Short Expiry Mobile Banners.jpg",
+    desktopImage: "https://www.densndente.ca/SSP Applications/NetSuite Inc. - SCS/SuiteCommerce Standard/home-page/[JPEG]Short Expiry Web Banners.jpg",
     mobileImage: "https://www.densndente.ca/Mobile Image Views/[JPEG]Short Expiry Mobile Banners.jpg",
     button: { text: "VIEW SPECIALS", link: "/promotions/short-expiry" },
     duration: 7000,
   },
   {
-    desktopImage: "https://www.densndente.ca/Mobile Image Views/3M_Web_Banners_Available_Now_Mobile.jpg",
+    desktopImage: "https://www.densndente.ca/SSP Applications/NetSuite Inc. - SCS/SuiteCommerce Standard/home-page/3M_Web_Banners_Available_Now.jpg",
     mobileImage: "https://www.densndente.ca/Mobile Image Views/3M_Web_Banners_Available_Now_Mobile.jpg",
     button: { text: "SHOP NOW", link: "/products/by-brand/3m" },
     duration: 7000,
   },
   {
-    desktopImage: "https://www.densndente.ca/Mobile Image Views/[JPEGS]Web Banners D2 Redesign.jpg",
+    desktopImage: "https://www.densndente.ca/SSP Applications/NetSuite Inc. - SCS/SuiteCommerce Standard/home-page/Web Banners D2 Redesign.jpg",
     mobileImage: "https://www.densndente.ca/Mobile Image Views/[JPEGS]Web Banners D2 Redesign.jpg",
     button: { text: "SHOP NOW", link: "/products/by-brand/d2" },
     duration: 7000,
   },
   {
-    desktopImage: "https://www.densndente.ca/Mobile Image Views/[JPEGS]Web Banners DND Redesign5.jpg",
+    desktopImage: "https://www.densndente.ca/SSP Applications/NetSuite Inc. - SCS/SuiteCommerce Standard/home-page/[JPEGS]Web Banners DND Redesign.jpg",
     mobileImage: "https://www.densndente.ca/Mobile Image Views/[JPEGS]Web Banners DND Redesign5.jpg",
     button: { text: "SHOP NOW", link: "/products/by-brand/metrex" },
     duration: 7000,
@@ -76,7 +76,7 @@ export default function HeroCarousel() {
       <img
         src={desktopImage}
         alt={button.text}
-        className="hidden md:block w-full h-full object-cover object-center"
+        className="hidden md:block w-full h-full object-contain object-top"
       />
 
       {/* Mobile Image */}
