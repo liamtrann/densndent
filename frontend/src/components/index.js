@@ -74,3 +74,4 @@ export { default as HeroCarousel } from './sections/HeroCarousel';
 export { default as MailingList } from './sections/MailingList';
 export { default as ShopByBrand } from './sections/ShopByBrand';
 export { default as Sidebar } from './sections/Sidebar';
+export { default as RecentlyViewedSection } from "./sections/RecentlyViewedSection";

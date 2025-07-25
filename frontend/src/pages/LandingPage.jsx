@@ -7,6 +7,7 @@ import {
   MailingList,
   MainSection,
   PromotionsGrid,
+  RecentlyViewedSection,
   CategoryTiles,
   BestSellersSection,
   ShopByBrand,
@@ -24,7 +25,7 @@ const LandingPage = () => {
 
       {/* ✅ Catalogues section */}
       <Catalogues buttonLink="/promotions/q3-catalogue" />
-
+      <RecentlyViewedSection />
       <BestSellersSection />
       <ShopByBrand />
       <GlovesHighlight />
