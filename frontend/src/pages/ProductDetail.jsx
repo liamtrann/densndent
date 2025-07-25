@@ -24,6 +24,7 @@ import {
   useQuantityHandlers,
   extractBuyGet,
 } from "config/config";
+import { addToRecentViews } from "../redux/slices/recentViewsSlice";
 
 export default function ProductsPage() {
   const { id } = useParams();
@@ -57,6 +58,10 @@ export default function ProductsPage() {
         // Use centralized axios instance for API call
         const res = await api.get(endpoint.GET_PRODUCT_BY_ID(id));
         setProduct(res.data);
+
+        // ✅ Dispatch recently viewed product
+        dispatch(addToRecentViews(res.data.id));
+
       } catch (err) {
         setError(err?.response?.data?.error || "Failed to load product.");
       } finally {
