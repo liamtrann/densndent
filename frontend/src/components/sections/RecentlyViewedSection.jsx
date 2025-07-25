@@ -20,9 +20,9 @@ export default function RecentlyViewedSection() {
     }
   }, [viewedProductIds, recentProducts, dispatch]);
 
-  // const handleClick = (item) => {
-  //   navigate(`/product/${item.id}`);
-  // };
+  const handleClick = (item) => {
+    navigate(`/product/${item.id}`);
+  };
 
   const hasItems = recentProducts && recentProducts.length > 0;
 
