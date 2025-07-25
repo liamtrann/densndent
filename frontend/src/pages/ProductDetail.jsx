@@ -24,7 +24,12 @@ import {
   useQuantityHandlers,
   extractBuyGet,
 } from "config/config";
-import { addRecentlyViewed } from "store/slices/recentlyViewedSlice"; // ✅ NEW
+import { addToRecentViews } from "../redux/slices/recentViewsSlice";
+
+
+
+
+
 
 export default function ProductsPage() {
   const { id } = useParams();
@@ -60,7 +65,8 @@ export default function ProductsPage() {
         setProduct(res.data);
 
         // ✅ Dispatch recently viewed product
-        dispatch(addRecentlyViewed(res.data));
+        dispatch(addToRecentViews(res.data.id));
+
       } catch (err) {
         setError(err?.response?.data?.error || "Failed to load product.");
       } finally {

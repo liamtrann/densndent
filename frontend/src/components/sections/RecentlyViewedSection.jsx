@@ -1,32 +1,51 @@
 // src/components/RecentlyViewedSection.jsx
-import React from "react";
-import { useSelector } from "react-redux";
+import React, { useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { BestSellerCard, AnimatedCard } from "common";
 import BlueBanner from "./BlueBanner";
+import { fetchRecentProducts } from "../../redux/slices/recentViewsSlice";
 
 export default function RecentlyViewedSection() {
   const navigate = useNavigate();
-  const items = useSelector((state) => state.recentlyViewed.items);
+  const dispatch = useDispatch();
 
-  if (!items || items.length === 0) return null;
+  const { recentProducts, loading, error, viewedProductIds } = useSelector(
+    (state) => state.recentViews
+  );
+
+  useEffect(() => {
+    if (viewedProductIds.length > 0 && recentProducts.length === 0) {
+      dispatch(fetchRecentProducts(viewedProductIds));
+    }
+  }, [viewedProductIds, recentProducts, dispatch]);
 
   const handleClick = (item) => {
     navigate(`/product/${item.id}`);
   };
 
+  const hasItems = recentProducts && recentProducts.length > 0;
+
   return (
     <BlueBanner
       title="Recently Viewed"
-      items={items}
+      items={hasItems ? recentProducts : []}
       enableHorizontalScroll={true}
-      renderItem={(item) => (
-        <AnimatedCard>
-          <div onClick={() => handleClick(item)} className="cursor-pointer">
-            <BestSellerCard {...item} />
+      loading={loading}
+      error={error}
+      renderItem={(item) =>
+        hasItems ? (
+          <AnimatedCard key={item.id}>
+            <div onClick={() => handleClick(item)} className="cursor-pointer">
+              <BestSellerCard {...item} />
+            </div>
+          </AnimatedCard>
+        ) : (
+          <div className="text-gray-400 text-sm italic px-4 py-2">
+            No recently viewed products yet.
           </div>
-        </AnimatedCard>
-      )}
+        )
+      }
       showButton={false}
     />
   );

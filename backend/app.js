@@ -23,18 +23,10 @@ app.use('/restapi', restapiRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-<<<<<<< HEAD
-  res.json({
-    status: 'OK',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    service: 'DensNDent Backend'
-=======
   res.status(200).json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
     uptime: process.uptime()
->>>>>>> ab8b0fe728acbfc023271ae39f5b350bbca93d60
   });
 });
 
@@ -52,34 +44,6 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 3001;
 
-<<<<<<< HEAD
-// Simple server start (uncomment Kafka version below when ready)
-app.listen(PORT, () => {
-  console.log(`🌟 Server running on port ${PORT}`);
-  console.log(`🔍 Health check: http://localhost:${PORT}/health`);
-});
-
-// Start server and Kafka services (uncomment when ready to use Kafka)
-// const kafkaServicesManager = require('./kafka/services.manager');
-// async function startServer() {
-//   try {
-//     // Start Kafka microservices
-//     await kafkaServicesManager.startAllServices();
-
-//     // Start Express server
-//     app.listen(PORT, () => {
-//       console.log(`🌟 Server running on port ${PORT}`);
-//       console.log(`🔍 Kafka health check: http://localhost:${PORT}/kafka/health`);
-//     });
-//   } catch (error) {
-//     console.error('❌ Failed to start server:', error);
-//     process.exit(1);
-//   }
-// }
-
-// startServer();
-=======
 app.listen(PORT, () => {
   console.log(`🌟 Server running on port ${PORT}`);
 });
->>>>>>> ab8b0fe728acbfc023271ae39f5b350bbca93d60
