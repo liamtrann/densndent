@@ -26,26 +26,25 @@ export default function RecentlyViewedSection() {
 
   const hasItems = recentProducts && recentProducts.length > 0;
 
+  // Don't render the section if there are no items and not loading
+  if (!hasItems && !loading) {
+    return null;
+  }
+
   return (
     <BlueBanner
       title="Recently Viewed"
-      items={hasItems ? recentProducts : []}
+      items={recentProducts}
       enableHorizontalScroll={true}
       loading={loading}
       error={error}
-      renderItem={(item) =>
-        hasItems ? (
-          <AnimatedCard key={item.id}>
-            <div onClick={() => handleClick(item)} className="cursor-pointer">
-              <BestSellerCard {...item} />
-            </div>
-          </AnimatedCard>
-        ) : (
-          <div className="text-gray-400 text-sm italic px-4 py-2">
-            No recently viewed products yet.
+      renderItem={(item) => (
+        <AnimatedCard key={item.id}>
+          <div onClick={() => handleClick(item)} className="cursor-pointer">
+            <BestSellerCard {...item} />
           </div>
-        )
-      }
+        </AnimatedCard>
+      )}
       showButton={false}
     />
   );

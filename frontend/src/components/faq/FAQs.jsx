@@ -10,6 +10,7 @@ export default function FAQs() {
       titleClass="text-smiles-blue"
       description="Get quick answers about ordering, shipping, returns, and how to shop for dental supplies and products on our website."
       buttonText="Learn More"
+      buttonLink="/faq"
       imageSrc="/faq-banner.png"
       sectionClass="bg-smiles-white/5"
     />
