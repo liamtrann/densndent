@@ -11,6 +11,9 @@ export default function CheckoutPayment() {
   const navigate = useNavigate();
   const [isAddModalOpen, setAddModalOpen] = useState(false);
 
+  // Debug: Log userInfo to see its structure
+  console.log("CheckoutPayment - userInfo:", userInfo);
+
   const {
     addresses,
     setAddresses,
