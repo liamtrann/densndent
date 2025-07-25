@@ -23,18 +23,11 @@ app.use('/restapi', restapiRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-<<<<<<< HEAD
   res.json({
     status: 'OK',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     service: 'DensNDent Backend'
-=======
-  res.status(200).json({
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime()
->>>>>>> ab8b0fe728acbfc023271ae39f5b350bbca93d60
   });
 });
 
@@ -52,7 +45,6 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 3001;
 
-<<<<<<< HEAD
 // Simple server start (uncomment Kafka version below when ready)
 app.listen(PORT, () => {
   console.log(`🌟 Server running on port ${PORT}`);
@@ -78,8 +70,3 @@ app.listen(PORT, () => {
 // }
 
 // startServer();
-=======
-app.listen(PORT, () => {
-  console.log(`🌟 Server running on port ${PORT}`);
-});
->>>>>>> ab8b0fe728acbfc023271ae39f5b350bbca93d60

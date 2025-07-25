@@ -6,28 +6,29 @@ import { BestSellerCard, AnimatedCard } from "common";
 import BlueBanner from "./BlueBanner";
 
 export default function RecentlyViewedSection() {
-  const navigate = useNavigate();
-  const items = useSelector((state) => state.recentlyViewed.items);
+  // const navigate = useNavigate();
+  // const items = useSelector((state) => state.recentlyViewed.items);
 
-  if (!items || items.length === 0) return null;
+  // if (!items || items.length === 0) return null;
 
-  const handleClick = (item) => {
-    navigate(`/product/${item.id}`);
-  };
+  // const handleClick = (item) => {
+  //   navigate(`/product/${item.id}`);
+  // };
 
   return (
-    <BlueBanner
-      title="Recently Viewed"
-      items={items}
-      enableHorizontalScroll={true}
-      renderItem={(item) => (
-        <AnimatedCard>
-          <div onClick={() => handleClick(item)} className="cursor-pointer">
-            <BestSellerCard {...item} />
-          </div>
-        </AnimatedCard>
-      )}
-      showButton={false}
-    />
+    // <BlueBanner
+    //   title="Recently Viewed"
+    //   items={items}
+    //   enableHorizontalScroll={true}
+    //   renderItem={(item) => (
+    //     <AnimatedCard>
+    //       <div onClick={() => handleClick(item)} className="cursor-pointer">
+    //         <BestSellerCard {...item} />
+    //       </div>
+    //     </AnimatedCard>
+    //   )}
+    //   showButton={false}
+    // />
+    <></>
   );
 }
