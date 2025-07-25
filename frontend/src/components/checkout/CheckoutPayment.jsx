@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { Button } from "common";
@@ -11,12 +11,18 @@ export default function CheckoutPayment() {
   const navigate = useNavigate();
   const [isAddModalOpen, setAddModalOpen] = useState(false);
 
-  const {
-    addresses,
-    setAddresses,
-    selectedId,
-    setSelectedId,
-  } = useInitialAddress(userInfo);
+  const { addresses, setAddresses, selectedId, setSelectedId } =
+    useInitialAddress(userInfo);
+
+  // Save addresses and selectedId to localStorage whenever they change
+  useEffect(() => {
+    if (addresses.length > 0) {
+      localStorage.setItem("checkoutAddresses", JSON.stringify(addresses));
+    }
+    if (selectedId) {
+      localStorage.setItem("selectedAddressId", selectedId.toString());
+    }
+  }, [addresses, selectedId]);
 
   const handleSelectAddress = (id) => {
     setAddresses((prev) =>
@@ -43,12 +49,12 @@ export default function CheckoutPayment() {
       isDefaultShipping: addresses.length === 0,
     };
     setAddresses((prev) => [...prev, formatted]);
+
     if (addresses.length === 0) {
       setSelectedId(id);
     }
-    setAddModalOpen(false);
 
-    console.log(newAddress)
+    setAddModalOpen(false);
   };
 
   return (

@@ -129,6 +129,7 @@ const endpoint = {
     // NETSUITE REST API Endpoints
     GET_CUSTOMER: (id) => `/restapi/customer/${id}`,
     GET_SALES_ORDER: (id) => `/restapi/salesOrder/${id}`,
+    POST_SALES_ORDER: () => `/restapi/salesOrder`,
     PATCH_UPDATE_CUSTOMER: (id) => `/restapi/customer/${id}`,
     POST_CREATE_CUSTOMER: () => `/restapi/customer`,
 };

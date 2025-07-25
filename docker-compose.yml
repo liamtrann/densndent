@@ -1,40 +1,12 @@
-<<<<<<< HEAD
-services:
-  # Backend Service
-=======
 version: '3.8'
 
 services:
->>>>>>> ab8b0fe728acbfc023271ae39f5b350bbca93d60
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: densndent-backend
     ports:
-<<<<<<< HEAD
-      - "3001:3001"
-    environment:
-      # Node.js Configuration
-      - NODE_ENV=development
-      - PORT=3001
-      
-      # Kafka Configuration
-      - KAFKA_BROKER=kafka:9092
-      - KAFKAJS_NO_PARTITIONER_WARNING=1
-    env_file:
-      - ./backend/.env
-    depends_on:
-      redis:
-        condition: service_healthy
-      kafka:
-        condition: service_healthy
-    restart: unless-stopped
-    networks:
-      - densndent-network
-    healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/health', (res) => { if (res.statusCode === 200) process.exit(0); else process.exit(1); }).on('error', () => process.exit(1));"]
-=======
       - "8080:80"  # Backend nginx runs on port 80, expose to host port 8080
     env_file:
       - ./.env  # Use root .env file
@@ -43,102 +15,15 @@ services:
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/health"]
->>>>>>> ab8b0fe728acbfc023271ae39f5b350bbca93d60
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
 
-<<<<<<< HEAD
-  # Frontend Service
-=======
->>>>>>> ab8b0fe728acbfc023271ae39f5b350bbca93d60
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-<<<<<<< HEAD
-    container_name: densndent-frontend
-    ports:
-      - "3000:80"
-    environment:
-      # Non-sensitive configuration only
-      - REACT_APP_API_BASE_URL=http://localhost:3001
-    env_file:
-      - ./frontend/.env
-    depends_on:
-      - backend
-    restart: unless-stopped
-    networks:
-      - densndent-network
-
-  # Redis Cache
-  redis:
-    image: redis:7-alpine
-    container_name: densndent-redis
-    ports:
-      - "6379:6379"
-    command: redis-server --appendonly yes --requirepass redis_password_123
-    volumes:
-      - redis_data:/data
-    restart: unless-stopped
-    networks:
-      - densndent-network
-    healthcheck:
-      test: ["CMD", "redis-cli", "-a", "redis_password_123", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
-
-  # Kafka Zookeeper
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.4.0
-    container_name: densndent-zookeeper
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-    networks:
-      - densndent-network
-    restart: unless-stopped
-
-  # Kafka Broker
-  kafka:
-    image: confluentinc/cp-kafka:7.4.0
-    container_name: densndent-kafka
-    depends_on:
-      - zookeeper
-    ports:
-      - "9092:9092"
-      - "9093:9093"
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9093
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: true
-    networks:
-      - densndent-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "kafka:9092"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
-
-# Volumes
-volumes:
-  redis_data:
-    driver: local
-
-# Networks
-networks:
-  densndent-network:
-    driver: bridge
-=======
       args:
         - REACT_APP_API_BASE_URL=${REACT_APP_API_BASE_URL}
         - REACT_APP_AUTH0_DOMAIN=${REACT_APP_AUTH0_DOMAIN}
@@ -173,4 +58,3 @@ volumes:
   # Add any persistent volumes if needed in the future
   app-logs:
     driver: local
->>>>>>> ab8b0fe728acbfc023271ae39f5b350bbca93d60
