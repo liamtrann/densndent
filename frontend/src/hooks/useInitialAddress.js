@@ -60,7 +60,7 @@ export default function useInitialAddress(userInfo) {
         setAddresses(initialAddresses);
         setSelectedId(initialAddresses[0].id);
       }
-      
+
       setIsInitialized(true);
     }
   }, [userInfo, isInitialized]);

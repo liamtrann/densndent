@@ -49,7 +49,6 @@ export default function AddressModal({ isOpen, onClose, onSave }) {
       newErrors.phone = "Phone number must be 10 digits";
     }
 
-    console.log(newErrors)
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -79,8 +78,6 @@ export default function AddressModal({ isOpen, onClose, onSave }) {
       setErrors({});
       onClose(); // Close modal after successful save
     }
-
-    console.log(formData)
   };
 
   const states = stateMappings[formData.country?.toLowerCase?.()] || {};
