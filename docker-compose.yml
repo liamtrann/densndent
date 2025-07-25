@@ -1,11 +1,18 @@
+<<<<<<< HEAD
 services:
   # Backend Service
+=======
+version: '3.8'
+
+services:
+>>>>>>> ab8b0fe728acbfc023271ae39f5b350bbca93d60
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: densndent-backend
     ports:
+<<<<<<< HEAD
       - "3001:3001"
     environment:
       # Node.js Configuration
@@ -27,16 +34,30 @@ services:
       - densndent-network
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/health', (res) => { if (res.statusCode === 200) process.exit(0); else process.exit(1); }).on('error', () => process.exit(1));"]
+=======
+      - "8080:80"  # Backend nginx runs on port 80, expose to host port 8080
+    env_file:
+      - ./.env  # Use root .env file
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+>>>>>>> ab8b0fe728acbfc023271ae39f5b350bbca93d60
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
 
+<<<<<<< HEAD
   # Frontend Service
+=======
+>>>>>>> ab8b0fe728acbfc023271ae39f5b350bbca93d60
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+<<<<<<< HEAD
     container_name: densndent-frontend
     ports:
       - "3000:80"
@@ -117,3 +138,39 @@ volumes:
 networks:
   densndent-network:
     driver: bridge
+=======
+      args:
+        - REACT_APP_API_BASE_URL=${REACT_APP_API_BASE_URL}
+        - REACT_APP_AUTH0_DOMAIN=${REACT_APP_AUTH0_DOMAIN}
+        - REACT_APP_AUTH0_CLIENT_ID=${REACT_APP_AUTH0_CLIENT_ID}
+        - REACT_APP_AUTH0_AUDIENCE=${REACT_APP_AUTH0_AUDIENCE}
+        - BASE_FILE_URL_FOR_IMG=${BASE_FILE_URL_FOR_IMG}
+        - REACT_APP_NO_IMAGE_AVAILABLE_LOGO=${REACT_APP_NO_IMAGE_AVAILABLE_LOGO}
+    container_name: densndent-frontend
+    ports:
+      - "3000:80"  # Frontend nginx runs on port 80, expose to host port 3000
+    depends_on:
+      backend:
+        condition: service_healthy
+    env_file:
+      - ./.env  # Use root .env file
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+networks:
+  app-network:
+    driver: bridge
+    name: densndent-network
+
+volumes:
+  # Add any persistent volumes if needed in the future
+  app-logs:
+    driver: local
+>>>>>>> ab8b0fe728acbfc023271ae39f5b350bbca93d60

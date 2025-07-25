@@ -1,6 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
 
-import { cartReducer, bestSellers, classification, products, user, itemPriceAfterDiscount } from './slices';
+import { cartReducer, bestSellers, classification, products, user, itemPriceAfterDiscount, recentViews } from './slices';
 
 const store = configureStore({
     reducer: {
@@ -10,6 +10,7 @@ const store = configureStore({
         products,
         user,
         itemPriceAfterDiscount,
+        recentViews,
     },
 });
 

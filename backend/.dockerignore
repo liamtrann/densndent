@@ -1,4 +1,5 @@
 node_modules
+<<<<<<< HEAD
 npm - debug.log
     .env
     .git
@@ -6,3 +7,12 @@ npm - debug.log
 README.md
     .nyc_output
 coverage
+=======
+.git
+.env
+*.log
+.DS_Store
+Dockerfile
+.dockerignore
+README.md
+>>>>>>> ab8b0fe728acbfc023271ae39f5b350bbca93d60

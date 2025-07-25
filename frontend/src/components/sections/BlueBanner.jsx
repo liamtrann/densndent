@@ -29,11 +29,11 @@ export default function BlueBanner({
             <ErrorMessage message={error} />
           </div>
         ) : enableHorizontalScroll ? (
-          // Horizontal scroll layout - responsive widths
-          <div className="overflow-x-auto scrollbar-hide">
-            <div className="flex gap-4 pb-4">
+          // Horizontal scroll layout - grid on mobile, horizontal scroll on md+
+          <div className="md:overflow-x-auto md:scrollbar-hide">
+            <div className="grid grid-cols-2 gap-4 md:flex md:gap-4 md:pb-4">
               {items.map((item, idx) => (
-                <div key={idx} className="flex-shrink-0">
+                <div key={idx} className="md:flex-shrink-0">
                   {renderItem(item)}
                 </div>
               ))}

@@ -1,4 +1,5 @@
 node_modules
+<<<<<<< HEAD
 npm-debug.log
 .env
 .env.local
@@ -10,3 +11,15 @@ npm-debug.log
 README.md
 build
 coverage
+=======
+.git
+.env
+*.log
+.DS_Store
+Dockerfile
+.dockerignore
+README.md
+build
+dist
+.eslintcache
+>>>>>>> ab8b0fe728acbfc023271ae39f5b350bbca93d60

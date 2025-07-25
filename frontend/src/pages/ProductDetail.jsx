@@ -17,6 +17,7 @@ import api from "api/api";
 import endpoint from "api/endpoints";
 import { delayCall } from "api/util";
 import { addToCart } from "store/slices/cartSlice";
+import { useRecentViews } from "../hooks/useRecentViews";
 import {
   getMatrixInfo,
   formatCurrency,
@@ -37,6 +38,10 @@ export default function ProductsPage() {
   const [matrixOptions, setMatrixOptions] = useState([]);
   const [selectedMatrixOption, setSelectedMatrixOption] = useState("");
 
+  // Use recent views hook
+  const { addProductToRecentViews } = useRecentViews();
+
+  // Use reusable quantity handlers with Buy X Get Y logic
   const {
     quantity,
     actualQuantity,
@@ -84,6 +89,13 @@ export default function ProductsPage() {
   useEffect(() => {
     if (product) setSelectedMatrixOption(product.id);
   }, [product]);
+
+  // Track product view for recent views
+  useEffect(() => {
+    if (id) {
+      addProductToRecentViews(id);
+    }
+  }, [id, addProductToRecentViews]);
 
   const handleAddToCart = () => {
     if (!product) return;

@@ -5,6 +5,7 @@ export { default as classification } from './classificationSlice';
 export { default as products } from './productsSlice';
 export { default as user } from './userSlice';
 export { default as itemPriceAfterDiscount } from './itemPriceAfterDiscountSlice';
+export { default as recentViews } from './recentViewsSlice';
 
 // Export actions
 export { addToCart, removeFromCart, clearCart, loadCart, updateQuantity } from './cartSlice';
@@ -28,3 +29,11 @@ export {
     selectPriceDataExists,
     selectCartSubtotalWithDiscounts
 } from './itemPriceAfterDiscountSlice';
+export {
+    addToRecentViews,
+    setRecentProducts,
+    setRecentViewsLoading,
+    setRecentViewsError,
+    clearRecentViews,
+    fetchRecentProducts,
+} from './recentViewsSlice';

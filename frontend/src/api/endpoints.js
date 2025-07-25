@@ -4,6 +4,7 @@ const endpoint = {
     GET_SUB_CATEGORIES_BY_PARENT: (id) => `/suiteql/commerceCategory/sub-category-by-parent/${id}`,
     GET_PRODUCT_BY_ID: (id) => `/suiteql/item/by-id?id=${id}`,
     POST_GET_PRODUCT_BY_PARENT: () => `/suiteql/item/by-parent`,
+    POST_GET_ITEM_BY_IDS: () => `/suiteql/item/by-ids`,
     GET_ITEMS_BY_CLASS: ({ classId, limit, offset, sort, minPrice, maxPrice }) => {
         const params = new URLSearchParams();
         if (classId) params.append('classId', classId);
