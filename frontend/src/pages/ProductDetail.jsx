@@ -25,6 +25,7 @@ import {
   extractBuyGet,
 } from "config/config";
 import { addToRecentViews } from "../redux/slices/recentViewsSlice";
+import RecentlyViewedSection from "../components/sections/RecentlyViewedSection"; // ✅ Imported section
 
 export default function ProductsPage() {
   const { id } = useParams();
@@ -38,10 +39,8 @@ export default function ProductsPage() {
   const [matrixOptions, setMatrixOptions] = useState([]);
   const [selectedMatrixOption, setSelectedMatrixOption] = useState("");
 
-  // Use recent views hook
   const { addProductToRecentViews } = useRecentViews();
 
-  // Use reusable quantity handlers with Buy X Get Y logic
   const {
     quantity,
     actualQuantity,
@@ -58,10 +57,7 @@ export default function ProductsPage() {
         // Use centralized axios instance for API call
         const res = await api.get(endpoint.GET_PRODUCT_BY_ID(id));
         setProduct(res.data);
-
-        // ✅ Dispatch recently viewed product
         dispatch(addToRecentViews(res.data.id));
-
       } catch (err) {
         setError(err?.response?.data?.error || "Failed to load product.");
       } finally {
@@ -91,7 +87,6 @@ export default function ProductsPage() {
     if (product) setSelectedMatrixOption(product.id);
   }, [product]);
 
-  // Track product view for recent views
   useEffect(() => {
     if (id) {
       addProductToRecentViews(id);
@@ -100,8 +95,6 @@ export default function ProductsPage() {
 
   const handleAddToCart = () => {
     if (!product) return;
-
-    // Store all product details, use actualQuantity which includes Buy X Get Y bonus
     const cartItem = { ...product, quantity: Number(actualQuantity) };
 
     delayCall(() => {
@@ -112,8 +105,7 @@ export default function ProductsPage() {
     });
   };
 
-  const { matrixType, options: matrixOptionsList } =
-    getMatrixInfo(matrixOptions);
+  const { matrixType, options: matrixOptionsList } = getMatrixInfo(matrixOptions);
 
   if (loading) return <Loading text="Loading product..." />;
   if (error) return <ErrorMessage message={error} />;
@@ -216,7 +208,6 @@ export default function ProductsPage() {
               )}
             </div>
 
-            {/* Show promotion preview */}
             {actualQuantity > quantity && (
               <div className="mt-2 text-sm">
                 <span className="text-gray-600">
@@ -262,6 +253,11 @@ export default function ProductsPage() {
           </p>
         </Modal>
       )}
+
+      {/* ✅ Recently Viewed Products Carousel */}
+      <div className="mt-20">
+        <RecentlyViewedSection />
+      </div>
     </div>
   );
 }
