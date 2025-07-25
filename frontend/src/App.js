@@ -13,11 +13,11 @@ import { LandingPage } from "./pages";
 
 // Lazy loaded components
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
-const ListProductPage = lazy(() => import("./components/ListProductPage"));
+const ListProductPage = lazy(() => import("./components/product/ListProductPage"));
 const CartPage = lazy(() => import("./pages/CartPage"));
 const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
-const ProfileEditCard = lazy(() => import("./components/ProfileEditCard"));
+const ProfileEditCard = lazy(() => import("./components/profile/ProfileEditCard"));
 const PurchaseHistory = lazy(() => import("./pages/PurchaseHistory"));
 const FAQPage = lazy(() => import("./pages/FAQPage"));
 const AboutUs = lazy(() => import("./pages/AboutUs"));
