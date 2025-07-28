@@ -26,8 +26,8 @@ export default function RecentlyViewedSection() {
 
   const hasItems = recentProducts && recentProducts.length > 0;
 
-  return (
-    <BlueBanner
+  //return (
+    /*<BlueBanner
       title="Recently Viewed"
       items={hasItems ? recentProducts : []}
       enableHorizontalScroll={true}
@@ -47,6 +47,6 @@ export default function RecentlyViewedSection() {
         )
       }
       showButton={false}
-    />
-  );
+    />*/
+  //);
 }
