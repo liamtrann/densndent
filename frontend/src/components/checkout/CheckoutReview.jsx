@@ -148,8 +148,20 @@ export default function CheckoutReview() {
       {/* Loading Overlay */}
       {isPlacingOrder && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg">
-            <Loading text="Your order is processing..." />
+          <div className="bg-white p-8 rounded-lg shadow-lg max-w-md text-center">
+            <Loading text="Processing your order..." />
+            <div className="mt-4 space-y-2">
+              <p className="text-gray-700 font-medium">
+                Please don't close this window
+              </p>
+              <p className="text-sm text-gray-600">
+                We're creating your order and sending confirmation details. This
+                may take a few minutes.
+              </p>
+              <p className="text-xs text-gray-500 mt-3">
+                You'll be redirected to your order history once complete.
+              </p>
+            </div>
           </div>
         </div>
       )}
