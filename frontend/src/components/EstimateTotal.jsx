@@ -11,7 +11,8 @@ export default function EstimateTotal({
   className = "",
 }) {
   // Free shipping for orders $300 and above
-  const shipping = subtotal >= 300 ? 0 : (shippingCost !== null ? shippingCost : 9.99);
+  const shipping =
+    subtotal >= 300 ? 0 : shippingCost !== null ? shippingCost : 9.99;
   const tax = estimatedTax || 0;
   const total = Number(subtotal) + Number(tax) + Number(shipping);
 
