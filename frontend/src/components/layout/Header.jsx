@@ -101,7 +101,7 @@ export default function Header() {
           </button>
 
           {/* DARK MODE TOGGLE */}
-          <button
+          {/* <button
             onClick={() => setIsDarkMode(!isDarkMode)}
             className="p-2 rounded-full transition-colors bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
             aria-label="Toggle Dark Mode"
@@ -111,7 +111,7 @@ export default function Header() {
             ) : (
               <FaMoon className="text-gray-800" />
             )}
-          </button>
+          </button> */}
 
           {/* Auth & Cart */}
           <div className="hidden lg:block">
