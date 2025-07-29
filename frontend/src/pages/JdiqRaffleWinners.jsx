@@ -14,7 +14,7 @@ export default function JdiqRaffleWinners() {
 
       <div className="max-w-6xl mx-auto flex flex-col lg:flex-row items-center gap-10">
         <img
-          src="https://sandbox.densndente.ca/images/thankyou-raffle.png"
+          src="https://www.densndente.ca/site/extra%20images/JDIQ/2025/JDIQ_thank_you.png"
           alt="Thank You"
           className="w-full lg:w-1/2"
         />

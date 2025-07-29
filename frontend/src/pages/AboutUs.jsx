@@ -18,7 +18,7 @@ export default function AboutUs() {
           </Paragraph>
         </div>
         <img
-          src="https://sandbox.densndente.ca/images/about-banner.png"
+          src="	https://www.densndente.ca/site/webimages/abouts-us.png"
           alt="About Banner"
           className="mx-auto mt-8 max-w-xl"
         />
@@ -28,7 +28,7 @@ export default function AboutUs() {
       <section className="bg-[#00548F] text-white py-12 px-6">
         <div className="max-w-4xl mx-auto flex flex-col lg:flex-row items-center gap-8">
           <img
-            src="https://sandbox.densndente.ca/images/process-bg.png"
+            src="	https://www.densndente.ca/site/webimages/61802.png"
             alt="Background Graphic"
             className="w-full lg:w-1/2"
           />
@@ -73,9 +73,9 @@ export default function AboutUs() {
 
       {/* Story Section */}
       <section className="bg-orange-500 text-white py-16 px-6">
-        <div className="max-w-6xl mx-auto flex flex-col lg:flex-row items-center gap-8">
+        <div className="max-w-6l mx-auto flex flex-col lg:flex-row items-center gap-8">
           <img
-            src="https://sandbox.densndente.ca/images/story-bg.png"
+            src="https://www.densndente.ca/site/webimages/last-section.png"
             alt="Story Graphic"
             className="w-full lg:w-1/2"
           />

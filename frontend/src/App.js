@@ -30,7 +30,8 @@ const Q3CataloguePage = lazy(() => import("./pages/Q3CataloguePage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Simple placeholder components
-const BlogPage = lazy(() => Promise.resolve({ default: () => <div>Blog Page</div> }));
+const BlogPage = lazy(() => import("./pages/BlogPage"));
+
 const PromotionsPage = lazy(() => Promise.resolve({ default: () => <div>Promotions Page</div> }));
 const CataloguesPage = lazy(() => Promise.resolve({ default: () => <div>Catalogues Page</div> }));
 const ClearancePage = lazy(() => Promise.resolve({ default: () => <div>Clearance Page</div> }));
