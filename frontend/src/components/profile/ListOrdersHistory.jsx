@@ -4,6 +4,8 @@ import { Paragraph } from "common";
 import { formatCurrency } from "config/config";
 
 export default function ListOrdersHistory({ orders = [] }) {
+
+  console.log(orders)
   // Group orders by transaction date
   const groupedOrders = orders.reduce((groups, order) => {
     const date = order.trandate || "Unknown";
@@ -35,7 +37,9 @@ export default function ListOrdersHistory({ orders = [] }) {
             </Paragraph>
           </div>
           {/* Orders for this date */}
-          {dateOrders.map((order) => (
+          {dateOrders
+            .sort((a, b) => (b.id || 0) - (a.id || 0)) // Sort by order ID descending
+            .map((order) => (
             <div
               key={order.id}
               className="p-4 border-b last:border-b-0 flex justify-between items-center"
