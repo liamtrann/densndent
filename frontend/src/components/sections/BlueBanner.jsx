@@ -1,9 +1,8 @@
 // components/BlueBanner.jsx
-import React, { useRef, useState, useEffect } from "react";
-import { Button, SectionTitle, Loading, ErrorMessage } from "common";
+import React from "react";
+import { Button, Loading, ErrorMessage } from "common";
 
 export default function BlueBanner({
-  title,
   items,
   columns = { base: 2, md: 4, lg: 5 },
   renderItem,
@@ -18,11 +17,10 @@ export default function BlueBanner({
 
   return (
     <>
-      <SectionTitle>{title}</SectionTitle>
       <section className="bg-white px-6 py-8">
         {loading ? (
           <div className="col-span-full">
-            <Loading text={`Loading ${title.toLowerCase()}...`} />
+            <Loading text={`Loading...`} />
           </div>
         ) : error ? (
           <div className="col-span-full">

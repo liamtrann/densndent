@@ -39,6 +39,7 @@ export { default as PreviewCartItem } from "./cards/PreviewCartItem";
 export { default as FooterSection } from "./layout/FooterSection";
 export { default as InfoBanner } from "./layout/InfoBanner";
 export { default as SectionTitle } from "./layout/SectionTitle";
+export { default as TitleSection } from "./TitleSection";
 
 // Utility components
 export { default as ProtectedRoute } from "./utils/ProtectedRoute";

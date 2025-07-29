@@ -2,6 +2,22 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../api/api';
 import endpoint from '../../api/endpoints';
 
+// 💾 LocalStorage helper functions for persistent recent views
+const loadRecentViewsFromStorage = () => {
+    try {
+        const data = localStorage.getItem('recentViews');
+        return data ? JSON.parse(data) : [];
+    } catch {
+        return [];
+    }
+};
+
+const saveRecentViewsToStorage = (viewedProductIds) => {
+    try {
+        localStorage.setItem('recentViews', JSON.stringify(viewedProductIds));
+    } catch { }
+};
+
 // Async thunk for adding a product to recent views and fetching products
 export const addToRecentViews = createAsyncThunk(
     'recentViews/addToRecentViews',
@@ -47,7 +63,7 @@ export const fetchRecentProducts = createAsyncThunk(
 );
 
 const initialState = {
-    viewedProductIds: [],
+    viewedProductIds: loadRecentViewsFromStorage(),
     recentProducts: [],
     loading: false,
     error: null,
@@ -73,6 +89,10 @@ const recentViewsSlice = createSlice({
             state.viewedProductIds = [];
             state.recentProducts = [];
             state.error = null;
+            saveRecentViewsToStorage(state.viewedProductIds);
+        },
+        loadRecentViews: (state) => {
+            state.viewedProductIds = loadRecentViewsFromStorage();
         },
     },
     extraReducers: (builder) => {
@@ -80,6 +100,7 @@ const recentViewsSlice = createSlice({
             // Handle addToRecentViews async thunk
             .addCase(addToRecentViews.fulfilled, (state, action) => {
                 state.viewedProductIds = action.payload.newIds;
+                saveRecentViewsToStorage(state.viewedProductIds);
             })
             // Handle fetchRecentProducts async thunk
             .addCase(fetchRecentProducts.pending, (state) => {
@@ -103,6 +124,7 @@ export const {
     setRecentViewsLoading,
     setRecentViewsError,
     clearRecentViews,
+    loadRecentViews,
 } = recentViewsSlice.actions;
 
 export default recentViewsSlice.reducer;
