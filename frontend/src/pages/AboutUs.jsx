@@ -20,7 +20,7 @@ export default function AboutUs() {
         <img
           src="	https://www.densndente.ca/site/webimages/abouts-us.png"
           alt="About Banner"
-          className="mx-auto mt-8 max-w-xl"
+          className="mx-auto mt-8 w-[90%] max-w-md"
         />
       </section>
 
@@ -77,7 +77,7 @@ export default function AboutUs() {
           <img
             src="https://www.densndente.ca/site/webimages/last-section.png"
             alt="Story Graphic"
-            className="w-full lg:w-1/2"
+            className="w-full max-w-[200px] lg:max-w-[200px] mx-auto"
           />
           <div className="text-left max-w-xl">
             <Paragraph className="mb-4">
