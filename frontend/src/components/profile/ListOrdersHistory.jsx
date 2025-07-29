@@ -1,4 +1,3 @@
-// components/ListOrdersHistory.jsx
 import React from "react";
 import { Paragraph } from "common";
 import { formatCurrency } from "config/config";
@@ -29,10 +28,32 @@ export default function ListOrdersHistory({ orders = [] }) {
       {Object.entries(groupedOrders).map(([date, dateOrders]) => (
         <div key={date} className="border-b last:border-b-0">
           {/* Date Header */}
-          <div className="bg-smiles-brightGreen px-4 py-3 border-b">
-            <Paragraph className="font-semibold text-white">
-              Placed on {date}
-            </Paragraph>
+          <div className="bg-gradient-to-r from-smiles-orange to-smiles-orange px-4 py-3 border-b">
+            <div className="flex items-center gap-2">
+              <div className="bg-white/20 rounded-full p-1.5">
+                <svg
+                  className="w-4 h-4 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <Paragraph className="font-medium text-white text-sm leading-tight">
+                  Placed on {date}
+                </Paragraph>
+                <Paragraph className="text-white/70 text-xs">
+                  {dateOrders.length} order{dateOrders.length !== 1 ? "s" : ""}
+                </Paragraph>
+              </div>
+            </div>
           </div>
           {/* Orders for this date */}
           {dateOrders

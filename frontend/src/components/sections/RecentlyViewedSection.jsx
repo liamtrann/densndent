@@ -37,7 +37,7 @@ export default function RecentlyViewedSection() {
         title="Recently Viewed"
         subtitle="Continue where you left off"
         itemCount={recentProducts.length}
-        itemLabel="items"
+        itemLabel="products"
         colorScheme="blue"
         icon={
           <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">

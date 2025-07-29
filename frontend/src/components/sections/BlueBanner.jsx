@@ -31,7 +31,10 @@ export default function BlueBanner({
           <div className="md:overflow-x-auto md:scrollbar-hide">
             <div className="grid grid-cols-2 gap-4 md:flex md:gap-4 md:pb-4">
               {items.map((item, idx) => (
-                <div key={idx} className="md:flex-shrink-0">
+                <div
+                  key={idx}
+                  className="md:flex-shrink-0 shadow-md hover:shadow-lg transition-shadow duration-200"
+                >
                   {renderItem(item)}
                 </div>
               ))}
@@ -43,7 +46,12 @@ export default function BlueBanner({
             className={`${gridClasses} items-center justify-items-center text-center`}
           >
             {items.map((item, idx) => (
-              <div key={idx}>{renderItem(item)}</div>
+              <div
+                key={idx}
+                className="shadow-md hover:shadow-lg transition-shadow duration-200"
+              >
+                {renderItem(item)}
+              </div>
             ))}
           </div>
         )}
