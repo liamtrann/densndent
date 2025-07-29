@@ -4,8 +4,6 @@ import { Paragraph } from "common";
 import { formatCurrency } from "config/config";
 
 export default function ListOrdersHistory({ orders = [] }) {
-
-  console.log(orders)
   // Group orders by transaction date
   const groupedOrders = orders.reduce((groups, order) => {
     const date = order.trandate || "Unknown";
@@ -40,33 +38,33 @@ export default function ListOrdersHistory({ orders = [] }) {
           {dateOrders
             .sort((a, b) => (b.id || 0) - (a.id || 0)) // Sort by order ID descending
             .map((order) => (
-            <div
-              key={order.id}
-              className="p-4 border-b last:border-b-0 flex justify-between items-center"
-            >
-              <div>
-                <Paragraph className="font-medium">
-                  {order.trandisplayname}
-                </Paragraph>
-                {order.shipcarrier && (
+              <div
+                key={order.id}
+                className="p-4 border-b last:border-b-0 flex justify-between items-center"
+              >
+                <div>
+                  <Paragraph className="font-medium">
+                    {order.trandisplayname}
+                  </Paragraph>
+                  {order.shipcarrier && (
+                    <Paragraph className="text-sm text-gray-600">
+                      Carrier:{" "}
+                      <span className="font-medium">{order.shipcarrier}</span>
+                    </Paragraph>
+                  )}
+                </div>
+                <div className="text-right">
                   <Paragraph className="text-sm text-gray-600">
-                    Carrier:{" "}
-                    <span className="font-medium">{order.shipcarrier}</span>
+                    {order.status}
                   </Paragraph>
-                )}
+                  {order.foreigntotal && (
+                    <Paragraph className="text-base font-semibold text-gray-800">
+                      {formatCurrency(order.foreigntotal)}
+                    </Paragraph>
+                  )}
+                </div>
               </div>
-              <div className="text-right">
-                <Paragraph className="text-sm text-gray-600">
-                  {order.status}
-                </Paragraph>
-                {order.foreigntotal && (
-                  <Paragraph className="text-base font-semibold text-gray-800">
-                    {formatCurrency(order.foreigntotal)}
-                  </Paragraph>
-                )}
-              </div>
-            </div>
-          ))}
+            ))}
         </div>
       ))}
     </div>
