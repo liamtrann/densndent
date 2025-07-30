@@ -30,10 +30,12 @@ const Q3CataloguePage = lazy(() => import("./pages/Q3CataloguePage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Simple placeholder components
-const BlogPage = lazy(() => Promise.resolve({ default: () => <div>Blog Page</div> }));
+const BlogPage = lazy(() => import("./pages/BlogPage"));
+
 const PromotionsPage = lazy(() => Promise.resolve({ default: () => <div>Promotions Page</div> }));
 const CataloguesPage = lazy(() => Promise.resolve({ default: () => <div>Catalogues Page</div> }));
-const ClearancePage = lazy(() => Promise.resolve({ default: () => <div>Clearance Page</div> }));
+const ClearancePage = lazy(() => import("./pages/ClearancePage"));
+
 
 // Loading fallback component
 const PageLoading = () => (
@@ -109,7 +111,9 @@ export default function App() {
               <Route path="/promotions/jdiq" element={<CenteredContent><JdiqRaffleWinners /></CenteredContent>} />
               <Route path="/promotions/gift-card" element={<CenteredContent><GiftCardProgramPage /></CenteredContent>} />
               <Route path="/catalogues" element={<CenteredContent><CataloguesPage /></CenteredContent>} />
-              <Route path="/clearance" element={<CenteredContent><ClearancePage /></CenteredContent>} />
+              <Route path="/clearance" element={<ClearancePage />} />
+              
+
               <Route path="/partners" element={<CenteredContent><OurPartners /></CenteredContent>} />
               <Route path="/promotions/q3-catalogue" element={<CenteredContent><Q3CataloguePage /></CenteredContent>} />
 
