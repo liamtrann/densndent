@@ -5,7 +5,7 @@ const teamMembers = [
   {
     name: "Carrie Reeve Dreyer",
     title: "Account Coordinator",
-    image: "/images/team/carrie.png",
+    image: "https://www.densndente.ca/site/extra%20images/Our%20Team/Carrie_Sales-Rep-2.png",
     description: [
       "With over six years of experience as a dental sales coordinator with Dens ‘N Dente, I have honed my skills in managing accounts and fostering strong relationships with dental professionals to help aid them in their business growth through exceptional customer service.",
       "Beyond dentistry, I find joy in spectating sports and participating in recreational activities, such as golfing and swimming. I highly value my role as a family-oriented individual and prioritize spending quality time with my children.",
@@ -14,7 +14,7 @@ const teamMembers = [
   {
     name: "Leila Heidary",
     title: "Account Coordinator",
-    image: "/images/team/leila.png",
+    image: "https://www.densndente.ca/site/extra%20images/Our%20Team/Leila_Sales-Rep-2.png",
     description: [
       "I’ve been with Smiles First for 6 years, initially in logistics and now as an account coordinator for Dens ‘N Dente Healthcare. Applying my business expertise, sales strategies, and product knowledge, I assist clients in selecting top-market products.",
       "Outside of work, I enjoy cycling, yoga, music, and quality time with loved ones.",
@@ -23,7 +23,7 @@ const teamMembers = [
   {
     name: "Safeh A. Pairose",
     title: "Head of Sales",
-    image: "/images/team/safeh.png",
+    image: "https://www.densndente.ca/site/extra%20images/Our%20Team/Safeh_Sales-Rep-2.png",
     description: [
       "With a professional background encompassing 10 years of valuable experience in the field of dentistry, I strive to bring both expertise and enthusiasm to the table.",
       "In addition to my commitment to oral health, I also take pleasure in engaging in various leisure activities including basketball, the gym, and quality time spent with my cherished friends and family. I am ecstatic to help your office bring success and unlock new levels of achievement and growth together.",
@@ -32,7 +32,7 @@ const teamMembers = [
   {
     name: "Nisarg Raval",
     title: "Account Coordinator",
-    image: "/images/team/nisarg.png",
+    image: "https://www.densndente.ca/site/extra%20images/Our%20Team/Nisarg_Sales-Rep-2.png",
     description: [
       "An International trained dentist from India, my passion lies in providing exceptional dental care using only the highest quality materials. I love sports and connecting with people, and I strive to create a warm and welcoming environment for all my clients.",
       "With my background in dentistry and genuine care for each individual, I aim to build trust and establish lasting relationships in the dental sales field.",
@@ -41,7 +41,7 @@ const teamMembers = [
   {
     name: "Katie Mak",
     title: "Account Coordinator",
-    image: "/images/team/katie.png",
+    image: "https://www.densndente.ca/site/extra%20images/Our%20Team/Katie_Sales-Rep-2.png",
     description: [
       "I am excited to join Dens ‘N Dente Healthcare as an Account Coordinator. With over 9 years of experience as a pharmaceutical sales representative, I’m passionate about building relationships and delivering tailored solutions.",
       "When I’m not at work, I love spending time practicing yoga and hiking. Nature has always been a source of inspiration for me.",
@@ -50,7 +50,7 @@ const teamMembers = [
   {
     name: "Samantha Trieu",
     title: "Account Coordinator",
-    image: "/images/team/samantha.png",
+    image: "https://www.densndente.ca/site/extra%20images/Our%20Team/Sam_Sales-Rep.png",
     description: [
       "When it comes to helping dental offices grow, being able to nurture strong relationships is immensely rewarding to me. I’m excited to utilize my expertise from a combination of dental and sales experience to deliver individualized service to dental professionals.",
       "At my leisure, I enjoy searching for unique house plants to add to my growing collection.",
@@ -59,7 +59,7 @@ const teamMembers = [
   {
     name: "Marila Fontenelle Sily de Assis",
     title: "Customer Service Representative Lead",
-    image: "/images/team/marila.png",
+    image: "https://www.densndente.ca/site/extra%20images/Our%20Team/Marila_CSR-2.png",
     description: [
       "Passionate about delivering exceptional customer experiences, I design tailored solutions that create value, nurture lasting relationships, and elevate every interaction.",
       "Beyond my professional dedication, I treasure time with loved ones and enjoy travelling, restaurants, movies, and home decor.",

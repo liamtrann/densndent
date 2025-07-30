@@ -2,6 +2,7 @@ import React from "react";
 import { useParams } from "react-router-dom";
 import ListProductComponent from "./ListProductComponent";
 
+
 export default function ListProductPage({ by }) {
   const { name, brandName, nameAndId, categoryNameAndId } = useParams();
 
