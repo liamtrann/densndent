@@ -19,6 +19,30 @@ const partnerKeys = [
   "surgical-specialties",
   "flight",
   "mark3",
+  "zirc",
+  "young",
+  "waterpik",
+  "univet",
+  "tidi",
+  "sable",
+  "shofu",
+  "primed",
+  "pulpdent",
+  "pdi",
+  "kuraray",
+  "halyard",
+  "flow",
+  "defend",
+  "dentamerica",
+  "pierrel",
+  "pacdent",
+  "morita",
+  "palmero",
+  "parkell",
+  "hager",
+  
+
+
 ];
 
 const partners = partnerKeys.map((key) => ({
