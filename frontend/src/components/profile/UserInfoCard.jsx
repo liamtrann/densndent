@@ -55,7 +55,7 @@ export default function UserInfoCard({ customer }) {
                 customer.billing_state ||
                 customer.billing_zip ? (
                   <div>
-                    [
+                    
                     {[
                       customer.billing_city,
                       customer.billing_state,

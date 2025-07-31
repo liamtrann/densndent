@@ -4,7 +4,7 @@ import { delayCall } from "api/util";
 import {
   fetchProductsBy,
   fetchCountBy,
-} from "../../redux/slices/productsSlice";
+} from "store/slices/productsSlice";
 import {
   Breadcrumb,
   ErrorMessage,
@@ -14,7 +14,6 @@ import {
 } from "common";
 import FilterOption from "../filters/FilterOption";
 import ProductListGrid from "./ProductListGrid";
-import CartSummaryPanel from "../cart/CartSummaryPanel"; // 👈 Import here
 export default function ListProductComponent({
   type,
   id,
@@ -25,6 +24,12 @@ export default function ListProductComponent({
   const [sort, setSort] = useState("");
   const [page, setPage] = useState(1);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [appliedFilters, setAppliedFilters] = useState({
+    minPrice: "",
+    maxPrice: "",
+    selectedCategories: [],
+    selectedBrands: [],
+  });
   const [filters, setFilters] = useState({
     minPrice: "",
     maxPrice: "",
@@ -33,17 +38,20 @@ export default function ListProductComponent({
   });
 
   const dispatch = useDispatch();
-  const key = `${id}_${perPage}_${sort}_${page}`;
+  const { minPrice, maxPrice } = appliedFilters;
+  const priceKey = `${minPrice || ""}_${maxPrice || ""}`;
+  const key = `${id}_${perPage}_${sort}_${priceKey}_${page}`;
+  const countKey = `${id}_${priceKey}`;
   const products = useSelector(
     (state) => state.products.productsByPage[key] || []
   );
   const isLoading = useSelector((state) => state.products.isLoading);
   const error = useSelector((state) => state.products.error);
-  // Use either totalByClass or totalByBrand, fallback to totalByClass
+  // Use price-aware count key for filtered totals
   const total = useSelector(
     (state) =>
+      state.products.totalByClass?.[countKey] ||
       state.products.totalByClass?.[id] ||
-      state.products.totalByBrand?.[id] ||
       0
   );
 
@@ -55,27 +63,77 @@ export default function ListProductComponent({
     }
   }, [dispatch, type, id]);
 
+  // Separate useEffect for fetching filtered count when filters are applied
+  useEffect(() => {
+    if (id && (appliedFilters.minPrice || appliedFilters.maxPrice)) {
+      return delayCall(() =>
+        dispatch(
+          fetchCountBy({
+            type,
+            id,
+            minPrice: appliedFilters.minPrice,
+            maxPrice: appliedFilters.maxPrice,
+          })
+        )
+      );
+    }
+  }, [dispatch, type, id, appliedFilters.minPrice, appliedFilters.maxPrice]);
+
   useEffect(() => {
     if (id) {
       if (!products || products.length === 0) {
         return delayCall(() => {
-          dispatch(fetchProductsBy({ type, id, page, limit: perPage, sort }));
+          dispatch(
+            fetchProductsBy({
+              type,
+              id,
+              page,
+              limit: perPage,
+              sort,
+              minPrice: appliedFilters.minPrice,
+              maxPrice: appliedFilters.maxPrice,
+            })
+          );
         });
       }
     }
-  }, [dispatch, type, id, perPage, sort, page, products.length]);
+  }, [
+    dispatch,
+    type,
+    id,
+    perPage,
+    sort,
+    page,
+    products.length,
+    appliedFilters.minPrice,
+    appliedFilters.maxPrice,
+  ]);
 
   const totalPages = Math.ceil(total / perPage) || 1;
 
   const handleFiltersChange = (newFilters) => {
     setFilters(newFilters);
-    setPage(1); // Reset to first page when filters change
+    // Don't reset page or trigger API call here - only on Apply
   };
 
   const handleApplyFilters = () => {
-    // Here you can trigger a new search with the applied filters
-    console.log("Applied filters:", filters);
-    // You might want to dispatch a new fetchProductsBy with filters
+    // Set the applied filters (this will trigger useEffect to fetch new data)
+    setAppliedFilters(filters);
+
+    // Reset to first page when applying filters
+    setPage(1);
+
+    // Fetch updated count with filters
+    if (filters.minPrice || filters.maxPrice) {
+      dispatch(
+        fetchCountBy({
+          type,
+          id,
+          minPrice: filters.minPrice,
+          maxPrice: filters.maxPrice,
+        })
+      );
+    }
   };
 
   return (
@@ -88,73 +146,81 @@ export default function ListProductComponent({
       {/* Desktop: 3-column layout, Mobile: Single column stack */}
       <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 items-start">
         {/* Left Column: Filters - Hidden on mobile, shown on desktop */}
-        <FilterOption
-          className="hidden lg:block"
-          filters={filters}
-          onFiltersChange={handleFiltersChange}
-          onApplyFilters={handleApplyFilters}
-        />
+        {products.length > 0 && (
+          <FilterOption
+            className="hidden lg:block"
+            filters={filters}
+            onFiltersChange={handleFiltersChange}
+            onApplyFilters={handleApplyFilters}
+          />
+        )}
 
         {/* Center Column: Main product area */}
         <div className="flex-1 w-full">
           {/* Mobile filter toggle button */}
-          <div className="lg:hidden mb-4">
-            <button
-              onClick={() => setShowMobileFilters(!showMobileFilters)}
-              className="w-full bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg text-left flex items-center justify-between"
-            >
-              <span className="font-medium">Filters & Sort</span>
-              <svg
-                className={`w-5 h-5 transform transition-transform ${
-                  showMobileFilters ? "rotate-180" : ""
-                }`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+          {products.length > 0 && (
+            <div className="lg:hidden mb-4">
+              <button
+                onClick={() => setShowMobileFilters(!showMobileFilters)}
+                className="w-full bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg text-left flex items-center justify-between"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </button>
+                <span className="font-medium">Filters & Sort</span>
+                <svg
+                  className={`w-5 h-5 transform transition-transform ${
+                    showMobileFilters ? "rotate-180" : ""
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
 
-            {/* Mobile filters dropdown */}
-            {showMobileFilters && (
-              <div className="mt-2 bg-white border rounded-lg shadow-lg p-4">
-                <FilterOption
-                  filters={filters}
-                  onFiltersChange={handleFiltersChange}
-                  onApplyFilters={() => {
-                    handleApplyFilters();
-                    setShowMobileFilters(false);
-                  }}
-                  className="w-full"
-                />
-              </div>
-            )}
-          </div>
+              {/* Mobile filters dropdown */}
+              {showMobileFilters && (
+                <div className="mt-2 bg-white border rounded-lg shadow-lg p-4">
+                  <FilterOption
+                    filters={filters}
+                    onFiltersChange={handleFiltersChange}
+                    onApplyFilters={() => {
+                      handleApplyFilters();
+                      setShowMobileFilters(false);
+                    }}
+                    className="w-full"
+                  />
+                </div>
+              )}
+            </div>
+          )}
 
-          <ProductToolbar
-            perPageOptions={[12, 24, 48]}
-            onPerPageChange={(e) => {
-              setPerPage(Number(e.target.value));
-              setPage(1);
-            }}
-            perPage={perPage}
-            sort={sort}
-            onSortChange={(e) => setSort(e.target.value)}
-            total={total}
-          />
-          <div className="mb-4">
-            <Pagination
-              page={page}
-              totalPages={totalPages}
-              onPageChange={setPage}
+          {products.length > 0 && (
+            <ProductToolbar
+              perPageOptions={[12, 24, 48]}
+              onPerPageChange={(e) => {
+                setPerPage(Number(e.target.value));
+                setPage(1);
+              }}
+              perPage={perPage}
+              sort={sort}
+              onSortChange={(e) => setSort(e.target.value)}
+              total={total}
             />
-          </div>
+          )}
+          {products.length > 0 && (
+            <div className="mb-4">
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                onPageChange={setPage}
+              />
+            </div>
+          )}
           {isLoading && <Loading message="Loading products..." />}
           {error && <ErrorMessage message={error} />}
           {!isLoading && !error && products.length === 0 && (
@@ -166,13 +232,15 @@ export default function ListProductComponent({
             <ProductListGrid products={products} />
           )}
           {/* Bottom pagination for mobile */}
-          <div className="mt-6">
-            <Pagination
-              page={page}
-              totalPages={totalPages}
-              onPageChange={setPage}
-            />
-          </div>
+          {products.length > 0 && (
+            <div className="mt-6">
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                onPageChange={setPage}
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>

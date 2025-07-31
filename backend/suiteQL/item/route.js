@@ -24,4 +24,6 @@ router.get('/by-class-and-brand', controller.getItemsByClassAndBrand);
 
 router.get('/by-category', controller.getItemsByCategory);
 
+router.get('/count-by-category', controller.getCountByCategory);
+
 module.exports = router;

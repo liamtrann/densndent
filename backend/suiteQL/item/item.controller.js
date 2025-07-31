@@ -3,11 +3,11 @@ const { validateUserAccess } = require('../../auth/middleware');
 
 exports.getItemsByClass = async (req, res) => {
   try {
-    const { classId, limit, offset, sort } = req.query;
+    const { classId, limit, offset, sort, minPrice, maxPrice } = req.query;
     if (!classId) {
       return res.status(400).json({ error: 'classId is required' });
     }
-    const items = await itemsService.findByField('class', classId, limit, offset, sort);
+    const items = await itemsService.findByField('class', classId, limit, offset, sort, minPrice, maxPrice);
     if (!items) {
       return res.status(404).json({ error: 'Items not found' });
     }
@@ -19,11 +19,11 @@ exports.getItemsByClass = async (req, res) => {
 
 exports.getItemsByBrand = async (req, res) => {
   try {
-    const { brand, limit, offset, sort } = req.query;
+    const { brand, limit, offset, sort, minPrice, maxPrice } = req.query;
     if (!brand) {
       return res.status(400).json({ error: 'brand is required' });
     }
-    const items = await itemsService.findByField('brand', brand, limit, offset, sort);
+    const items = await itemsService.findByField('brand', brand, limit, offset, sort, minPrice, maxPrice);
     if (!items) {
       return res.status(404).json({ error: 'Items not found' });
     }
@@ -142,12 +142,13 @@ exports.postItemsByIds = async (req, res) => {
 
 exports.postItemsByNameLike = async (req, res) => {
   try {
-    const { limit, offset, sort } = req.query;
+    const { limit, offset, sort, minPrice, maxPrice } = req.query;
     const { name } = req.body;
+    
     if (!name) {
       return res.status(400).json({ error: 'Missing name in request body' });
     }
-    const items = await itemsService.findByField("name", name, limit, offset, sort);
+    const items = await itemsService.findByField("name", name, limit, offset, sort, minPrice, maxPrice);
     res.json(items);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -156,11 +157,11 @@ exports.postItemsByNameLike = async (req, res) => {
 
 exports.getCountByClass = async (req, res) => {
   try {
-    const { classId } = req.query;
+    const { classId, minPrice, maxPrice } = req.query;
     if (!classId) {
       return res.status(400).json({ error: 'classId is required' });
     }
-    const count = await itemsService.countByField('class', classId);
+    const count = await itemsService.countByField('class', classId, minPrice, maxPrice);
     res.json({ count });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -168,11 +169,12 @@ exports.getCountByClass = async (req, res) => {
 };
 exports.getCountByName = async (req, res) => {
   try {
+    const { minPrice, maxPrice } = req.query;
     const { name } = req.body;
     if (!name) {
       return res.status(400).json({ error: 'name is required' });
     }
-    const count = await itemsService.countByField('name', name);
+    const count = await itemsService.countByField('name', name, minPrice, maxPrice);
     res.json({ count });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -181,11 +183,11 @@ exports.getCountByName = async (req, res) => {
 
 exports.getCountByBrand = async (req, res) => {
   try {
-    const { brand } = req.query;
+    const { brand, minPrice, maxPrice } = req.query;
     if (!brand) {
       return res.status(400).json({ error: 'brand is required' });
     }
-    const count = await itemsService.countByField('brand', brand);
+    const count = await itemsService.countByField('brand', brand, minPrice, maxPrice);
     res.json({ count });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -194,15 +196,28 @@ exports.getCountByBrand = async (req, res) => {
 
 exports.getItemsByCategory = async (req, res) => {
   try {
-    const { category, limit, offset, sort } = req.query;
+    const { category, limit, offset, sort, minPrice, maxPrice } = req.query;
     if (!category) {
       return res.status(400).json({ error: 'category is required' });
     }
-    const items = await itemsService.findByCategory(category, limit, offset, sort);
+    const items = await itemsService.findByCategory(category, limit, offset, sort, minPrice, maxPrice);
     if (!items) {
       return res.status(404).json({ error: 'Items not found' });
     }
     res.json(items);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getCountByCategory = async (req, res) => {
+  try {
+    const { category, minPrice, maxPrice } = req.query;
+    if (!category) {
+      return res.status(400).json({ error: 'category is required' });
+    }
+    const count = await itemsService.countByCategory(category, minPrice, maxPrice);
+    res.json({ count });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

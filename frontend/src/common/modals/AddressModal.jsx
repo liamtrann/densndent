@@ -1,80 +1,196 @@
-// src/common/AddressModal.jsx
 import React, { useState } from "react";
+import Modal from "react-modal";
 import InputField from "../ui/InputField";
+import Dropdown from "../ui/Dropdown";
 import Button from "../ui/Button";
+import stateMappings from "../../config/states";
+import {
+  validatePhone,
+  validatePostalCode,
+} from "../../config/config";
 
-export default function AddressModal({ onClose }) {
+Modal.setAppElement("#root");
+
+export default function AddressModal({ isOpen, onClose, onSave }) {
   const [formData, setFormData] = useState({
-    newEmail: "",
-    confirmEmail: "",
-    password: "",
+    fullName: "",
+    address: "",
+    address2: "",
+    city: "",
+    state: "on",
+    zip: "",
+    phone: "",
+    isResidential: false,
+    country: "ca",
   });
-  const states = [
-    { value: "California", label: "California" },
-    { value: "New York", label: "New York" },
-    { value: "Texas", label: "Texas" },
-  ];
+
+  const [errors, setErrors] = useState({});
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onClose();
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.fullName) newErrors.fullName = "Full Name is required";
+    if (!formData.address) newErrors.address = "Address is required";
+    if (!formData.city) newErrors.city = "City is required";
+    if (!formData.state) newErrors.state = "State/Province is required";
+
+    const zipError = validatePostalCode(formData.zip, formData.country);
+    if (zipError) newErrors.zip = zipError;
+
+    if (!validatePhone(formData.phone)) {
+      newErrors.phone = "Phone number must be 10 digits";
+    }
+
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
+
+  const handleSave = () => {
+
+    const isValid = validateForm();
+
+    if (!isValid) return;
+
+    if (onSave) {
+      onSave(formData);
+
+      // Reset form
+      setFormData({
+        fullName: "",
+        address: "",
+        address2: "",
+        city: "",
+        state: "",
+        zip: "",
+        phone: "",
+        isResidential: false,
+        country: "us",
+      });
+      setErrors({});
+      onClose(); // Close modal after successful save
+    }
+  };
+
+  const states = stateMappings[formData.country?.toLowerCase?.()] || {};
+  const stateOptions = Object.entries(states).map(([label, value]) => ({
+    label:
+      label
+        .split(" ")
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(" "),
+    value,
+  }));
+
+  const countryOptions = [
+    { label: "United States", value: "us" },
+    { label: "Canada", value: "ca" },
+  ];
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-      <div className="bg-white w-full max-w-md p-6 rounded shadow-lg relative">
+    <Modal
+      isOpen={isOpen}
+      onRequestClose={onClose}
+      contentLabel="Add Address"
+      className="bg-white rounded-md p-6 w-full max-w-xl mx-auto mt-20 outline-none relative shadow-xl overflow-y-auto max-h-[90vh]"
+      overlayClassName="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-start z-50"
+    >
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold">Add New Address</h2>
         <button
-          className="absolute top-2 right-4 text-xl font-bold text-gray-600 hover:text-gray-800"
           onClick={onClose}
+          className="text-gray-500 text-xl hover:text-black"
         >
-          &times;
+          ×
         </button>
-
-        <h2 className="text-xl font-semibold mb-4">Change Email</h2>
-
-        <form onSubmit={handleSubmit}>
-          <InputField
-            label="New Email"
-            name="newEmail"
-            type="email"
-            value={formData.newEmail}
-            onChange={handleChange}
-            required
-          />
-          <InputField
-            label="Confirm New Email"
-            name="confirmEmail"
-            type="email"
-            value={formData.confirmEmail}
-            onChange={handleChange}
-            required
-          />
-          <InputField
-            label="Password"
-            name="password"
-            type="password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-          />
-
-          <p className="text-sm text-gray-600 mt-2">
-            You will still be able to login with your current email address and
-            password until your new email address is verified.
-          </p>
-
-          <div className="mt-4">
-            <Button type="submit" className="bg-red-600 hover:bg-red-700">
-              Send Verification Email
-            </Button>
-          </div>
-        </form>
       </div>
-    </div>
+
+      <p className="text-sm text-red-600 mb-4">
+        Required <span className="text-red-700">*</span>
+      </p>
+
+      <div className="space-y-4">
+        <InputField
+          label="Full Name *"
+          name="fullName"
+          value={formData.fullName}
+          onChange={handleChange}
+          error={errors.fullName}
+        />
+        <InputField
+          label="Address *"
+          name="address"
+          value={formData.address}
+          onChange={handleChange}
+          error={errors.address}
+        />
+        <InputField
+          name="address2"
+          value={formData.address2}
+          onChange={handleChange}
+          placeholder="Apt. 3 or Suite #1516"
+        />
+        <InputField
+          label="City *"
+          name="city"
+          value={formData.city}
+          onChange={handleChange}
+          error={errors.city}
+        />
+        <Dropdown
+          label="Country *"
+          name="country"
+          value={formData.country}
+          onChange={handleChange}
+          options={countryOptions}
+        />
+        <Dropdown
+          label="State/Province *"
+          name="state"
+          value={formData.state}
+          onChange={handleChange}
+          options={stateOptions}
+          error={errors.state}
+        />
+        <InputField
+          label="Postal/Zip Code *"
+          name="zip"
+          value={formData.zip}
+          onChange={handleChange}
+          error={errors.zip}
+        />
+        <InputField
+          label="Phone Number *"
+          name="phone"
+          value={formData.phone}
+          onChange={handleChange}
+          error={errors.phone}
+        />
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            name="isResidential"
+            checked={formData.isResidential}
+            onChange={handleChange}
+          />
+          This is a Residential Address
+        </label>
+      </div>
+
+      <div className="mt-6 flex justify-end gap-4">
+        <Button variant="link" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button onClick={handleSave}>Save Address</Button>
+      </div>
+    </Modal>
   );
 }

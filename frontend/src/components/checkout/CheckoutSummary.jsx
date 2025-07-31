@@ -1,18 +1,30 @@
-import React from "react";
+import React, { useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
-import { Button, InputField, Paragraph, ProductImage } from "common";
+import { useSelector, useDispatch } from "react-redux";
+import { Button, InputField, Paragraph, PreviewCartItem } from "common";
+import { formatCurrency } from "config/config";
+import {
+  calculatePriceAfterDiscount,
+  selectFinalPrice,
+  selectCartSubtotalWithDiscounts,
+} from "@/redux/slices";
+import { EstimateTotal } from "components";
 
-export default function CheckoutSummary({ promoCode, setPromoCode }) {
+export default function CheckoutSummary({
+  promoCode,
+  setPromoCode,
+  shippingCost = 0,
+  estimatedTax = null,
+  taxRate = null,
+}) {
   const cart = useSelector((state) => state.cart.items);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  const subtotal = cart
-    .reduce(
-      (sum, item) => sum + (item.unitprice || item.price || 0) * item.quantity,
-      0
-    )
-    .toFixed(2);
+  // Calculate subtotal with discounted prices
+  const subtotal = useSelector((state) =>
+    selectCartSubtotalWithDiscounts(state, cart)
+  );
 
   const handleNavigateToProduct = (id) => {
     navigate(`/product/${id}`);
@@ -26,22 +38,22 @@ export default function CheckoutSummary({ promoCode, setPromoCode }) {
         <span>
           SUBTOTAL {cart.length} ITEM{cart.length !== 1 ? "S" : ""}
         </span>
-        <span className="font-semibold">${subtotal}</span>
+        <span className="font-semibold">{formatCurrency(subtotal)}</span>
       </div>
 
       <Paragraph className="text-xs text-gray-500 mb-2">
         Subtotal Does Not Include Shipping Or Tax
       </Paragraph>
 
-      <div className="mb-2 flex justify-between text-sm">
-        <span>Shipping</span>
-        <span>$0.00</span>
-      </div>
-
-      <div className="mb-4 flex justify-between font-semibold">
-        <span>TOTAL</span>
-        <span>${subtotal}</span>
-      </div>
+      <EstimateTotal
+        subtotal={subtotal}
+        shippingCost={shippingCost}
+        estimatedTax={estimatedTax}
+        taxRate={taxRate}
+        currency="$"
+        showBreakdown={true}
+        className="mb-4"
+      />
 
       {/* Promo Code */}
       {/* <div className="mb-4">
@@ -63,32 +75,16 @@ export default function CheckoutSummary({ promoCode, setPromoCode }) {
         </h4>
         <div className="space-y-3 text-sm">
           {cart.map((item, idx) => (
-            <div
+            <PreviewCartItem
               key={item.id + "-" + idx}
-              className="p-3 border rounded flex items-start gap-3"
-            >
-              <ProductImage
-                src={item.file_url || item.img1 || item.imageurl}
-                alt={item.itemid || item.displayname}
-                className="w-16 h-16 object-contain border rounded"
-              />
-              <div className="space-y-1">
-                {/* 🔗 Clickable title */}
-                <div
-                  onClick={() => handleNavigateToProduct(item.id)}
-                  className="font-semibold text-blue-700 hover:underline cursor-pointer"
-                >
-                  {item.itemid || item.displayname}
-                </div>
-
-                <div>Unit price: ${item.unitprice || item.price}</div>
-                <div>Quantity: {item.quantity}</div>
-                <div className="font-bold">
-                  Amount: $
-                  {((item.unitprice || item.price) * item.quantity).toFixed(2)}
-                </div>
-              </div>
-            </div>
+              item={item}
+              onQuantityChange={null}
+              onItemClick={handleNavigateToProduct}
+              showQuantityControls={false}
+              compact={false}
+              imageSize="w-16 h-16"
+              textSize="text-sm"
+            />
           ))}
         </div>
 

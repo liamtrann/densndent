@@ -8,12 +8,12 @@ export default function FilterSidebar({ filters, onFiltersChange }) {
     selectedBrands = [],
   } = filters || {};
 
-  const predefinedRanges = [
-    { label: "Under $100", min: 0, max: 100 },
-    { label: "$100 - $300", min: 100, max: 300 },
-    { label: "$300 - $500", min: 300, max: 500 },
-    { label: "$500+", min: 500, max: Infinity },
-  ];
+  // const predefinedRanges = [
+  //   { label: "Under $100", min: 0, max: 100 },
+  //   { label: "$100 - $300", min: 100, max: 300 },
+  //   { label: "$300 - $500", min: 300, max: 500 },
+  //   { label: "$500+", min: 500, max: Infinity },
+  // ];
 
   const handleRangeClick = (range) => {
     onFiltersChange?.({
@@ -80,7 +80,7 @@ export default function FilterSidebar({ filters, onFiltersChange }) {
         </div>
 
         {/* Predefined Ranges */}
-        <div className="flex flex-col space-y-2 text-sm">
+        {/* <div className="flex flex-col space-y-2 text-sm">
           {predefinedRanges.map((range) => (
             <button
               key={range.label}
@@ -90,11 +90,11 @@ export default function FilterSidebar({ filters, onFiltersChange }) {
               {range.label}
             </button>
           ))}
-        </div>
+        </div> */}
       </div>
 
       {/* CATEGORY FILTER */}
-      <div className="mb-6">
+      {/* <div className="mb-6">
         <h3 className="font-semibold text-sm mb-2">CATEGORIES</h3>
         {["Dental", "Amalgam", "Alloys"].map((cat) => (
           <label key={cat} className="block text-sm">
@@ -107,10 +107,10 @@ export default function FilterSidebar({ filters, onFiltersChange }) {
             {cat}
           </label>
         ))}
-      </div>
+      </div> */}
 
       {/* BRAND FILTER */}
-      <div className="mb-6">
+      {/* <div className="mb-6">
         <h3 className="font-semibold text-sm mb-2">BRAND</h3>
         {["Ivoclar", "SDI", "Silmet"].map((brand) => (
           <label key={brand} className="block text-sm">
@@ -123,7 +123,7 @@ export default function FilterSidebar({ filters, onFiltersChange }) {
             {brand}
           </label>
         ))}
-      </div>
+      </div> */}
     </aside>
   );
 }

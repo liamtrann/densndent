@@ -3,10 +3,20 @@ import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Modal } from "../components";
 import { delayCall } from "../api/util";
-import { useInventoryCheck } from "../hooks";
-import { CartProductCard, CartOrderSummary } from "../components";
-import { ErrorMessage, Loading } from "../common";
-import { addToCart, removeFromCart } from "store/slices/cartSlice";
+import { useInventoryCheck } from "../config";
+import { CartOrderSummary } from "../components";
+import { ErrorMessage, Loading, PreviewCartItem } from "../common";
+import {
+  addToCart,
+  removeFromCart,
+  updateQuantity,
+} from "store/slices/cartSlice";
+import { formatPrice, formatCurrency } from "config/config";
+import {
+  calculatePriceAfterDiscount,
+  selectFinalPrice,
+  selectCartSubtotalWithDiscounts,
+} from "@/redux/slices";
 
 export default function CartPage() {
   const cart = useSelector((state) => state.cart.items);
@@ -32,25 +42,21 @@ export default function CartPage() {
     }
   }, [cart]);
 
-  // Calculate subtotal and total quantity
-  const subtotal = cart
-    .reduce(
-      (sum, item) => sum + (item.unitprice || item.price || 0) * item.quantity,
-      0
-    )
-    .toFixed(2);
+  // Calculate subtotal with discounted prices
+  const subtotalAmount = useSelector((state) =>
+    selectCartSubtotalWithDiscounts(state, cart)
+  );
+  const subtotal = formatPrice(subtotalAmount);
   const totalQuantity = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   // Handle quantity change
-  const handleQuantityChange = (item, value) => {
-    const newQuantity = Math.max(
-      1,
-      Math.min(Number(value), item.totalquantityonhand || 9999)
-    );
-    if (newQuantity !== item.quantity) {
-      delayCall(() =>
-        dispatch(addToCart({ ...item, quantity: newQuantity - item.quantity }))
-      );
+  const handleQuantityChange = (item, type) => {
+    const newQuantity = type === "inc" ? item.quantity + 1 : item.quantity - 1;
+
+    if (newQuantity === 0) {
+      dispatch(removeFromCart(item.id));
+    } else {
+      dispatch(updateQuantity({ id: item.id, quantity: newQuantity }));
     }
   };
 
@@ -113,15 +119,28 @@ export default function CartPage() {
               key={
                 item.id + (item.flavor ? `-${item.flavor}` : "") + "-wrapper"
               }
+              className="mb-4"
             >
-              <CartProductCard
+              <PreviewCartItem
                 key={item.id + (item.flavor ? `-${item.flavor}` : "")}
                 item={item}
-                inv={inv}
-                onNavigate={handleNavigateToProduct}
                 onQuantityChange={handleQuantityChange}
-                onRemove={handleRemoveClick}
+                onItemClick={handleNavigateToProduct}
+                showQuantityControls={true}
+                showTotal={true}
+                compact={false}
+                imageSize="w-24 h-24"
+                textSize="text-base"
               />
+              {inv && inv.quantityavailable <= 0 && (
+                <div className="text-red-600 text-sm mt-2">Out of stock</div>
+              )}
+              <button
+                onClick={() => handleRemoveClick(item)}
+                className="text-red-600 text-sm underline mt-2 hover:text-red-800"
+              >
+                Remove from cart
+              </button>
             </div>
           );
         })
@@ -143,7 +162,9 @@ export default function CartPage() {
           product={[
             {
               name: selectedProduct.displayname || selectedProduct.itemid,
-              price: selectedProduct.unitprice || selectedProduct.price,
+              price: formatCurrency(
+                selectedProduct.unitprice || selectedProduct.price
+              ),
               quantity: selectedProduct.quantity,
             },
           ]}

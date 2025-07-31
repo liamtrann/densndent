@@ -6,6 +6,8 @@ const suiteqlRoutes = require('./suiteQL/route');
 const netsuiteRestRoute = require('./netsuiteRest/route');
 const restapiRoutes = require('./restapi/restapi.route');
 const bodyParser = require('body-parser');
+// const kafkaServicesManager = require('./kafka/services.manager');
+
 const app = express();
 
 // Middleware
@@ -19,6 +21,21 @@ app.use('/suiteql', suiteqlRoutes);
 app.use('/netsuite-rest', netsuiteRestRoute);
 app.use('/restapi', restapiRoutes);
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
+// Kafka health check endpoint
+// app.get('/kafka/health', (req, res) => {
+//   const health = kafkaServicesManager.getServicesHealth();
+//   res.json(health);
+// });
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
@@ -26,6 +43,7 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 3001;
+
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`🌟 Server running on port ${PORT}`);
 });

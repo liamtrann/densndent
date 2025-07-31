@@ -1,0 +1,46 @@
+name: Simple CI/CD
+
+on:
+  push:
+    branches: [ main, full-stack ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    # Test Frontend
+    - name: Test Frontend
+      working-directory: ./frontend
+      run: |
+        npm ci
+        npm run lint:check
+        npm test -- --watchAll=false
+        npm run build
+      env:
+        CI: false
+
+    # Test Backend
+    - name: Test Backend
+      working-directory: ./backend
+      run: |
+        npm ci
+        npm start &
+        sleep 5
+        kill $!
+
+    # Simple Security Check
+    - name: Security Audit
+      run: |
+        cd frontend && npm audit --audit-level high
+        cd ../backend && npm audit --audit-level high

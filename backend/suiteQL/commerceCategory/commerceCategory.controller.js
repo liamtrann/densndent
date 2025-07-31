@@ -12,7 +12,7 @@ exports.getAllCommerceCategories = async (req, res) => {
 
 exports.getCommerceCategoryById = async (req, res) => {
     try {
-        const { id } = req.query;
+        const { id } = req.params;
         if (!id) {
             return res.status(400).json({ error: 'id is required' });
         }

@@ -25,10 +25,10 @@ export default function SearchBar({ onClose }) {
     debounceRef.current = delayCall(async () => {
       try {
         const res = await api.post(
-          endpoint.POST_GET_ITEMS_BY_NAME({ name: query, limit: 5, offset: 0 }),
+          endpoint.POST_GET_ITEMS_BY_NAME({ limit: 5, offset: 0 }),
           { name: query }
         );
-        setResults(res.data.items || []);
+        setResults(res.data || []);
       } catch (err) {
         setResults([]);
       } finally {

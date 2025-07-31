@@ -1,9 +1,8 @@
 // components/BlueBanner.jsx
 import React from "react";
-import { Button, SectionTitle, Loading, ErrorMessage } from "common";
+import { Button, Loading, ErrorMessage } from "common";
 
 export default function BlueBanner({
-  title,
   items,
   columns = { base: 2, md: 4, lg: 5 },
   renderItem,
@@ -12,29 +11,53 @@ export default function BlueBanner({
   buttonOnClick = () => {},
   loading = false,
   error = null,
+  enableHorizontalScroll = false, // New prop to enable horizontal scrolling
 }) {
   const gridClasses = `grid grid-cols-${columns.base} md:grid-cols-${columns.md} lg:grid-cols-${columns.lg} gap-6`;
 
   return (
     <>
-      <SectionTitle>{title}</SectionTitle>
-      <section
-        className={`bg-white px-6 py-8 ${gridClasses} items-center justify-items-center text-center`}
-      >
+      <section className="bg-white px-6 py-8">
         {loading ? (
           <div className="col-span-full">
-            <Loading text={`Loading ${title.toLowerCase()}...`} />
+            <Loading text={`Loading...`} />
           </div>
         ) : error ? (
           <div className="col-span-full">
             <ErrorMessage message={error} />
           </div>
+        ) : enableHorizontalScroll ? (
+          // Horizontal scroll layout - grid on mobile, horizontal scroll on md+
+          <div className="md:overflow-x-auto md:scrollbar-hide">
+            <div className="grid grid-cols-2 gap-4 md:flex md:gap-4 md:pb-4">
+              {items.map((item, idx) => (
+                <div
+                  key={idx}
+                  className="md:flex-shrink-0 shadow-md hover:shadow-lg transition-shadow duration-200"
+                >
+                  {renderItem(item)}
+                </div>
+              ))}
+            </div>
+          </div>
         ) : (
-          items.map((item, idx) => <div key={idx}>{renderItem(item)}</div>)
+          // Grid layout (default)
+          <div
+            className={`${gridClasses} items-center justify-items-center text-center`}
+          >
+            {items.map((item, idx) => (
+              <div
+                key={idx}
+                className="shadow-md hover:shadow-lg transition-shadow duration-200"
+              >
+                {renderItem(item)}
+              </div>
+            ))}
+          </div>
         )}
 
         {showButton && !loading && !error && (
-          <div className="col-span-full flex justify-center mt-4">
+          <div className="flex justify-center mt-4">
             <Button onClick={buttonOnClick}>{buttonText}</Button>
           </div>
         )}

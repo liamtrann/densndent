@@ -1,7 +1,7 @@
 // Modal components
 export { default as AddressModal } from "./modals/AddressModal";
 export { default as CreateAddressModal } from "./modals/CreateAddressModal";
-export { default as AddAddressModal } from "./modals/AddAddressModal";
+
 
 // UI components
 export { default as Button } from "./ui/Button";
@@ -33,14 +33,20 @@ export { default as AnimatedCard } from "./cards/AnimatedCard";
 export { default as BestSellerCard } from "./cards/BestSellerCard";
 export { default as CategoryTile } from "./cards/CategoryTile";
 export { default as PromotionCard } from "./cards/PromotionCard";
+export { default as PreviewCartItem } from "./cards/PreviewCartItem";
 
 // Layout components
 export { default as FooterSection } from "./layout/FooterSection";
 export { default as InfoBanner } from "./layout/InfoBanner";
 export { default as SectionTitle } from "./layout/SectionTitle";
+export { default as TitleSection } from "./TitleSection";
 
 // Utility components
 export { default as ProtectedRoute } from "./utils/ProtectedRoute";
 export { default as ShowMoreHtml } from "./utils/ShowMoreHtml";
 export { default as TextButton } from "./utils/TextButton";
-// export { default as reactQuery } from "./utils/reactQuery"; // Commented out until @tanstack/react-query is installed
+
+// Toast components
+export { default as Toast } from "./toast/Toast";
+export { default as ToastProvider } from "./toast/ToastProvider";
+export * from "./toast/Toast"; // Export all named exports from Toast.js

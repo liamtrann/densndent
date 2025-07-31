@@ -6,7 +6,7 @@ import { STATUS } from '../status';
 export const fetchBestSellers = createAsyncThunk(
     'bestSellers/fetchBestSellers',
     async (params, { rejectWithValue }) => {
-        const { limit = 10, fromDate = '2025-01-01' } = params || {};
+        const { limit = 20, fromDate = '2025-01-01' } = params || {};
         try {
             const baseUrl = process.env.REACT_APP_API_BASE_URL;
             const url = `${baseUrl}/suiteql/saleInvoiced/top-sale-details?limit=${limit}&fromDate=${fromDate}`;

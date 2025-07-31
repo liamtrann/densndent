@@ -7,12 +7,14 @@ import {
   FormSubmit,
   ErrorMessage,
   Loading,
+  Toast,
 } from "common";
 import { useAuth0 } from "@auth0/auth0-react";
 import api from "api/api";
 import endpoint from "api/endpoints";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchUserInfo } from "../../redux/slices/userSlice";
+import { fetchUserInfo } from "store/slices/userSlice";
+import { validatePhone, validatePassword } from "../../config/config";
 
 export default function ProfileEditCard({ onClose, error }) {
   const { user, getAccessTokenSilently } = useAuth0();
@@ -36,15 +38,6 @@ export default function ProfileEditCard({ onClose, error }) {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: undefined }));
-  };
-
-  const validatePhone = (phone) =>
-    !phone || /^\d{10}$/.test(phone.replace(/\D/g, ""));
-  const validatePassword = (password) => {
-    // At least 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char
-    return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/.test(
-      password
-    );
   };
 
   const handleSubmit = async (e) => {
@@ -88,9 +81,11 @@ export default function ProfileEditCard({ onClose, error }) {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       dispatch(fetchUserInfo({ user, getAccessTokenSilently }));
+      Toast.success("Profile created successfully!");
       if (onClose) onClose();
     } catch (err) {
       setErrors({ form: "Failed to create profile." });
+      Toast.error("Failed to create profile. Please try again.");
     } finally {
       setSubmitting(false);
     }

@@ -1,19 +1,42 @@
-// components/CartSummaryPanel.jsx
-import React from "react";
-import { useSelector } from "react-redux";
+import React, { useEffect, useMemo } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { Button, ProductImage } from "common";
+import { Button, PreviewCartItem } from "common";
+import { updateQuantity, removeFromCart } from "@/redux/slices/cartSlice";
+import { formatCurrency } from "config/config";
+import {
+  calculatePriceAfterDiscount,
+  selectFinalPrice,
+  selectCartSubtotalWithDiscounts,
+  selectPriceDataExists,
+} from "@/redux/slices";
 
 export default function CartSummaryPanel() {
   const cartItems = useSelector((state) => state.cart.items);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const subtotal = cartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
+  // Calculate subtotal with discounted prices
+  const subtotal = useSelector((state) =>
+    selectCartSubtotalWithDiscounts(state, cartItems)
   );
 
   if (cartItems.length === 0) return null;
+
+  const handleQtyChange = (item, type) => {
+    const newQty = type === "inc" ? item.quantity + 1 : item.quantity - 1;
+
+    if (newQty > 0) {
+      dispatch(updateQuantity({ id: item.id, quantity: newQty }));
+    } else {
+      // Remove item from cart when quantity reaches 0
+      dispatch(removeFromCart(item.id));
+    }
+  };
+
+  const handleNavigateToProduct = (id) => {
+    navigate(`/product/${id}`);
+  };
 
   return (
     <aside className="hidden lg:block w-80 bg-white border border-gray-200 p-4 rounded shadow sticky top-28 h-fit">
@@ -23,27 +46,34 @@ export default function CartSummaryPanel() {
         variant="primary"
       >
         Go to Checkout
-      </Button>{" "}
+      </Button>
+
+      <Button
+        onClick={() => navigate("/cart")}
+        className="w-full mt-2"
+        variant="secondary"
+      >
+        Go to Cart
+      </Button>
+
       <div className="mt-4 font-medium flex justify-between">
         <span>Subtotal:</span>
-        <span>${subtotal.toFixed(2)}</span>
+        <span>{formatCurrency(subtotal)}</span>
       </div>
-      <h3 className="text-lg font-semibold mb-3">Cart Summary</h3>
+
+      <h3 className="text-lg font-semibold my-3">Cart Summary</h3>
+
       <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
         {cartItems.map((item) => (
-          <div key={item.id} className="flex items-center gap-3 border-b pb-2">
-            <ProductImage
-              src={item.file_url}
-              className="w-12 h-12 object-cover"
-            />
-            <div className="flex flex-col text-sm">
-              <span className="font-medium">{item.itemid}</span>
-              <span className="text-gray-500">Qty: {item.quantity}</span>
-              <span className="text-gray-800 font-semibold">
-                ${(item.price * item.quantity).toFixed(2)}
-              </span>
-            </div>
-          </div>
+          <PreviewCartItem
+            key={item.id}
+            item={item}
+            onQuantityChange={handleQtyChange}
+            onItemClick={handleNavigateToProduct}
+            compact={true}
+            imageSize="w-12 h-12"
+            textSize="text-sm"
+          />
         ))}
       </div>
     </aside>

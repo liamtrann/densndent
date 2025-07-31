@@ -10,7 +10,8 @@ import { useDispatch } from "react-redux";
 import FormSubmit from "../forms/FormSubmit";
 import Loading from "../ui/Loading";
 import ErrorMessage from "../ui/ErrorMessage";
-import { fetchUserInfo } from "../../redux/slices/userSlice";
+import Toast from "../toast/Toast";
+import { fetchUserInfo } from "store/slices/userSlice";
 
 export default function CreateAddressModal({
   onClose,
@@ -144,6 +145,7 @@ export default function CreateAddressModal({
         }
       );
       dispatch(fetchUserInfo({ user, getAccessTokenSilently })); // Refresh Redux user info
+      Toast.success("Address saved successfully!");
       if (onAddressCreated) onAddressCreated();
       setTimeout(() => {
         onClose();
@@ -153,7 +155,7 @@ export default function CreateAddressModal({
         "❌ Error saving address:",
         err?.response?.data || err?.message || err
       );
-      alert("Failed to save address. Please try again.");
+      Toast.error("Failed to save address. Please try again.");
     } finally {
       setSubmitting(false);
     }

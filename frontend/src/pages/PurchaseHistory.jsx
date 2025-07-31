@@ -197,7 +197,36 @@ export default function PurchaseHistory() {
           {userInfo?.id ? (
             <ListProductHistory userId={userInfo.id} />
           ) : (
-            <Loading message="Loading user information..." className="py-6" />
+            <div className="text-center py-12">
+              <div className="mb-4">
+                <svg
+                  className="mx-auto h-12 w-12 text-gray-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                Profile Setup Required
+              </h3>
+              <Paragraph className="text-gray-500 mb-4">
+                Please complete your profile setup to view your purchase
+                history.
+              </Paragraph>
+              <TextButton
+                className="text-blue-600 hover:text-blue-800"
+                onClick={() => (window.location.href = "/profile")}
+              >
+                Complete Profile Setup
+              </TextButton>
+            </div>
           )}
         </div>
       )}
