@@ -28,6 +28,15 @@ app.use('/api/suiteql', suiteqlRoutes);
 app.use('/api/netsuite-rest', netsuiteRestRoute);
 app.use('/api/restapi', restapiRoutes);
 
+// Test route
+app.get('/api/test', (req, res) => {
+  res.json({ 
+    message: 'Backend is working!', 
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({
@@ -57,10 +66,18 @@ if (process.env.NODE_ENV === 'production') {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error('Error occurred:', {
+    message: err.message,
+    stack: err.stack,
+    url: req.url,
+    method: req.method,
+    timestamp: new Date().toISOString()
+  });
+  
   res.status(500).json({
     error: 'Something went wrong!',
-    message: process.env.NODE_ENV === 'production' ? 'Internal Server Error' : err.message
+    message: process.env.NODE_ENV === 'production' ? 'Internal Server Error' : err.message,
+    ...(process.env.NODE_ENV !== 'production' && { stack: err.stack })
   });
 });
 
