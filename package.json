@@ -1,19 +1,45 @@
 {
   "name": "densndent",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Dens N Dent Healthcare Full Stack Application",
+  "main": "backend/app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "start": "cd backend && node app.js",
+    "server": "cd backend && npm run dev",
+    "client": "cd frontend && npm start",
+    "build": "cd frontend && npm install && npm run build",
+    "heroku-postbuild": "cd frontend && npm install && npm run build",
+    "test": "cd frontend && npm test",
+    "docker:build": "docker build -t densndent .",
+    "docker:run": "docker run -p 3001:3001 densndent",
+    "heroku:login": "heroku container:login",
+    "heroku:build": "heroku container:push web",
+    "heroku:deploy": "heroku container:release web"
   },
+  "engines": {
+    "node": "18.x",
+    "npm": "9.x"
+  },
+  "dependencies": {
+    "concurrently": "^7.6.0"
+  },
+  "devDependencies": {},
+  "keywords": [
+    "react",
+    "nodejs", 
+    "healthcare",
+    "fullstack",
+    "docker",
+    "netsuite"
+  ],
+  "author": "Hong",
+  "license": "ISC",
+  "type": "commonjs",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/liamtrann/densndent.git"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
   "bugs": {
     "url": "https://github.com/liamtrann/densndent/issues"
   },

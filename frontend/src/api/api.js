@@ -1,7 +1,17 @@
 import axios from 'axios';
 
+// Get the base URL based on environment
+const getBaseURL = () => {
+  if (process.env.NODE_ENV === 'production') {
+    // In production, use relative path since backend serves frontend
+    return '/api';
+  }
+  // In development, use full URL
+  return process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001';
+};
+
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_BASE_URL,
+  baseURL: getBaseURL(),
   headers: {
     'Content-Type': 'application/json',
   },
