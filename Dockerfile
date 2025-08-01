@@ -13,7 +13,7 @@ COPY backend/package*.json ./backend/
 
 # Install frontend dependencies
 WORKDIR /app/frontend
-RUN npm ci --only=production --no-audit --no-fund
+RUN npm install --only=production --no-audit --no-fund
 
 # Copy frontend source code and build
 COPY frontend/ ./
@@ -32,7 +32,7 @@ WORKDIR /app
 COPY backend/package*.json ./
 
 # Install backend dependencies
-RUN npm ci --only=production --no-audit --no-fund && \
+RUN npm install --only=production --no-audit --no-fund && \
     npm cache clean --force
 
 # Copy backend source code
