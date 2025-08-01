@@ -4,12 +4,11 @@ import React, { Suspense, lazy } from "react";
 import { useDispatch } from "react-redux";
 import { Routes, Route } from "react-router-dom";
 
+import { fetchUserInfo, clearUserInfo } from "store/slices/userSlice";
+
 import { ProtectedRoute, ToastProvider, Loading } from "./common";
 import { Header, Footer, LayoutWithCart, CenteredContent } from "./components";
-
-// Eagerly loaded components (critical for initial render)
 import { LandingPage } from "./pages";
-import { fetchUserInfo, clearUserInfo } from "store/slices/userSlice";
 // Lazy loaded components
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
 const ListProductPage = lazy(() => import("./components/product/ListProductPage"));

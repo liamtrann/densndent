@@ -8,15 +8,10 @@ export default function Breadcrumb({ path }) {
       {path.map((segment, idx) => (
         <span key={idx}>
           {idx > 0 && " - "}
-          {segment.link ? (
-            <Link
-              to={segment.link}
-              className="hover:underline text-blue-600"
-            >
-              {segment.name}
-            </Link>
+          {idx === path.length - 1 ? (
+            <span className="font-semibold">{segment}</span>
           ) : (
-            <span className="font-semibold">{segment.name}</span>
+            <span className="text-gray-600">{segment}</span>
           )}
         </span>
       ))}
