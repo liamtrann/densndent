@@ -2,7 +2,6 @@ import React from "react";
 import { useParams } from "react-router-dom";
 import ListProductComponent from "./ListProductComponent";
 
-
 export default function ListProductPage({ by }) {
   const { name, brandName, nameAndId, categoryNameAndId } = useParams();
 
@@ -69,6 +68,14 @@ export default function ListProductPage({ by }) {
           headerTitle: parsedName.toUpperCase(),
         };
       }
+      case "all": {
+        // For all products, no specific ID or name parsing needed
+        return {
+          displayName: "All Products",
+          id: null,
+          headerTitle: "ALL PRODUCTS",
+        };
+      }
       default: {
         // Fallback for any other cases
         return {
@@ -93,6 +100,8 @@ export default function ListProductPage({ by }) {
         return "brand";
       case "name":
         return "name";
+      case "all":
+        return "all";
       default:
         return by;
     }

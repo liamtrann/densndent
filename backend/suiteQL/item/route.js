@@ -2,6 +2,10 @@ const express = require('express');
 const router = express.Router();
 const controller = require('./item.controller');
 
+router.get('/all-products', controller.getAllProducts);
+
+router.get('/count-all-products', controller.getCountAllProducts);
+
 router.get('/by-class', controller.getItemsByClass);
 
 router.get('/by-id', controller.getItemById);

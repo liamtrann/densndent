@@ -1,6 +1,13 @@
 const endpoint = {
     // SuiteQL Endpoints
     GET_ALL_CLASSIFICATIONS: '/suiteql/classification',
+    GET_ALL_PRODUCTS: ({ limit, offset, sort }) => {
+        const params = new URLSearchParams();
+        if (limit) params.append('limit', limit);
+        if (offset) params.append('offset', offset);
+        if (sort) params.append('sort', sort);
+        return `/suiteql/item/all-products?${params.toString()}`;
+    },
     GET_SUB_CATEGORIES_BY_PARENT: (id) => `/suiteql/commerceCategory/sub-category-by-parent/${id}`,
     GET_PRODUCT_BY_ID: (id) => `/suiteql/item/by-id?id=${id}`,
     POST_GET_PRODUCT_BY_PARENT: () => `/suiteql/item/by-parent`,
@@ -71,6 +78,12 @@ const endpoint = {
         if (minPrice) params.append('minPrice', minPrice);
         if (maxPrice) params.append('maxPrice', maxPrice);
         return `/suiteql/item/count-by-category?${params.toString()}`;
+    },
+    GET_COUNT_ALL_PRODUCTS: ({ minPrice, maxPrice }) => {
+        const params = new URLSearchParams();
+        if (minPrice) params.append('minPrice', minPrice);
+        if (maxPrice) params.append('maxPrice', maxPrice);
+        return `/suiteql/item/count-all-products?${params.toString()}`;
     },
     GET_ITEMS_ORDER_HISTORY_BY_USER: ({ userId, limit, offset }) => {
         const params = new URLSearchParams();

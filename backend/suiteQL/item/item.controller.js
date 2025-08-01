@@ -144,7 +144,7 @@ exports.postItemsByNameLike = async (req, res) => {
   try {
     const { limit, offset, sort, minPrice, maxPrice } = req.query;
     const { name } = req.body;
-    
+
     if (!name) {
       return res.status(400).json({ error: 'Missing name in request body' });
     }
@@ -217,6 +217,29 @@ exports.getCountByCategory = async (req, res) => {
       return res.status(400).json({ error: 'category is required' });
     }
     const count = await itemsService.countByCategory(category, minPrice, maxPrice);
+    res.json({ count });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getAllProducts = async (req, res) => {
+  try {
+    const { limit, offset, sort } = req.query;
+    const items = await itemsService.findAllProducts(limit, offset, sort);
+    if (!items) {
+      return res.status(404).json({ error: 'Items not found' });
+    }
+    res.json(items);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getCountAllProducts = async (req, res) => {
+  try {
+    const { minPrice, maxPrice } = req.query;
+    const count = await itemsService.countByField('all', null, minPrice, maxPrice);
     res.json({ count });
   } catch (error) {
     res.status(500).json({ error: error.message });

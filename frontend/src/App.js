@@ -96,6 +96,13 @@ export default function App() {
                   </CenteredContent>
                 </LayoutWithCart>
               } />
+              <Route path="/products/all-products" element={
+                <LayoutWithCart>
+                  <CenteredContent>
+                    <ListProductPage by="all" />
+                  </CenteredContent>
+                </LayoutWithCart>
+              } />
 
               {/* Routes WITHOUT Cart Panel */}
               <Route path="/cart" element={<CenteredContent><CartPage /></CenteredContent>} />
