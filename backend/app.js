@@ -69,23 +69,23 @@ app.get('/api/config-check', (req, res) => {
 if (process.env.NODE_ENV === 'production') {
   const fs = require('fs');
   const frontendPath = path.join(__dirname, '..', 'frontend', 'build');
-  
+
   console.log('🔍 Attempting to serve static files from:', frontendPath);
-  
+
   // Check if build directory exists
   if (fs.existsSync(frontendPath)) {
     console.log('✅ Frontend build directory found');
     app.use(express.static(frontendPath));
-    
+
     // Catch all handler: send back React's index.html file for any non-API routes
     app.get('*', (req, res) => {
       const indexPath = path.join(frontendPath, 'index.html');
       if (fs.existsSync(indexPath)) {
         res.sendFile(indexPath);
       } else {
-        res.status(404).json({ 
-          error: 'Frontend index.html not found', 
-          path: indexPath 
+        res.status(404).json({
+          error: 'Frontend index.html not found',
+          path: indexPath
         });
       }
     });
@@ -96,7 +96,7 @@ if (process.env.NODE_ENV === 'production') {
       if (req.path.startsWith('/api/') || req.path.startsWith('/health')) {
         return; // Let other routes handle API calls
       }
-      res.json({ 
+      res.json({
         message: 'Frontend not built yet. This is the backend API.',
         availableEndpoints: ['/health', '/api/test', '/api/config-check'],
         buildPath: frontendPath,

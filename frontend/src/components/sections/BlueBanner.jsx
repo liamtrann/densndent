@@ -15,7 +15,7 @@ export default function BlueBanner({
 }) {
   // Ensure items is always an array
   const safeItems = Array.isArray(items) ? items : [];
-  
+
   const gridClasses = `grid grid-cols-${columns.base} md:grid-cols-${columns.md} lg:grid-cols-${columns.lg} gap-6`;
 
   return (

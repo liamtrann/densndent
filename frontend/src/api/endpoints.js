@@ -107,6 +107,12 @@ const endpoint = {
     GET_SHIPPING_METHOD: (id) => `/suiteql/shipItem/${id}`, // get id = 20412
     POST_CHECK_INVENTORY: () => '/suiteql/inventory/check-inventory',
     GET_ACTIVE_PROMOTIONS: () => '/suiteql/promotion',
+    GET_TOP_SALE: ({ limit, fromDate }) => {
+        const params = new URLSearchParams();
+        if (limit) params.append('limit', limit);
+        if (fromDate) params.append('fromDate', fromDate);
+        return `/suiteql/saleInvoiced/top-sale-details?${params.toString()}`;
+    },
     GET_PROMOTIONS_BY_PRODUCT: ({ productId, limit, offset }) => {
         const params = new URLSearchParams();
         if (productId) params.append('productId', productId);
