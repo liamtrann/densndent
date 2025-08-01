@@ -47,32 +47,18 @@ export default function ListProductComponent({
   const error = useSelector((state) => state.products.error);
   // Use price-aware count key for filtered totals
   const total = useSelector((state) => {
-    console.log(
-      "All totalCounts keys:",
-      Object.keys(state.products.totalCounts || {})
-    );
-    console.log("Looking for countKey:", countKey);
-
     // Try the price-aware count key first
     const count = state.products.totalCounts?.[countKey];
     if (count !== undefined) {
-      console.log("✓ Found count:", count, "for countKey:", countKey);
       return count;
     }
-
-    console.log("✓ No count found, using 0");
     return 0;
   });
 
   useEffect(() => {
-    console.log("First useEffect triggered - resetting page and sort");
     setPage(1);
     setSort("");
     if (id || type === "all") {
-      console.log("Dispatching fetchCountBy with:", {
-        type,
-        id: effectiveId === "all" ? null : effectiveId,
-      });
       return delayCall(() =>
         dispatch(
           fetchCountBy({
@@ -90,12 +76,6 @@ export default function ListProductComponent({
       (id || type === "all") &&
       (appliedFilters.minPrice || appliedFilters.maxPrice)
     ) {
-      console.log("Fetching filtered count with:", {
-        type,
-        id: effectiveId === "all" ? null : effectiveId,
-        minPrice: appliedFilters.minPrice,
-        maxPrice: appliedFilters.maxPrice,
-      });
       return delayCall(() =>
         dispatch(
           fetchCountBy({
@@ -118,15 +98,6 @@ export default function ListProductComponent({
   useEffect(() => {
     if (id || type === "all") {
       if (!products || products.length === 0) {
-        console.log("Fetching products with:", {
-          type,
-          id: effectiveId === "all" ? null : effectiveId,
-          page,
-          limit: perPage,
-          sort,
-          minPrice: appliedFilters.minPrice,
-          maxPrice: appliedFilters.maxPrice,
-        });
         return delayCall(() => {
           dispatch(
             fetchProductsBy({
