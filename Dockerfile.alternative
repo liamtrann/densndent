@@ -1,0 +1,61 @@
+# Alternative Dockerfile that avoids root package.json issues
+# This builds each part independently
+
+# Stage 1: Build React Frontend
+FROM node:18-alpine AS frontend-build
+
+WORKDIR /app
+
+# Copy frontend package files
+COPY frontend/package*.json ./
+
+# Install dependencies using npm install (not ci) to avoid lock file issues
+RUN npm install --production=false
+
+# Copy frontend source
+COPY frontend/ ./
+
+# Build the app
+RUN npm run build
+
+# Stage 2: Prepare Backend
+FROM node:18-alpine AS backend-build
+
+WORKDIR /app
+
+# Copy backend package files
+COPY backend/package*.json ./
+
+# Install dependencies
+RUN npm install --production=true
+
+# Copy backend source
+COPY backend/ ./
+
+# Stage 3: Production
+FROM node:18-alpine AS production
+
+# Install dumb-init
+RUN apk add --no-cache dumb-init
+
+WORKDIR /app
+
+# Copy backend from build stage
+COPY --from=backend-build /app ./
+
+# Copy frontend build from build stage
+COPY --from=frontend-build /app/build ./public
+
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001 && \
+    chown -R nodejs:nodejs /app
+
+USER nodejs
+
+# Expose port
+EXPOSE $PORT
+
+# Start with dumb-init
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["node", "app.js"]

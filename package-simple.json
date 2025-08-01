@@ -1,0 +1,30 @@
+{
+  "name": "densndent-simple",
+  "version": "1.0.0",
+  "description": "Dens N Dent Healthcare Full Stack Application",
+  "private": true,
+  "scripts": {
+    "start": "cd backend && npm start",
+    "heroku-postbuild": "cd frontend && npm install && npm run build",
+    "dev": "concurrently \"cd backend && npm run dev\" \"cd frontend && npm start\"",
+    "build": "cd frontend && npm run build",
+    "test": "cd frontend && npm test",
+    "clean": "rimraf node_modules frontend/node_modules backend/node_modules",
+    "postinstall": "echo 'Root dependencies installed'"
+  },
+  "engines": {
+    "node": "18.x",
+    "npm": "9.x"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "keywords": ["react", "nodejs", "healthcare", "fullstack"],
+  "author": "Hong",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/liamtrann/densndent.git"
+  }
+}
