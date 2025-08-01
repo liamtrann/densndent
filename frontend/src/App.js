@@ -6,11 +6,10 @@ import { Routes, Route } from "react-router-dom";
 
 import { ProtectedRoute, ToastProvider, Loading } from "./common";
 import { Header, Footer, LayoutWithCart, CenteredContent } from "./components";
-import { fetchUserInfo, clearUserInfo } from "./redux/slices/userSlice";
 
 // Eagerly loaded components (critical for initial render)
 import { LandingPage } from "./pages";
-
+import { fetchUserInfo, clearUserInfo } from "store/slices/userSlice";
 // Lazy loaded components
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
 const ListProductPage = lazy(() => import("./components/product/ListProductPage"));
@@ -112,7 +111,7 @@ export default function App() {
               <Route path="/promotions/gift-card" element={<CenteredContent><GiftCardProgramPage /></CenteredContent>} />
               <Route path="/catalogues" element={<CenteredContent><CataloguesPage /></CenteredContent>} />
               <Route path="/clearance" element={<ClearancePage />} />
-              
+
 
               <Route path="/partners" element={<CenteredContent><OurPartners /></CenteredContent>} />
               <Route path="/promotions/q3-catalogue" element={<CenteredContent><Q3CataloguePage /></CenteredContent>} />

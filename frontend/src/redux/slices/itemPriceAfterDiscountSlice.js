@@ -63,7 +63,6 @@ export const calculatePriceAfterDiscount = createAsyncThunk(
                 promotionApplied: bestPromotion
             };
         } catch (error) {
-            console.error('Error calculating discount:', error);
             // Return original price if error occurs
             const originalTotal = Number(unitPrice) * Number(quantity);
             return rejectWithValue({
