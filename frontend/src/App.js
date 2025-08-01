@@ -112,6 +112,14 @@ export default function App() {
               <Route path="/contact" element={<CenteredContent><ContactPage /></CenteredContent>} />
               <Route path="/blog" element={<CenteredContent><BlogPage /></CenteredContent>} />
               <Route path="/promotions" element={<CenteredContent><PromotionsPage /></CenteredContent>} />
+              <Route path="/promotions" element={<CenteredContent><PromotionsPage /></CenteredContent>} />
+              <Route path="/promotions/monthly-special" element={
+                <LayoutWithCart>
+                  <CenteredContent>
+                    <ListProductPage by="category" />
+                  </CenteredContent>
+                </LayoutWithCart>
+              } />
               <Route path="/promotions/jdiq" element={<CenteredContent><JdiqRaffleWinners /></CenteredContent>} />
               <Route path="/promotions/gift-card" element={<CenteredContent><GiftCardProgramPage /></CenteredContent>} />
               <Route path="/catalogues" element={<CenteredContent><CataloguesPage /></CenteredContent>} />

@@ -12,6 +12,8 @@ const buildProductUrl = ({ type, id, limit, offset = 0, sort, minPrice, maxPrice
       return { url: endpoint.GET_ITEMS_BY_BRAND({ brand: id, limit, offset, sort, minPrice, maxPrice }), method: "get" };
     case "name":
       return { url: endpoint.POST_GET_ITEMS_BY_NAME({ limit, offset, sort, minPrice, maxPrice }), method: "post" };
+    case "category":
+      return { url: endpoint.GET_ITEMS_BY_CATEGORY({ category: id, limit, offset, sort, minPrice, maxPrice }), method: "get" };
     case "all":
       return { url: endpoint.GET_ALL_PRODUCTS({ limit, offset, sort }), method: "get" };
     case "orderHistory":
