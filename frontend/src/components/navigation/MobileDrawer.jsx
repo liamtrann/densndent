@@ -8,7 +8,7 @@ import { Paragraph, Button } from "common";
 const promotionsLinks = [
   { label: "JDIQ Raffle Winners", path: "/promotions/jdiq" },
   { label: "Monthly Specials", path: "/promotions/monthly-special" },
-  { label: "Q3 D2 Specials (House Brand)", path: "/promotions/q3-d2" },
+  // { label: "Q3 D2 Specials (House Brand)", path: "/promotions/q3-d2" },
   // { label: "Q3 Vendor Specials", path: "/promotions/q3-vendor" },
   // { label: "Q3 Catalogue", path: "/promotions/q3-catalogue" },
   { label: "DND Gift Card Program", path: "/promotions/gift-card" },
