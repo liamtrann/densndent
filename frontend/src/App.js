@@ -3,7 +3,6 @@ import { useAuth0 } from "@auth0/auth0-react";
 import React, { Suspense, lazy } from "react";
 import { useDispatch } from "react-redux";
 import { Routes, Route } from "react-router-dom";
-
 import { fetchUserInfo, clearUserInfo } from "store/slices/userSlice";
 
 import { ProtectedRoute, ToastProvider, Loading } from "./common";
