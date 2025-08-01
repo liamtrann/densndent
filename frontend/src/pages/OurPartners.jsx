@@ -40,8 +40,6 @@ const partnerKeys = [
   "palmero",
   "parkell",
   "hager",
-  
-
 
 ];
 

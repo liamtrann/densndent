@@ -35,6 +35,7 @@ const BlogPage = lazy(() => import("./pages/BlogPage"));
 const PromotionsPage = lazy(() => Promise.resolve({ default: () => <div>Promotions Page</div> }));
 const CataloguesPage = lazy(() => Promise.resolve({ default: () => <div>Catalogues Page</div> }));
 const ClearancePage = lazy(() => import("./pages/ClearancePage"));
+const BlogDetailPage = lazy(() => import("./pages/BlogDetailPage"));
 
 
 // Loading fallback component
@@ -112,6 +113,8 @@ export default function App() {
               <Route path="/promotions/gift-card" element={<CenteredContent><GiftCardProgramPage /></CenteredContent>} />
               <Route path="/catalogues" element={<CenteredContent><CataloguesPage /></CenteredContent>} />
               <Route path="/clearance" element={<ClearancePage />} />
+              <Route path="/blog/:slug" element={<CenteredContent><BlogDetailPage /></CenteredContent>} />
+
               
 
               <Route path="/partners" element={<CenteredContent><OurPartners /></CenteredContent>} />

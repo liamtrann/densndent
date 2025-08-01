@@ -1,7 +1,11 @@
-import React from "react";
-import { Breadcrumb, Paragraph } from "common";
+// src/pages/BlogPage.jsx
+import React, { useState } from "react";
+import { Breadcrumb } from "common";
 import blogBanner from "../assets/blog-banner.jpg";
 import { Link } from "react-router-dom";
+import Pagination from "../common/navigation/Pagination"; // make sure this path is correct
+
+const POSTS_PER_PAGE = 6;
 
 const blogPosts = [
   {
@@ -58,6 +62,13 @@ const blogPosts = [
 ];
 
 const BlogPage = () => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = Math.ceil(blogPosts.length / POSTS_PER_PAGE);
+
+  const indexOfLastPost = currentPage * POSTS_PER_PAGE;
+  const indexOfFirstPost = indexOfLastPost - POSTS_PER_PAGE;
+  const currentPosts = blogPosts.slice(indexOfFirstPost, indexOfLastPost);
+
   return (
     <div className="bg-white dark:bg-gray-900 text-black dark:text-gray-100 px-4 py-8">
       <Breadcrumb path={["Home", "Blog"]} />
@@ -67,20 +78,18 @@ const BlogPage = () => {
       {/* Hero Banner */}
       <div className="w-full max-w-5xl mx-auto mb-10">
         <img
-          src= {blogBanner}
+          src={blogBanner}
           alt="Dens N Dente Blog Banner"
           className="w-full h-auto object-cover rounded shadow"
         />
       </div>
 
-      {/* Section Title */}
       <h2 className="text-xl font-semibold border-b-2 border-gray-300 pb-1 mb-6">
         LATEST ARTICLES
       </h2>
 
-      {/* Blog Post Cards */}
       <div className="grid gap-8 max-w-6xl mx-auto md:grid-cols-2 lg:grid-cols-3">
-        {blogPosts.map((post, index) => (
+        {currentPosts.map((post, index) => (
           <div
             key={index}
             className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-6 shadow-sm flex flex-col justify-between"
@@ -108,12 +117,12 @@ const BlogPage = () => {
         ))}
       </div>
 
-      {/* Pagination (optional static example) */}
-      <div className="flex justify-center mt-8 space-x-4 text-sm font-semibold">
-        <span className="text-gray-500">1</span>
-        <span className="text-black dark:text-white underline">2</span>
-        <span className="text-gray-500">3</span>
-      </div>
+      {/* Functional Pagination */}
+      <Pagination
+        page={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 };
