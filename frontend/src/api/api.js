@@ -7,7 +7,7 @@ const getBaseURL = () => {
     return '/api';
   }
   // In development, use full URL
-  return process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001';
+  return `${process.env.REACT_APP_API_BASE_URL}/api` || 'http://localhost:3001/api';
 };
 
 const api = axios.create({
