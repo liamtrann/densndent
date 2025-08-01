@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+
 import api from '../../api/api';
 import endpoint from '../../api/endpoints';
 import { STATUS } from '../status';
@@ -63,7 +64,6 @@ export const calculatePriceAfterDiscount = createAsyncThunk(
                 promotionApplied: bestPromotion
             };
         } catch (error) {
-            console.error('Error calculating discount:', error);
             // Return original price if error occurs
             const originalTotal = Number(unitPrice) * Number(quantity);
             return rejectWithValue({

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+
 import api from "../api/api.js";
 
 function extractBuyGet(str) {
@@ -147,7 +148,7 @@ async function getTotalPriceAfterDiscount(productId, unitPrice, quantity) {
             promotionApplied: bestPromotion,
         };
     } catch (error) {
-        console.error("Error calculating discount:", error);
+        // console.error("Error calculating discount:", error);
         // Return original price if error occurs
         const originalTotal = Number(unitPrice) * Number(quantity);
         return {

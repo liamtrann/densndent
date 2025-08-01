@@ -1,5 +1,5 @@
 import axios from 'axios';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 function CategoryPage() {
@@ -14,7 +14,7 @@ function CategoryPage() {
             })
             .then((res) => setItems(res.data))
             .catch((err) => {
-                console.error(err);
+                // console.error(err);
                 setError('Failed to fetch category data');
             });
     }, [id]);

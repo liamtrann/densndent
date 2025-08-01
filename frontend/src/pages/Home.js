@@ -1,5 +1,5 @@
 import axios from 'axios';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 function Home() {
@@ -17,7 +17,6 @@ function Home() {
                 setClassifications(data);
             })
             .catch((err) => {
-                console.error(err);
                 setError('Failed to fetch classifications');
             });
     }, []);
