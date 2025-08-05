@@ -14,7 +14,7 @@ export default function Catalogues() {
             Browse our catalogues for exclusive discounts on dental supplies,
             instruments, equipment, and disposables.
           </p>
-          <Link to="/promotions/q3-catalogue">
+          <Link to="/promotions/monthly-special">
             <Button variant="primary" className="px-6 py-2">Shop Now</Button>
           </Link>
         </div>

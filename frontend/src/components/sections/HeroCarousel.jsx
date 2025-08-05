@@ -87,12 +87,12 @@ export default function HeroCarousel() {
       />
 
       {/* CTA Button */}
-      <Link
+      {/* <Link
         to={button.link}
         className="absolute left-6 bottom-6 bg-white text-blue-700 px-5 py-2 font-semibold rounded shadow hover:bg-gray-100 z-10"
       >
         {button.text}
-      </Link>
+      </Link> */}
 
       {/* Navigation Arrows */}
       <button
