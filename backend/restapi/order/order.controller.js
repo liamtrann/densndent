@@ -1,33 +1,42 @@
 // order.controller.js
 // Controller for order endpoints
 
-const orderService = require('./order.service');
+const restApiService = require('../restapi.service');
+
+// Create a new sales order
+const createSalesOrder = async (req, res, next) => {
+    try {
+        const result = await restApiService.postRecord('salesOrder', req.body);
+        res.status(201).json(result);
+    } catch (err) {
+        next(err);
+    }
+};
+
+// Get a specific sales order by ID
+const getSalesOrder = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const result = await restApiService.getRecord('salesOrder', id);
+        res.json(result);
+    } catch (err) {
+        next(err);
+    }
+};
+
+// Update sales order
+const updateOrderStatus = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const result = await restApiService.patchRecord('salesOrder', id, req.body);
+        res.json(result);
+    } catch (err) {
+        next(err);
+    }
+};
 
 module.exports = {
-    async createOrder(req, res, next) {
-        try {
-            const order = await orderService.createOrder(req.body);
-            res.status(201).json(order);
-        } catch (err) {
-            next(err);
-        }
-    },
-
-    async getOrderById(req, res, next) {
-        try {
-            const order = await orderService.getOrderById(req.params.id);
-            res.json(order);
-        } catch (err) {
-            next(err);
-        }
-    },
-
-    async listOrders(req, res, next) {
-        try {
-            const orders = await orderService.listOrders();
-            res.json(orders);
-        } catch (err) {
-            next(err);
-        }
-    },
+    createSalesOrder,
+    getSalesOrder,
+    updateOrderStatus
 };

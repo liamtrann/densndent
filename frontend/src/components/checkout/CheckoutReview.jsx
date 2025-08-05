@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
+import { useAuth0 } from "@auth0/auth0-react";
 import InputField from "common/ui/InputField";
 import Button from "common/ui/Button";
 import { Loading } from "common";
@@ -13,6 +14,7 @@ import { clearCart } from "store/slices/cartSlice";
 export default function CheckoutReview() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { getAccessTokenSilently } = useAuth0();
   const userInfo = useSelector((state) => state.user.info);
   const cartItems = useSelector((state) => state.cart.items || []);
   const [showCardNumber, setShowCardNumber] = useState(false);
@@ -115,9 +117,16 @@ export default function CheckoutReview() {
     try {
       setIsPlacingOrder(true);
 
+      const token = await getAccessTokenSilently();
+
       const response = await api.post(
         endpoint.POST_SALES_ORDER(),
-        orderPayload
+        orderPayload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       // Show success message
