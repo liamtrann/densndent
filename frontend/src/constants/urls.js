@@ -37,13 +37,6 @@ export const URLS = {
         parkell: "https://www.densndente.ca/site/extra%20images/brands/parkell-logo.png",
         flow: "https://www.densndente.ca/site/extra images/Dens website change May 2023/logo/flow-logo.png",
         hager: "	https://www.densndente.ca/site/extra%20images/brands/hager-worldwide-logo.png",
-        
-
-
-
-
-
-
 
 
 
