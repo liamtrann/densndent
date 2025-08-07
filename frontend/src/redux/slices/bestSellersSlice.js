@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+
 import endpoint from 'api/endpoints';
 
 import { STATUS } from '../status';
