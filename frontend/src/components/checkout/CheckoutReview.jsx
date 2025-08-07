@@ -10,6 +10,7 @@ import ToastNotification from "common/toast/Toast";
 import api from "api/api";
 import endpoint from "api/endpoints";
 import { clearCart } from "store/slices/cartSlice";
+import VersaPayPaymentForm from "./VersaPayPaymentForm";
 
 export default function CheckoutReview() {
   const navigate = useNavigate();
@@ -33,6 +34,7 @@ export default function CheckoutReview() {
   const [billingAddress, setBillingAddress] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState("invoice"); // NEW
   const [isPlacingOrder, setIsPlacingOrder] = useState(false); // Loading state
+  const [paymentResult, setPaymentResult] = useState(null); // Store VersaPay payment result
 
   useEffect(() => {
     const stored = JSON.parse(
@@ -42,6 +44,22 @@ export default function CheckoutReview() {
     const selectedAddress = stored.find((addr) => addr.id === selected);
     setBillingAddress(selectedAddress);
   }, []);
+
+  // Handle VersaPay payment success
+  const handleVersaPaySuccess = (result) => {
+    console.log("VersaPay payment successful:", result);
+    setPaymentResult(result);
+    ToastNotification.success(
+      "Payment processed successfully! You can now place your order."
+    );
+  };
+
+  // Handle VersaPay payment error
+  const handleVersaPayError = (error) => {
+    console.error("VersaPay payment failed:", error);
+    setPaymentResult(null);
+    ToastNotification.error("Payment failed. Please try again.");
+  };
 
   const handlePlaceOrder = async () => {
     // Check if user ID is available
@@ -72,6 +90,14 @@ export default function CheckoutReview() {
     if (!cartItems || cartItems.length === 0) {
       ToastNotification.error(
         "Your cart is empty. Please add items before placing an order."
+      );
+      return;
+    }
+
+    // If credit card payment, ensure payment was processed
+    if (paymentMethod === "card" && !paymentResult) {
+      ToastNotification.error(
+        "Please complete your payment before placing the order."
       );
       return;
     }
@@ -112,6 +138,15 @@ export default function CheckoutReview() {
           }
         : null,
       paymentMethod: paymentMethod, // Optional: Include method
+      email: userInfo.email,
+      // Add payment information if credit card was used
+      ...(paymentMethod === "card" &&
+        paymentResult && {
+          versaPayOrderId: paymentResult.orderId,
+          versaPayTransactionId: paymentResult.payment?.transactionId,
+          paymentToken: paymentResult.payment?.token,
+          paymentStatus: "paid",
+        }),
     };
 
     try {
@@ -220,7 +255,7 @@ export default function CheckoutReview() {
 
             {/* Tabs */}
             <div className="flex space-x-4 border-b mb-4">
-              {/* <button
+              <button
                 className={`py-2 px-4 font-medium ${
                   paymentMethod === "card"
                     ? "border-b-2 border-blue-600 text-blue-600"
@@ -229,7 +264,7 @@ export default function CheckoutReview() {
                 onClick={() => setPaymentMethod("card")}
               >
                 Credit/Debit Card
-              </button> */}
+              </button>
               <button
                 className={`py-2 px-4 font-medium ${
                   paymentMethod === "invoice"
@@ -242,51 +277,43 @@ export default function CheckoutReview() {
               </button>
             </div>
 
-            {/* Credit Card Fields */}
-            {/* {paymentMethod === "card" && (
-              <>
-                <InputField
-                  label="Credit Card Number"
-                  type={showCardNumber ? "text" : "password"}
-                  value={cardNumber}
-                  onChange={(e) => setCardNumber(e.target.value)}
-                  placeholder="•••• •••• •••• 1234"
+            {/* VersaPay Credit Card Form */}
+            {paymentMethod === "card" && (
+              <div className="space-y-4">
+                <VersaPayPaymentForm
+                  selectedAddress={billingAddress}
+                  shippingCost={0} // You can pass actual shipping cost here
+                  estimatedTax={0} // You can pass actual tax here
+                  onPaymentSuccess={handleVersaPaySuccess}
+                  onPaymentError={handleVersaPayError}
                 />
-                <Button
-                  variant="secondary"
-                  onClick={() => setShowCardNumber(!showCardNumber)}
-                >
-                  {showCardNumber ? "Hide" : "Show"}
-                </Button>
-
-                <InputField
-                  label="Name on Card"
-                  value={nameOnCard}
-                  onChange={(e) => setNameOnCard(e.target.value)}
-                />
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <InputField
-                    label="Expiration Month"
-                    value={expMonth}
-                    onChange={(e) => setExpMonth(e.target.value)}
-                    placeholder="MM"
-                  />
-                  <InputField
-                    label="Expiration Year"
-                    value={expYear}
-                    onChange={(e) => setExpYear(e.target.value)}
-                    placeholder="YYYY"
-                  />
-                  <InputField
-                    label="Security Code"
-                    type="password"
-                    value={securityCode}
-                    onChange={(e) => setSecurityCode(e.target.value)}
-                    placeholder="CVV"
-                  />
-                </div>
-              </>
-            )} */}
+                {paymentResult && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div className="flex items-center">
+                      <svg
+                        className="w-5 h-5 text-green-400 mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                      <span className="text-green-800 font-medium">
+                        Payment Completed Successfully
+                      </span>
+                    </div>
+                    <p className="text-green-600 text-sm mt-1">
+                      Transaction ID: {paymentResult.payment?.transactionId}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Invoice Message */}
             {paymentMethod === "invoice" && (
@@ -306,8 +333,17 @@ export default function CheckoutReview() {
             >
               Back
             </Button>
-            <Button onClick={handlePlaceOrder} disabled={isPlacingOrder}>
-              {isPlacingOrder ? "Placing Order..." : "Place Order"}
+            <Button
+              onClick={handlePlaceOrder}
+              disabled={
+                isPlacingOrder || (paymentMethod === "card" && !paymentResult)
+              }
+            >
+              {isPlacingOrder
+                ? "Placing Order..."
+                : paymentMethod === "card" && !paymentResult
+                ? "Complete Payment First"
+                : "Place Order"}
             </Button>
           </div>
         </div>

@@ -3,6 +3,7 @@
 const kafkaProducer = require('../../kafka/kafka.producer');
 const TOPICS = require('../../kafka/topics');
 const { v4: uuidv4 } = require('uuid');
+const versaPayService = require('../versapay/versapay.service');
 
 module.exports = {
     // Create order with Kafka integration

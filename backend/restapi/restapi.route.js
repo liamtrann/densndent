@@ -7,6 +7,7 @@ const restApiService = require('./restapi.service');
 // Import route modules
 const orderRoutes = require('./order/route');
 const customerRoutes = require('./customer/route');
+const versaPayRoutes = require('./versapay/route');
 
 // Protect all /restapi routes with JWT
 router.use(checkJwt);
@@ -22,6 +23,7 @@ router.use((err, req, res, next) => {
 // Use route modules
 router.use('/salesOrder', orderRoutes);
 router.use('/customer', customerRoutes);
+router.use('/versapay', versaPayRoutes);
 
 // // GET a record by type and id
 // router.get('/:recordType/:id', async (req, res, next) => {
