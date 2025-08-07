@@ -3,6 +3,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import endpoint from 'api/endpoints';
 
 import { STATUS } from '../status';
+
 import { api } from '@/api';
 
 export const fetchBestSellers = createAsyncThunk(
