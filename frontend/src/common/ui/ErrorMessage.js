@@ -1,4 +1,4 @@
-import React from 'react';
+// ...existing code...
 
 export default function ErrorMessage({
     message = "An error occurred.",
