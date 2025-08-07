@@ -1,8 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import endpoint from 'api/endpoints';
 
-import axiosInstance from '../../api/axiosInstance';
-
 import { STATUS } from '../status';
 import { api } from '@/api';
 

@@ -89,7 +89,7 @@ export default function ErrorMessage({
 
                 {/* Decorative accent */}
                 <div className={`absolute top-0 left-4 w-8 h-1 rounded-b-full ${type === 'warning' ? 'bg-amber-400' :
-                        type === 'info' ? 'bg-blue-400' : 'bg-red-400'
+                    type === 'info' ? 'bg-blue-400' : 'bg-red-400'
                     }`}></div>
             </div>
         </div>
