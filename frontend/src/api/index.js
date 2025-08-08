@@ -2,6 +2,6 @@
 import api from './api';
 import authApi from './authApi';
 import ENDPOINTS from './endpoints';
-import util from './util'
+import * as util from './util';
 
 export { api, authApi, ENDPOINTS, util };

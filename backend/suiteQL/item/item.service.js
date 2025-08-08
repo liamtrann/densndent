@@ -52,7 +52,7 @@ class ItemsService {
         const sortBy = this._getSortBy(sort);
 
         // SQL Query
-        const sql = `SELECT i.id, i.itemid, i.totalquantityonhand, i.stockdescription, ip.price, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url FROM item i JOIN itemprice ip ON i.id = ip.item AND ip.pricelevel = 1 WHERE ${conditions.join(' AND ')} ${sortBy}`;
+        const sql = `SELECT i.id, i.itemid, i.totalquantityonhand, i.stockdescription, ip.price, i.custitemcustitem_dnd_brand AS branditem, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url FROM item i JOIN itemprice ip ON i.id = ip.item AND ip.pricelevel = 1 WHERE ${conditions.join(' AND ')} ${sortBy}`;
 
         // Run with standard function signature
         const results = await runQueryWithPagination(sql, limit, offset);
@@ -105,17 +105,28 @@ class ItemsService {
             name: 'i.itemid'
         };
 
-        // Build conditions array
-        let conditions = [`i.isonline = 'T'`, `i.isinactive = 'F'`];
+        // Base conditions
+        const conditions = [`i.isonline = 'T'`, `i.isinactive = 'F'`];
 
-        // Field-based filter
-        if (field === "name") {
-            conditions.push(`LOWER(${allowedFields[field]}) LIKE '%' || LOWER('${value}') || '%'`);
-        } else {
-            conditions.push(`LOWER(${allowedFields[field]}) = LOWER('${value}')`);
+        // Add field-specific filter (skip for "all" case)
+        if (field !== "all") {
+            const column = allowedFields[field];
+            if (!column) {
+                throw new Error(`Invalid filter field: ${field}`);
+            }
+
+            if (field === "name") {
+                conditions.push(`LOWER(${column}) LIKE '%' || LOWER('${value}') || '%'`);
+            } else {
+                conditions.push(`LOWER(${column}) = LOWER('${value}')`);
+            }
         }
 
-        // Price range filter
+        // Check if price filtering is needed
+        const hasPriceFilter = (minPrice !== undefined && minPrice !== null && minPrice !== '') ||
+            (maxPrice !== undefined && maxPrice !== null && maxPrice !== '');
+
+        // Add price range filters
         if (minPrice !== undefined && minPrice !== null && minPrice !== '') {
             conditions.push(`ip.price >= ${parseFloat(minPrice)}`);
         }
@@ -123,16 +134,14 @@ class ItemsService {
             conditions.push(`ip.price <= ${parseFloat(maxPrice)}`);
         }
 
-        // Build SQL with or without price join
-        let sql;
-        if ((minPrice !== undefined && minPrice !== null && minPrice !== '') ||
-            (maxPrice !== undefined && maxPrice !== null && maxPrice !== '')) {
-            // Need to join with itemprice for price filtering
-            sql = `SELECT COUNT(*) AS count FROM item i JOIN itemprice ip ON i.id = ip.item AND ip.pricelevel = 1 WHERE ${conditions.join(' AND ')};`;
-        } else {
-            // No price filtering, simpler query
-            sql = `SELECT COUNT(*) AS count FROM item i WHERE ${conditions.join(' AND ')};`;
-        }
+        // Build SQL query
+        const baseQuery = `SELECT COUNT(*) AS count FROM item i`;
+        const priceJoin = ` JOIN itemprice ip ON i.id = ip.item AND ip.pricelevel = 1`;
+        const whereClause = ` WHERE ${conditions.join(' AND ')}`;
+
+        const sql = hasPriceFilter
+            ? baseQuery + priceJoin + whereClause
+            : baseQuery + whereClause;
 
         const results = await runQueryWithPagination(sql, 1, 0);
         return results.items?.[0]?.count || 0;
@@ -173,6 +182,27 @@ class ItemsService {
         const sql = `SELECT COUNT(*) AS count FROM item i INNER JOIN CommerceCategoryItemAssociation cc ON cc.item = i.id INNER JOIN itemprice ip ON ip.item = i.id AND ip.pricelevel = 1 WHERE ${conditions.join(' AND ')};`;
         const results = await runQueryWithPagination(sql, 1, 0);
         return results.items?.[0]?.count || 0;
+    }
+
+    // Method for getting all products with pagination and sorting
+    async findAllProducts(limit, offset, sort) {
+        let conditions = [`i.isonline = 'T'`, `i.isinactive = 'F'`];
+
+        // Custom sorting logic for findAllProducts
+        let sortBy;
+        if (sort === 'parent_classification_name') {
+            sortBy = ` ORDER BY pc.name ASC`;
+        } else if (sort && ['asc', 'desc'].includes(sort.toLowerCase())) {
+            sortBy = ` ORDER BY ip.price ${sort.toLowerCase()}`;
+        } else {
+            sortBy = ` ORDER BY i.itemid ASC`;
+        }
+
+        // Use the same SQL structure as findByField for consistency, plus classification joins
+        const sql = `SELECT i.id, i.itemid, i.totalquantityonhand, i.stockdescription, ip.price, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url, c.name AS classification_name, pc.name AS parent_classification_name FROM item i JOIN itemprice ip ON i.id = ip.item AND ip.pricelevel = 1 LEFT JOIN classification c ON i.class = c.id LEFT JOIN classification pc ON c.parent = pc.id WHERE ${conditions.join(' AND ')} ${sortBy}`;
+
+        const results = await runQueryWithPagination(sql, limit, offset);
+        return results.items || [];
     }
 
 }

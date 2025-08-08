@@ -9,10 +9,7 @@ const ClearancePage = () => {
       {/* Breadcrumb */}
       <div className="max-w-7xl mx-auto">
         <Breadcrumb
-          path={[
-            { name: "Home", link: "/" },
-            { name: "Clearance", link: "/clearance" },
-          ]}
+          path={["Home", "Clearance"]}
         />
       </div>
       

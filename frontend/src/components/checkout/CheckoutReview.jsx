@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
+import { useAuth0 } from "@auth0/auth0-react";
 import InputField from "common/ui/InputField";
 import Button from "common/ui/Button";
 import { Loading } from "common";
@@ -13,6 +14,7 @@ import { clearCart } from "store/slices/cartSlice";
 export default function CheckoutReview() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { getAccessTokenSilently } = useAuth0();
   const userInfo = useSelector((state) => state.user.info);
   const cartItems = useSelector((state) => state.cart.items || []);
   const [showCardNumber, setShowCardNumber] = useState(false);
@@ -115,9 +117,16 @@ export default function CheckoutReview() {
     try {
       setIsPlacingOrder(true);
 
+      const token = await getAccessTokenSilently();
+
       const response = await api.post(
         endpoint.POST_SALES_ORDER(),
-        orderPayload
+        orderPayload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       // Show success message
@@ -148,8 +157,20 @@ export default function CheckoutReview() {
       {/* Loading Overlay */}
       {isPlacingOrder && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg">
-            <Loading text="Your order is processing..." />
+          <div className="bg-white p-8 rounded-lg shadow-lg max-w-md text-center">
+            <Loading text="Processing your order..." />
+            <div className="mt-4 space-y-2">
+              <p className="text-gray-700 font-medium">
+                Please don't close this window
+              </p>
+              <p className="text-sm text-gray-600">
+                We're creating your order and sending confirmation details. This
+                may take a few minutes.
+              </p>
+              <p className="text-xs text-gray-500 mt-3">
+                You'll be redirected to your order history once complete.
+              </p>
+            </div>
           </div>
         </div>
       )}

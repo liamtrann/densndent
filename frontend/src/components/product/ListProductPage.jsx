@@ -2,7 +2,6 @@ import React from "react";
 import { useParams } from "react-router-dom";
 import ListProductComponent from "./ListProductComponent";
 
-
 export default function ListProductPage({ by }) {
   const { name, brandName, nameAndId, categoryNameAndId } = useParams();
 
@@ -11,20 +10,20 @@ export default function ListProductPage({ by }) {
     switch (by) {
       case "name": {
         // Convert dashes back to spaces for name-based queries
-        const textName = name.replaceAll("-", " ");
+        const textName = name?.replaceAll("-", " ") || "";
         return {
-          displayName: textName,
+          displayName: textName || "Unknown Product",
           id: textName,
-          headerTitle: name.toUpperCase(),
+          headerTitle: (name || "UNKNOWN").toUpperCase(),
         };
       }
       case "brand": {
         // For brand, use brandName parameter
         const brand = brandName || "";
         return {
-          displayName: brand,
+          displayName: brand || "Unknown Brand",
           id: brand,
-          headerTitle: brand.toUpperCase(),
+          headerTitle: (brand || "UNKNOWN BRAND").toUpperCase(),
         };
       }
       case "class": {
@@ -43,30 +42,43 @@ export default function ListProductPage({ by }) {
         }
 
         return {
-          displayName: parsedName,
+          displayName: parsedName || "Unknown Category",
           id: parsedClassId,
-          headerTitle: parsedName.toUpperCase(),
+          headerTitle: (parsedName || "UNKNOWN CATEGORY").toUpperCase(),
         };
       }
       case "category": {
-        // For category, parse categoryNameAndId to extract name and categoryId
+        // For category, get the last segment from the URL path
+        const currentPath = window.location.pathname;
+        const pathSegments = currentPath.split("/");
+        const lastSegment = pathSegments[pathSegments.length - 1] || "";
+
+        // Parse the last segment to extract name and categoryId
         let parsedName = "";
         let parsedCategoryId = "";
 
-        if (categoryNameAndId) {
-          const lastDash = categoryNameAndId.lastIndexOf("-");
+        if (lastSegment) {
+          const lastDash = lastSegment.lastIndexOf("-");
           if (lastDash !== -1) {
-            parsedName = categoryNameAndId.slice(0, lastDash);
-            parsedCategoryId = categoryNameAndId.slice(lastDash + 1);
+            parsedName = lastSegment.slice(0, lastDash);
+            parsedCategoryId = lastSegment.slice(lastDash + 1);
           } else {
-            parsedName = categoryNameAndId;
+            parsedName = lastSegment;
           }
         }
 
         return {
-          displayName: parsedName,
-          id: parsedCategoryId,
-          headerTitle: parsedName.toUpperCase(),
+          displayName: parsedName || "Unknown Category",
+          id: 273, // Default ID for "Monthly Specials"
+          headerTitle: (parsedName || "UNKNOWN CATEGORY").toUpperCase(),
+        };
+      }
+      case "all": {
+        // For all products, no specific ID or name parsing needed
+        return {
+          displayName: "All Products",
+          id: null,
+          headerTitle: "ALL PRODUCTS",
         };
       }
       default: {
@@ -93,6 +105,8 @@ export default function ListProductPage({ by }) {
         return "brand";
       case "name":
         return "name";
+      case "all":
+        return "all";
       default:
         return by;
     }
@@ -102,7 +116,7 @@ export default function ListProductPage({ by }) {
     <ListProductComponent
       type={getComponentType()}
       id={id}
-      breadcrumbPath={["Home", "Products", displayName]}
+      breadcrumbPath={["Home", "Products", displayName || "Unknown"]}
       headerTitle={headerTitle}
     />
   );

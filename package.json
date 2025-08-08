@@ -1,19 +1,58 @@
 {
-  "name": "densndent",
+  "name": "densndent-fullstack",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Dens N Dent Healthcare Full Stack Application",
+  "private": true,
+  "main": "backend/app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "start": "cd backend && npm start",
+    "server": "cd backend && npm run dev",
+    "client": "cd frontend && npm start",
+    "build": "cd frontend && npm install && npm run build",
+    "heroku-postbuild": "cd frontend && npm install && npm run build",
+    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install",
+    "clean": "rimraf node_modules frontend/node_modules backend/node_modules",
+    "clean:lock": "rimraf package-lock.json frontend/package-lock.json backend/package-lock.json",
+    "reinstall": "npm run clean && npm run clean:lock && npm run install:all",
+    "test": "cd frontend && npm test",
+    "docker:build": "docker build -t densndent .",
+    "docker:run": "docker run -p 5000:5000 densndent",
+    "heroku:login": "heroku container:login",
+    "heroku:build": "heroku container:push web",
+    "heroku:deploy": "heroku container:release web",
+    "deploy": "heroku container:push web && heroku container:release web"
   },
+  "engines": {
+    "node": "18.x",
+    "npm": "9.x"
+  },
+  "dependencies": {
+    "concurrently": "^8.2.2",
+    "@craco/craco": "^7.1.0"
+  },
+  "devDependencies": {
+    "rimraf": "^5.0.5"
+  },
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "keywords": [
+    "react",
+    "nodejs", 
+    "healthcare",
+    "fullstack",
+    "docker",
+    "netsuite",
+    "heroku"
+  ],
+  "author": "Hong",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/liamtrann/densndent.git"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
   "bugs": {
     "url": "https://github.com/liamtrann/densndent/issues"
   },

@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useRef } from "react";
+import { Link } from "react-router-dom";
 
 export default function ProductsDropdown({ classification }) {
   const [open, setOpen] = useState(false);
@@ -23,14 +23,13 @@ export default function ProductsDropdown({ classification }) {
   };
 
   return (
-    <div
-      className="relative"
-      onMouseEnter={enter}
-      onMouseLeave={leave}
-    >
-      <span className="text-sm text-gray-800 hover:text-orange-600 font-medium">
+    <div className="relative" onMouseEnter={enter} onMouseLeave={leave}>
+      <Link
+        to="/products/all-products"
+        className="text-sm text-gray-800 hover:text-orange-600 font-medium"
+      >
         Products
-      </span>
+      </Link>
 
       {open && (
         <div className="absolute left-0 top-full mt-2 w-auto bg-white shadow-xl border rounded-md flex z-50">
@@ -40,8 +39,9 @@ export default function ProductsDropdown({ classification }) {
               <div
                 key={cat.name}
                 onMouseEnter={() => handleCategoryHover(cat.name)}
-                className={`px-4 py-2 text-sm flex justify-between items-center hover:bg-gray-100 cursor-pointer ${hoveredCategory === cat.name ? "bg-gray-100" : ""
-                  }`}
+                className={`px-4 py-2 text-sm flex justify-between items-center hover:bg-gray-100 cursor-pointer ${
+                  hoveredCategory === cat.name ? "bg-gray-100" : ""
+                }`}
               >
                 {cat.name}
                 <span className="text-gray-400">&gt;</span>
@@ -53,15 +53,22 @@ export default function ProductsDropdown({ classification }) {
           {hoveredCategory && (
             <div className="w-60 border-l p-4">
               {(() => {
-                const hoveredCat = classification.find((cat) => cat.name === hoveredCategory);
-                if (!hoveredCat || !Array.isArray(hoveredCat.subcategories)) return null;
+                const hoveredCat = classification.find(
+                  (cat) => cat.name === hoveredCategory
+                );
+                if (!hoveredCat || !Array.isArray(hoveredCat.subcategories))
+                  return null;
                 return hoveredCat.subcategories.map((sub) => {
-                  const name = (sub.name || '').replace(/\s+/g, '');
-                  const id = sub.id || '';
+                  const name = (sub.name || "").replace(/\s+/g, "");
+                  const id = sub.id || "";
                   return (
                     <Link
-                      key={name + (id ? `-${id}` : '')}
-                      to={id ? `/products/by-class/${name.toLowerCase()}-${id}` : `/products/by-class/${name.toLowerCase()}`}
+                      key={name + (id ? `-${id}` : "")}
+                      to={
+                        id
+                          ? `/products/by-class/${name.toLowerCase()}-${id}`
+                          : `/products/by-class/${name.toLowerCase()}`
+                      }
                       className="block px-4 py-2 text-sm hover:bg-orange-50"
                       onClick={() => setOpen(false)}
                     >

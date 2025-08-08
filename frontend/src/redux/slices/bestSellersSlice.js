@@ -1,16 +1,17 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+
+import endpoint from 'api/endpoints';
 
 import { STATUS } from '../status';
+
+import { api } from '@/api';
 
 export const fetchBestSellers = createAsyncThunk(
     'bestSellers/fetchBestSellers',
     async (params, { rejectWithValue }) => {
         const { limit = 20, fromDate = '2025-01-01' } = params || {};
         try {
-            const baseUrl = process.env.REACT_APP_API_BASE_URL;
-            const url = `${baseUrl}/suiteql/saleInvoiced/top-sale-details?limit=${limit}&fromDate=${fromDate}`;
-            const response = await axios.get(url);
+            const response = await api(endpoint.GET_TOP_SALE({ limit, fromDate }));
             return response.data.items || response.data;
         } catch (err) {
             return rejectWithValue(err.response?.data?.error || 'Failed to load best sellers.');

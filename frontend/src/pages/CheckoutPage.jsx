@@ -15,6 +15,7 @@ import ToastNotification from "@/common/toast/Toast";
 // Import the new modular sections
 import CheckoutPayment from "../components/checkout/CheckoutPayment";
 import CheckoutReview from "../components/checkout/CheckoutReview";
+import useInitialAddress from "@/hooks/useInitialAddress";
 
 export default function CheckoutPage() {
   const { getAccessTokenSilently } = useAuth0();
@@ -41,6 +42,9 @@ export default function CheckoutPage() {
     selectCartSubtotalWithDiscounts(state, cart)
   );
 
+  const { addresses, setAddresses, selectedId, setSelectedId } =
+    useInitialAddress(userInfo);
+    
   const fetchShippingMethods = async (itemId) => {
     try {
       setLoadingShipping(true);
@@ -108,22 +112,25 @@ export default function CheckoutPage() {
     fetchShippingMethods(20412);
   }, []);
 
-  // Auto-estimate tax and shipping when user info is available
+  // Auto-estimate tax and shipping when selected address is available
   useEffect(() => {
-    if (userInfo && subtotal > 0) {
-      // Extract country and postal code from user info
-      const userCountry =
-        userInfo.addressbook?.[0]?.country || userInfo.defaultaddress?.country;
-      const userPostalCode =
-        userInfo.addressbook?.[0]?.zip || userInfo.defaultaddress?.zip;
+    if (selectedId && addresses.length > 0 && subtotal > 0) {
+      // Find the selected address from the addresses array
+      const selectedAddress = addresses.find((addr) => addr.id === selectedId);
 
-      if (userCountry && userPostalCode) {
-        setCountry(userCountry.toLowerCase());
-        setPostalCode(userPostalCode);
-        estimateTaxAndShipping(userCountry, userPostalCode);
+      if (selectedAddress) {
+        // Extract country and postal code from selected address
+        const userCountry = selectedAddress.country;
+        const userPostalCode = selectedAddress.zip;
+
+        if (userCountry && userPostalCode) {
+          setCountry(userCountry.toLowerCase());
+          setPostalCode(userPostalCode);
+          estimateTaxAndShipping(userCountry, userPostalCode);
+        }
       }
     }
-  }, [userInfo, subtotal]);
+  }, [selectedId, addresses, subtotal]);
 
   const renderStep = () => {
     const step = location.pathname.split("/")[2] || "payment";
@@ -134,6 +141,10 @@ export default function CheckoutPage() {
           <CheckoutPayment
             isAddModalOpen={isAddModalOpen}
             setAddModalOpen={setAddModalOpen}
+            addresses={addresses}
+            setAddresses={setAddresses}
+            selectedId={selectedId}
+            setSelectedId={setSelectedId}
           />
         );
       case "review":

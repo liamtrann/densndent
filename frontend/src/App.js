@@ -3,14 +3,11 @@ import { useAuth0 } from "@auth0/auth0-react";
 import React, { Suspense, lazy } from "react";
 import { useDispatch } from "react-redux";
 import { Routes, Route } from "react-router-dom";
+import { fetchUserInfo, clearUserInfo } from "store/slices/userSlice";
 
 import { ProtectedRoute, ToastProvider, Loading } from "./common";
 import { Header, Footer, LayoutWithCart, CenteredContent } from "./components";
-import { fetchUserInfo, clearUserInfo } from "./redux/slices/userSlice";
-
-// Eagerly loaded components (critical for initial render)
 import { LandingPage } from "./pages";
-
 // Lazy loaded components
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
 const ListProductPage = lazy(() => import("./components/product/ListProductPage"));
@@ -100,6 +97,13 @@ export default function App() {
                   </CenteredContent>
                 </LayoutWithCart>
               } />
+              <Route path="/products/all-products" element={
+                <LayoutWithCart>
+                  <CenteredContent>
+                    <ListProductPage by="all" />
+                  </CenteredContent>
+                </LayoutWithCart>
+              } />
 
               {/* Routes WITHOUT Cart Panel */}
               <Route path="/cart" element={<CenteredContent><CartPage /></CenteredContent>} />
@@ -109,10 +113,19 @@ export default function App() {
               <Route path="/contact" element={<CenteredContent><ContactPage /></CenteredContent>} />
               <Route path="/blog" element={<CenteredContent><BlogPage /></CenteredContent>} />
               <Route path="/promotions" element={<CenteredContent><PromotionsPage /></CenteredContent>} />
+              <Route path="/promotions" element={<CenteredContent><PromotionsPage /></CenteredContent>} />
+              <Route path="/promotions/monthly-special" element={
+                <LayoutWithCart>
+                  <CenteredContent>
+                    <ListProductPage by="category" />
+                  </CenteredContent>
+                </LayoutWithCart>
+              } />
               <Route path="/promotions/jdiq" element={<CenteredContent><JdiqRaffleWinners /></CenteredContent>} />
               <Route path="/promotions/gift-card" element={<CenteredContent><GiftCardProgramPage /></CenteredContent>} />
               <Route path="/catalogues" element={<CenteredContent><CataloguesPage /></CenteredContent>} />
               <Route path="/clearance" element={<ClearancePage />} />
+
               <Route path="/blog/:slug" element={<CenteredContent><BlogDetailPage /></CenteredContent>} />
 
               

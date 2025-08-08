@@ -17,14 +17,13 @@ export const setupAuthApiInterceptors = (getAccessTokenSilently) => {
                     config.headers['Authorization'] = `Bearer ${token}`;
                 }
             } catch (err) {
-                // Log and attach error message if token fetch fails
-                console.error('Auth0 token error:', err?.message || err);
-                // Optionally, you can throw or handle the error here
+                // Handle auth token error silently or redirect to login
+                // console.error('Auth0 token error:', err?.message || err);
             }
             return config;
         },
         (error) => {
-            console.error('Axios request error:', error?.message || error);
+            // console.error('Axios request error:', error?.message || error);
             return Promise.reject(error);
         }
     );
@@ -34,9 +33,9 @@ export const setupAuthApiInterceptors = (getAccessTokenSilently) => {
 authApi.interceptors.response.use(
     (response) => response,
     (error) => {
-        // Log and return error with message
+        // Handle error silently or with proper error handling
         const errorMsg = error?.response?.data?.message || error?.message || error;
-        console.error('Axios response error:', errorMsg);
+        // console.error('Axios response error:', errorMsg);
         return Promise.reject(errorMsg);
     }
 );

@@ -12,6 +12,10 @@ const buildProductUrl = ({ type, id, limit, offset = 0, sort, minPrice, maxPrice
       return { url: endpoint.GET_ITEMS_BY_BRAND({ brand: id, limit, offset, sort, minPrice, maxPrice }), method: "get" };
     case "name":
       return { url: endpoint.POST_GET_ITEMS_BY_NAME({ limit, offset, sort, minPrice, maxPrice }), method: "post" };
+    case "category":
+      return { url: endpoint.GET_ITEMS_BY_CATEGORY({ category: id, limit, offset, sort, minPrice, maxPrice }), method: "get" };
+    case "all":
+      return { url: endpoint.GET_ALL_PRODUCTS({ limit, offset, sort }), method: "get" };
     case "orderHistory":
       return {
         url: endpoint.GET_ITEMS_ORDER_HISTORY_BY_USER({ userId: id, limit, offset }),
@@ -33,6 +37,8 @@ const buildCountUrl = ({ type, id, minPrice, maxPrice }) => {
       return { url: endpoint.POST_GET_COUNT_BY_NAME({ minPrice, maxPrice }), method: "post" };
     case "category":
       return { url: endpoint.GET_COUNT_BY_CATEGORY({ category: id, minPrice, maxPrice }), method: "get" };
+    case "all":
+      return { url: endpoint.GET_COUNT_ALL_PRODUCTS({ minPrice, maxPrice }), method: "get" };
     default:
       throw new Error("Unknown type");
   }
@@ -86,25 +92,23 @@ export const fetchCountBy = createAsyncThunk(
   async ({ type, id, minPrice, maxPrice }, { rejectWithValue }) => {
     try {
       const { url, method } = buildCountUrl({ type, id, minPrice, maxPrice });
+
       let res;
       if (method === "post") {
         res = await api.post(url, { name: id });
       } else {
         res = await api.get(url);
       }
-      return { id, count: res.data.count, minPrice, maxPrice };
+      return { id: id || "all", count: res.data.count, minPrice, maxPrice };
     } catch (err) {
       return rejectWithValue(err?.response?.data || err.message);
     }
   }
-);
-
-const productsSlice = createSlice({
+); const productsSlice = createSlice({
   name: 'products',
   initialState: {
-    productsByPage: {}, // key: `${classId}_${page}` => products[]
-    totalByClass: {},   // key: classId => total count
-    total: 0,
+    productsByPage: {}, // key: `${id}_${limit}_${sort}_${priceKey}_${page}` => products[]
+    totalCounts: {},    // key: `${id}_${priceKey}` => total count (where id can be classId, brandId, "all", etc.)
     isLoading: false,
     error: null,
   },
@@ -117,10 +121,18 @@ const productsSlice = createSlice({
       })
       .addCase(fetchProductsBy.fulfilled, (state, action) => {
         state.isLoading = false;
-        const { id, page, products, limit, sort, minPrice, maxPrice } = action.payload;
+        const { id, page, products, total, limit, sort, minPrice, maxPrice } = action.payload;
         const priceKey = `${minPrice || ''}_${maxPrice || ''}`;
-        const key = `${id}_${limit || 12}_${sort}_${priceKey}_${page}`;
+        const effectiveId = id || "all";
+        const key = `${effectiveId}_${limit || 12}_${sort}_${priceKey}_${page}`;
+        const countKey = `${effectiveId}_${priceKey}`;
+
         state.productsByPage[key] = products;
+
+        // Store the total count if it's provided in the response
+        if (total && total > 0) {
+          state.totalCounts[countKey] = total;
+        }
       })
       .addCase(fetchProductsBy.rejected, (state, action) => {
         state.isLoading = false;
@@ -130,8 +142,7 @@ const productsSlice = createSlice({
         const { id, count, minPrice, maxPrice } = action.payload;
         const priceKey = `${minPrice || ''}_${maxPrice || ''}`;
         const countKey = `${id}_${priceKey}`;
-        state.totalByClass[countKey] = count;
-        state.total = count;
+        state.totalCounts[countKey] = count;
       });
   },
 });

@@ -1,6 +1,13 @@
 const endpoint = {
     // SuiteQL Endpoints
     GET_ALL_CLASSIFICATIONS: '/suiteql/classification',
+    GET_ALL_PRODUCTS: ({ limit, offset, sort }) => {
+        const params = new URLSearchParams();
+        if (limit) params.append('limit', limit);
+        if (offset) params.append('offset', offset);
+        if (sort) params.append('sort', sort);
+        return `/suiteql/item/all-products?${params.toString()}`;
+    },
     GET_SUB_CATEGORIES_BY_PARENT: (id) => `/suiteql/commerceCategory/sub-category-by-parent/${id}`,
     GET_PRODUCT_BY_ID: (id) => `/suiteql/item/by-id?id=${id}`,
     POST_GET_PRODUCT_BY_PARENT: () => `/suiteql/item/by-parent`,
@@ -72,6 +79,12 @@ const endpoint = {
         if (maxPrice) params.append('maxPrice', maxPrice);
         return `/suiteql/item/count-by-category?${params.toString()}`;
     },
+    GET_COUNT_ALL_PRODUCTS: ({ minPrice, maxPrice }) => {
+        const params = new URLSearchParams();
+        if (minPrice) params.append('minPrice', minPrice);
+        if (maxPrice) params.append('maxPrice', maxPrice);
+        return `/suiteql/item/count-all-products?${params.toString()}`;
+    },
     GET_ITEMS_ORDER_HISTORY_BY_USER: ({ userId, limit, offset }) => {
         const params = new URLSearchParams();
         if (userId) params.append('userId', userId);
@@ -107,6 +120,12 @@ const endpoint = {
     GET_SHIPPING_METHOD: (id) => `/suiteql/shipItem/${id}`, // get id = 20412
     POST_CHECK_INVENTORY: () => '/suiteql/inventory/check-inventory',
     GET_ACTIVE_PROMOTIONS: () => '/suiteql/promotion',
+    GET_TOP_SALE: ({ limit, fromDate }) => {
+        const params = new URLSearchParams();
+        if (limit) params.append('limit', limit);
+        if (fromDate) params.append('fromDate', fromDate);
+        return `/suiteql/saleInvoiced/top-sale-details?${params.toString()}`;
+    },
     GET_PROMOTIONS_BY_PRODUCT: ({ productId, limit, offset }) => {
         const params = new URLSearchParams();
         if (productId) params.append('productId', productId);

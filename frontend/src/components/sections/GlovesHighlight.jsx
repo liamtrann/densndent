@@ -8,8 +8,8 @@ export default function GlovesHighlight() {
       title="Gloves"
       description="Ensure safety and comfort with high-quality dental gloves — essential supplies in every clinic's inventory of dental products and accessories."
       buttonText="Shop Now"
-      buttonLink="/products/by-category/gloves-9" // ✅ Make sure the ID is correct
-      imageSrc="/gloves-banner.png"
+      buttonLink="/products/by-name/gloves"
+      imageSrc="/gloves-banner.png" // Make sure this image is wide and high-res enough
       sectionClass="bg-smiles-white/10"
     />
   );

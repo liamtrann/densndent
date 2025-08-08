@@ -1,5 +1,6 @@
-import { useDispatch, useSelector } from 'react-redux';
 import { useCallback } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+
 import { addToRecentViews, fetchRecentProducts } from '../redux/slices/recentViewsSlice';
 
 export const useRecentViews = () => {

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+
 import api from "../api/api.js";
 
 function extractBuyGet(str) {
@@ -147,7 +148,7 @@ async function getTotalPriceAfterDiscount(productId, unitPrice, quantity) {
             promotionApplied: bestPromotion,
         };
     } catch (error) {
-        console.error("Error calculating discount:", error);
+        // console.error("Error calculating discount:", error);
         // Return original price if error occurs
         const originalTotal = Number(unitPrice) * Number(quantity);
         return {
@@ -394,8 +395,16 @@ async function handleTaxShippingEstimate({
     const { default: endpoint } = await import("../api/endpoints.js");
 
     try {
+        // Normalize country values to lowercase codes
+        let normalizedCountry = country?.toLowerCase();
+        if (normalizedCountry === 'canada') {
+            normalizedCountry = 'ca';
+        } else if (normalizedCountry === 'usa' || normalizedCountry === 'united states') {
+            normalizedCountry = 'us';
+        }
+
         // Validate postal code before making API call
-        const validationError = validatePostalCode(postalCode, country);
+        const validationError = validatePostalCode(postalCode, normalizedCountry);
         if (validationError) {
             if (onError) onError(validationError);
             return { success: false, error: validationError };
@@ -403,7 +412,7 @@ async function handleTaxShippingEstimate({
 
         if (onLoading) onLoading("Estimating region...");
 
-        const result = await fetchRegionByCode(country, postalCode);
+        const result = await fetchRegionByCode(normalizedCountry, postalCode);
 
         if (onDismiss) onDismiss();
 
@@ -413,7 +422,7 @@ async function handleTaxShippingEstimate({
             if (province) {
                 try {
                     // Get tax rates
-                    const taxUrl = endpoint.GET_TAX_RATES({ country, province });
+                    const taxUrl = endpoint.GET_TAX_RATES({ country: normalizedCountry, province });
                     const taxRates = await api.get(taxUrl);
 
                     // Calculate estimated tax
@@ -433,7 +442,7 @@ async function handleTaxShippingEstimate({
                         shippingCost,
                         taxRate: totalTaxRate,
                         province,
-                        country
+                        country: normalizedCountry
                     };
 
                     if (onSuccess) onSuccess("Tax rates loaded!", estimateData);

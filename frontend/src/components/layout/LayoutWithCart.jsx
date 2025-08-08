@@ -9,11 +9,11 @@ export default function LayoutWithCart({ children }) {
   return (
     <div className="flex">
       {/* Main Content Area */}
-      <div className="flex-1">{children}</div>
+      <div className="flex-1 min-w-0">{children}</div>
 
       {/* Right Sidebar - Cart Summary - Only show if cart has items */}
       {hasItemsInCart && (
-        <div className="hidden lg:block w-[300px] shrink-0 mr-4">
+        <div className="hidden lg:block w-[300px] xl:w-[320px] shrink-0 mr-4 min-w-[250px]">
           <CartSummaryPanel />
         </div>
       )}

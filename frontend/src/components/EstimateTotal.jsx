@@ -10,7 +10,9 @@ export default function EstimateTotal({
   showBreakdown = true,
   className = "",
 }) {
-  const shipping = shippingCost !== null ? shippingCost : 9.99;
+  // Free shipping for orders $300 and above
+  const shipping =
+    subtotal >= 300 ? 0 : shippingCost !== null ? shippingCost : 9.99;
   const tax = estimatedTax || 0;
   const total = Number(subtotal) + Number(tax) + Number(shipping);
 
@@ -48,9 +50,16 @@ export default function EstimateTotal({
 
       {/* Shipping Row */}
       <div className="flex justify-between items-center py-2 border-t border-gray-200 text-base font-semibold">
-        <span className="text-gray-700">Shipping</span>
+        <span className="text-gray-700 flex items-center gap-2">
+          Shipping
+          {subtotal >= 300 && (
+            <span className="text-xs text-green-600 font-medium">
+              (FREE on orders $300+)
+            </span>
+          )}
+        </span>
         <span className="text-gray-900">
-          {formatCurrency(shipping, currency)}
+          {shipping === 0 ? "FREE" : formatCurrency(shipping, currency)}
         </span>
       </div>
 

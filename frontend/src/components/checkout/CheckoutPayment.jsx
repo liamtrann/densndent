@@ -4,15 +4,26 @@ import { useSelector } from "react-redux";
 import { Button } from "common";
 import AddressModal from "common/modals/AddressModal";
 import AddressCard from "common/ui/AddressCard";
-import useInitialAddress from "hooks/useInitialAddress";
 
-export default function CheckoutPayment() {
+/**
+ * CheckoutPayment component handles address selection and shipping method selection
+ * @param {boolean} isAddModalOpen - Whether the add address modal is open
+ * @param {function} setAddModalOpen - Function to toggle the add address modal
+ * @param {Array} addresses - Array of available addresses
+ * @param {function} setAddresses - Function to update addresses array
+ * @param {number|null} selectedId - ID of the currently selected address
+ * @param {function} setSelectedId - Function to update selected address ID
+ */
+export default function CheckoutPayment({
+  isAddModalOpen,
+  setAddModalOpen,
+  addresses,
+  setAddresses,
+  selectedId,
+  setSelectedId,
+}) {
   const userInfo = useSelector((state) => state.user.info);
   const navigate = useNavigate();
-  const [isAddModalOpen, setAddModalOpen] = useState(false);
-
-  const { addresses, setAddresses, selectedId, setSelectedId } =
-    useInitialAddress(userInfo);
 
   // Save addresses and selectedId to localStorage whenever they change
   useEffect(() => {

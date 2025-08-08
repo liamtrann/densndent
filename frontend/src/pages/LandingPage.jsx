@@ -21,9 +21,9 @@ const LandingPage = () => {
       <MainSection />
       <HeroCarousel />
       <div className="mt-12"></div>
-      <RecentlyViewedSection />  {/* ⬅️ MOVE THIS RIGHT AFTER HERO */}
+      <RecentlyViewedSection /> 
       <CategoryTiles />
-      <PromotionsGrid />
+      {/* <PromotionsGrid /> */}
       <Catalogues buttonLink="/promotions/q3-catalogue" />
       <BestSellersSection />
       <ShopByBrand />

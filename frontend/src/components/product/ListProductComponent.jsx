@@ -1,10 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { delayCall } from "api/util";
-import {
-  fetchProductsBy,
-  fetchCountBy,
-} from "store/slices/productsSlice";
+import { fetchProductsBy, fetchCountBy } from "store/slices/productsSlice";
 import {
   Breadcrumb,
   ErrorMessage,
@@ -40,53 +37,72 @@ export default function ListProductComponent({
   const dispatch = useDispatch();
   const { minPrice, maxPrice } = appliedFilters;
   const priceKey = `${minPrice || ""}_${maxPrice || ""}`;
-  const key = `${id}_${perPage}_${sort}_${priceKey}_${page}`;
-  const countKey = `${id}_${priceKey}`;
+  const effectiveId = id || "all"; // Use "all" when id is null
+  const key = `${effectiveId}_${perPage}_${sort}_${priceKey}_${page}`;
+  const countKey = `${effectiveId}_${priceKey}`;
   const products = useSelector(
     (state) => state.products.productsByPage[key] || []
   );
   const isLoading = useSelector((state) => state.products.isLoading);
   const error = useSelector((state) => state.products.error);
   // Use price-aware count key for filtered totals
-  const total = useSelector(
-    (state) =>
-      state.products.totalByClass?.[countKey] ||
-      state.products.totalByClass?.[id] ||
-      0
-  );
+  const total = useSelector((state) => {
+    // Try the price-aware count key first
+    const count = state.products.totalCounts?.[countKey];
+    if (count !== undefined) {
+      return count;
+    }
+    return 0;
+  });
 
   useEffect(() => {
     setPage(1);
     setSort("");
-    if (id) {
-      return delayCall(() => dispatch(fetchCountBy({ type, id })));
-    }
-  }, [dispatch, type, id]);
-
-  // Separate useEffect for fetching filtered count when filters are applied
-  useEffect(() => {
-    if (id && (appliedFilters.minPrice || appliedFilters.maxPrice)) {
+    if (id || type === "all") {
       return delayCall(() =>
         dispatch(
           fetchCountBy({
             type,
-            id,
+            id: effectiveId === "all" ? null : effectiveId,
+          })
+        )
+      );
+    }
+  }, [dispatch, type, id, effectiveId]);
+
+  // Separate useEffect for fetching filtered count when filters are applied
+  useEffect(() => {
+    if (
+      (id || type === "all") &&
+      (appliedFilters.minPrice || appliedFilters.maxPrice)
+    ) {
+      return delayCall(() =>
+        dispatch(
+          fetchCountBy({
+            type,
+            id: effectiveId === "all" ? null : effectiveId,
             minPrice: appliedFilters.minPrice,
             maxPrice: appliedFilters.maxPrice,
           })
         )
       );
     }
-  }, [dispatch, type, id, appliedFilters.minPrice, appliedFilters.maxPrice]);
+  }, [
+    dispatch,
+    type,
+    effectiveId,
+    appliedFilters.minPrice,
+    appliedFilters.maxPrice,
+  ]);
 
   useEffect(() => {
-    if (id) {
+    if (id || type === "all") {
       if (!products || products.length === 0) {
         return delayCall(() => {
           dispatch(
             fetchProductsBy({
               type,
-              id,
+              id: effectiveId === "all" ? null : effectiveId,
               page,
               limit: perPage,
               sort,
@@ -100,7 +116,7 @@ export default function ListProductComponent({
   }, [
     dispatch,
     type,
-    id,
+    effectiveId,
     perPage,
     sort,
     page,
@@ -128,7 +144,7 @@ export default function ListProductComponent({
       dispatch(
         fetchCountBy({
           type,
-          id,
+          id: effectiveId === "all" ? null : effectiveId,
           minPrice: filters.minPrice,
           maxPrice: filters.maxPrice,
         })
