@@ -8,6 +8,7 @@ const pricingRoute = require('./pricing/route');
 const saleInvoicedRoute = require('./saleInvoiced/route');
 const customerRoute = require('./customer/route');
 const brandsRoute = require('./brands/route');
+const emailRoute = require('./email/route');
 const transactionRoute = require('./transaction/route');
 const promotionRoute = require('./promotion/route');
 const shipItemRoute = require('./shipItem/route');
@@ -29,6 +30,8 @@ router.use('/shipItem', shipItemRoute);
 router.use('/inventory', inventoryRoute);
 router.use('/commerceCategory', commerceCategoryRoute);
 router.use('/tax', taxRoute);
+router.use('/email', emailRoute);
+
 
 router.use((err, req, res, next) => {
     if (err.name === 'UnauthorizedError') {

@@ -1,14 +1,15 @@
-import React, { useEffect, useMemo } from "react";
+import React from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Button, PreviewCartItem } from "common";
-import { updateQuantity, removeFromCart } from "@/redux/slices/cartSlice";
+import {
+  updateQuantity,
+  removeFromCart,
+  setSubscriptionFrequency,
+} from "@/redux/slices/cartSlice";
 import { formatCurrency } from "config/config";
 import {
-  calculatePriceAfterDiscount,
-  selectFinalPrice,
   selectCartSubtotalWithDiscounts,
-  selectPriceDataExists,
 } from "@/redux/slices";
 
 export default function CartSummaryPanel() {
@@ -16,7 +17,6 @@ export default function CartSummaryPanel() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // Calculate subtotal with discounted prices
   const subtotal = useSelector((state) =>
     selectCartSubtotalWithDiscounts(state, cartItems)
   );
@@ -27,9 +27,8 @@ export default function CartSummaryPanel() {
     const newQty = type === "inc" ? item.quantity + 1 : item.quantity - 1;
 
     if (newQty > 0) {
-      dispatch(updateQuantity({ id: item.id, quantity: newQty }));
+      dispatch(updateQuantity({ id: item.id, flavor: item.flavor, quantity: newQty }));
     } else {
-      // Remove item from cart when quantity reaches 0
       dispatch(removeFromCart(item.id));
     }
   };
@@ -65,15 +64,42 @@ export default function CartSummaryPanel() {
 
       <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
         {cartItems.map((item) => (
-          <PreviewCartItem
-            key={item.id}
-            item={item}
-            onQuantityChange={handleQtyChange}
-            onItemClick={handleNavigateToProduct}
-            compact={true}
-            imageSize="w-12 h-12"
-            textSize="text-sm"
-          />
+          <div key={`${item.id}-${item.flavor || ""}`} className="border-b pb-3">
+            <PreviewCartItem
+              item={item}
+              onQuantityChange={handleQtyChange}
+              onItemClick={handleNavigateToProduct}
+              compact={true}
+              imageSize="w-12 h-12"
+              textSize="text-sm"
+            />
+
+            {/* Subscription Dropdown per product */}
+            <div className="mt-2">
+              <label className="block text-sm font-medium mb-1 text-gray-700">
+                Subscribe to this item:
+              </label>
+              <select
+                className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                value={item.subscriptionFrequency || ""}
+                onChange={(e) =>
+                  dispatch(
+                    setSubscriptionFrequency({
+                      id: item.id,
+                      flavor: item.flavor,
+                      frequency: e.target.value,
+                    })
+                  )
+                }
+              >
+                <option value="">No Subscription</option>
+                <option value="1">Every 1 month</option>
+                <option value="2">Every 2 months</option>
+                <option value="3">Every 3 months</option>
+                <option value="6">Every 6 months</option>
+              </select>
+            </div>
+          </div>
         ))}
       </div>
     </aside>
