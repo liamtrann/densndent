@@ -1,11 +1,9 @@
 // order.service.js
 // Service functions for order operations
-const kafkaProducer = require('../../kafka/kafka.producer');
-const TOPICS = require('../../kafka/topics');
 const { v4: uuidv4 } = require('uuid');
 
 module.exports = {
-    // Create order with Kafka integration
+    // Create order
     async createOrder(orderData) {
         try {
             // Generate unique order ID
@@ -28,20 +26,7 @@ module.exports = {
             // Save order to database (implement based on your DB)
             // await saveOrderToDatabase(order);
 
-            // Publish order created event to Kafka
-            await kafkaProducer.sendMessage(TOPICS.ORDER_CREATED, {
-                eventType: 'ORDER_CREATED',
-                orderId: orderId,
-                customerId: order.customerId,
-                customerName: order.customerName,
-                customerEmail: order.customerEmail,
-                items: order.items,
-                totalAmount: order.totalAmount,
-                currency: order.currency,
-                timestamp: new Date().toISOString()
-            });
-
-            console.log(`Order ${orderId} created and published to Kafka`);
+            console.log(`Order ${orderId} created successfully`);
             return { success: true, order };
 
         } catch (error) {

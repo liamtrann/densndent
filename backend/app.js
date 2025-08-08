@@ -7,7 +7,6 @@ const suiteqlRoutes = require('./suiteQL/route');
 const netsuiteRestRoute = require('./netsuiteRest/route');
 const restapiRoutes = require('./restapi/restapi.route');
 const bodyParser = require('body-parser');
-// const kafkaServicesManager = require('./kafka/services.manager');
 
 const app = express();
 
@@ -105,12 +104,6 @@ if (process.env.NODE_ENV === 'production') {
     });
   }
 }
-
-// Kafka health check endpoint
-// app.get('/kafka/health', (req, res) => {
-//   const health = kafkaServicesManager.getServicesHealth();
-//   res.json(health);
-// });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
