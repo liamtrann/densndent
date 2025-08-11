@@ -40,6 +40,9 @@ export { default as FooterSection } from "./layout/FooterSection";
 export { default as InfoBanner } from "./layout/InfoBanner";
 export { default as SectionTitle } from "./layout/SectionTitle";
 export { default as TitleSection } from "./TitleSection";
+// src/common/ui/index.js
+export { default as PurchaseOptions } from "./ui/PurchaseOptions";
+
 
 // Utility components
 export { default as ProtectedRoute } from "./utils/ProtectedRoute";

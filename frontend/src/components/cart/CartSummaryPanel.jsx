@@ -1,3 +1,4 @@
+// src/components/CartSummaryPanel.jsx
 import React from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -10,6 +11,10 @@ import {
 import { formatCurrency } from "config/config";
 import { selectCartSubtotalWithDiscounts } from "@/redux/slices";
 
+
+// NEW: reusable purchase options
+import PurchaseOptions from "common/ui/PurchaseOptions";
+
 export default function CartSummaryPanel() {
   const cartItems = useSelector((state) => state.cart.items);
   const dispatch = useDispatch();
@@ -19,7 +24,7 @@ export default function CartSummaryPanel() {
     selectCartSubtotalWithDiscounts(state, cartItems)
   );
 
-  if (cartItems.length === 0) return null;
+  if (!cartItems || cartItems.length === 0) return null;
 
   const handleQtyChange = (item, type) => {
     const newQty = type === "inc" ? item.quantity + 1 : item.quantity - 1;
@@ -107,56 +112,14 @@ export default function CartSummaryPanel() {
                 textSize="text-sm"
               />
 
-              {/* Purchase Options */}
-              <fieldset className="mt-3">
-                <legend className="sr-only">Purchase options</legend>
-                <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-sm">
-                    <input
-                      type="radio"
-                      name={`purchase-${key}`}
-                      checked={!isSubbed}
-                      onChange={() => chooseOneTime(item)}
-                      className="h-4 w-4"
-                    />
-                    <span>One-Time Purchase</span>
-                  </label>
-
-                  <label className="flex items-center gap-2 text-sm">
-                    <input
-                      type="radio"
-                      name={`purchase-${key}`}
-                      checked={isSubbed}
-                      onChange={() => chooseSubscribe(item)}
-                      className="h-4 w-4"
-                    />
-                    <span>Subscribe &amp; Save</span>
-                  </label>
-                </div>
-              </fieldset>
-
-              {/* Subscription controls appear only if Subscribe is chosen */}
-              {isSubbed && (
-                <div className="mt-2">
-                  <label
-                    htmlFor={`interval-${key}`}
-                    className="block text-sm mb-1 font-medium"
-                  >
-                    Delivery frequency
-                  </label>
-                  <select
-                    id={`interval-${key}`}
-                    value={interval}
-                    onChange={(e) => changeInterval(item, e.target.value)}
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-                  >
-                    <option value="1">Every 1 month</option>
-                    <option value="2">Every 2 months</option>
-                    <option value="3">Every 3 months</option>
-                    <option value="6">Every 6 months</option>
-                  </select>
-                </div>
-              )}
+              <PurchaseOptions
+                name={key}
+                isSubscribed={isSubbed}
+                interval={interval}
+                onOneTime={() => chooseOneTime(item)}
+                onSubscribe={() => chooseSubscribe(item)}
+                onIntervalChange={(val) => changeInterval(item, val)}
+              />
             </div>
           );
         })}

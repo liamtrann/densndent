@@ -1,3 +1,4 @@
+// src/pages/CartPage.jsx
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -14,6 +15,52 @@ import {
 } from "store/slices/cartSlice";
 import { formatPrice, formatCurrency } from "config/config";
 import { selectCartSubtotalWithDiscounts } from "@/redux/slices";
+
+// ✅ Reuse the shared purchase control
+import PurchaseOptions from "../common/ui/PurchaseOptions";
+
+/* =======================
+   Date helpers (local-only)
+   ======================= */
+
+// Add months safely: if target month has fewer days (e.g., adding 1 month to Jan 31),
+// clamp to the last day of the target month.
+function addMonthsSafe(date, months) {
+  const d = new Date(date.getTime());
+  const day = d.getDate();
+  const targetMonth = d.getMonth() + months;
+  const targetYear = d.getFullYear() + Math.floor(targetMonth / 12);
+  const normalizedMonth = ((targetMonth % 12) + 12) % 12;
+
+  // move to first day of target month, then clamp day
+  const endDay = daysInMonth(targetYear, normalizedMonth);
+  const clampedDay = Math.min(day, endDay);
+  const res = new Date(d);
+  res.setFullYear(targetYear, normalizedMonth, clampedDay);
+  return res;
+}
+
+function daysInMonth(year, monthIndex) {
+  // monthIndex: 0-11
+  return new Date(year, monthIndex + 1, 0).getDate();
+}
+
+function formatLocalDateToronto(date) {
+  // Always render in America/Toronto
+  return date.toLocaleDateString("en-CA", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    timeZone: "America/Toronto",
+  });
+}
+
+function nextSubscriptionDateFromToday(intervalStr) {
+  const interval = parseInt(intervalStr || "1", 10);
+  const todayToronto = new Date(); // We format with TZ; JS Date holds UTC internally
+  const next = addMonthsSafe(todayToronto, isNaN(interval) ? 1 : interval);
+  return next;
+}
 
 export default function CartPage() {
   const cart = useSelector((state) => state.cart.items);
@@ -37,7 +84,7 @@ export default function CartPage() {
     if (cart.length > 0) {
       checkInventory(cart.map((item) => item.id));
     }
-  }, [cart]);
+  }, [cart]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Subtotal with discounts
   const subtotalAmount = useSelector((state) =>
@@ -53,7 +100,6 @@ export default function CartPage() {
     if (newQuantity === 0) {
       dispatch(removeFromCart(item.id));
     } else {
-      // pass flavor if you use variants
       dispatch(
         updateQuantity({
           id: item.id,
@@ -155,6 +201,11 @@ export default function CartPage() {
           const isSubbed = !!item.subscriptionEnabled;
           const interval = item.subscriptionInterval || "1";
 
+          // ⏱️ First subscription delivery date (if subscribed)
+          const firstDeliveryDate = isSubbed
+            ? nextSubscriptionDateFromToday(interval)
+            : null;
+
           return (
             <div key={`${key}-wrapper`} className="mb-6 border-b pb-4">
               <PreviewCartItem
@@ -173,54 +224,24 @@ export default function CartPage() {
                 <div className="text-red-600 text-sm mt-2">Out of stock</div>
               )}
 
-              {/* Purchase Options */}
-              <fieldset className="mt-3">
-                <legend className="sr-only">Purchase options</legend>
-                <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-sm">
-                    <input
-                      type="radio"
-                      name={`purchase-${key}`}
-                      checked={!isSubbed}
-                      onChange={() => chooseOneTime(item)}
-                      className="h-4 w-4"
-                    />
-                    <span>One-Time Purchase</span>
-                  </label>
+              {/* ✅ Reusable Purchase Options */}
+              <PurchaseOptions
+                name={key}
+                isSubscribed={isSubbed}
+                interval={interval}
+                onOneTime={() => chooseOneTime(item)}
+                onSubscribe={() => chooseSubscribe(item)}
+                onIntervalChange={(val) => changeInterval(item, val)}
+              />
 
-                  <label className="flex items-center gap-2 text-sm">
-                    <input
-                      type="radio"
-                      name={`purchase-${key}`}
-                      checked={isSubbed}
-                      onChange={() => chooseSubscribe(item)}
-                      className="h-4 w-4"
-                    />
-                    <span>Subscribe &amp; Save</span>
-                  </label>
-                </div>
-              </fieldset>
-
-              {/* Subscription frequency (visible only if Subscribe is selected) */}
+              {/* ✅ Subscription start date preview */}
               {isSubbed && (
-                <div className="mt-2">
-                  <label
-                    htmlFor={`sub-${key}`}
-                    className="block text-sm mb-1 font-medium"
-                  >
-                    Delivery frequency
-                  </label>
-                  <select
-                    id={`sub-${key}`}
-                    value={interval}
-                    onChange={(e) => changeInterval(item, e.target.value)}
-                    className="w-64 border border-gray-300 rounded px-3 py-2 text-sm"
-                  >
-                    <option value="1">Every 1 month</option>
-                    <option value="2">Every 2 months</option>
-                    <option value="3">Every 3 months</option>
-                    <option value="6">Every 6 months</option>
-                  </select>
+                <div className="mt-2 text-xs text-gray-600">
+                  <span className="font-medium">First delivery:</span>{" "}
+                  <span>{formatLocalDateToronto(firstDeliveryDate)}</span>
+                  <span className="ml-1">
+                    ({interval === "1" ? "every 1 month" : `every ${interval} months`})
+                  </span>
                 </div>
               )}
 
