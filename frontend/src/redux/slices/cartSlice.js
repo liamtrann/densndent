@@ -16,23 +16,24 @@ const saveCartToStorage = (items) => {
   } catch {}
 };
 
+const initialState = {
+  items: loadCartFromStorage(),
+  status: STATUS.IDLE,
+  error: null,
+};
+
+const findItem = (list, { id, flavor }) =>
+  flavor !== undefined
+    ? list.find(i => i.id === id && i.flavor === flavor)
+    : list.find(i => i.id === id);
+
 const cartSlice = createSlice({
   name: 'cart',
-  initialState: {
-    items: loadCartFromStorage(),
-    status: STATUS.IDLE,
-    error: null,
-  },
+  initialState,
   reducers: {
     addToCart: (state, action) => {
       const { id, flavor, quantity } = action.payload;
-      let existing;
-
-      if (flavor !== undefined) {
-        existing = state.items.find(item => item.id === id && item.flavor === flavor);
-      } else {
-        existing = state.items.find(item => item.id === id);
-      }
+      const existing = findItem(state.items, { id, flavor });
 
       if (existing) {
         existing.quantity += quantity;
@@ -40,10 +41,11 @@ const cartSlice = createSlice({
         state.items.push({
           ...action.payload,
           quantity,
-          subscriptionFrequency: null, // new field
+          // subscription is OFF by default
+          subscriptionEnabled: false,
+          subscriptionInterval: null,
         });
       }
-
       saveCartToStorage(state.items);
     },
 
@@ -63,34 +65,19 @@ const cartSlice = createSlice({
 
     updateQuantity: (state, action) => {
       const { id, flavor, quantity } = action.payload;
-      let item;
-
-      if (flavor !== undefined) {
-        item = state.items.find(i => i.id === id && i.flavor === flavor);
-      } else {
-        item = state.items.find(i => i.id === id);
-      }
-
-      if (item && quantity > 0) {
-        item.quantity = quantity;
-      }
-
+      const item = findItem(state.items, { id, flavor });
+      if (item && quantity > 0) item.quantity = quantity;
       saveCartToStorage(state.items);
     },
 
-    setSubscriptionFrequency: (state, action) => {
-      const { id, flavor, frequency } = action.payload;
-      let item;
+    // 🔽 toggle/assign subscription for a single item
+    setItemSubscription: (state, action) => {
+      const { id, flavor, enabled, interval } = action.payload;
+      const item = findItem(state.items, { id, flavor });
+      if (!item) return;
 
-      if (flavor !== undefined) {
-        item = state.items.find(i => i.id === id && i.flavor === flavor);
-      } else {
-        item = state.items.find(i => i.id === id);
-      }
-
-      if (item) {
-        item.subscriptionFrequency = frequency;
-      }
+      item.subscriptionEnabled = !!enabled;
+      item.subscriptionInterval = enabled ? (interval || '1') : null;
 
       saveCartToStorage(state.items);
     },
@@ -103,7 +90,7 @@ export const {
   clearCart,
   loadCart,
   updateQuantity,
-  setSubscriptionFrequency,
+  setItemSubscription,
 } = cartSlice.actions;
 
 export default cartSlice.reducer;

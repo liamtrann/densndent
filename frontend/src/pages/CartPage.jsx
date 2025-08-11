@@ -10,13 +10,10 @@ import {
   addToCart,
   removeFromCart,
   updateQuantity,
+  setItemSubscription, // ✅ per-item subscription
 } from "store/slices/cartSlice";
 import { formatPrice, formatCurrency } from "config/config";
-import {
-  calculatePriceAfterDiscount,
-  selectFinalPrice,
-  selectCartSubtotalWithDiscounts,
-} from "@/redux/slices";
+import { selectCartSubtotalWithDiscounts } from "@/redux/slices";
 
 export default function CartPage() {
   const cart = useSelector((state) => state.cart.items);
@@ -42,25 +39,32 @@ export default function CartPage() {
     }
   }, [cart]);
 
-  // Calculate subtotal with discounted prices
+  // Subtotal with discounts
   const subtotalAmount = useSelector((state) =>
     selectCartSubtotalWithDiscounts(state, cart)
   );
   const subtotal = formatPrice(subtotalAmount);
   const totalQuantity = cart.reduce((sum, item) => sum + item.quantity, 0);
 
-  // Handle quantity change
+  // Quantity change
   const handleQuantityChange = (item, type) => {
     const newQuantity = type === "inc" ? item.quantity + 1 : item.quantity - 1;
 
     if (newQuantity === 0) {
       dispatch(removeFromCart(item.id));
     } else {
-      dispatch(updateQuantity({ id: item.id, quantity: newQuantity }));
+      // pass flavor if you use variants
+      dispatch(
+        updateQuantity({
+          id: item.id,
+          flavor: item.flavor,
+          quantity: newQuantity,
+        })
+      );
     }
   };
 
-  // Handle remove
+  // Remove item
   const handleRemoveClick = (item) => {
     setSelectedProduct(item);
     setModalOpen(true);
@@ -83,11 +87,44 @@ export default function CartPage() {
     navigate(`/product/${id}`);
   };
 
-  // Check inventory before checkout
+  // Purchase option helpers (per item)
+  const chooseOneTime = (item) => {
+    dispatch(
+      setItemSubscription({
+        id: item.id,
+        flavor: item.flavor,
+        enabled: false,
+        interval: null,
+      })
+    );
+  };
+
+  const chooseSubscribe = (item) => {
+    dispatch(
+      setItemSubscription({
+        id: item.id,
+        flavor: item.flavor,
+        enabled: true,
+        interval: item.subscriptionInterval || "1",
+      })
+    );
+  };
+
+  const changeInterval = (item, value) => {
+    dispatch(
+      setItemSubscription({
+        id: item.id,
+        flavor: item.flavor,
+        enabled: true,
+        interval: value,
+      })
+    );
+  };
+
+  // Proceed to checkout w/ inventory guard
   const handleProceedToCheckout = async () => {
     const result = await checkInventory(cart.map((item) => item.id));
     if (!result) return;
-    // Check for out of stock or missing items
     const outOfStock = result.find((r) => !r || r.quantityavailable <= 0);
     if (outOfStock) {
       alert(
@@ -114,15 +151,14 @@ export default function CartPage() {
       {cart.length > 0 ? (
         cart.map((item) => {
           const inv = inventoryStatus.find((i) => i.item === item.id);
+          const key = item.id + (item.flavor ? `-${item.flavor}` : "");
+          const isSubbed = !!item.subscriptionEnabled;
+          const interval = item.subscriptionInterval || "1";
+
           return (
-            <div
-              key={
-                item.id + (item.flavor ? `-${item.flavor}` : "") + "-wrapper"
-              }
-              className="mb-4"
-            >
+            <div key={`${key}-wrapper`} className="mb-6 border-b pb-4">
               <PreviewCartItem
-                key={item.id + (item.flavor ? `-${item.flavor}` : "")}
+                key={key}
                 item={item}
                 onQuantityChange={handleQuantityChange}
                 onItemClick={handleNavigateToProduct}
@@ -132,12 +168,65 @@ export default function CartPage() {
                 imageSize="w-24 h-24"
                 textSize="text-base"
               />
+
               {inv && inv.quantityavailable <= 0 && (
                 <div className="text-red-600 text-sm mt-2">Out of stock</div>
               )}
+
+              {/* Purchase Options */}
+              <fieldset className="mt-3">
+                <legend className="sr-only">Purchase options</legend>
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="radio"
+                      name={`purchase-${key}`}
+                      checked={!isSubbed}
+                      onChange={() => chooseOneTime(item)}
+                      className="h-4 w-4"
+                    />
+                    <span>One-Time Purchase</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="radio"
+                      name={`purchase-${key}`}
+                      checked={isSubbed}
+                      onChange={() => chooseSubscribe(item)}
+                      className="h-4 w-4"
+                    />
+                    <span>Subscribe &amp; Save</span>
+                  </label>
+                </div>
+              </fieldset>
+
+              {/* Subscription frequency (visible only if Subscribe is selected) */}
+              {isSubbed && (
+                <div className="mt-2">
+                  <label
+                    htmlFor={`sub-${key}`}
+                    className="block text-sm mb-1 font-medium"
+                  >
+                    Delivery frequency
+                  </label>
+                  <select
+                    id={`sub-${key}`}
+                    value={interval}
+                    onChange={(e) => changeInterval(item, e.target.value)}
+                    className="w-64 border border-gray-300 rounded px-3 py-2 text-sm"
+                  >
+                    <option value="1">Every 1 month</option>
+                    <option value="2">Every 2 months</option>
+                    <option value="3">Every 3 months</option>
+                    <option value="6">Every 6 months</option>
+                  </select>
+                </div>
+              )}
+
               <button
                 onClick={() => handleRemoveClick(item)}
-                className="text-red-600 text-sm underline mt-2 hover:text-red-800"
+                className="block text-red-600 text-sm underline mt-3 hover:text-red-800"
               >
                 Remove from cart
               </button>
