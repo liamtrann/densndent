@@ -1,15 +1,17 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { useAuth0 } from "@auth0/auth0-react";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { useAuth0 } from "@auth0/auth0-react";
-import InputField from "common/ui/InputField";
+
 import Button from "common/ui/Button";
 import { Loading } from "common";
-import CheckoutSummary from "components/checkout/CheckoutSummary";
 import ToastNotification from "common/toast/Toast";
+
 import api from "api/api";
 import endpoint from "api/endpoints";
+
 import { clearCart } from "store/slices/cartSlice";
+import { buildIdempotencyKey } from "config/config";
 
 export default function CheckoutReview() {
   const navigate = useNavigate();
@@ -17,22 +19,10 @@ export default function CheckoutReview() {
   const { getAccessTokenSilently } = useAuth0();
   const userInfo = useSelector((state) => state.user.info);
   const cartItems = useSelector((state) => state.cart.items || []);
-  const [showCardNumber, setShowCardNumber] = useState(false);
-  const [cardNumber, setCardNumber] = useState("1234567812341234");
-  const [nameOnCard, setNameOnCard] = useState(() => {
-    if (userInfo && userInfo.firstname && userInfo.lastname) {
-      return `${userInfo.firstname} ${userInfo.lastname}`;
-    }
-    return "";
-  });
-
-  const [expMonth, setExpMonth] = useState("07");
-  const [expYear, setExpYear] = useState("2025");
-  const [securityCode, setSecurityCode] = useState("");
   const [sameAsShipping, setSameAsShipping] = useState(true);
   const [billingAddress, setBillingAddress] = useState(null);
-  const [paymentMethod, setPaymentMethod] = useState("invoice"); // NEW
-  const [isPlacingOrder, setIsPlacingOrder] = useState(false); // Loading state
+  const [paymentMethod, setPaymentMethod] = useState("invoice");
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
   useEffect(() => {
     const stored = JSON.parse(
@@ -116,8 +106,10 @@ export default function CheckoutReview() {
 
     try {
       setIsPlacingOrder(true);
-
       const token = await getAccessTokenSilently();
+
+      // Build deterministic idempotency key matching backend window logic
+      const idemKey = buildIdempotencyKey(userInfo, cartItems, "20412", 10);
 
       const response = await api.post(
         endpoint.POST_SALES_ORDER(),
@@ -125,12 +117,19 @@ export default function CheckoutReview() {
         {
           headers: {
             Authorization: `Bearer ${token}`,
+            "Idempotency-Key": idemKey,
           },
         }
       );
 
-      // Show success message
-      ToastNotification.success("Order placed successfully!");
+      // Check if this is a duplicate order (from cache or NetSuite)
+      if (response?.data?.isDuplicate === true) {
+        ToastNotification.success(
+          "Order already placed! To place the same order again, please wait 10 minutes."
+        );
+      } else {
+        ToastNotification.success("Order placed successfully!");
+      }
 
       // Clear cart after successful order
       dispatch(clearCart());
@@ -142,11 +141,8 @@ export default function CheckoutReview() {
       // Redirect to order history
       navigate("/profile/history");
     } catch (error) {
-      console.error("Error placing order:", error);
-      ToastNotification.error(
-        error?.response?.data?.error ||
-          "Failed to place order. Please try again."
-      );
+      // Handle order placement error
+      ToastNotification.error("Failed to place order. Please try again.");
     } finally {
       setIsPlacingOrder(false);
     }

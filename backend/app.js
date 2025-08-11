@@ -7,7 +7,7 @@ const suiteqlRoutes = require('./suiteQL/route');
 const netsuiteRestRoute = require('./netsuiteRest/route');
 const restapiRoutes = require('./restapi/restapi.route');
 const bodyParser = require('body-parser');
-// const kafkaServicesManager = require('./kafka/services.manager');
+const cronManager = require('./cron');
 
 const app = express();
 
@@ -47,23 +47,15 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Config check endpoint
-app.get('/api/config-check', (req, res) => {
+// Cron jobs status endpoint
+app.get('/api/cron/status', (req, res) => {
   res.json({
-    environment: process.env.NODE_ENV || 'development',
-    port: process.env.PORT || 3001,
-    hasNetSuiteConfig: !!(process.env.SUITEQL_CONSUMER_KEY && process.env.SUITEQL_CONSUMER_SECRET),
-    frontendUrl: process.env.FRONTEND_URL,
-    envVars: {
-      NODE_ENV: process.env.NODE_ENV,
-      SUITEQL_CONSUMER_KEY: process.env.SUITEQL_CONSUMER_KEY ? '***set***' : 'missing',
-      SUITEQL_CONSUMER_SECRET: process.env.SUITEQL_CONSUMER_SECRET ? '***set***' : 'missing',
-      AUTH0_DOMAIN: process.env.AUTH0_DOMAIN ? '***set***' : 'missing',
-      NETSUITE_BASE_URL: process.env.NETSUITE_BASE_URL ? '***set***' : 'missing'
-    },
+    status: 'active',
+    jobs: cronManager.getJobsStatus(),
     timestamp: new Date().toISOString()
   });
 });
+
 
 // Serve static files from React build in production
 if (process.env.NODE_ENV === 'production') {
@@ -106,12 +98,6 @@ if (process.env.NODE_ENV === 'production') {
   }
 }
 
-// Kafka health check endpoint
-// app.get('/kafka/health', (req, res) => {
-//   const health = kafkaServicesManager.getServicesHealth();
-//   res.json(health);
-// });
-
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Error occurred:', {
@@ -134,11 +120,15 @@ const PORT = process.env.PORT || 3001;
 const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`🌟 Server running on port ${PORT}`);
   console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+
+  // Initialize cron jobs
+  cronManager.initializeCronJobs();
 });
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
   console.log('SIGTERM received, shutting down gracefully');
+  cronManager.stopAllJobs(); // Stop cron jobs
   server.close(() => {
     console.log('Process terminated');
   });

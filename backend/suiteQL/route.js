@@ -14,6 +14,7 @@ const shipItemRoute = require('./shipItem/route');
 const inventoryRoute = require('./inventory/route');
 const commerceCategoryRoute = require('./commerceCategory/route');
 const taxRoute = require('./tax/route');
+const recurringOrderRoute = require('./recurringOrder/route');
 const { checkJwt } = require('../auth/middleware');
 
 router.use('/classification', classificationRoutes);
@@ -29,6 +30,7 @@ router.use('/shipItem', shipItemRoute);
 router.use('/inventory', inventoryRoute);
 router.use('/commerceCategory', commerceCategoryRoute);
 router.use('/tax', taxRoute);
+router.use('/recurring-order', recurringOrderRoute);
 
 router.use((err, req, res, next) => {
     if (err.name === 'UnauthorizedError') {

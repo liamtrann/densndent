@@ -475,6 +475,23 @@ async function handleTaxShippingEstimate({
     }
 }
 
+// Build idempotency key for order deduplication
+function buildIdempotencyKey(userInfo, cartItems, shipMethodId = "20412", windowMins = 10) {
+    const cartKey = (cartItems || [])
+        .map((i) => `${i.netsuiteId || i.id}x${i.quantity}`)
+        .sort()
+        .join("|");
+    const windowBucket = Math.floor(Date.now() / (windowMins * 60 * 1000));
+    const raw = `${userInfo?.id || "anon"}|${shipMethodId}|${cartKey}|${windowBucket}`;
+
+    // Simple base64 makes it compact and header-safe
+    try {
+        return `ck-${btoa(unescape(encodeURIComponent(raw))).slice(0, 64)}`;
+    } catch {
+        return `ck-${Date.now()}`;
+    }
+}
+
 export {
     extractBuyGet,
     getMatrixInfo,
@@ -493,5 +510,6 @@ export {
     validateCanadianPostalCode,
     validateUSZipCode,
     validatePostalCode,
-    handleTaxShippingEstimate
+    handleTaxShippingEstimate,
+    buildIdempotencyKey
 };
