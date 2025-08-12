@@ -29,7 +29,7 @@ const normalizeSubscription = (payload = {}) => {
   const {
     subscriptionEnabled = false,             // on/off
     subscriptionInterval = null,             // '1', '2', '3', '6', etc.
-    subscriptionUnit = 'month',              // 'month' | 'week' | 'day' (if you ever expand)
+    subscriptionUnit = 'months',              // 'month' | 'week' | 'day' (if you ever expand)
     // You can add more optional fields later:
     // subscriptionStartDate = null,
     // subscriptionDiscount = null,
@@ -115,7 +115,7 @@ const cartSlice = createSlice({
       const sub = normalizeSubscription({
         subscriptionEnabled: enabled,
         subscriptionInterval: interval ?? item.subscriptionInterval ?? '1',
-        subscriptionUnit: unit ?? item.subscriptionUnit ?? 'month',
+        subscriptionUnit: unit ?? item.subscriptionUnit ?? 'months',
       });
 
       item.subscriptionEnabled = sub.subscriptionEnabled;

@@ -496,21 +496,23 @@ function buildIdempotencyKey(userInfo, cartItems, shipMethodId = "20412", window
 function calculateNextRunDate(interval, intervalUnit) {
     const currentDate = new Date();
     const parsedInterval = parseInt(interval) || 1;
-    const normalizedUnit = (intervalUnit || 'Months').toLowerCase();
+    const normalizedUnit = (intervalUnit || 'weeks').toLowerCase();
 
     const nextRunDate = new Date(currentDate);
 
     switch (normalizedUnit) {
-        case 'Weeks':
+        case 'weeks':
+        case 'week':
             nextRunDate.setDate(currentDate.getDate() + (parsedInterval * 7));
             break;
 
-        case 'Months':
+        case 'months':
+        case 'month':
             nextRunDate.setMonth(currentDate.getMonth() + parsedInterval);
             break;
 
         default:
-            nextRunDate.setDate(currentDate.getDate() + (parsedInterval * 7));
+            nextRunDate.setMonth(currentDate.getMonth() + (parsedInterval));
     }
 
     return nextRunDate.toISOString().slice(0, 10); // yyyy-mm-dd format

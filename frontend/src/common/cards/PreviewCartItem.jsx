@@ -92,7 +92,8 @@ export default function PreviewCartItem({
 
         {item.subscriptionEnabled && (
           <div className="text-xs text-white font-medium bg-smiles-gentleBlue px-1.5 py-0.5 rounded inline-block mt-1 mb-1">
-            Subscription: Every {item.subscriptionInterval} {item.subscriptionUnit}
+            Subscription: Every {item.subscriptionInterval}{" "}
+            {item.subscriptionUnit}
           </div>
         )}
 

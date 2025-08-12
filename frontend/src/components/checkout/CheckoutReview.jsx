@@ -11,7 +11,7 @@ import api from "api/api";
 import endpoint from "api/endpoints";
 
 import { clearCart } from "store/slices/cartSlice";
-import { buildIdempotencyKey } from "config/config";
+import { buildIdempotencyKey, calculateNextRunDate } from "config/config";
 
 export default function CheckoutReview() {
   const navigate = useNavigate();
@@ -32,6 +32,8 @@ export default function CheckoutReview() {
     const selectedAddress = stored.find((addr) => addr.id === selected);
     setBillingAddress(selectedAddress);
   }, []);
+
+  console.log(cartItems);
 
   const handlePlaceOrder = async () => {
     // Check if user ID is available
@@ -74,7 +76,7 @@ export default function CheckoutReview() {
       item: {
         items: cartItems.map((item) => ({
           item: {
-            id: item.netsuiteId || item.id,
+            id: item.id,
           },
           quantity: item.quantity,
         })),
@@ -129,6 +131,64 @@ export default function CheckoutReview() {
         );
       } else {
         ToastNotification.success("Order placed successfully!");
+
+        // Create recurring orders for subscription items ONLY if sales order was successful (not duplicate)
+        const subscriptionItems = cartItems.filter(
+          (item) =>
+            item.subscriptionEnabled &&
+            item.subscriptionInterval &&
+            item.subscriptionUnit
+        );
+
+        if (subscriptionItems.length > 0) {
+          for (const item of subscriptionItems) {
+            try {
+              const nextRunDate = calculateNextRunDate(
+                item.subscriptionInterval,
+                item.subscriptionUnit
+              );
+
+              const recurringOrderPayload = {
+                name: `every ${item.subscriptionInterval} ${item.subscriptionUnit}`,
+                custrecord_ro_customer: { id: userInfo.id },
+                custrecord_ro_item: { id: item.id },
+                custrecord_ro_quantity: Number(item.quantity),
+                custrecord_ro_interval: Number(item.subscriptionInterval),
+                custrecord_ro_interval_unit: { id: "2" },
+                custrecord_ro_next_run: nextRunDate,
+                custrecord_ro_status: { id: "1" },
+              };
+
+              await api.post(
+                endpoint.POST_RECURRING_ORDER(),
+                recurringOrderPayload,
+                {
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                  },
+                }
+              );
+
+              console.log(
+                `✅ Created recurring order for item: ${item.itemid || item.id}`
+              );
+            } catch (recurringError) {
+              console.error(
+                `❌ Failed to create recurring order for item: ${
+                  item.itemid || item.id
+                }`,
+                recurringError
+              );
+              // Don't show error to user - main order was successful
+            }
+          }
+
+          if (subscriptionItems.length > 0) {
+            ToastNotification.success(
+              `Subscription set up for ${subscriptionItems.length} item(s)!`
+            );
+          }
+        }
       }
 
       // Clear cart after successful order
