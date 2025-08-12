@@ -36,7 +36,7 @@ export default function CheckoutPage() {
 
   const userInfo = useSelector((state) => state.user.info);
   const cart = useSelector((state) => state.cart.items);
-
+  
   // Calculate subtotal with discounted prices
   const subtotal = useSelector((state) =>
     selectCartSubtotalWithDiscounts(state, cart)

@@ -1,13 +1,9 @@
-import React, { useEffect, useMemo } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
-import { Button, InputField, Paragraph, PreviewCartItem } from "common";
+import { useSelector } from "react-redux";
+import { Button, Paragraph, PreviewCartItem } from "common";
 import { formatCurrency } from "config/config";
-import {
-  calculatePriceAfterDiscount,
-  selectFinalPrice,
-  selectCartSubtotalWithDiscounts,
-} from "@/redux/slices";
+import { selectCartSubtotalWithDiscounts } from "@/redux/slices";
 import { EstimateTotal } from "components";
 
 export default function CheckoutSummary({
@@ -19,7 +15,6 @@ export default function CheckoutSummary({
 }) {
   const cart = useSelector((state) => state.cart.items);
   const navigate = useNavigate();
-  const dispatch = useDispatch();
 
   // Calculate subtotal with discounted prices
   const subtotal = useSelector((state) =>

@@ -90,6 +90,12 @@ export default function PreviewCartItem({
           </span>
         )}
 
+        {item.subscriptionEnabled && (
+          <div className="text-xs text-white font-medium bg-smiles-gentleBlue px-1.5 py-0.5 rounded inline-block mt-1 mb-1">
+            Subscription: Every {item.subscriptionInterval} {item.subscriptionUnit}
+          </div>
+        )}
+
         {!compact && (
           <div className="text-gray-600 mt-1">
             Unit price: ${Number(item.unitprice || item.price || 0).toFixed(2)}
