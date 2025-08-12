@@ -15,7 +15,7 @@ const loadCartFromStorage = () => {
 const saveCartToStorage = (items) => {
   try {
     localStorage.setItem('cart', JSON.stringify(items));
-  } catch {}
+  } catch { }
 };
 
 // ---------- utils ----------
@@ -29,7 +29,7 @@ const normalizeSubscription = (payload = {}) => {
   const {
     subscriptionEnabled = false,             // on/off
     subscriptionInterval = null,             // '1', '2', '3', '6', etc.
-    subscriptionUnit = 'month',              // 'month' | 'week' | 'day' (if you ever expand)
+    subscriptionUnit = 'Months',              // 'month' | 'week' | 'day' (if you ever expand)
     // You can add more optional fields later:
     // subscriptionStartDate = null,
     // subscriptionDiscount = null,
@@ -43,7 +43,7 @@ const normalizeSubscription = (payload = {}) => {
 
 // ---------- slice ----------
 const cartSlice = createSlice({
-  name: 'cart',
+  name: 'Cart',
   initialState: {
     items: loadCartFromStorage(),
     status: STATUS.IDLE,

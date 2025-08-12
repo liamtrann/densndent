@@ -13,12 +13,25 @@ import {
 import api from "api/api";
 import endpoint from "api/endpoints";
 import { useAuth0 } from "@auth0/auth0-react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { ListOrdersHistory, ListProductHistory } from "components";
+
+/* ✅ NEW: subscriptions */
+import ListSubscriptions from "components/product/ListSubscriptions";
+import {
+  selectSubscriptions,
+  cancelSubscription,
+  updateSubscriptionInterval,
+} from "store/slices/subscriptionsSlice";
 
 export default function PurchaseHistory() {
   const { getAccessTokenSilently } = useAuth0();
   const userInfo = useSelector((state) => state.user.info);
+
+  /* ✅ NEW: subscriptions state */
+  const dispatch = useDispatch();
+  const subscriptions = useSelector(selectSubscriptions);
+
   const [activeTab, setActiveTab] = useState("orders");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
@@ -34,15 +47,13 @@ export default function PurchaseHistory() {
     { value: "oldest", label: "Oldest First" },
   ];
 
-  // Generate status options from actual data
   const statusOptions = [
     { value: "All", label: "All" },
-    ...Array.from(
-      new Set(orders.map((order) => order.status || "Pending Fulfillment"))
-    ).map((status) => ({ value: status, label: status })),
+    ...Array.from(new Set(orders.map((order) => order.status || "Pending Fulfillment"))).map(
+      (status) => ({ value: status, label: status })
+    ),
   ];
 
-  // Fetch orders
   useEffect(() => {
     async function fetchOrders() {
       if (!userInfo?.id) return;
@@ -63,27 +74,22 @@ export default function PurchaseHistory() {
         setLoading(false);
       }
     }
-
     fetchOrders();
   }, [userInfo?.id, getAccessTokenSilently]);
 
-  // Filter by date range and status
   useEffect(() => {
     if (!orders.length) {
       setFilteredOrders([]);
       return;
     }
-
     const from = fromDate ? new Date(fromDate) : null;
     const to = toDate ? new Date(toDate) : null;
 
     let filtered = orders.filter((order) => {
       const orderDate = new Date(order.trandate);
       if (isNaN(orderDate)) return false;
-
       if (from && orderDate < from) return false;
       if (to && orderDate > to) return false;
-
       return true;
     });
 
@@ -101,6 +107,20 @@ export default function PurchaseHistory() {
 
     setFilteredOrders(filtered);
   }, [fromDate, toDate, status, sort, orders]);
+
+  /* ✅ handlers for subscription list */
+  const handleCancelSub = (s) => {
+    dispatch(cancelSubscription({ id: s.id, flavor: s.flavor || null }));
+  };
+  const handleChangeInterval = (s, interval) => {
+    dispatch(
+      updateSubscriptionInterval({
+        id: s.id,
+        flavor: s.flavor || null,
+        interval,
+      })
+    );
+  };
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-10">
@@ -122,6 +142,7 @@ export default function PurchaseHistory() {
         >
           Your Orders
         </button>
+
         <button
           className={`px-6 py-3 font-medium border-b-2 transition-colors ${
             activeTab === "buyAgain"
@@ -131,6 +152,18 @@ export default function PurchaseHistory() {
           onClick={() => setActiveTab("buyAgain")}
         >
           Buy Again
+        </button>
+
+        {/* ✅ NEW TAB */}
+        <button
+          className={`px-6 py-3 font-medium border-b-2 transition-colors ${
+            activeTab === "subscriptions"
+              ? "border-smiles-orange text-smiles-orange"
+              : "border-transparent text-gray-500 hover:text-gray-700"
+          }`}
+          onClick={() => setActiveTab("subscriptions")}
+        >
+          Subscription List
         </button>
       </div>
 
@@ -155,7 +188,10 @@ export default function PurchaseHistory() {
             />
             <Dropdown
               label="Sort By"
-              options={sortOptions}
+              options={[
+                { value: "recent", label: "Most Recent" },
+                { value: "oldest", label: "Oldest First" },
+              ]}
               value={sort}
               onChange={(e) => setSort(e.target.value)}
               className="min-w-[150px]"
@@ -191,8 +227,7 @@ export default function PurchaseHistory() {
             <ListOrdersHistory orders={filteredOrders} />
           )}
         </>
-      ) : (
-        /* Buy Again Tab */
+      ) : activeTab === "buyAgain" ? (
         <div>
           {userInfo?.id ? (
             <ListProductHistory userId={userInfo.id} />
@@ -229,6 +264,13 @@ export default function PurchaseHistory() {
             </div>
           )}
         </div>
+      ) : (
+        /* ✅ Subscriptions Tab */
+        <ListSubscriptions
+          items={subscriptions}
+          onCancel={handleCancelSub}
+          onChangeInterval={handleChangeInterval}
+        />
       )}
     </div>
   );
