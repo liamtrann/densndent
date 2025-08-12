@@ -492,6 +492,30 @@ function buildIdempotencyKey(userInfo, cartItems, shipMethodId = "20412", window
     }
 }
 
+// Calculate next run date for custrecord_ro_next_run field
+function calculateNextRunDate(interval, intervalUnit) {
+    const currentDate = new Date();
+    const parsedInterval = parseInt(interval) || 1;
+    const normalizedUnit = (intervalUnit || 'Months').toLowerCase();
+
+    const nextRunDate = new Date(currentDate);
+
+    switch (normalizedUnit) {
+        case 'Weeks':
+            nextRunDate.setDate(currentDate.getDate() + (parsedInterval * 7));
+            break;
+
+        case 'Months':
+            nextRunDate.setMonth(currentDate.getMonth() + parsedInterval);
+            break;
+
+        default:
+            nextRunDate.setDate(currentDate.getDate() + (parsedInterval * 7));
+    }
+
+    return nextRunDate.toISOString().slice(0, 10); // yyyy-mm-dd format
+}
+
 export {
     extractBuyGet,
     getMatrixInfo,
@@ -511,5 +535,6 @@ export {
     validateUSZipCode,
     validatePostalCode,
     handleTaxShippingEstimate,
-    buildIdempotencyKey
+    buildIdempotencyKey,
+    calculateNextRunDate
 };

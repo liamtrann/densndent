@@ -74,13 +74,11 @@ class RecurringOrderCron {
             const nextRunDate = new Date(currentDate);
 
             switch (intervalunit) {
-                case 'weeks':
-                case 'week':
+                case 'Weeks':
                     nextRunDate.setDate(currentDate.getDate() + (interval * 7));
                     break;
 
-                case 'months':
-                case 'month':
+                case 'Months':
                     nextRunDate.setMonth(currentDate.getMonth() + interval);
                     break;
 
