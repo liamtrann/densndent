@@ -145,12 +145,35 @@ const endpoint = {
     POST_CALCULATE_TAX: () => '/suiteql/tax/calculate',
     // GET_TAX_RATES_BY_POSTAL_CODE: (country, postalCode) => `/suiteql/tax/rates/${country}/${postalCode}`,
 
+    // Recurring Order Endpoints (SuiteQL)
+    GET_RECURRING_ORDERS: ({ customerId, limit, offset }) => {
+        const params = new URLSearchParams();
+        if (customerId) params.append('customerId', customerId);
+        if (limit) params.append('limit', limit);
+        if (offset) params.append('offset', offset);
+        return `/suiteql/recurring-order?${params.toString()}`;
+    },
+    GET_DUE_RECURRING_ORDERS: ({ limit, offset }) => {
+        const params = new URLSearchParams();
+        if (limit) params.append('limit', limit);
+        if (offset) params.append('offset', offset);
+        return `/suiteql/recurring-order/due?${params.toString()}`;
+    },
+    GET_ACTIVE_RECURRING_ORDERS: ({ limit, offset }) => {
+        const params = new URLSearchParams();
+        if (limit) params.append('limit', limit);
+        if (offset) params.append('offset', offset);
+        return `/suiteql/recurring-order/active?${params.toString()}`;
+    },
+    GET_RECURRING_ORDER_BY_ID: (id) => `/suiteql/recurring-order/${id}`,
+
     // NETSUITE REST API Endpoints
     GET_CUSTOMER: (id) => `/restapi/customer/${id}`,
     GET_SALES_ORDER: (id) => `/restapi/salesOrder/${id}`,
     POST_SALES_ORDER: () => `/restapi/salesOrder`,
     PATCH_UPDATE_CUSTOMER: (id) => `/restapi/customer/${id}`,
     POST_CREATE_CUSTOMER: () => `/restapi/customer`,
+    POST_RECURRING_ORDER: () => `/restapi/customrecord_recurring_order`
 };
 
 export default endpoint;

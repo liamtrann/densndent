@@ -475,6 +475,47 @@ async function handleTaxShippingEstimate({
     }
 }
 
+// Build idempotency key for order deduplication
+function buildIdempotencyKey(userInfo, cartItems, shipMethodId = "20412", windowMins = 10) {
+    const cartKey = (cartItems || [])
+        .map((i) => `${i.netsuiteId || i.id}x${i.quantity}`)
+        .sort()
+        .join("|");
+    const windowBucket = Math.floor(Date.now() / (windowMins * 60 * 1000));
+    const raw = `${userInfo?.id || "anon"}|${shipMethodId}|${cartKey}|${windowBucket}`;
+
+    // Simple base64 makes it compact and header-safe
+    try {
+        return `ck-${btoa(unescape(encodeURIComponent(raw))).slice(0, 64)}`;
+    } catch {
+        return `ck-${Date.now()}`;
+    }
+}
+
+// Calculate next run date for custrecord_ro_next_run field
+function calculateNextRunDate(interval, intervalUnit) {
+    const currentDate = new Date();
+    const parsedInterval = parseInt(interval) || 1;
+    const normalizedUnit = (intervalUnit || 'Months').toLowerCase();
+
+    const nextRunDate = new Date(currentDate);
+
+    switch (normalizedUnit) {
+        case 'Weeks':
+            nextRunDate.setDate(currentDate.getDate() + (parsedInterval * 7));
+            break;
+
+        case 'Months':
+            nextRunDate.setMonth(currentDate.getMonth() + parsedInterval);
+            break;
+
+        default:
+            nextRunDate.setDate(currentDate.getDate() + (parsedInterval * 7));
+    }
+
+    return nextRunDate.toISOString().slice(0, 10); // yyyy-mm-dd format
+}
+
 export {
     extractBuyGet,
     getMatrixInfo,
@@ -493,5 +534,7 @@ export {
     validateCanadianPostalCode,
     validateUSZipCode,
     validatePostalCode,
-    handleTaxShippingEstimate
+    handleTaxShippingEstimate,
+    buildIdempotencyKey,
+    calculateNextRunDate
 };

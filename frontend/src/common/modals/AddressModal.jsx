@@ -17,7 +17,7 @@ export default function AddressModal({ isOpen, onClose, onSave }) {
     address: "",
     address2: "",
     city: "",
-    state: "on",
+    state: "ON",
     zip: "",
     phone: "",
     isResidential: false,
