@@ -1,3 +1,4 @@
+// src/pages/ProductsPage.jsx
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
@@ -25,7 +26,39 @@ import {
   extractBuyGet,
 } from "config/config";
 import { addToRecentViews } from "../redux/slices/recentViewsSlice";
-import RecentlyViewedSection from "../components/sections/RecentlyViewedSection"; // ✅ Imported section
+import RecentlyViewedSection from "../components/sections/RecentlyViewedSection";
+
+// ✅ Reusable purchase control
+import PurchaseOptions from "../common/ui/PurchaseOptions";
+
+/* ===== Date helpers (local) ===== */
+function daysInMonth(year, monthIndex) {
+  return new Date(year, monthIndex + 1, 0).getDate();
+}
+function addMonthsSafe(date, months) {
+  const d = new Date(date.getTime());
+  const day = d.getDate();
+  const targetMonth = d.getMonth() + months;
+  const targetYear = d.getFullYear() + Math.floor(targetMonth / 12);
+  const normalizedMonth = ((targetMonth % 12) + 12) % 12;
+  const endDay = daysInMonth(targetYear, normalizedMonth);
+  const clamped = Math.min(day, endDay);
+  const res = new Date(d);
+  res.setFullYear(targetYear, normalizedMonth, clamped);
+  return res;
+}
+function formatLocalDateToronto(date) {
+  return date.toLocaleDateString("en-CA", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    timeZone: "America/Toronto",
+  });
+}
+function nextSubscriptionDateFromToday(intervalStr) {
+  const interval = parseInt(intervalStr || "1", 10);
+  return addMonthsSafe(new Date(), isNaN(interval) ? 1 : interval);
+}
 
 export default function ProductsPage() {
   const { id } = useParams();
@@ -39,6 +72,10 @@ export default function ProductsPage() {
   const [matrixOptions, setMatrixOptions] = useState([]);
   const [selectedMatrixOption, setSelectedMatrixOption] = useState("");
 
+  // ✅ local state for purchase options on PDP
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [subInterval, setSubInterval] = useState("1");
+
   const { addProductToRecentViews } = useRecentViews();
 
   const {
@@ -49,15 +86,18 @@ export default function ProductsPage() {
     decrement,
   } = useQuantityHandlers(1, product?.stockdescription);
 
+  // fetch product
   useEffect(() => {
     async function fetchProduct() {
       try {
         setLoading(true);
         setError(null);
-        // Use centralized axios instance for API call
         const res = await api.get(endpoint.GET_PRODUCT_BY_ID(id));
         setProduct(res.data);
         dispatch(addToRecentViews(res.data.id));
+        // reset PDP subscription UI on product change
+        setIsSubscribed(false);
+        setSubInterval("1");
       } catch (err) {
         setError(err?.response?.data?.error || "Failed to load product.");
       } finally {
@@ -65,18 +105,18 @@ export default function ProductsPage() {
       }
     }
     fetchProduct();
-  }, [id]);
+  }, [id, dispatch]);
 
+  // fetch matrix/variants
   useEffect(() => {
     if (!product || !product.custitem39) return;
-    // Fetch products with the same custitem39 (parent key)
     async function fetchMatrixOptions() {
       try {
         const res = await api.post(endpoint.POST_GET_PRODUCT_BY_PARENT(), {
           parent: product.custitem39,
         });
         setMatrixOptions(res.data || []);
-      } catch (err) {
+      } catch {
         setMatrixOptions([]);
       }
     }
@@ -88,19 +128,21 @@ export default function ProductsPage() {
   }, [product]);
 
   useEffect(() => {
-    if (id) {
-      addProductToRecentViews(id);
-    }
+    if (id) addProductToRecentViews(id);
   }, [id, addProductToRecentViews]);
 
   const handleAddToCart = () => {
     if (!product) return;
-    const cartItem = { ...product, quantity: Number(actualQuantity) };
+    const cartItem = {
+      ...product,
+      quantity: Number(actualQuantity),
+      // ✅ carry PDP subscription choice into cart
+      subscriptionEnabled: isSubscribed,
+      subscriptionInterval: isSubscribed ? subInterval : null,
+    };
 
     delayCall(() => {
       dispatch(addToCart(cartItem));
-
-      // Show simple success notification
       Toast.success(`Added ${actualQuantity} ${product.itemid} to cart!`);
     });
   };
@@ -110,6 +152,11 @@ export default function ProductsPage() {
   if (loading) return <Loading text="Loading product..." />;
   if (error) return <ErrorMessage message={error} />;
   if (!product) return null;
+
+  // compute first delivery date preview
+  const firstDeliveryDate = isSubscribed
+    ? nextSubscriptionDateFromToday(subInterval)
+    : null;
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-10">
@@ -125,6 +172,7 @@ export default function ProductsPage() {
           <h2 className="text-2xl font-bold text-gray-800 mb-2">
             {product.itemid}
           </h2>
+
           {product.totalquantityonhand && product.totalquantityonhand > 0 ? (
             <Paragraph className="text-green-700 font-semibold">
               Current Stock: {product.totalquantityonhand}
@@ -134,6 +182,7 @@ export default function ProductsPage() {
               Out of stock
             </Paragraph>
           )}
+
           <div className="mt-2 mb-4">
             {product.price ? (
               <div className="text-3xl font-bold text-gray-800">
@@ -141,13 +190,16 @@ export default function ProductsPage() {
               </div>
             ) : null}
           </div>
+
           {product.storedetaileddescription && (
             <ShowMoreHtml
               html={product.storedetaileddescription}
               maxLength={400}
             />
           )}
+
           <div className="text-sm text-gray-500 mt-4">MPN: {product.mpn}</div>
+
           {matrixOptions.length > 0 && (
             <Dropdown
               label={matrixType}
@@ -164,6 +216,7 @@ export default function ProductsPage() {
             />
           )}
 
+          {/* Quantity */}
           <div className="mt-4">
             <label className="block mb-1 font-medium">Quantity:</label>
             <div className="flex items-center gap-4">
@@ -201,6 +254,7 @@ export default function ProductsPage() {
                   +
                 </button>
               </div>
+
               {product.stockdescription && (
                 <span className="text-sm text-blue-600 font-medium bg-blue-50 px-2 py-1 rounded">
                   {product.stockdescription}
@@ -220,6 +274,30 @@ export default function ProductsPage() {
             )}
           </div>
 
+          {/* ✅ Purchase options (PDP) */}
+          <div className="mt-5">
+            <PurchaseOptions
+              name={`pdp-${product.id}`}
+              isSubscribed={isSubscribed}
+              interval={subInterval}
+              onOneTime={() => setIsSubscribed(false)}
+              onSubscribe={() => setIsSubscribed(true)}
+              onIntervalChange={(val) => setSubInterval(val)}
+            />
+
+            {/* date preview when subscribed */}
+            {isSubscribed && (
+              <div className="mt-2 text-xs text-gray-600">
+                <span className="font-medium">First delivery:</span>{" "}
+                <span>{formatLocalDateToronto(firstDeliveryDate)}</span>
+                <span className="ml-1">
+                  ({subInterval === "1" ? "every 1 month" : `every ${subInterval} months`})
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Add to Cart */}
           <Button
             className={`mt-6 w-full ${
               !product.totalquantityonhand || product.totalquantityonhand <= 0
