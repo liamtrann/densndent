@@ -1,7 +1,7 @@
+// src/components/product/ListSubscriptions.jsx
 import React from "react";
 import { Button, Dropdown, Image, Paragraph } from "common";
 
-/* ===== subscription helpers (local) ===== */
 const INTERVAL_OPTIONS = [
   { value: "1", label: "Every 1 month" },
   { value: "2", label: "Every 2 months" },
@@ -56,14 +56,12 @@ export default function ListSubscriptions({ items = [], onCancel, onChangeInterv
 
         return (
           <div key={s.id} className="flex items-start gap-4 border rounded-md p-3">
-            {/* image */}
             <Image
               src={s.file_url}
               alt={s.displayname || s.itemid || "Product"}
               className="w-16 h-16 object-contain border rounded"
             />
 
-            {/* info */}
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <div className="font-semibold text-gray-800">
@@ -79,7 +77,6 @@ export default function ListSubscriptions({ items = [], onCancel, onChangeInterv
                 Next delivery: <span className="font-medium">{formatLocalDateToronto(nextDate)}</span>
               </Paragraph>
 
-              {/* controls */}
               <div className="mt-3 flex flex-wrap items-center gap-3">
                 <div className="w-48">
                   <Dropdown
