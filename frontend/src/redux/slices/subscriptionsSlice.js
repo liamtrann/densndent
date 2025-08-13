@@ -1,4 +1,3 @@
-// src/store/slices/subscriptionsSlice.js
 import { createSlice } from "@reduxjs/toolkit";
 
 const LS_KEY = "dnd_subscriptions_v1";
@@ -17,7 +16,7 @@ function saveToLS(items) {
   } catch {}
 }
 
-// Each subscription: { id, itemid, displayname, file_url, flavor, interval, createdAt }
+// each subscription: { id, itemid, displayname, file_url, interval, createdAt }
 const initialState = {
   items: loadFromLS(),
 };
@@ -27,22 +26,19 @@ const subscriptionsSlice = createSlice({
   initialState,
   reducers: {
     upsertSubscription: (state, action) => {
-      const { id, itemid, displayname, file_url, flavor = null, interval = "1" } = action.payload || {};
+      const { id, itemid, displayname, file_url, interval = "1" } = action.payload || {};
       if (!id) return;
 
-      const keyMatch = (s) => s.id === id && (s.flavor || null) === (flavor || null);
-      const existingIdx = state.items.findIndex(keyMatch);
-      if (existingIdx >= 0) {
-        // update interval only; preserve original createdAt
-        state.items[existingIdx].interval = interval || state.items[existingIdx].interval || "1";
+      const idx = state.items.findIndex((s) => s.id === id);
+      if (idx >= 0) {
+        state.items[idx].interval = String(interval || state.items[idx].interval || "1");
       } else {
         state.items.push({
           id,
           itemid,
           displayname,
           file_url,
-          flavor: flavor || null,
-          interval: interval || "1",
+          interval: String(interval || "1"),
           createdAt: Date.now(),
         });
       }
@@ -50,20 +46,20 @@ const subscriptionsSlice = createSlice({
     },
 
     updateSubscriptionInterval: (state, action) => {
-      const { id, flavor = null, interval } = action.payload || {};
-      const idx = state.items.findIndex((s) => s.id === id && (s.flavor || null) === (flavor || null));
+      const { id, interval } = action.payload || {};
+      const idx = state.items.findIndex((s) => s.id === id);
       if (idx >= 0) {
-        state.items[idx].interval = interval;
+        state.items[idx].interval = String(interval || "1");
         saveToLS(state.items);
       }
     },
 
     cancelSubscription: (state, action) => {
-      const { id, flavor = null } = action.payload || {};
-      state.items = state.items.filter((s) => !(s.id === id && (s.flavor || null) === (flavor || null)));
+      const { id } = action.payload || {};
+      state.items = state.items.filter((s) => s.id !== id);
       saveToLS(state.items);
     },
-    // optional: clear all (not used in UI)
+
     clearSubscriptions: (state) => {
       state.items = [];
       saveToLS(state.items);

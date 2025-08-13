@@ -1,11 +1,13 @@
 // src/redux/slices/cartSlice.js
-import { createSlice } from '@reduxjs/toolkit';
-import { STATUS } from '../status';
+import { createSlice } from "@reduxjs/toolkit";
+import { STATUS } from "../status";
 
 // ---------- storage helpers ----------
+const LS_KEY = "cart";
+
 const loadCartFromStorage = () => {
   try {
-    const data = localStorage.getItem('cart');
+    const data = localStorage.getItem(LS_KEY);
     return data ? JSON.parse(data) : [];
   } catch {
     return [];
@@ -14,36 +16,38 @@ const loadCartFromStorage = () => {
 
 const saveCartToStorage = (items) => {
   try {
-    localStorage.setItem('cart', JSON.stringify(items));
-  } catch { }
+    localStorage.setItem(LS_KEY, JSON.stringify(items));
+  } catch {}
 };
 
 // ---------- utils ----------
-const findItem = (list, { id, flavor }) =>
-  flavor !== undefined
-    ? list.find((i) => i.id === id && i.flavor === flavor)
-    : list.find((i) => i.id === id);
+// Find strictly by id (no variant/flavor support)
+const findItem = (list, id) => list.find((i) => i.id === id);
 
-// normalize subscription payload & defaults
+// Normalize subscription fields to a consistent shape
 const normalizeSubscription = (payload = {}) => {
   const {
-    subscriptionEnabled = false,             // on/off
-    subscriptionInterval = null,             // '1', '2', '3', '6', etc.
-    subscriptionUnit = 'Months',              // 'month' | 'week' | 'day' (if you ever expand)
-    // You can add more optional fields later:
-    // subscriptionStartDate = null,
-    // subscriptionDiscount = null,
+    subscriptionEnabled = false, // on/off
+    subscriptionInterval = null, // '1' | '2' | '3' | '6' | null
+    subscriptionUnit = "month",  // standardized (lowercase singular)
   } = payload;
 
-  // if not enabled, we null out interval for clarity
   return subscriptionEnabled
-    ? { subscriptionEnabled: true, subscriptionInterval: String(subscriptionInterval || '1'), subscriptionUnit }
-    : { subscriptionEnabled: false, subscriptionInterval: null, subscriptionUnit };
+    ? {
+        subscriptionEnabled: true,
+        subscriptionInterval: String(subscriptionInterval || "1"),
+        subscriptionUnit,
+      }
+    : {
+        subscriptionEnabled: false,
+        subscriptionInterval: null,
+        subscriptionUnit,
+      };
 };
 
 // ---------- slice ----------
 const cartSlice = createSlice({
-  name: 'Cart',
+  name: "Cart",
   initialState: {
     items: loadCartFromStorage(),
     status: STATUS.IDLE,
@@ -51,29 +55,30 @@ const cartSlice = createSlice({
   },
   reducers: {
     addToCart: (state, action) => {
-      const { id, flavor, quantity = 1, ...rest } = action.payload;
+      const { id, quantity: rawQty = 1, ...rest } = action.payload;
 
-      // figure out if we already have this variant in cart
-      const existing = findItem(state.items, { id, flavor });
+      // coerce quantity safely
+      const qtyNum = Number(rawQty);
+      const qty = Number.isFinite(qtyNum) && qtyNum > 0 ? qtyNum : 1;
+
+      const existing = findItem(state.items, id);
 
       // normalize incoming subscription fields (or defaults)
       const sub = normalizeSubscription(rest);
 
       if (existing) {
-        // quantity: add to existing
-        existing.quantity += quantity;
+        existing.quantity += qty;
 
         // if caller explicitly provided subscription fields, update them
-        if (rest.hasOwnProperty('subscriptionEnabled')) {
+        if (Object.prototype.hasOwnProperty.call(rest, "subscriptionEnabled")) {
           existing.subscriptionEnabled = sub.subscriptionEnabled;
           existing.subscriptionInterval = sub.subscriptionInterval;
           existing.subscriptionUnit = sub.subscriptionUnit;
         }
       } else {
-        // push brand new item with normalized subscription fields
         state.items.push({
           ...action.payload,
-          quantity,
+          quantity: qty,
           subscriptionEnabled: sub.subscriptionEnabled,
           subscriptionInterval: sub.subscriptionInterval,
           subscriptionUnit: sub.subscriptionUnit,
@@ -98,24 +103,26 @@ const cartSlice = createSlice({
     },
 
     updateQuantity: (state, action) => {
-      const { id, flavor, quantity } = action.payload;
-      const item = findItem(state.items, { id, flavor });
-      if (item && quantity > 0) {
-        item.quantity = quantity;
+      const { id, quantity } = action.payload;
+      const qtyNum = Number(quantity);
+      const item = findItem(state.items, id);
+
+      if (item && Number.isFinite(qtyNum) && qtyNum > 0) {
+        item.quantity = qtyNum;
         saveCartToStorage(state.items);
       }
     },
 
     // Toggle/assign subscription for a single item (used in Cart Page / Panel)
     setItemSubscription: (state, action) => {
-      const { id, flavor, enabled, interval, unit } = action.payload;
-      const item = findItem(state.items, { id, flavor });
+      const { id, enabled, interval, unit } = action.payload;
+      const item = findItem(state.items, id);
       if (!item) return;
 
       const sub = normalizeSubscription({
         subscriptionEnabled: enabled,
-        subscriptionInterval: interval ?? item.subscriptionInterval ?? '1',
-        subscriptionUnit: unit ?? item.subscriptionUnit ?? 'month',
+        subscriptionInterval: interval ?? item.subscriptionInterval ?? "1",
+        subscriptionUnit: unit ?? item.subscriptionUnit ?? "month",
       });
 
       item.subscriptionEnabled = sub.subscriptionEnabled;
