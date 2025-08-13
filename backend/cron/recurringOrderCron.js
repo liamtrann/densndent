@@ -1,33 +1,35 @@
 const recurringOrderService = require('../suiteQL/recurringOrder/recurringOrder.service');
-const restApiService = require('../restapi/restapi.service');
+const { enqueueOrder } = require('../queue/orderQueue');
 
 class RecurringOrderCron {
     async processRecurringOrders() {
         console.log('⏰ [CRON] Running daily recurring orders job at:', new Date().toISOString());
+        console.log(`🌍 [CRON] Environment: ${process.env.NODE_ENV || 'development'}`);
 
         try {
             const dueOrders = await recurringOrderService.getDueOrders();
             console.log(`📋 [CRON] Found ${dueOrders.length} due recurring orders to process`);
 
             if (dueOrders.length === 0) {
-                console.log('� [CRON] No due orders to process');
+                console.log('📭 [CRON] No due orders to process');
                 return;
             }
 
-            console.log('�🔄 [CRON] Processing due orders...');
+            console.log('� [CRON] Enqueuing orders for processing...');
 
             const results = {
-                success: 0,
+                enqueued: 0,
                 failed: 0,
                 errors: []
             };
 
-            // Process each order with individual error handling
+            // Enqueue all orders for asynchronous processing
             for (const order of dueOrders) {
                 try {
-                    await this.processOrder(order);
-                    results.success++;
-                    console.log(`✅ [CRON] Successfully processed order ID: ${order.id}`);
+                    console.log(`📤 [CRON] Enqueuing order ID: ${order.id} for customer: ${order.customerid}`);
+                    await enqueueOrder(order);
+                    results.enqueued++;
+                    console.log(`📤 [CRON] Successfully enqueued order ID: ${order.id}`);
                 } catch (error) {
                     results.failed++;
                     results.errors.push({
@@ -35,26 +37,30 @@ class RecurringOrderCron {
                         customerId: order.customerid,
                         error: error.message
                     });
-
-                    // Mark order for retry instead of just failing
-                    await this.markOrderAsFailedAndRetryLater(order.id, error.message);
-
-                    console.error(`❌ [CRON] Failed to process order ID: ${order.id} - ${error.message}`);
+                    console.error(`❌ [CRON] Failed to enqueue order ID: ${order.id} - ${error.message}`);
                 }
             }
 
             // Summary report
-            console.log(`📊 [CRON] Processing Summary: ${results.success} successful, ${results.failed} failed`);
+            console.log(`📊 [CRON] Enqueue Summary: ${results.enqueued} enqueued, ${results.failed} failed`);
 
             if (results.errors.length > 0) {
-                console.log('� [CRON] Failed orders:', JSON.stringify(results.errors, null, 2));
+                console.log('🔍 [CRON] Failed to enqueue:', JSON.stringify(results.errors, null, 2));
             }
 
         } catch (error) {
             console.error('❌ [CRON] Critical error in recurring orders job:', error.message);
             console.error('❌ [CRON] Stack trace:', error.stack);
+
+            // In production, you might want to send alerts
+            if (process.env.NODE_ENV === 'production') {
+                console.error('🚨 [PRODUCTION] CRITICAL CRON FAILURE - Manual intervention may be required');
+            }
         }
     }
+
+    // BACKUP METHODS - These are kept for fallback or migration purposes
+    // The main processing now happens in the Bull Queue (orderQueue.js)
 
     async processOrder(order) {
         console.log(`🔨 [CRON] Processing order ID: ${order.id} for customer: ${order.customerid}`);
