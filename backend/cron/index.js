@@ -17,7 +17,7 @@ class CronManager {
     }
 
     startRecurringOrderCron() {
-        const job = cron.schedule('5 0 * * *', async () => {
+        const job = cron.schedule('*/20 * * * * *', async () => {
             await recurringOrderCron.processRecurringOrders();
         }, {
             scheduled: true,
@@ -26,11 +26,11 @@ class CronManager {
 
         this.jobs.push({
             name: 'Recurring Orders',
-            schedule: '5 0 * * *',
+            schedule: '*/20 * * * * *',
             job: job
         });
 
-        console.log('⏰ Recurring Orders cron job scheduled: Daily at 00:05');
+        console.log('⏰ Recurring Orders cron job scheduled: Every 20 seconds (TESTING MODE)');
     }
 
     // Stop all cron jobs
