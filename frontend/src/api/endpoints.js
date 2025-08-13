@@ -146,7 +146,7 @@ const endpoint = {
     // GET_TAX_RATES_BY_POSTAL_CODE: (country, postalCode) => `/suiteql/tax/rates/${country}/${postalCode}`,
 
     // Recurring Order Endpoints (SuiteQL)
-    GET_RECURRING_ORDERS: ({ customerId, limit, offset }) => {
+    GET_RECURRING_ORDERS_BY_CUSTOMER: ({ customerId, limit, offset }) => {
         const params = new URLSearchParams();
         if (customerId) params.append('customerId', customerId);
         if (limit) params.append('limit', limit);
@@ -173,7 +173,8 @@ const endpoint = {
     POST_SALES_ORDER: () => `/restapi/salesOrder`,
     PATCH_UPDATE_CUSTOMER: (id) => `/restapi/customer/${id}`,
     POST_CREATE_CUSTOMER: () => `/restapi/customer`,
-    POST_RECURRING_ORDER: () => `/restapi/customrecord_recurring_order`
+    POST_RECURRING_ORDER: () => `/restapi/customrecord_recurring_order`,
+    UPDATE_RECURRING_ORDER: (id) => `/restapi/customrecord_recurring_order/${id}`
 };
 
 export default endpoint;

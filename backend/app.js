@@ -9,6 +9,18 @@ const restapiRoutes = require('./restapi/restapi.route');
 const bodyParser = require('body-parser');
 const cronManager = require('./cron');
 
+// Initialize Bull Queue and Worker
+// In development: run everything in one process
+// In production: separate web and worker processes using WORKER_MODE env variable
+if (process.env.NODE_ENV !== 'production' || process.env.WORKER_MODE !== 'false') {
+  console.log('🔧 [APP] Initializing Bull Queue and Worker...');
+  const { recurringOrderQueue } = require('./queue/orderQueue');
+  console.log('✅ [APP] Bull Queue worker initialized and ready to process jobs');
+  console.log('🎯 [APP] Worker is listening for recurring order jobs...');
+} else {
+  console.log('🌐 [APP] Running in web-only mode (worker disabled)');
+}
+
 const app = express();
 
 // Middleware
@@ -33,7 +45,8 @@ app.get('/api/test', (req, res) => {
   res.json({
     message: 'Backend is working!',
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
+    workerEnabled: process.env.NODE_ENV !== 'production' || process.env.WORKER_MODE !== 'false'
   });
 });
 
@@ -55,7 +68,6 @@ app.get('/api/cron/status', (req, res) => {
     timestamp: new Date().toISOString()
   });
 });
-
 
 // Serve static files from React build in production
 if (process.env.NODE_ENV === 'production') {

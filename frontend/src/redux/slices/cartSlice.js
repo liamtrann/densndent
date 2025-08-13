@@ -27,9 +27,12 @@ const findItem = (list, id) => list.find((i) => i.id === id);
 // Normalize subscription fields to a consistent shape
 const normalizeSubscription = (payload = {}) => {
   const {
-    subscriptionEnabled = false, // on/off
-    subscriptionInterval = null, // '1' | '2' | '3' | '6' | null
-    subscriptionUnit = "month",  // standardized (lowercase singular)
+    subscriptionEnabled = false,             // on/off
+    subscriptionInterval = null,             // '1', '2', '3', '6', etc.
+    subscriptionUnit = 'months',              // 'month' | 'week' | 'day' (if you ever expand)
+    // You can add more optional fields later:
+    // subscriptionStartDate = null,
+    // subscriptionDiscount = null,
   } = payload;
 
   return subscriptionEnabled
@@ -121,8 +124,8 @@ const cartSlice = createSlice({
 
       const sub = normalizeSubscription({
         subscriptionEnabled: enabled,
-        subscriptionInterval: interval ?? item.subscriptionInterval ?? "1",
-        subscriptionUnit: unit ?? item.subscriptionUnit ?? "month",
+        subscriptionInterval: interval ?? item.subscriptionInterval ?? '1',
+        subscriptionUnit: unit ?? item.subscriptionUnit ?? 'months',
       });
 
       item.subscriptionEnabled = sub.subscriptionEnabled;
