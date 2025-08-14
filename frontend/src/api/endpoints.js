@@ -167,14 +167,19 @@ const endpoint = {
     },
     GET_RECURRING_ORDER_BY_ID: (id) => `/suiteql/recurring-order/${id}`,
 
-    // NETSUITE REST API Endpoints
+   // NETSUITE REST API Endpoints
     GET_CUSTOMER: (id) => `/restapi/customer/${id}`,
     GET_SALES_ORDER: (id) => `/restapi/salesOrder/${id}`,
     POST_SALES_ORDER: () => `/restapi/salesOrder`,
     PATCH_UPDATE_CUSTOMER: (id) => `/restapi/customer/${id}`,
     POST_CREATE_CUSTOMER: () => `/restapi/customer`,
     POST_RECURRING_ORDER: () => `/restapi/customrecord_recurring_order`,
-    UPDATE_RECURRING_ORDER: (id) => `/restapi/customrecord_recurring_order/${id}`
+    UPDATE_RECURRING_ORDER: (id) => `/restapi/customrecord_recurring_order/${id}`, 
+
+    // ✅ Convenience aliases (same URL, clearer intent)
+    CANCEL_RECURRING_ORDER: (id) => `/restapi/customrecord_recurring_order/${id}`, 
+    SET_RECURRING_ORDER_INTERVAL: (id) => `/restapi/customrecord_recurring_order/${id}`, 
+
 };
 
 export default endpoint;
