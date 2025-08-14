@@ -209,7 +209,7 @@ export default function PurchaseHistory() {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
-            <ListSubscriptions items={subscriptions} onCancel={handleCancelSub} onChangeInterval={handleChangeInterval} />
+            <ListSubscriptions />
           </div>
 
           <div className="border p-6 rounded shadow-md h-fit">

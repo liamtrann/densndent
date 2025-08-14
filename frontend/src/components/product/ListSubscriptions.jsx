@@ -1,6 +1,9 @@
 // src/components/product/ListSubscriptions.jsx
-import React from "react";
+import React, { useEffect } from "react";
 import { Button, Dropdown, Image, Paragraph } from "common";
+import { api } from "@/api";
+import endpoint from "@/api/endpoints";
+import { useSelector } from "react-redux";
 
 const INTERVAL_OPTIONS = [
   { value: "1", label: "Every 1 month" },
@@ -37,7 +40,27 @@ function nextFromToday(intervalStr) {
   return addMonthsSafe(new Date(), Number.isFinite(n) ? n : 1);
 }
 
-export default function ListSubscriptions({ items = [], onCancel, onChangeInterval }) {
+export default function ListSubscriptions() {
+  const [items,setItems] = React.useState([]);
+  const userInfo = useSelector((state) => state.user.info);
+
+  useEffect(() => {
+    if (!userInfo) return;
+    const subscriptions = api.get(endpoint.GET_RECURRING_ORDERS_BY_CUSTOMER(userInfo.id));
+    subscriptions.then((res) => {
+      if (res.data && Array.isArray(res.data)) {
+        setItems(res.data);
+      } else {
+        setItems([]);
+      }
+    }).catch((err) => {
+      console.error("Failed to fetch subscriptions:", err);
+      setItems([]);
+    });
+  }, [userInfo]);
+
+  console.log(items)
+  
   if (!items.length) {
     return (
       <div className="text-center py-12">
@@ -82,12 +105,11 @@ export default function ListSubscriptions({ items = [], onCancel, onChangeInterv
                   <Dropdown
                     label="Change interval"
                     value={s.interval}
-                    onChange={(e) => onChangeInterval(s, e.target.value)}
                     options={INTERVAL_OPTIONS}
                   />
                 </div>
 
-                <Button variant="danger" onClick={() => onCancel(s)} className="px-3 py-2">
+                <Button variant="danger" className="px-3 py-2">
                   Cancel subscription
                 </Button>
               </div>

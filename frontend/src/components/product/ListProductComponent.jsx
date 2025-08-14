@@ -152,6 +152,8 @@ export default function ListProductComponent({
     }
   };
 
+  console.log(products)
+
   return (
     <div className="px-4 lg:px-6 py-6 lg:py-8 max-w-screen-2xl mx-auto">
       <Breadcrumb path={breadcrumbPath} />
