@@ -82,6 +82,7 @@ export default function CheckoutReview() {
         })),
       },
       toBeEmailed: true,
+      email: userInfo.email,
       shipMethod: {
         id: "20412",
       },

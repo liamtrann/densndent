@@ -38,7 +38,7 @@ try {
     console.error('❌ [QUEUE] Failed to connect to Redis:', error.message);
     console.log('💡 [QUEUE] To fix this, start Redis with: docker run -d -p 6379:6379 redis:alpine');
     console.log('🔄 [QUEUE] Falling back to synchronous processing...');
-    
+
     // Set to null so we can handle fallback
     recurringOrderQueue = null;
 }
@@ -48,7 +48,7 @@ const concurrency = process.env.NODE_ENV === 'production' ? 2 : 3;
 
 if (recurringOrderQueue) {
     console.log(`🔧 [QUEUE] Setting up worker with concurrency: ${concurrency}`);
-    
+
     recurringOrderQueue.process('process-order', concurrency, async (job) => {
         const orderData = job.data;
         console.log(`🔨 [QUEUE] Worker picked up job ${job.id} - Processing order ID: ${orderData.id} for customer: ${orderData.customerid}`);
@@ -90,20 +90,20 @@ if (recurringOrderQueue) {
     recurringOrderQueue.on('active', (job, jobPromise) => {
         console.log(`🏃 [QUEUE] Job ${job.id} started processing`);
     });
-    
+
 } else {
     console.log('⚠️ [QUEUE] Redis not available, queue processing disabled');
 }
 
 async function enqueueOrder(orderData) {
     console.log(`🔍 [QUEUE] Processing order ${orderData.id} for customer ${orderData.customerid}...`);
-    
+
     // For local development, just process synchronously since Redis is having issues
     if (process.env.NODE_ENV !== 'production') {
         console.log('� [DEV] Processing order synchronously (Redis disabled for development)...');
         return await processOrderLogic(orderData);
     }
-    
+
     // If Redis is not available, process synchronously
     if (!recurringOrderQueue) {
         console.log('⚠️ [QUEUE] Redis not available, processing order synchronously...');
@@ -112,7 +112,7 @@ async function enqueueOrder(orderData) {
 
     try {
         console.log(`🔍 [QUEUE] Adding job to queue for order ${orderData.id}...`);
-        
+
         // Add timeout to the operation
         const jobPromise = recurringOrderQueue.add('process-order', orderData, {
             priority: orderData.priority || 1,
@@ -122,7 +122,7 @@ async function enqueueOrder(orderData) {
         // Wait max 5 seconds for the job to be added
         const job = await Promise.race([
             jobPromise,
-            new Promise((_, reject) => 
+            new Promise((_, reject) =>
                 setTimeout(() => reject(new Error('Job enqueue timeout after 5 seconds')), 5000)
             )
         ]);
