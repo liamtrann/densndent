@@ -48,3 +48,29 @@ exports.getItemsByUserOrderHistory = async (req, res) => {
     }
 };
 
+exports.getOrderDetailsByTransaction = async (req, res) => {
+    try {
+        const { transactionId, limit, offset } = req.query;
+
+        if (!transactionId) {
+            return res.status(400).json({ error: 'transactionId is required' });
+        }
+
+        const orderDetails = await transactionService.getOrderDetailsByTransaction(transactionId, limit, offset);
+
+        if (!orderDetails || orderDetails.length === 0) {
+            return res.status(404).json({ error: 'Order details not found for this transaction' });
+        }
+
+        res.json({
+            success: true,
+            transactionId: transactionId,
+            itemCount: orderDetails.length,
+            orderDetails: orderDetails
+        });
+    } catch (error) {
+        console.error('Error getting order details by transaction:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
+

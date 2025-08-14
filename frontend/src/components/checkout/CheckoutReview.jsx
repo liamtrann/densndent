@@ -71,7 +71,7 @@ export default function CheckoutReview() {
     const orderPayload = {
       entity: {
         id: userInfo.id,
-        type: userInfo.searchstage,
+        // type: userInfo.searchstage,
       },
       item: {
         items: cartItems.map((item) => ({
@@ -81,7 +81,7 @@ export default function CheckoutReview() {
           quantity: item.quantity,
         })),
       },
-      toBeEmailed: true,
+      tobeEmailed: true,
       email: userInfo.email,
       shipMethod: {
         id: "20412",
