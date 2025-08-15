@@ -6,6 +6,7 @@ const path = require('path');
 const suiteqlRoutes = require('./suiteQL/route');
 const netsuiteRestRoute = require('./netsuiteRest/route');
 const restapiRoutes = require('./restapi/restapi.route');
+const versapayRoutes = require('./versapay/route');
 const bodyParser = require('body-parser');
 const cronManager = require('./cron');
 
@@ -39,6 +40,7 @@ app.use(bodyParser.json());
 app.use('/api/suiteql', suiteqlRoutes);
 app.use('/api/netsuite-rest', netsuiteRestRoute);
 app.use('/api/restapi', restapiRoutes);
+app.use('/api/versapay', versapayRoutes);
 
 // Test route
 app.get('/api/test', (req, res) => {
