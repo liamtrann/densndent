@@ -1,21 +1,22 @@
-import React, { useEffect, useState } from "react";
+// src/components/product/ListSubscriptions.jsx
+import React, { useEffect, useState } from "react"; //these imports power the whole “Subscription List” page: the list items, the image, the interval
 import { Button, Dropdown, Paragraph, ProductImage } from "common";
 import api from "api/api";
 import endpoint from "api/endpoints";
-import { useSelector } from "react-redux";
+import { useSelector } from "react-redux"; //where things come from 
 
-/* ===== subscription helpers ===== */
-const INTERVAL_OPTIONS = [
+const INTERVAL_OPTIONS = [ //Options for the interval <Dropdown>
   { value: "1", label: "Every 1 month" },
   { value: "2", label: "Every 2 months" },
   { value: "3", label: "Every 3 months" },
   { value: "6", label: "Every 6 months" },
 ];
 
-function daysInMonth(year, monthIndex) {
+function daysInMonth(year, monthIndex) { //Date helpers
   return new Date(year, monthIndex + 1, 0).getDate();
 }
-function addMonthsSafe(date, months) {
+
+function addMonthsSafe(date, months) {  //Adds months to a date safely, avoiding overflow and prevents bugs for “next delivery” dates.
   const d = new Date(date.getTime());
   const day = d.getDate();
   const targetMonth = d.getMonth() + months;
@@ -27,7 +28,8 @@ function addMonthsSafe(date, months) {
   res.setFullYear(targetYear, normalizedMonth, clamped);
   return res;
 }
-function formatLocalDateToronto(date) {
+
+function formatLocalDateToronto(date) { //Formats a Date to a short readable string in the Toronto time zone
   return date.toLocaleDateString("en-CA", {
     year: "numeric",
     month: "short",
@@ -35,115 +37,75 @@ function formatLocalDateToronto(date) {
     timeZone: "America/Toronto",
   });
 }
+
 function nextFromToday(intervalStr) {
   const n = parseInt(intervalStr || "1", 10);
   return addMonthsSafe(new Date(), Number.isFinite(n) ? n : 1);
 }
 
-/** Normalize a backend subscription record into the UI shape we need
- * We keep BOTH:
- *  - roId      = recurring order record id (used for PATCH cancel/update)
- *  - productId = item id (used to backfill image via POST_GET_ITEM_BY_IDS)
- */
-function normalizeSub(r) {
-  const roId = r.id ?? r.internalid ?? r.roId;
+function normalizeSub(r) { //the card title (“3D: Curved Utility Syringe …”), the image, and the “Interval: Every X months” line all come from this normalized object.
+  const roId = r.id ?? r.internalid ?? r.roId; //Picks a recurring order id
   const productId = r.itemId ?? r.item_id ?? r.productId;
   return {
     roId,
     productId,
-    itemid:
-      r.itemid ||
-      r.itemName ||
-      r.name ||
-      r.displayname ||
-      `#${productId || roId}`,
-    displayname:
-      r.displayname ||
-      r.itemName ||
-      r.name ||
-      r.itemid ||
-      `#${productId || roId}`,
+    itemid: r.itemid || r.itemName || r.name || r.displayname || `#${productId || roId}`,
+    displayname: r.displayname || r.itemName || r.name || r.itemid || `#${productId || roId}`,
     file_url: r.file_url || r.image || r.thumbnail || r.fileUrl || "",
-    interval: String(
-      r.interval || r.custrecord_ro_interval || r.recurringInterval || "1"
-    ),
+    interval: String(r.interval || r.custrecord_ro_interval || r.recurringInterval || "1"),
   };
 }
+
+
+
+
+const isCanceled = (rec) => { //tell me if this record is canceled, even if the API uses different fields/types
+  const val = rec?.custrecord_ro_status?.id ?? rec?.custrecord_ro_status ?? rec?.statusId ?? rec?.status;
+  return String(val) === "3";
+};
 
 export default function ListSubscriptions() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
-
-  // interval edits per subscription: { [roId]: "1" | "2" | "3" | "6" }
   const [pending, setPending] = useState({});
-  const [saving, setSaving] = useState({});    // { [roId]: boolean }
-  const [canceling, setCanceling] = useState({}); // { [roId]: boolean }
+  const [saving, setSaving] = useState({});
+  const [canceling, setCanceling] = useState({});
+  const userInfo = useSelector((state) => state.user.info); //id to fetch that user’s subscriptions
 
-  const userInfo = useSelector((state) => state.user.info);
-
-  // Load subscriptions + backfill images if missing
-  useEffect(() => {
-    let mounted = true;
+  useEffect(() => { //Fetch subscriptions
+    let mounted = true; //fetch GET_RECURRING_ORDERS_BY_CUSTOMER(customerId)
     async function load() {
-      if (!userInfo?.id) return;
+      if (!userInfo?.id) return; //If we don’t have a user ID yet, do nothing
       setLoading(true);
       try {
-        // 1) fetch subscriptions for this customer
-        const res = await api.get(
-          endpoint.GET_RECURRING_ORDERS_BY_CUSTOMER({ customerId: userInfo.id })
+        const res = await api.get( //Calls backend endpoint to list recurring orders for this user
+          endpoint.GET_RECURRING_ORDERS_BY_CUSTOMER({ //a SuiteQL endpoint listing all recurring orders for the user
+            customerId: userInfo.id,
+            timestamp: new Date().getTime()
+          })
         );
         const raw = res.data?.items || res.data || [];
-        let subs = raw.map(normalizeSub);
-
-        // 2) backfill missing images using product ids
-        const missingProductIds = subs
-          .filter((s) => !s.file_url && s.productId)
-          .map((s) => s.productId);
-        if (missingProductIds.length) {
-          try {
-            const prodRes = await api.post(endpoint.POST_GET_ITEM_BY_IDS(), {
-              ids: missingProductIds,
-            });
-            const products = prodRes.data?.items || prodRes.data || [];
-            const byId = new Map(
-              products.map((p) => [
-                p.id,
-                p.file_url || p.thumbnail || p.image || "",
-              ])
-            );
-            subs = subs.map((s) =>
-              s.file_url
-                ? s
-                : {
-                    ...s,
-                    file_url: byId.get(s.productId) || "",
-                  }
-            );
-          } catch {
-            /* swallow image backfill failure */
-          }
-        }
+        const activeOnly = raw.filter((r) => !isCanceled(r));
+        const subs = activeOnly.map(normalizeSub);
 
         if (mounted) {
           setItems(subs);
-          // initialize pending intervals from current data
           const init = {};
           subs.forEach((s) => (init[s.roId] = s.interval));
           setPending(init);
         }
       } catch (err) {
+        console.error("Error loading subscriptions:", err);
         if (mounted) setItems([]);
       } finally {
         if (mounted) setLoading(false);
       }
     }
     load();
-    return () => {
-      mounted = false;
-    };
+    return () => { mounted = false; };
   }, [userInfo?.id]);
 
-  const handleIntervalChange = (s, value) => {
+  const handleIntervalChange = (s, value) => { //you select “Every 2 months” → the Save button in that row turns active
     setPending((prev) => ({ ...prev, [s.roId]: value }));
   };
 
@@ -151,111 +113,103 @@ export default function ListSubscriptions() {
     const selected = pending[s.roId];
     if (!selected || selected === s.interval) return;
 
-    setSaving((prev) => ({ ...prev, [s.roId]: true }));
+    setSaving((prev) => ({ ...prev, [s.roId]: true })); //Interval: Every X months” and the Next delivery (computed from the saved value) match.
     try {
       await api.patch(endpoint.SET_RECURRING_ORDER_INTERVAL(s.roId), {
         custrecord_ro_interval: Number(selected),
       });
-
-      // reflect update locally
       setItems((prev) =>
         prev.map((it) =>
           it.roId === s.roId ? { ...it, interval: String(selected) } : it
         )
       );
+    } catch (err) {
+      console.error("Failed to update interval:", err);
+      alert("Failed to update interval. Please try again.");
     } finally {
-      setSaving((prev) => ({ ...prev, [s.roId]: false }));
+      setSaving((prev) => ({ ...prev, [s.roId]: false })); //, the Save button shows “Saving…” and disables
     }
   };
 
-  const handleCancel = async (s) => {
-    if (!window.confirm("Cancel this subscription?")) return;
 
+  //------------------------------------------------------------------
+  const handleCancel = async (s) => {
+    if (!window.confirm("Are you sure you want to cancel this subscription?")) return;
+
+
+    console.log("Canceling subscription:", s);
     setCanceling((prev) => ({ ...prev, [s.roId]: true }));
     try {
-      await api.patch(endpoint.CANCEL_RECURRING_ORDER(s.roId), {
-        custrecord_ro_status: { id: "3" },
+      const response = await api.patch(endpoint.CANCEL_RECURRING_ORDER(s.roId), {
+        custrecord_ro_status: { id: "3" }, //Confirms with the user, then with status { id: "3" } (your “Canceled” code).
       });
 
-      // remove from list
-      setItems((prev) => prev.filter((it) => it.roId !== s.roId));
-      // clean up local state
-      setPending((prev) => {
-        const cp = { ...prev };
-        delete cp[s.roId];
-        return cp;
-      });
+      console.log(response)
+
+      if (response.status >= 200 && response.status < 300) {
+        setItems((prev) => prev.filter((it) => it.roId !== s.roId));
+        setPending((prev) => {
+          const cp = { ...prev };
+          delete cp[s.roId];
+          return cp;
+        });
+        alert("Subscription canceled successfully"); //On success we remove the row immediately from items
+      } else {
+        throw new Error("Failed to cancel subscription");
+      }
+    } catch (err) {
+      console.error("Failed to cancel subscription:", err);
+      alert("Failed to cancel subscription. Please try again.");
     } finally {
       setCanceling((prev) => ({ ...prev, [s.roId]: false }));
     }
   };
 
+//-----------------------------------------------------------------------------
+
   if (loading && items.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <Paragraph>Loading subscriptions…</Paragraph>
-      </div>
-    );
+    return <div className="text-center py-12"><Paragraph>Loading subscriptions...</Paragraph></div>; //Before data arrives: you see the centered “Loading” block.
   }
 
-  if (!items.length) {
+  if (!items.length) { ////After fetch, if nothing is active: you see the “No active subscriptions” block
     return (
-      <div className="text-center py-12">
-        <h3 className="text-lg font-semibold text-gray-800 mb-2">
-          No subscriptions yet
-        </h3>
+      <div className="text-center py-12"> 
+        <h3 className="text-lg font-semibold text-gray-800 mb-2">No active subscriptions</h3> 
         <Paragraph className="text-gray-500">
           Subscribe to products on their detail pages to see them here.
         </Paragraph>
       </div>
-    );
+    ); //you don’t see these now because you have 5 active subs; they show only when appropriate.
   }
 
   return (
     <div className="space-y-4">
       {items.map((s) => {
-        const intervalNow = pending[s.roId] ?? s.interval;
-        const nextDate = nextFromToday(s.interval); // next date based on saved interval
-
-        const isDirty = intervalNow !== s.interval;
-        const isSaving = !!saving[s.roId];
-        const isCanceling = !!canceling[s.roId];
+      const intervalNow = pending[s.roId] ?? s.interval;    // value shown in the dropdown
+      const nextDate = nextFromToday(s.interval);            // based on the SAVED interval
+      const isDirty = intervalNow !== s.interval;            // Save enabled only if changed
+      const isSaving = !!saving[s.roId];
+      const isCanceling = !!canceling[s.roId];
 
         return (
-          <div
-            key={s.roId}
-            className="flex items-start gap-4 border rounded-md p-3"
-          >
-            {/* image */}
+          <div key={s.roId} className="flex items-start gap-4 border rounded-md p-3">
             <ProductImage
               src={s.file_url}
               alt={s.displayname || s.itemid || "Product"}
               className="w-16 h-16 object-contain border rounded"
             />
-
-            {/* info */}
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <div className="font-semibold text-gray-800">
                   {s.displayname || s.itemid || `#${s.productId || s.roId}`}
                 </div>
               </div>
-
               <Paragraph className="mt-1 text-sm text-gray-600">
-                Interval:{" "}
-                {s.interval === "1"
-                  ? "Every 1 month"
-                  : `Every ${s.interval} months`}
+                Interval: {s.interval === "1" ? "Every 1 month" : `Every ${s.interval} months`}
               </Paragraph>
-
               <Paragraph className="text-xs text-gray-500 mt-1">
-                Next delivery:{" "}
-                <span className="font-medium">
-                  {formatLocalDateToronto(nextDate)}
-                </span>
+                Next delivery: <span className="font-medium">{formatLocalDateToronto(nextDate)}</span>
               </Paragraph>
-
-              {/* controls */}
               <div className="mt-3 flex flex-wrap items-center gap-3">
                 <div className="w-48">
                   <Dropdown
@@ -266,25 +220,21 @@ export default function ListSubscriptions() {
                     className="h-10"
                   />
                 </div>
-
-                {/* Save (ghost, same height as select) */}
                 <Button
-                  variant="ghost"
+                  variant="ghost" //ghost = a subtle, neutral button
                   className="h-10 px-4 border border-gray-300 text-gray-700 hover:bg-gray-50"
                   disabled={!isDirty || isSaving || isCanceling}
                   onClick={() => handleSaveInterval(s)}
                 >
-                  {isSaving ? "Saving…" : "Save"}
+                  {isSaving ? "Saving..." : "Save"}
                 </Button>
-
-                {/* Cancel (light/ghost, same height as select) */}
                 <Button
-                  variant="dangerGhost"
+                  variant="dangerGhost" //the same “ghost” treatment but in a destructive theme.
                   className="h-10 px-4 whitespace-nowrap font-normal"
                   disabled={isSaving || isCanceling}
                   onClick={() => handleCancel(s)}
                 >
-                  {isCanceling ? "Cancelling…" : "Cancel subscription"}
+                  {isCanceling ? "Canceling..." : "Cancel subscription"}
                 </Button>
               </div>
             </div>

@@ -175,10 +175,10 @@ const endpoint = {
     POST_CREATE_CUSTOMER: () => `/restapi/customer`,
     POST_RECURRING_ORDER: () => `/restapi/customrecord_recurring_order`,
     UPDATE_RECURRING_ORDER: (id) => `/restapi/customrecord_recurring_order/${id}`, 
+    // optional aliases for clarity
+    CANCEL_RECURRING_ORDER: (id) => `/restapi/customrecord_recurring_order/${id}`,
+    SET_RECURRING_ORDER_INTERVAL: (id) => `/restapi/customrecord_recurring_order/${id}`,
 
-    // ✅ Convenience aliases (same URL, clearer intent)
-    CANCEL_RECURRING_ORDER: (id) => `/restapi/customrecord_recurring_order/${id}`, 
-    SET_RECURRING_ORDER_INTERVAL: (id) => `/restapi/customrecord_recurring_order/${id}`, 
 
 };
 
