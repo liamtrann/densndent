@@ -10,7 +10,7 @@ const customerRoutes = require('./customer/route');
 const recurringOrderRoutes = require('./recurringOrder/route');
 
 // Protect all /restapi routes with JWT
-router.use(checkJwt);
+// router.use(checkJwt);
 
 // Error handler for UnauthorizedError from express-jwt
 router.use((err, req, res, next) => {
