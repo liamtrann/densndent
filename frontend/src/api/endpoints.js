@@ -100,6 +100,13 @@ const endpoint = {
         if (sort) params.append('sort', sort);
         return `/suiteql/transaction/by-id?${params.toString()}`;
     },
+    GET_ORDER_DETAILS_BY_TRANSACTION: ({ transactionId, limit, offset }) => {
+        const params = new URLSearchParams();
+        if (transactionId) params.append('transactionId', transactionId);
+        if (limit) params.append('limit', limit);
+        if (offset) params.append('offset', offset);
+        return `/suiteql/transaction/order-details-by-transaction?${params.toString()}`;
+    },
     // GET_TRANSACTION_BY_EMAIL: ({ email, limit, offset }) => {
     //     const params = new URLSearchParams();
     //     if (email) params.append('email', email);
