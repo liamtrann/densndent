@@ -62,12 +62,8 @@ exports.getOrderDetailsByTransaction = async (req, res) => {
             return res.status(404).json({ error: 'Order details not found for this transaction' });
         }
 
-        res.json({
-            success: true,
-            transactionId: transactionId,
-            itemCount: orderDetails.length,
-            orderDetails: orderDetails
-        });
+        res.json(orderDetails);
+
     } catch (error) {
         console.error('Error getting order details by transaction:', error);
         res.status(500).json({ error: error.message });

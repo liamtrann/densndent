@@ -121,22 +121,22 @@ class RecurringOrderCron {
             // Calculate next run date based on interval and intervalUnit
             const currentDate = new Date(order.nextrun || new Date());
             const interval = parseInt(order.interval) || 1;
-            const intervalunit = (order.intervalunit || 'months').toLowerCase();
+            const intervalunit = (order.intervalunit || 'month').toLowerCase();
 
             // Calculate next run date based on interval unit
             const nextRunDate = new Date(currentDate);
 
             switch (intervalunit) {
-                case 'weeks':
+                case 'week':
                     nextRunDate.setDate(currentDate.getDate() + (interval * 7));
                     break;
 
-                case 'months':
+                case 'month':
                     nextRunDate.setMonth(currentDate.getMonth() + interval);
                     break;
 
                 default:
-                    console.warn(`⚠️ [CRON] Unknown interval unit '${order.intervalunit}' for order ${order.id}, defaulting to weeks`);
+                    console.warn(`⚠️ [CRON] Unknown interval unit '${order.intervalunit}' for order ${order.id}, defaulting to week`);
                     nextRunDate.setDate(currentDate.getDate() + (interval * 7));
             }
 

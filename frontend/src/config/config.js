@@ -496,17 +496,14 @@ function buildIdempotencyKey(userInfo, cartItems, shipMethodId = "20412", window
 function calculateNextRunDate(interval, intervalUnit) {
     const currentDate = new Date();
     const parsedInterval = parseInt(interval) || 1;
-    const normalizedUnit = (intervalUnit || 'weeks').toLowerCase();
+    const normalizedUnit = (intervalUnit || 'week').toLowerCase();
 
     const nextRunDate = new Date(currentDate);
 
     switch (normalizedUnit) {
-        case 'weeks':
         case 'week':
             nextRunDate.setDate(currentDate.getDate() + (parsedInterval * 7));
             break;
-
-        case 'months':
         case 'month':
             nextRunDate.setMonth(currentDate.getMonth() + parsedInterval);
             break;
