@@ -18,17 +18,14 @@ export default function Button({
       "bg-smiles-blue text-white px-4 py-2 hover:bg-smiles-orange/80 dark:hover:bg-smiles-orange focus:ring-smiles-orange",
     secondary:
       "bg-white border border-smiles-orange text-smiles-orange px-4 py-2 hover:bg-smiles-orange/10 dark:bg-gray-800 dark:border-orange-300 focus:ring-smiles-orange",
-    link: "text-smiles-blue bg-transparent hover:underline px-0 py-0 dark:text-blue-300 focus:ring-smiles-orange",
+    link:
+      "text-smiles-blue bg-transparent hover:underline px-0 py-0 dark:text-blue-300 focus:ring-smiles-orange",
     danger:
       "bg-red-500 text-white px-4 py-2 hover:bg-red-600 focus:ring-red-400",
     disabled:
       "bg-gray-300 text-gray-600 cursor-not-allowed px-4 py-2 dark:bg-gray-700 dark:text-gray-500",
-
-    ghost:
-      "bg-transparent border border-gray-300 text-gray-700 px-4 py-2 hover:bg-gray-50 focus:ring-gray-300",
-    dangerGhost:
-      "bg-transparent border border-red-500 text-red-600 px-4 py-2 hover:bg-red-50 focus:ring-red-400",
   };
+
 
   const finalClassName = classNames(
     baseStyles,
