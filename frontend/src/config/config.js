@@ -318,14 +318,16 @@ function useQuantityHandlers(initialQuantity = 1, stockdescription = "") {
 async function fetchRegionByCode(country, code) {
     try {
         // Only allow 'ca' or 'us'
-        if (country !== 'ca' && country !== 'us') {
+        if (country !== "ca" && country !== "us") {
             throw new Error('Country not supported. Only "ca" and "us" are allowed.');
         }
         let cleanCode = code.replace(/\s/g, "").toUpperCase();
-        if (country === 'ca') {
+        if (country === "ca") {
             cleanCode = cleanCode.slice(0, 3); // Use only first 3 characters for Canada
         }
-        const response = await api.get(`https://api.zippopotam.us/${country}/${cleanCode}`);
+        const response = await api.get(
+            `https://api.zippopotam.us/${country}/${cleanCode}`
+        );
         return response.data;
     } catch (error) {
         return null;
@@ -373,9 +375,13 @@ function validatePostalCode(code, selectedCountry) {
     }
 
     if (selectedCountry === "ca") {
-        return validateCanadianPostalCode(code) ? "" : "Please enter a valid Canadian postal code (e.g., A1A 1A1)";
+        return validateCanadianPostalCode(code)
+            ? ""
+            : "Please enter a valid Canadian postal code (e.g., A1A 1A1)";
     } else if (selectedCountry === "us") {
-        return validateUSZipCode(code) ? "" : "Please enter a valid US zip code (e.g., 12345 or 12345-6789)";
+        return validateUSZipCode(code)
+            ? ""
+            : "Please enter a valid US zip code (e.g., 12345 or 12345-6789)";
     }
 
     return "";
@@ -397,10 +403,13 @@ async function handleTaxShippingEstimate({
     try {
         // Normalize country values to lowercase codes
         let normalizedCountry = country?.toLowerCase();
-        if (normalizedCountry === 'canada') {
-            normalizedCountry = 'ca';
-        } else if (normalizedCountry === 'usa' || normalizedCountry === 'united states') {
-            normalizedCountry = 'us';
+        if (normalizedCountry === "canada") {
+            normalizedCountry = "ca";
+        } else if (
+            normalizedCountry === "usa" ||
+            normalizedCountry === "united states"
+        ) {
+            normalizedCountry = "us";
         }
 
         // Validate postal code before making API call
@@ -417,12 +426,16 @@ async function handleTaxShippingEstimate({
         if (onDismiss) onDismiss();
 
         if (result) {
-            const province = result.places[0]?.state || result.places[0]?.state_abbreviation;
+            const province =
+                result.places[0]?.state || result.places[0]?.state_abbreviation;
 
             if (province) {
                 try {
                     // Get tax rates
-                    const taxUrl = endpoint.GET_TAX_RATES({ country: normalizedCountry, province });
+                    const taxUrl = endpoint.GET_TAX_RATES({
+                        country: normalizedCountry,
+                        province,
+                    });
                     const taxRates = await api.get(taxUrl);
 
                     // Calculate estimated tax
@@ -434,7 +447,9 @@ async function handleTaxShippingEstimate({
                     }
 
                     // Get shipping cost
-                    const shippingRes = await api.get(endpoint.GET_SHIPPING_METHOD(20412));
+                    const shippingRes = await api.get(
+                        endpoint.GET_SHIPPING_METHOD(20412)
+                    );
                     const shippingCost = shippingRes.data?.shippingflatrateamount ?? 9.99;
 
                     const estimateData = {
@@ -442,16 +457,15 @@ async function handleTaxShippingEstimate({
                         shippingCost,
                         taxRate: totalTaxRate,
                         province,
-                        country: normalizedCountry
+                        country: normalizedCountry,
                     };
 
                     if (onSuccess) onSuccess("Tax rates loaded!", estimateData);
 
                     return {
                         success: true,
-                        data: estimateData
+                        data: estimateData,
                     };
-
                 } catch (taxError) {
                     const errorMessage = "Failed to get tax rates or shipping cost.";
                     if (onError) onError(errorMessage);
@@ -476,13 +490,19 @@ async function handleTaxShippingEstimate({
 }
 
 // Build idempotency key for order deduplication
-function buildIdempotencyKey(userInfo, cartItems, shipMethodId = "20412", windowMins = 10) {
+function buildIdempotencyKey(
+    userInfo,
+    cartItems,
+    shipMethodId = "20412",
+    windowMins = 10
+) {
     const cartKey = (cartItems || [])
         .map((i) => `${i.netsuiteId || i.id}x${i.quantity}`)
         .sort()
         .join("|");
     const windowBucket = Math.floor(Date.now() / (windowMins * 60 * 1000));
-    const raw = `${userInfo?.id || "anon"}|${shipMethodId}|${cartKey}|${windowBucket}`;
+    const raw = `${userInfo?.id || "anon"
+        }|${shipMethodId}|${cartKey}|${windowBucket}`;
 
     // Simple base64 makes it compact and header-safe
     try {
@@ -496,24 +516,115 @@ function buildIdempotencyKey(userInfo, cartItems, shipMethodId = "20412", window
 function calculateNextRunDate(interval, intervalUnit) {
     const currentDate = new Date();
     const parsedInterval = parseInt(interval) || 1;
-    const normalizedUnit = (intervalUnit || 'week').toLowerCase();
+    const normalizedUnit = (intervalUnit || "week").toLowerCase();
 
     const nextRunDate = new Date(currentDate);
 
     switch (normalizedUnit) {
-        case 'week':
-            nextRunDate.setDate(currentDate.getDate() + (parsedInterval * 7));
+        case "week":
+            nextRunDate.setDate(currentDate.getDate() + parsedInterval * 7);
             break;
-        case 'month':
+        case "month":
             nextRunDate.setMonth(currentDate.getMonth() + parsedInterval);
             break;
 
         default:
-            nextRunDate.setMonth(currentDate.getMonth() + (parsedInterval));
+            nextRunDate.setMonth(currentDate.getMonth() + parsedInterval);
     }
 
     return nextRunDate.toISOString().slice(0, 10); // yyyy-mm-dd format
 }
+
+/* =======================
+   Subscription UI helpers
+   ======================= */
+
+// Options for the interval <Dropdown>
+export const SUBSCRIPTION_INTERVAL_OPTIONS = [
+    { value: "1", label: "Every 1 month" },
+    { value: "2", label: "Every 2 months" },
+    { value: "3", label: "Every 3 months" },
+    { value: "6", label: "Every 6 months" },
+];
+
+// Small date helpers we reuse across subscription UI
+export function daysInMonth(year, monthIndex) {
+    return new Date(year, monthIndex + 1, 0).getDate();
+}
+
+export function addMonthsSafe(date, months) {
+    const d = new Date(date.getTime());
+    const day = d.getDate();
+    const targetMonth = d.getMonth() + months;
+    const targetYear = d.getFullYear() + Math.floor(targetMonth / 12);
+    const normalizedMonth = ((targetMonth % 12) + 12) % 12;
+    const endDay = daysInMonth(targetYear, normalizedMonth);
+    const clamped = Math.min(day, endDay);
+    const res = new Date(d);
+    res.setFullYear(targetYear, normalizedMonth, clamped);
+    return res;
+}
+
+export function formatLocalDateToronto(date) {
+    return date.toLocaleDateString("en-CA", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        timeZone: "America/Toronto",
+    });
+}
+
+export function nextFromToday(intervalStr) {
+    const n = parseInt(intervalStr || "1", 10);
+    return addMonthsSafe(new Date(), Number.isFinite(n) ? n : 1);
+}
+
+/**
+ * Normalize a backend recurring-order record into a single, predictable shape.
+ * Works with minor field-name differences coming from SuiteQL/REST.
+ */
+export function normalizeSubscriptionRecord(r) {
+    const roId = r.id ?? r.internalid ?? r.roId;
+    const productId = r.itemId ?? r.item_id ?? r.productId;
+    return {
+        roId,
+        productId,
+        itemid:
+            r.itemid ||
+            r.itemName ||
+            r.name ||
+            r.displayname ||
+            `#${productId || roId}`,
+        displayname:
+            r.displayname ||
+            r.itemName ||
+            r.name ||
+            r.itemid ||
+            `#${productId || roId}`,
+        file_url: r.file_url || r.image || r.thumbnail || r.fileUrl || "",
+        interval: String(
+            r.interval || r.custrecord_ro_interval || r.recurringInterval || "1"
+        ),
+    };
+}
+
+/** Detect if a recurring order is canceled (status "3") regardless of field shape */
+export function isSubscriptionCanceled(rec) {
+    const val =
+        rec?.custrecord_ro_status?.id ??
+        rec?.custrecord_ro_status ??
+        rec?.statusId ??
+        rec?.status;
+    return String(val) === "3";
+}
+
+/** Small payload helpers so we don’t repeat magic values in components */
+export function buildIntervalPatchPayload(interval) {
+    return { custrecord_ro_interval: Number(interval) };
+}
+export const SUBSCRIPTION_CANCEL_PAYLOAD = {
+    custrecord_ro_status: { id: "3" },
+};
 
 export {
     extractBuyGet,
@@ -535,5 +646,6 @@ export {
     validatePostalCode,
     handleTaxShippingEstimate,
     buildIdempotencyKey,
-    calculateNextRunDate
+    calculateNextRunDate,
+
 };
