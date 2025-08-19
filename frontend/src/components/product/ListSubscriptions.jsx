@@ -1,9 +1,9 @@
-// src/components/product/ListSubscriptions.jsx
 import React, { useEffect, useState } from "react";
-import { Button, Dropdown, Paragraph, ProductImage } from "common";
+import { Button, Dropdown, Loading, Paragraph, ProductImage } from "common";
 import api from "api/api";
 import endpoint from "api/endpoints";
 import { useSelector } from "react-redux";
+import { useAuth0 } from "@auth0/auth0-react";
 import ConfirmCancelSubscription from "common/modals/ConfirmCancelSubscription";
 import ToastNotification from "@/common/toast/Toast";
 
@@ -26,8 +26,9 @@ export default function ListSubscriptions() {
   const [pending, setPending] = useState({}); // { [roId]: "1"|"2"|"3"|"6" }
   const [saving, setSaving] = useState({}); // { [roId]: boolean }
   const [canceling, setCanceling] = useState({}); // { [roId]: boolean }
-  const [confirming, setConfirming] = useState(null); // the row we’re confirming
+  const [confirming, setConfirming] = useState(null); // the row we're confirming
 
+  const { getAccessTokenSilently } = useAuth0();
   const userInfo = useSelector((state) => state.user.info);
 
   /** Fetch subscriptions */
@@ -37,11 +38,15 @@ export default function ListSubscriptions() {
       if (!userInfo?.id) return;
       setLoading(true);
       try {
+        const token = await getAccessTokenSilently();
         const res = await api.get(
           endpoint.GET_RECURRING_ORDERS_BY_CUSTOMER({
             customerId: userInfo.id,
             timestamp: Date.now(),
-          })
+          }),
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
         );
         const raw = res.data?.items || res.data || [];
         const activeOnly = raw.filter((r) => !isSubscriptionCanceled(r));
@@ -65,7 +70,7 @@ export default function ListSubscriptions() {
     return () => {
       mounted = false;
     };
-  }, [userInfo?.id]);
+  }, [userInfo?.id, getAccessTokenSilently]);
 
   const handleIntervalChange = (s, value) => {
     setPending((prev) => ({ ...prev, [s.roId]: value }));
@@ -77,9 +82,13 @@ export default function ListSubscriptions() {
 
     setSaving((prev) => ({ ...prev, [s.roId]: true }));
     try {
+      const token = await getAccessTokenSilently();
       await api.patch(
         endpoint.SET_RECURRING_ORDER_INTERVAL(s.roId),
-        buildIntervalPatchPayload(selected)
+        buildIntervalPatchPayload(selected),
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
 
       setItems((prev) =>
@@ -100,9 +109,13 @@ export default function ListSubscriptions() {
   const performCancel = async (s) => {
     setCanceling((prev) => ({ ...prev, [s.roId]: true }));
     try {
+      const token = await getAccessTokenSilently();
       const response = await api.patch(
         endpoint.CANCEL_RECURRING_ORDER(s.roId),
-        SUBSCRIPTION_CANCEL_PAYLOAD
+        SUBSCRIPTION_CANCEL_PAYLOAD,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
 
       if (response.status >= 200 && response.status < 300) {
@@ -130,7 +143,7 @@ export default function ListSubscriptions() {
   if (loading && items.length === 0) {
     return (
       <div className="text-center py-12">
-        <Paragraph>Loading subscriptions...</Paragraph>
+        <Loading text="Loading subscriptions..." />
       </div>
     );
   }
