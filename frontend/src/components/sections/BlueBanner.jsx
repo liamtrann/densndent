@@ -15,7 +15,7 @@ export default function BlueBanner({
 }) {
   // Ensure items is always an array
   const safeItems = Array.isArray(items) ? items : [];
-  
+
   // Ref for horizontal scroll container
   const scrollContainerRef = useRef(null);
 
@@ -26,7 +26,7 @@ export default function BlueBanner({
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollBy({
         left: -300,
-        behavior: 'smooth'
+        behavior: "smooth",
       });
     }
   };
@@ -35,7 +35,7 @@ export default function BlueBanner({
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollBy({
         left: 300,
-        behavior: 'smooth'
+        behavior: "smooth",
       });
     }
   };
@@ -64,17 +64,27 @@ export default function BlueBanner({
               className="absolute left-0 top-1/2 transform -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2 hover:bg-gray-50 transition-colors duration-200 md:block hidden"
               aria-label="Scroll left"
             >
-              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              <svg
+                className="w-5 h-5 text-gray-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
               </svg>
             </button>
 
             {/* Scrollable container */}
             <div className="md:overflow-x-hidden">
-              <div 
+              <div
                 ref={scrollContainerRef}
                 className="grid grid-cols-2 gap-4 md:flex md:gap-4 md:overflow-x-auto md:scrollbar-hide md:scroll-smooth"
-                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
               >
                 {safeItems.map((item, idx) => (
                   <div
@@ -93,8 +103,18 @@ export default function BlueBanner({
               className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2 hover:bg-gray-50 transition-colors duration-200 md:block hidden"
               aria-label="Scroll right"
             >
-              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              <svg
+                className="w-5 h-5 text-gray-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </button>
           </div>

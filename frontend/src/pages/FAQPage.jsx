@@ -50,7 +50,8 @@ Out of Stock - The item is sold out and is not in stock currently. If an out-of-
       },
       {
         question: "Is this website secure for credit card transactions?",
-        answer: "Yes, our site uses SSL encryption to protect your information.",
+        answer:
+          "Yes, our site uses SSL encryption to protect your information.",
       },
       {
         question: "I don't want to order online, can I order a different way?",
@@ -136,7 +137,8 @@ Out of Stock - The item is sold out and is not in stock currently. If an out-of-
           "Visit our Promotions page or sign up for our newsletter to stay updated on the latest offers.",
       },
       {
-        question: "What are the hours of operation at Dens ‘N Dente Healthcare?",
+        question:
+          "What are the hours of operation at Dens ‘N Dente Healthcare?",
         answer:
           "Our office hours are Monday to Friday, 9:00 AM to 5:00 PM EST.",
       },
@@ -196,7 +198,6 @@ const FAQPage = () => {
           </div>
         </div>
       </div>
-
 
       {/* FAQ Accordion */}
       {faqData.map((section, sectionIdx) => (

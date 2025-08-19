@@ -23,7 +23,7 @@ export default function AuthButton() {
       // Wait for toast to be visible before logging out
       setTimeout(() => {
         logout({ returnTo: window.location.origin });
-      }, 5000); 
+      }, 5000);
     }
   }, [error, logout]);
 

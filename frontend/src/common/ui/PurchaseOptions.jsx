@@ -4,12 +4,12 @@ import React from "react";
 import Dropdown from "../ui/Dropdown";
 
 export default function PurchaseOptions({
-  name,                // e.g., `${id}-${flavor || 'no-flavor'}`
-  isSubscribed,        // boolean
-  interval,            // "1" | "2" | "3" | "6"
-  onOneTime,           // () => void
-  onSubscribe,         // () => void
-  onIntervalChange,    // (value: string) => void
+  name, // e.g., `${id}-${flavor || 'no-flavor'}`
+  isSubscribed, // boolean
+  interval, // "1" | "2" | "3" | "6"
+  onOneTime, // () => void
+  onSubscribe, // () => void
+  onIntervalChange, // (value: string) => void
   className = "",
 }) {
   return (

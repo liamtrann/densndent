@@ -5,12 +5,12 @@ import React from "react";
  * Usage: <AnimatedCard><YourContent /></AnimatedCard>
  */
 export default function AnimatedCard({ children, className = "", ...props }) {
-    return (
-        <div
-            className={`transition-transform duration-200 ease-in-out hover:scale-125 active:scale-100 ${className}`}
-            {...props}
-        >
-            {children}
-        </div>
-    );
+  return (
+    <div
+      className={`transition-transform duration-200 ease-in-out hover:scale-125 active:scale-100 ${className}`}
+      {...props}
+    >
+      {children}
+    </div>
+  );
 }

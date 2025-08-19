@@ -6,22 +6,28 @@ import PropTypes from "prop-types";
  * Usage:
  * <TextButton onClick={...}>Label</TextButton>
  */
-export default function TextButton({ children, onClick, className = "", type = "button", ...props }) {
-    return (
-        <button
-            type={type}
-            className={`text-sm text-smiles-blue hover:underline ${className}`.trim()}
-            onClick={onClick}
-            {...props}
-        >
-            {children}
-        </button>
-    );
+export default function TextButton({
+  children,
+  onClick,
+  className = "",
+  type = "button",
+  ...props
+}) {
+  return (
+    <button
+      type={type}
+      className={`text-sm text-smiles-blue hover:underline ${className}`.trim()}
+      onClick={onClick}
+      {...props}
+    >
+      {children}
+    </button>
+  );
 }
 
 TextButton.propTypes = {
-    children: PropTypes.node.isRequired,
-    onClick: PropTypes.func,
-    className: PropTypes.string,
-    type: PropTypes.string,
+  children: PropTypes.node.isRequired,
+  onClick: PropTypes.func,
+  className: PropTypes.string,
+  type: PropTypes.string,
 };

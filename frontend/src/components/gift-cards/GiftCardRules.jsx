@@ -11,7 +11,9 @@ export default function GiftCardRules() {
         Gift Card Rules & Qualification Requirements:
       </h3>
       <ol className="list-decimal ml-6 text-gray-800 space-y-2 text-sm mb-6">
-        <li>Applies only to call-in orders. Website orders are not eligible.</li>
+        <li>
+          Applies only to call-in orders. Website orders are not eligible.
+        </li>
         <li>Only valid for regular-priced products and vendor promotions.</li>
         <li>Excludes custom or special-order items.</li>
         <li>Not valid on large or mid-sized equipment.</li>
@@ -20,7 +22,8 @@ export default function GiftCardRules() {
       </ol>
 
       <p className="text-sm text-gray-700 mb-2">
-        If an order is canceled or returned, the gift card value will be adjusted or deducted from the refund.
+        If an order is canceled or returned, the gift card value will be
+        adjusted or deducted from the refund.
       </p>
       <p className="text-sm text-gray-700">
         The Gift Card Program and its policies may change without prior notice.

@@ -48,7 +48,8 @@ export default function ConfirmCancelSubscription({
         <p className="text-gray-600 mb-5">
           {productTitle ? (
             <>
-              Your subscription for <span className="font-medium">{productTitle}</span> will be
+              Your subscription for{" "}
+              <span className="font-medium">{productTitle}</span> will be
               canceled. You can re-subscribe anytime.
             </>
           ) : (

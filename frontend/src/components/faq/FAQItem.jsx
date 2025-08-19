@@ -13,7 +13,9 @@ export default function FAQItem({ question, answer }) {
         {isOpen ? "− " : "+ "} {question}
       </button>
       {isOpen && (
-        <div className="mt-2 text-sm text-gray-700 whitespace-pre-line">{answer}</div>
+        <div className="mt-2 text-sm text-gray-700 whitespace-pre-line">
+          {answer}
+        </div>
       )}
     </div>
   );

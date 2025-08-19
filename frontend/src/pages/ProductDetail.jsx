@@ -147,7 +147,8 @@ export default function ProductsPage() {
     });
   };
 
-  const { matrixType, options: matrixOptionsList } = getMatrixInfo(matrixOptions);
+  const { matrixType, options: matrixOptionsList } =
+    getMatrixInfo(matrixOptions);
 
   if (loading) return <Loading text="Loading product..." />;
   if (error) return <ErrorMessage message={error} />;
@@ -291,7 +292,11 @@ export default function ProductsPage() {
                 <span className="font-medium">First delivery:</span>{" "}
                 <span>{formatLocalDateToronto(firstDeliveryDate)}</span>
                 <span className="ml-1">
-                  ({subInterval === "1" ? "every 1 month" : `every ${subInterval} months`})
+                  (
+                  {subInterval === "1"
+                    ? "every 1 month"
+                    : `every ${subInterval} months`}
+                  )
                 </span>
               </div>
             )}

@@ -3,536 +3,537 @@ import { useState, useEffect } from "react";
 import api from "../api/api.js";
 
 function extractBuyGet(str) {
-    const numbers = str.match(/\d+/g);
-    return {
-        buy: numbers ? parseInt(numbers[0], 10) : null,
-        get: numbers ? parseInt(numbers[1], 10) : null,
-    };
+  const numbers = str.match(/\d+/g);
+  return {
+    buy: numbers ? parseInt(numbers[0], 10) : null,
+    get: numbers ? parseInt(numbers[1], 10) : null,
+  };
 }
 
 // Parse custitem38 to get matrix type and options
 function getMatrixInfo(matrixOptions) {
-    if (matrixOptions.length === 0) return { matrixType: "", options: [] };
+  if (matrixOptions.length === 0) return { matrixType: "", options: [] };
 
-    try {
-        // Get the first item to determine the matrix type
-        const firstItem = matrixOptions[0];
-        if (firstItem.custitem38) {
-            // Parse as JavaScript object string (not JSON)
-            const objectString = firstItem.custitem38.replace(/'/g, '"'); // Replace single quotes with double quotes
-            const parsed = JSON.parse(objectString);
-            const matrixType = Object.keys(parsed)[0]; // e.g., "Shade"
+  try {
+    // Get the first item to determine the matrix type
+    const firstItem = matrixOptions[0];
+    if (firstItem.custitem38) {
+      // Parse as JavaScript object string (not JSON)
+      const objectString = firstItem.custitem38.replace(/'/g, '"'); // Replace single quotes with double quotes
+      const parsed = JSON.parse(objectString);
+      const matrixType = Object.keys(parsed)[0]; // e.g., "Shade"
 
-            const options = matrixOptions.map((item) => {
-                try {
-                    const itemObjectString = item.custitem38.replace(/'/g, '"');
-                    const itemParsed = JSON.parse(itemObjectString);
-                    const value = itemParsed[matrixType]; // e.g., "Shade A2"
-                    return {
-                        value: item.id,
-                        label: value || item.itemid,
-                    };
-                } catch {
-                    return {
-                        value: item.id,
-                        label: item.itemid,
-                    };
-                }
-            });
-
-            return { matrixType, options };
-        }
-    } catch {
-        // Fallback if parsing fails
-    }
-
-    return {
-        matrixType: "Options",
-        options: matrixOptions.map((item) => ({
+      const options = matrixOptions.map((item) => {
+        try {
+          const itemObjectString = item.custitem38.replace(/'/g, '"');
+          const itemParsed = JSON.parse(itemObjectString);
+          const value = itemParsed[matrixType]; // e.g., "Shade A2"
+          return {
             value: item.id,
-            label: item.custitem38 || item.itemid,
-        })),
-    };
+            label: value || item.itemid,
+          };
+        } catch {
+          return {
+            value: item.id,
+            label: item.itemid,
+          };
+        }
+      });
+
+      return { matrixType, options };
+    }
+  } catch {
+    // Fallback if parsing fails
+  }
+
+  return {
+    matrixType: "Options",
+    options: matrixOptions.map((item) => ({
+      value: item.id,
+      label: item.custitem38 || item.itemid,
+    })),
+  };
 }
 
 // Format price with proper rounding to 2 decimal places
 function formatPrice(price) {
-    // Handle null, undefined, or invalid values
-    if (price === null || price === undefined || isNaN(price)) {
-        return "0.00";
-    }
+  // Handle null, undefined, or invalid values
+  if (price === null || price === undefined || isNaN(price)) {
+    return "0.00";
+  }
 
-    // Convert to number and format to 2 decimal places
-    return Number(price).toFixed(2);
+  // Convert to number and format to 2 decimal places
+  return Number(price).toFixed(2);
 }
 
 // Format price with currency symbol
 function formatCurrency(price, currency = "$") {
-    return `${currency}${formatPrice(price)}`;
+  return `${currency}${formatPrice(price)}`;
 }
 
 // Calculate total price for quantity
 function calculateTotalPrice(unitPrice, quantity) {
-    if (!unitPrice || !quantity) return "0.00";
+  if (!unitPrice || !quantity) return "0.00";
 
-    const total = Number(unitPrice) * Number(quantity);
-    return formatPrice(total);
+  const total = Number(unitPrice) * Number(quantity);
+  return formatPrice(total);
 }
 
 // Calculate total price with currency symbol
 function calculateTotalCurrency(unitPrice, quantity, currency = "$") {
-    return `${currency}${calculateTotalPrice(unitPrice, quantity)}`;
+  return `${currency}${calculateTotalPrice(unitPrice, quantity)}`;
 }
 
 // Calculate total price after discount based on promotions
 async function getTotalPriceAfterDiscount(productId, unitPrice, quantity) {
-    try {
-        // Import api and endpoints here to avoid circular dependency
-        const { default: api } = await import("../api/api.js");
-        const { default: endpoint } = await import("../api/endpoints.js");
+  try {
+    // Import api and endpoints here to avoid circular dependency
+    const { default: api } = await import("../api/api.js");
+    const { default: endpoint } = await import("../api/endpoints.js");
 
-        // Fetch promotions for the product
-        const promotionUrl = endpoint.GET_PROMOTIONS_BY_PRODUCT({
-            productId,
-        });
+    // Fetch promotions for the product
+    const promotionUrl = endpoint.GET_PROMOTIONS_BY_PRODUCT({
+      productId,
+    });
 
-        const response = await api.get(promotionUrl);
-        const promotions = response.data;
+    const response = await api.get(promotionUrl);
+    const promotions = response.data;
 
-        if (!promotions || promotions.length === 0) {
-            return {
-                originalPrice: Number(unitPrice) * Number(quantity),
-                discountedPrice: Number(unitPrice) * Number(quantity),
-                discount: 0,
-                promotionApplied: null,
-            };
-        }
-
-        const originalTotal = Number(unitPrice) * Number(quantity);
-        let bestDiscount = 0;
-        let bestPromotion = null;
-
-        // Check each promotion to find the best discount
-        for (const promotion of promotions) {
-            const { fixedprice, itemquantifier } = promotion;
-
-            // Skip if promotion doesn't have required fields
-            if (!fixedprice || !itemquantifier) continue;
-
-            // Check if quantity meets the minimum requirement
-            if (Number(quantity) >= Number(itemquantifier)) {
-                // Calculate how many promotion sets can be applied
-                const promotionSets = Math.floor(
-                    Number(quantity) / Number(itemquantifier)
-                );
-                const remainingItems = Number(quantity) % Number(itemquantifier);
-
-                // Calculate discounted price
-                const discountedTotal =
-                    promotionSets * Number(fixedprice) +
-                    remainingItems * Number(unitPrice);
-                const discount = originalTotal - discountedTotal;
-
-                // Keep track of best discount
-                if (discount > bestDiscount) {
-                    bestDiscount = discount;
-                    bestPromotion = promotion;
-                }
-            }
-        }
-
-        return {
-            originalPrice: originalTotal,
-            discountedPrice: originalTotal - bestDiscount,
-            discount: bestDiscount,
-            promotionApplied: bestPromotion,
-        };
-    } catch (error) {
-        // console.error("Error calculating discount:", error);
-        // Return original price if error occurs
-        const originalTotal = Number(unitPrice) * Number(quantity);
-        return {
-            originalPrice: originalTotal,
-            discountedPrice: originalTotal,
-            discount: 0,
-            promotionApplied: null,
-            error: error.message,
-        };
+    if (!promotions || promotions.length === 0) {
+      return {
+        originalPrice: Number(unitPrice) * Number(quantity),
+        discountedPrice: Number(unitPrice) * Number(quantity),
+        discount: 0,
+        promotionApplied: null,
+      };
     }
+
+    const originalTotal = Number(unitPrice) * Number(quantity);
+    let bestDiscount = 0;
+    let bestPromotion = null;
+
+    // Check each promotion to find the best discount
+    for (const promotion of promotions) {
+      const { fixedprice, itemquantifier } = promotion;
+
+      // Skip if promotion doesn't have required fields
+      if (!fixedprice || !itemquantifier) continue;
+
+      // Check if quantity meets the minimum requirement
+      if (Number(quantity) >= Number(itemquantifier)) {
+        // Calculate how many promotion sets can be applied
+        const promotionSets = Math.floor(
+          Number(quantity) / Number(itemquantifier)
+        );
+        const remainingItems = Number(quantity) % Number(itemquantifier);
+
+        // Calculate discounted price
+        const discountedTotal =
+          promotionSets * Number(fixedprice) +
+          remainingItems * Number(unitPrice);
+        const discount = originalTotal - discountedTotal;
+
+        // Keep track of best discount
+        if (discount > bestDiscount) {
+          bestDiscount = discount;
+          bestPromotion = promotion;
+        }
+      }
+    }
+
+    return {
+      originalPrice: originalTotal,
+      discountedPrice: originalTotal - bestDiscount,
+      discount: bestDiscount,
+      promotionApplied: bestPromotion,
+    };
+  } catch (error) {
+    // console.error("Error calculating discount:", error);
+    // Return original price if error occurs
+    const originalTotal = Number(unitPrice) * Number(quantity);
+    return {
+      originalPrice: originalTotal,
+      discountedPrice: originalTotal,
+      discount: 0,
+      promotionApplied: null,
+      error: error.message,
+    };
+  }
 }
 
 // Postal code lookup function (simplified - now uses separate validation)
 async function fetchLocationByPostalCode(country, code) {
-    if (!code || !code.trim()) {
-        return {
-            success: false,
-            error: "Postal code is required",
-        };
+  if (!code || !code.trim()) {
+    return {
+      success: false,
+      error: "Postal code is required",
+    };
+  }
+
+  // Use the new validation function
+  const validationError = validatePostalCode(code, country);
+  if (validationError) {
+    return {
+      success: false,
+      error: validationError,
+    };
+  }
+
+  try {
+    const cleanCode = code.replace(/\s/g, "").toUpperCase();
+    let apiUrl = "";
+
+    if (country === "us") {
+      apiUrl = `https://api.zippopotam.us/us/${cleanCode}`;
+    } else if (country === "ca") {
+      const firstThree = cleanCode.slice(0, 3);
+      apiUrl = `https://api.zippopotam.us/ca/${firstThree}`;
+    } else {
+      return {
+        success: false,
+        error: 'Country not supported. Only "us" and "ca" are supported.',
+      };
     }
 
-    // Use the new validation function
-    const validationError = validatePostalCode(code, country);
-    if (validationError) {
-        return {
-            success: false,
-            error: validationError,
-        };
+    const response = await fetch(apiUrl);
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: `Postal code not found (${response.status})`,
+      };
     }
 
-    try {
-        const cleanCode = code.replace(/\s/g, "").toUpperCase();
-        let apiUrl = "";
+    const data = await response.json();
 
-        if (country === "us") {
-            apiUrl = `https://api.zippopotam.us/us/${cleanCode}`;
-        } else if (country === "ca") {
-            const firstThree = cleanCode.slice(0, 3);
-            apiUrl = `https://api.zippopotam.us/ca/${firstThree}`;
-        } else {
-            return {
-                success: false,
-                error: 'Country not supported. Only "us" and "ca" are supported.',
-            };
-        }
-
-        const response = await fetch(apiUrl);
-
-        if (!response.ok) {
-            return {
-                success: false,
-                error: `Postal code not found (${response.status})`,
-            };
-        }
-
-        const data = await response.json();
-
-        if (data.places && data.places.length > 0) {
-            return {
-                success: true,
-                data: {
-                    city: data.places[0]["place name"],
-                    province: data.places[0]["state abbreviation"],
-                    state: data.places[0]["state abbreviation"], // Alias for province
-                    country: data.country,
-                    latitude: data.places[0]["latitude"],
-                    longitude: data.places[0]["longitude"],
-                },
-            };
-        } else {
-            return {
-                success: false,
-                error: "No location data found",
-            };
-        }
-    } catch (error) {
-        return {
-            success: false,
-            error: error.message || "Failed to fetch location data",
-        };
+    if (data.places && data.places.length > 0) {
+      return {
+        success: true,
+        data: {
+          city: data.places[0]["place name"],
+          province: data.places[0]["state abbreviation"],
+          state: data.places[0]["state abbreviation"], // Alias for province
+          country: data.country,
+          latitude: data.places[0]["latitude"],
+          longitude: data.places[0]["longitude"],
+        },
+      };
+    } else {
+      return {
+        success: false,
+        error: "No location data found",
+      };
     }
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message || "Failed to fetch location data",
+    };
+  }
 }
 
 // Quantity handling utilities for Buy X Get Y promotions
 function calculateActualQuantity(selectedQuantity, stockdescription) {
-    const { buy, get } = extractBuyGet(stockdescription || "");
+  const { buy, get } = extractBuyGet(stockdescription || "");
 
-    if (!buy || !get) {
-        return selectedQuantity;
-    }
+  if (!buy || !get) {
+    return selectedQuantity;
+  }
 
-    // Calculate how many complete "buy" sets the user has selected
-    const buyMultiplier = Math.floor(selectedQuantity / buy);
-    const remainder = selectedQuantity % buy;
+  // Calculate how many complete "buy" sets the user has selected
+  const buyMultiplier = Math.floor(selectedQuantity / buy);
+  const remainder = selectedQuantity % buy;
 
-    // Calculate total quantity: (buy + get) * multiplier + remainder
-    return buyMultiplier * (buy + get) + remainder;
+  // Calculate total quantity: (buy + get) * multiplier + remainder
+  return buyMultiplier * (buy + get) + remainder;
 }
 
 // Create quantity handler functions
 function createQuantityHandlers(
-    quantity,
-    setQuantity,
-    setActualQuantity,
-    stockdescription
+  quantity,
+  setQuantity,
+  setActualQuantity,
+  stockdescription
 ) {
-    const updateQuantities = (newQuantity) => {
-        setQuantity(newQuantity);
-        setActualQuantity(calculateActualQuantity(newQuantity, stockdescription));
-    };
+  const updateQuantities = (newQuantity) => {
+    setQuantity(newQuantity);
+    setActualQuantity(calculateActualQuantity(newQuantity, stockdescription));
+  };
 
-    return {
-        handleQuantityChange: (e) => {
-            const value = e.target.value;
-            if (Number(value) < 1) {
-                updateQuantities(1);
-            } else {
-                updateQuantities(Number(value));
-            }
-        },
+  return {
+    handleQuantityChange: (e) => {
+      const value = e.target.value;
+      if (Number(value) < 1) {
+        updateQuantities(1);
+      } else {
+        updateQuantities(Number(value));
+      }
+    },
 
-        increment: () => {
-            const newQuantity = Number(quantity) + 1;
-            updateQuantities(newQuantity);
-        },
+    increment: () => {
+      const newQuantity = Number(quantity) + 1;
+      updateQuantities(newQuantity);
+    },
 
-        decrement: () => {
-            if (Number(quantity) > 1) {
-                const newQuantity = Number(quantity) - 1;
-                updateQuantities(newQuantity);
-            }
-        },
-    };
+    decrement: () => {
+      if (Number(quantity) > 1) {
+        const newQuantity = Number(quantity) - 1;
+        updateQuantities(newQuantity);
+      }
+    },
+  };
 }
 
 // Hook-like utility for quantity management with Buy X Get Y logic
 function useQuantityHandlers(initialQuantity = 1, stockdescription = "") {
-    const [quantity, setQuantity] = useState(initialQuantity);
-    const [actualQuantity, setActualQuantity] = useState(
-        calculateActualQuantity(initialQuantity, stockdescription)
-    );
+  const [quantity, setQuantity] = useState(initialQuantity);
+  const [actualQuantity, setActualQuantity] = useState(
+    calculateActualQuantity(initialQuantity, stockdescription)
+  );
 
-    const handlers = createQuantityHandlers(
-        quantity,
-        setQuantity,
-        setActualQuantity,
-        stockdescription
-    );
+  const handlers = createQuantityHandlers(
+    quantity,
+    setQuantity,
+    setActualQuantity,
+    stockdescription
+  );
 
-    // Update actual quantity when stockdescription changes
-    useEffect(() => {
-        setActualQuantity(calculateActualQuantity(quantity, stockdescription));
-    }, [quantity, stockdescription]);
+  // Update actual quantity when stockdescription changes
+  useEffect(() => {
+    setActualQuantity(calculateActualQuantity(quantity, stockdescription));
+  }, [quantity, stockdescription]);
 
-    return {
-        quantity,
-        actualQuantity,
-        setQuantity: (newQuantity) => {
-            setQuantity(newQuantity);
-            setActualQuantity(calculateActualQuantity(newQuantity, stockdescription));
-        },
-        setActualQuantity,
-        ...handlers,
-    };
+  return {
+    quantity,
+    actualQuantity,
+    setQuantity: (newQuantity) => {
+      setQuantity(newQuantity);
+      setActualQuantity(calculateActualQuantity(newQuantity, stockdescription));
+    },
+    setActualQuantity,
+    ...handlers,
+  };
 }
 
 async function fetchRegionByCode(country, code) {
-    try {
-        // Only allow 'ca' or 'us'
-        if (country !== "ca" && country !== "us") {
-            throw new Error('Country not supported. Only "ca" and "us" are allowed.');
-        }
-        let cleanCode = code.replace(/\s/g, "").toUpperCase();
-        if (country === "ca") {
-            cleanCode = cleanCode.slice(0, 3); // Use only first 3 characters for Canada
-        }
-        const response = await api.get(
-            `https://api.zippopotam.us/${country}/${cleanCode}`
-        );
-        return response.data;
-    } catch (error) {
-        return null;
+  try {
+    // Only allow 'ca' or 'us'
+    if (country !== "ca" && country !== "us") {
+      throw new Error('Country not supported. Only "ca" and "us" are allowed.');
     }
+    let cleanCode = code.replace(/\s/g, "").toUpperCase();
+    if (country === "ca") {
+      cleanCode = cleanCode.slice(0, 3); // Use only first 3 characters for Canada
+    }
+    const response = await api.get(
+      `https://api.zippopotam.us/${country}/${cleanCode}`
+    );
+    return response.data;
+  } catch (error) {
+    return null;
+  }
 }
 
 // Phone validation function
 function validatePhone(phone) {
-    // Allow empty/null phone numbers (optional field)
-    if (!phone || phone.trim() === "") {
-        return true;
-    }
+  // Allow empty/null phone numbers (optional field)
+  if (!phone || phone.trim() === "") {
+    return true;
+  }
 
-    // Remove all non-digit characters
-    const digitsOnly = phone.replace(/\D/g, "");
+  // Remove all non-digit characters
+  const digitsOnly = phone.replace(/\D/g, "");
 
-    // Check if it's exactly 10 digits (US/Canada format)
-    return digitsOnly.length === 10;
+  // Check if it's exactly 10 digits (US/Canada format)
+  return digitsOnly.length === 10;
 }
 
 // Password validation function
 function validatePassword(password) {
-    // At least 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char
-    return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/.test(
-        password
-    );
+  // At least 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char
+  return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/.test(
+    password
+  );
 }
 
 // Postal code validation functions
 function validateCanadianPostalCode(code) {
-    // Canadian postal code format: A1A 1A1 (letter-digit-letter space digit-letter-digit)
-    const canadianPattern = /^[A-Za-z]\d[A-Za-z]\s?\d[A-Za-z]\d$/;
-    return canadianPattern.test(code);
+  // Canadian postal code format: A1A 1A1 (letter-digit-letter space digit-letter-digit)
+  const canadianPattern = /^[A-Za-z]\d[A-Za-z]\s?\d[A-Za-z]\d$/;
+  return canadianPattern.test(code);
 }
 
 function validateUSZipCode(code) {
-    // US zip code format: 12345 or 12345-6789
-    const usPattern = /^\d{5}(-\d{4})?$/;
-    return usPattern.test(code);
+  // US zip code format: 12345 or 12345-6789
+  const usPattern = /^\d{5}(-\d{4})?$/;
+  return usPattern.test(code);
 }
 
 function validatePostalCode(code, selectedCountry) {
-    if (!code.trim()) {
-        return "Postal/Zip code is required";
-    }
+  if (!code.trim()) {
+    return "Postal/Zip code is required";
+  }
 
-    if (selectedCountry === "ca") {
-        return validateCanadianPostalCode(code)
-            ? ""
-            : "Please enter a valid Canadian postal code (e.g., A1A 1A1)";
-    } else if (selectedCountry === "us") {
-        return validateUSZipCode(code)
-            ? ""
-            : "Please enter a valid US zip code (e.g., 12345 or 12345-6789)";
-    }
+  if (selectedCountry === "ca") {
+    return validateCanadianPostalCode(code)
+      ? ""
+      : "Please enter a valid Canadian postal code (e.g., A1A 1A1)";
+  } else if (selectedCountry === "us") {
+    return validateUSZipCode(code)
+      ? ""
+      : "Please enter a valid US zip code (e.g., 12345 or 12345-6789)";
+  }
 
-    return "";
+  return "";
 }
 
 // Reusable estimate tax and shipping function
 async function handleTaxShippingEstimate({
-    country,
-    postalCode,
-    subtotal,
-    onSuccess,
-    onError,
-    onLoading,
-    onDismiss,
+  country,
+  postalCode,
+  subtotal,
+  onSuccess,
+  onError,
+  onLoading,
+  onDismiss,
 }) {
-    // Import modules dynamically to avoid circular dependencies
-    const { default: endpoint } = await import("../api/endpoints.js");
+  // Import modules dynamically to avoid circular dependencies
+  const { default: endpoint } = await import("../api/endpoints.js");
 
-    try {
-        // Normalize country values to lowercase codes
-        let normalizedCountry = country?.toLowerCase();
-        if (normalizedCountry === "canada") {
-            normalizedCountry = "ca";
-        } else if (
-            normalizedCountry === "usa" ||
-            normalizedCountry === "united states"
-        ) {
-            normalizedCountry = "us";
+  try {
+    // Normalize country values to lowercase codes
+    let normalizedCountry = country?.toLowerCase();
+    if (normalizedCountry === "canada") {
+      normalizedCountry = "ca";
+    } else if (
+      normalizedCountry === "usa" ||
+      normalizedCountry === "united states"
+    ) {
+      normalizedCountry = "us";
+    }
+
+    // Validate postal code before making API call
+    const validationError = validatePostalCode(postalCode, normalizedCountry);
+    if (validationError) {
+      if (onError) onError(validationError);
+      return { success: false, error: validationError };
+    }
+
+    if (onLoading) onLoading("Estimating region...");
+
+    const result = await fetchRegionByCode(normalizedCountry, postalCode);
+
+    if (onDismiss) onDismiss();
+
+    if (result) {
+      const province =
+        result.places[0]?.state || result.places[0]?.state_abbreviation;
+
+      if (province) {
+        try {
+          // Get tax rates
+          const taxUrl = endpoint.GET_TAX_RATES({
+            country: normalizedCountry,
+            province,
+          });
+          const taxRates = await api.get(taxUrl);
+
+          // Calculate estimated tax
+          const totalTaxRate = taxRates.data?.rates?.total;
+          let estimatedTax = null;
+
+          if (totalTaxRate && subtotal) {
+            estimatedTax = Number(subtotal) * Number(totalTaxRate);
+          }
+
+          // Get shipping cost
+          const shippingRes = await api.get(
+            endpoint.GET_SHIPPING_METHOD(20412)
+          );
+          const shippingCost = shippingRes.data?.shippingflatrateamount ?? 9.99;
+
+          const estimateData = {
+            estimatedTax,
+            shippingCost,
+            taxRate: totalTaxRate,
+            province,
+            country: normalizedCountry,
+          };
+
+          if (onSuccess) onSuccess("Tax rates loaded!", estimateData);
+
+          return {
+            success: true,
+            data: estimateData,
+          };
+        } catch (taxError) {
+          const errorMessage = "Failed to get tax rates or shipping cost.";
+          if (onError) onError(errorMessage);
+          return { success: false, error: errorMessage };
         }
-
-        // Validate postal code before making API call
-        const validationError = validatePostalCode(postalCode, normalizedCountry);
-        if (validationError) {
-            if (onError) onError(validationError);
-            return { success: false, error: validationError };
-        }
-
-        if (onLoading) onLoading("Estimating region...");
-
-        const result = await fetchRegionByCode(normalizedCountry, postalCode);
-
-        if (onDismiss) onDismiss();
-
-        if (result) {
-            const province =
-                result.places[0]?.state || result.places[0]?.state_abbreviation;
-
-            if (province) {
-                try {
-                    // Get tax rates
-                    const taxUrl = endpoint.GET_TAX_RATES({
-                        country: normalizedCountry,
-                        province,
-                    });
-                    const taxRates = await api.get(taxUrl);
-
-                    // Calculate estimated tax
-                    const totalTaxRate = taxRates.data?.rates?.total;
-                    let estimatedTax = null;
-
-                    if (totalTaxRate && subtotal) {
-                        estimatedTax = Number(subtotal) * Number(totalTaxRate);
-                    }
-
-                    // Get shipping cost
-                    const shippingRes = await api.get(
-                        endpoint.GET_SHIPPING_METHOD(20412)
-                    );
-                    const shippingCost = shippingRes.data?.shippingflatrateamount ?? 9.99;
-
-                    const estimateData = {
-                        estimatedTax,
-                        shippingCost,
-                        taxRate: totalTaxRate,
-                        province,
-                        country: normalizedCountry,
-                    };
-
-                    if (onSuccess) onSuccess("Tax rates loaded!", estimateData);
-
-                    return {
-                        success: true,
-                        data: estimateData,
-                    };
-                } catch (taxError) {
-                    const errorMessage = "Failed to get tax rates or shipping cost.";
-                    if (onError) onError(errorMessage);
-                    return { success: false, error: errorMessage };
-                }
-            } else {
-                const errorMessage = "Province not found in region lookup.";
-                if (onError) onError(errorMessage);
-                return { success: false, error: errorMessage };
-            }
-        } else {
-            const errorMessage = "Region lookup failed.";
-            if (onError) onError(errorMessage);
-            return { success: false, error: errorMessage };
-        }
-    } catch (err) {
-        if (onDismiss) onDismiss();
-        const errorMessage = err.message || "Region lookup failed.";
+      } else {
+        const errorMessage = "Province not found in region lookup.";
         if (onError) onError(errorMessage);
         return { success: false, error: errorMessage };
+      }
+    } else {
+      const errorMessage = "Region lookup failed.";
+      if (onError) onError(errorMessage);
+      return { success: false, error: errorMessage };
     }
+  } catch (err) {
+    if (onDismiss) onDismiss();
+    const errorMessage = err.message || "Region lookup failed.";
+    if (onError) onError(errorMessage);
+    return { success: false, error: errorMessage };
+  }
 }
 
 // Build idempotency key for order deduplication
 function buildIdempotencyKey(
-    userInfo,
-    cartItems,
-    shipMethodId = "20412",
-    windowMins = 10
+  userInfo,
+  cartItems,
+  shipMethodId = "20412",
+  windowMins = 10
 ) {
-    const cartKey = (cartItems || [])
-        .map((i) => `${i.netsuiteId || i.id}x${i.quantity}`)
-        .sort()
-        .join("|");
-    const windowBucket = Math.floor(Date.now() / (windowMins * 60 * 1000));
-    const raw = `${userInfo?.id || "anon"
-        }|${shipMethodId}|${cartKey}|${windowBucket}`;
+  const cartKey = (cartItems || [])
+    .map((i) => `${i.netsuiteId || i.id}x${i.quantity}`)
+    .sort()
+    .join("|");
+  const windowBucket = Math.floor(Date.now() / (windowMins * 60 * 1000));
+  const raw = `${
+    userInfo?.id || "anon"
+  }|${shipMethodId}|${cartKey}|${windowBucket}`;
 
-    // Simple base64 makes it compact and header-safe
-    try {
-        return `ck-${btoa(unescape(encodeURIComponent(raw))).slice(0, 64)}`;
-    } catch {
-        return `ck-${Date.now()}`;
-    }
+  // Simple base64 makes it compact and header-safe
+  try {
+    return `ck-${btoa(unescape(encodeURIComponent(raw))).slice(0, 64)}`;
+  } catch {
+    return `ck-${Date.now()}`;
+  }
 }
 
 // Calculate next run date for custrecord_ro_next_run field
 function calculateNextRunDate(interval, intervalUnit) {
-    const currentDate = new Date();
-    const parsedInterval = parseInt(interval) || 1;
-    const normalizedUnit = (intervalUnit || "week").toLowerCase();
+  const currentDate = new Date();
+  const parsedInterval = parseInt(interval) || 1;
+  const normalizedUnit = (intervalUnit || "week").toLowerCase();
 
-    const nextRunDate = new Date(currentDate);
+  const nextRunDate = new Date(currentDate);
 
-    switch (normalizedUnit) {
-        case "week":
-            nextRunDate.setDate(currentDate.getDate() + parsedInterval * 7);
-            break;
-        case "month":
-            nextRunDate.setMonth(currentDate.getMonth() + parsedInterval);
-            break;
+  switch (normalizedUnit) {
+    case "week":
+      nextRunDate.setDate(currentDate.getDate() + parsedInterval * 7);
+      break;
+    case "month":
+      nextRunDate.setMonth(currentDate.getMonth() + parsedInterval);
+      break;
 
-        default:
-            nextRunDate.setMonth(currentDate.getMonth() + parsedInterval);
-    }
+    default:
+      nextRunDate.setMonth(currentDate.getMonth() + parsedInterval);
+  }
 
-    return nextRunDate.toISOString().slice(0, 10); // yyyy-mm-dd format
+  return nextRunDate.toISOString().slice(0, 10); // yyyy-mm-dd format
 }
 
 /* =======================
@@ -541,42 +542,42 @@ function calculateNextRunDate(interval, intervalUnit) {
 
 // Options for the interval <Dropdown>
 export const SUBSCRIPTION_INTERVAL_OPTIONS = [
-    { value: "1", label: "Every 1 month" },
-    { value: "2", label: "Every 2 months" },
-    { value: "3", label: "Every 3 months" },
-    { value: "6", label: "Every 6 months" },
+  { value: "1", label: "Every 1 month" },
+  { value: "2", label: "Every 2 months" },
+  { value: "3", label: "Every 3 months" },
+  { value: "6", label: "Every 6 months" },
 ];
 
 // Small date helpers we reuse across subscription UI
 export function daysInMonth(year, monthIndex) {
-    return new Date(year, monthIndex + 1, 0).getDate();
+  return new Date(year, monthIndex + 1, 0).getDate();
 }
 
 export function addMonthsSafe(date, months) {
-    const d = new Date(date.getTime());
-    const day = d.getDate();
-    const targetMonth = d.getMonth() + months;
-    const targetYear = d.getFullYear() + Math.floor(targetMonth / 12);
-    const normalizedMonth = ((targetMonth % 12) + 12) % 12;
-    const endDay = daysInMonth(targetYear, normalizedMonth);
-    const clamped = Math.min(day, endDay);
-    const res = new Date(d);
-    res.setFullYear(targetYear, normalizedMonth, clamped);
-    return res;
+  const d = new Date(date.getTime());
+  const day = d.getDate();
+  const targetMonth = d.getMonth() + months;
+  const targetYear = d.getFullYear() + Math.floor(targetMonth / 12);
+  const normalizedMonth = ((targetMonth % 12) + 12) % 12;
+  const endDay = daysInMonth(targetYear, normalizedMonth);
+  const clamped = Math.min(day, endDay);
+  const res = new Date(d);
+  res.setFullYear(targetYear, normalizedMonth, clamped);
+  return res;
 }
 
 export function formatLocalDateToronto(date) {
-    return date.toLocaleDateString("en-CA", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        timeZone: "America/Toronto",
-    });
+  return date.toLocaleDateString("en-CA", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    timeZone: "America/Toronto",
+  });
 }
 
 export function nextFromToday(intervalStr) {
-    const n = parseInt(intervalStr || "1", 10);
-    return addMonthsSafe(new Date(), Number.isFinite(n) ? n : 1);
+  const n = parseInt(intervalStr || "1", 10);
+  return addMonthsSafe(new Date(), Number.isFinite(n) ? n : 1);
 }
 
 /**
@@ -584,68 +585,67 @@ export function nextFromToday(intervalStr) {
  * Works with minor field-name differences coming from SuiteQL/REST.
  */
 export function normalizeSubscriptionRecord(r) {
-    const roId = r.id ?? r.internalid ?? r.roId;
-    const productId = r.itemId ?? r.item_id ?? r.productId;
-    return {
-        roId,
-        productId,
-        itemid:
-            r.itemid ||
-            r.itemName ||
-            r.name ||
-            r.displayname ||
-            `#${productId || roId}`,
-        displayname:
-            r.displayname ||
-            r.itemName ||
-            r.name ||
-            r.itemid ||
-            `#${productId || roId}`,
-        file_url: r.file_url || r.image || r.thumbnail || r.fileUrl || "",
-        interval: String(
-            r.interval || r.custrecord_ro_interval || r.recurringInterval || "1"
-        ),
-    };
+  const roId = r.id ?? r.internalid ?? r.roId;
+  const productId = r.itemId ?? r.item_id ?? r.productId;
+  return {
+    roId,
+    productId,
+    itemid:
+      r.itemid ||
+      r.itemName ||
+      r.name ||
+      r.displayname ||
+      `#${productId || roId}`,
+    displayname:
+      r.displayname ||
+      r.itemName ||
+      r.name ||
+      r.itemid ||
+      `#${productId || roId}`,
+    file_url: r.file_url || r.image || r.thumbnail || r.fileUrl || "",
+    interval: String(
+      r.interval || r.custrecord_ro_interval || r.recurringInterval || "1"
+    ),
+  };
 }
 
 /** Detect if a recurring order is canceled (status "3") regardless of field shape */
 export function isSubscriptionCanceled(rec) {
-    const val =
-        rec?.custrecord_ro_status?.id ??
-        rec?.custrecord_ro_status ??
-        rec?.statusId ??
-        rec?.status;
-    return String(val) === "3";
+  const val =
+    rec?.custrecord_ro_status?.id ??
+    rec?.custrecord_ro_status ??
+    rec?.statusId ??
+    rec?.status;
+  return String(val) === "3";
 }
 
 /** Small payload helpers so we don’t repeat magic values in components */
 export function buildIntervalPatchPayload(interval) {
-    return { custrecord_ro_interval: Number(interval) };
+  return { custrecord_ro_interval: Number(interval) };
 }
 export const SUBSCRIPTION_CANCEL_PAYLOAD = {
-    custrecord_ro_status: { id: "3" },
+  custrecord_ro_status: { id: "3" },
 };
 
 export {
-    extractBuyGet,
-    getMatrixInfo,
-    formatPrice,
-    formatCurrency,
-    calculateTotalPrice,
-    calculateTotalCurrency,
-    getTotalPriceAfterDiscount,
-    fetchLocationByPostalCode,
-    calculateActualQuantity,
-    createQuantityHandlers,
-    useQuantityHandlers,
-    fetchRegionByCode,
-    validatePhone,
-    validatePassword,
-    validateCanadianPostalCode,
-    validateUSZipCode,
-    validatePostalCode,
-    handleTaxShippingEstimate,
-    buildIdempotencyKey,
-    calculateNextRunDate,
-
+  extractBuyGet,
+  getMatrixInfo,
+  formatPrice,
+  formatCurrency,
+  calculateTotalPrice,
+  calculateTotalCurrency,
+  getTotalPriceAfterDiscount,
+  fetchLocationByPostalCode,
+  calculateActualQuantity,
+  createQuantityHandlers,
+  useQuantityHandlers,
+  fetchRegionByCode,
+  validatePhone,
+  validatePassword,
+  validateCanadianPostalCode,
+  validateUSZipCode,
+  validatePostalCode,
+  handleTaxShippingEstimate,
+  buildIdempotencyKey,
+  calculateNextRunDate,
 };

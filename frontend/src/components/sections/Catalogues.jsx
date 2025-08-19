@@ -15,7 +15,9 @@ export default function Catalogues() {
             instruments, equipment, and disposables.
           </p>
           <Link to="/promotions/monthly-special">
-            <Button variant="primary" className="px-6 py-2">Shop Now</Button>
+            <Button variant="primary" className="px-6 py-2">
+              Shop Now
+            </Button>
           </Link>
         </div>
 

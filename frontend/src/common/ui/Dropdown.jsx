@@ -2,7 +2,14 @@
 import React from "react";
 import classNames from "classnames";
 
-export default function Dropdown({ label, options, value, onChange, className = "", ...props }) {
+export default function Dropdown({
+  label,
+  options,
+  value,
+  onChange,
+  className = "",
+  ...props
+}) {
   return (
     <div className="mb-2">
       {label && (
