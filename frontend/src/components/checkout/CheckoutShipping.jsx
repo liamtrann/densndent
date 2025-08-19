@@ -32,7 +32,10 @@ export default function CheckoutShipping({ isResidential, setIsResidential }) {
         />
       </div>
       <div className="flex justify-end mt-6">
-        <Button className="px-6 py-3" onClick={() => navigate("/checkout/payment")}>
+        <Button
+          className="px-6 py-3"
+          onClick={() => navigate("/checkout/payment")}
+        >
           Continue to Payment
         </Button>
       </div>

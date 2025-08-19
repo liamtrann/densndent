@@ -193,7 +193,9 @@ export default function PurchaseHistory() {
     <div className="max-w-6xl mx-auto px-6 py-10">
       <Breadcrumb path={["Home", "Profile", "Purchase History"]} />
 
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">Purchase History</h2>
+      <h2 className="text-2xl font-bold text-gray-800 mb-6">
+        Purchase History
+      </h2>
 
       {/* Tabs */}
       <div className="flex border-b border-gray-200 mb-6">
@@ -347,14 +349,17 @@ export default function PurchaseHistory() {
             </div>
 
             <Paragraph className="text-xs text-gray-500 mb-4 mt-2">
-              Preview only. These are placeholder items to visualize your subscription list.
+              Preview only. These are placeholder items to visualize your
+              subscription list.
             </Paragraph>
 
             <div className="py-2 border-t border-gray-200 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-700">Earliest next delivery</span>
                 <span className="text-gray-900">
-                  {earliestNextDate ? formatLocalDateToronto(earliestNextDate) : "—"}
+                  {earliestNextDate
+                    ? formatLocalDateToronto(earliestNextDate)
+                    : "—"}
                 </span>
               </div>
             </div>

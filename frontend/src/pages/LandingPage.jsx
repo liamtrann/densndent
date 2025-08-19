@@ -16,12 +16,11 @@ import { HeroCarousel } from "components";
 
 const LandingPage = () => {
   return (
-   <div className="bg-gray-50 dark:bg-gray-900 text-black dark:text-gray-100 min-h-screen font-sans">
-
+    <div className="bg-gray-50 dark:bg-gray-900 text-black dark:text-gray-100 min-h-screen font-sans">
       <MainSection />
       <HeroCarousel />
       <div className="mt-12"></div>
-      <RecentlyViewedSection /> 
+      <RecentlyViewedSection />
       <CategoryTiles />
       {/* <PromotionsGrid /> */}
       <Catalogues buttonLink="/promotions/q3-catalogue" />

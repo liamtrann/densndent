@@ -10,22 +10,21 @@ import React from "react";
  * @param {object} [props.rest] - Other props
  */
 export default function FormSubmit({
-    onSubmit,
-    isSubmitting = false,
-    children,
-    className = "",
-    ...rest
+  onSubmit,
+  isSubmitting = false,
+  children,
+  className = "",
+  ...rest
 }) {
-    return (
-        <form
-            onSubmit={onSubmit}
-            className={className}
-            {...rest}
-        >
-            {/* Optionally, you can wrap children in a <fieldset> to disable all at once */}
-            <fieldset disabled={isSubmitting} style={{ border: 0, padding: 0, margin: 0 }}>
-                {children}
-            </fieldset>
-        </form>
-    );
+  return (
+    <form onSubmit={onSubmit} className={className} {...rest}>
+      {/* Optionally, you can wrap children in a <fieldset> to disable all at once */}
+      <fieldset
+        disabled={isSubmitting}
+        style={{ border: 0, padding: 0, margin: 0 }}
+      >
+        {children}
+      </fieldset>
+    </form>
+  );
 }

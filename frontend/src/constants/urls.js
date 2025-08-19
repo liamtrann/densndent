@@ -1,51 +1,77 @@
 export const URLS = {
-    LOGO: "https://sandbox.densndente.ca/SSP%20Applications/NetSuite%20Inc.%20-%20SCS/SuiteCommerce%20Standard/home-page/Denslogo-sm-f1.png",
-    BRANDS: {
-        "3m": "https://sandbox.densndente.ca/site/extra images/brands/3M-logo.png",
-        dmg: "https://sandbox.densndente.ca/site/extra%20images/brands/dmg.png",
-        kerr: "https://sandbox.densndente.ca/site/extra%20images/Dens%20website%20change%20May%202023/logo/kerr-logo.png",
-        microcopy: "https://sandbox.densndente.ca/site/extra%20images/Dens%20website%20change%20May%202023/logo/microcopy.png",
-        keystone: "https://sandbox.densndente.ca/site/extra%20images/Dens%20website%20change%20May%202023/logo/keystone.png",
-        "johnson-and-johnson": "https://sandbox.densndente.ca/site/extra%20images/brands/johnson-and-johnson.png",
-        aurelia: "https://sandbox.densndente.ca/site/extra%20images/Dens%20website%20change%20May%202023/logo/aurelia.png",
-        "d2-healthcare": "https://sandbox.densndente.ca/site/extra%20images/brands/D2-logo.png",
-        dentsply: "https://sandbox.densndente.ca/site/extra%20images/Dens%20website%20change%20May%202023/logo/dentsply.png",
-        diadent: "https://sandbox.densndente.ca/site/extra%20images/Dens%20website%20change%20May%202023/logo/diadent.png",
-        medicom: "https://sandbox.densndente.ca/site/extra%20images/Dens%20website%20change%20May%202023/logo/medicom.png",
-        premier: "https://sandbox.densndente.ca/site/extra%20images/Dens%20website%20change%20May%202023/logo/premier.png",
-        "surgical-specialties": "https://sandbox.densndente.ca/site/extra%20images/Dens%20website%20change%20May%202023/logo/surgical.png",
-        flight: "https://sandbox.densndente.ca/site/extra%20images/Dens%20website%20change%20May%202023/logo/flight.png",
-        mark3: "https://sandbox.densndente.ca/site/extra%20images/Dens%20website%20change%20May%202023/logo/mark3-logo.png",
-        zirc: "https://www.densndente.ca/site/extra%20images/brands/zirc-dental-logo.png",
-        defend: "https://www.densndente.ca/site/extra%20images/brands/defend-logo.png",
-        young: "https://www.densndente.ca/site/extra images/Dens website change May 2023/logo/young-logo.png",
-        waterpik:"https://www.densndente.ca/site/extra images/Dens website change May 2023/logo/waterpik-logo.png",
-        univet: "https://www.densndente.ca/site/extra%20images/brands/univet-logo.png",
-        tidi : "https://www.densndente.ca/site/extra%20images/brands/tidi-logo.png",
-        sable: "https://www.densndente.ca/site/extra images/Dens website change May 2023/logo/sable-logo.png",
-        shofu: "https://www.densndente.ca/site/extra images/Dens website change May 2023/logo/shofu-logo.png",
-        primed: "https://www.densndente.ca/site/extra images/Dens website change May 2023/logo/primed-logo.png",
-        pulpdent: "https://www.densndente.ca/site/extra%20images/Dens%20website%20change%20May%202023/logo/pulpdent.png",
-        pdi: "https://www.densndente.ca/site/extra%20images/brands/pdi-logo.png",
-        kuraray: "https://www.densndente.ca/site/extra images/Dens website change May 2023/logo/kuraray-logo.png",
-        halyard: "https://www.densndente.ca/site/extra%20images/brands/halyard-logo.png",
-        dentamerica: "https://www.densndente.ca/site/extra images/Dens website change May 2023/logo/dentamerica-logo.png",
-        pierrel: "https://www.densndente.ca/site/extra images/brands/Pierrel-logo.png",
-        pacdent: "https://www.densndente.ca/site/extra%20images/brands/pac-dent-logo.png",
-        morita: "https://www.densndente.ca/site/extra%20images/brands/J-Morita-logo.png",
-        "palmero": "https://www.densndente.ca/site/extra images/Dens website change May 2023/logo/palmero-logo.png",
-        parkell: "https://www.densndente.ca/site/extra%20images/brands/parkell-logo.png",
-        flow: "https://www.densndente.ca/site/extra images/Dens website change May 2023/logo/flow-logo.png",
-        hager: "	https://www.densndente.ca/site/extra%20images/brands/hager-worldwide-logo.png",
-
-
-
-    },
-    SOCIAL: {
-        FACEBOOK: "https://facebook.com",
-        INSTAGRAM: "https://instagram.com",
-        YOUTUBE: "https://youtube.com",
-        LINKEDIN: "https://linkedin.com",
-        GOOGLE_PLUS: "https://plus.google.com"
-    }
+  LOGO: "https://sandbox.densndente.ca/SSP%20Applications/NetSuite%20Inc.%20-%20SCS/SuiteCommerce%20Standard/home-page/Denslogo-sm-f1.png",
+  BRANDS: {
+    "3m": "https://sandbox.densndente.ca/site/extra images/brands/3M-logo.png",
+    dmg: "https://sandbox.densndente.ca/site/extra%20images/brands/dmg.png",
+    kerr: "https://sandbox.densndente.ca/site/extra%20images/Dens%20website%20change%20May%202023/logo/kerr-logo.png",
+    microcopy:
+      "https://sandbox.densndente.ca/site/extra%20images/Dens%20website%20change%20May%202023/logo/microcopy.png",
+    keystone:
+      "https://sandbox.densndente.ca/site/extra%20images/Dens%20website%20change%20May%202023/logo/keystone.png",
+    "johnson-and-johnson":
+      "https://sandbox.densndente.ca/site/extra%20images/brands/johnson-and-johnson.png",
+    aurelia:
+      "https://sandbox.densndente.ca/site/extra%20images/Dens%20website%20change%20May%202023/logo/aurelia.png",
+    "d2-healthcare":
+      "https://sandbox.densndente.ca/site/extra%20images/brands/D2-logo.png",
+    dentsply:
+      "https://sandbox.densndente.ca/site/extra%20images/Dens%20website%20change%20May%202023/logo/dentsply.png",
+    diadent:
+      "https://sandbox.densndente.ca/site/extra%20images/Dens%20website%20change%20May%202023/logo/diadent.png",
+    medicom:
+      "https://sandbox.densndente.ca/site/extra%20images/Dens%20website%20change%20May%202023/logo/medicom.png",
+    premier:
+      "https://sandbox.densndente.ca/site/extra%20images/Dens%20website%20change%20May%202023/logo/premier.png",
+    "surgical-specialties":
+      "https://sandbox.densndente.ca/site/extra%20images/Dens%20website%20change%20May%202023/logo/surgical.png",
+    flight:
+      "https://sandbox.densndente.ca/site/extra%20images/Dens%20website%20change%20May%202023/logo/flight.png",
+    mark3:
+      "https://sandbox.densndente.ca/site/extra%20images/Dens%20website%20change%20May%202023/logo/mark3-logo.png",
+    zirc: "https://www.densndente.ca/site/extra%20images/brands/zirc-dental-logo.png",
+    defend:
+      "https://www.densndente.ca/site/extra%20images/brands/defend-logo.png",
+    young:
+      "https://www.densndente.ca/site/extra images/Dens website change May 2023/logo/young-logo.png",
+    waterpik:
+      "https://www.densndente.ca/site/extra images/Dens website change May 2023/logo/waterpik-logo.png",
+    univet:
+      "https://www.densndente.ca/site/extra%20images/brands/univet-logo.png",
+    tidi: "https://www.densndente.ca/site/extra%20images/brands/tidi-logo.png",
+    sable:
+      "https://www.densndente.ca/site/extra images/Dens website change May 2023/logo/sable-logo.png",
+    shofu:
+      "https://www.densndente.ca/site/extra images/Dens website change May 2023/logo/shofu-logo.png",
+    primed:
+      "https://www.densndente.ca/site/extra images/Dens website change May 2023/logo/primed-logo.png",
+    pulpdent:
+      "https://www.densndente.ca/site/extra%20images/Dens%20website%20change%20May%202023/logo/pulpdent.png",
+    pdi: "https://www.densndente.ca/site/extra%20images/brands/pdi-logo.png",
+    kuraray:
+      "https://www.densndente.ca/site/extra images/Dens website change May 2023/logo/kuraray-logo.png",
+    halyard:
+      "https://www.densndente.ca/site/extra%20images/brands/halyard-logo.png",
+    dentamerica:
+      "https://www.densndente.ca/site/extra images/Dens website change May 2023/logo/dentamerica-logo.png",
+    pierrel:
+      "https://www.densndente.ca/site/extra images/brands/Pierrel-logo.png",
+    pacdent:
+      "https://www.densndente.ca/site/extra%20images/brands/pac-dent-logo.png",
+    morita:
+      "https://www.densndente.ca/site/extra%20images/brands/J-Morita-logo.png",
+    palmero:
+      "https://www.densndente.ca/site/extra images/Dens website change May 2023/logo/palmero-logo.png",
+    parkell:
+      "https://www.densndente.ca/site/extra%20images/brands/parkell-logo.png",
+    flow: "https://www.densndente.ca/site/extra images/Dens website change May 2023/logo/flow-logo.png",
+    hager:
+      "	https://www.densndente.ca/site/extra%20images/brands/hager-worldwide-logo.png",
+  },
+  SOCIAL: {
+    FACEBOOK: "https://facebook.com",
+    INSTAGRAM: "https://instagram.com",
+    YOUTUBE: "https://youtube.com",
+    LINKEDIN: "https://linkedin.com",
+    GOOGLE_PLUS: "https://plus.google.com",
+  },
 };

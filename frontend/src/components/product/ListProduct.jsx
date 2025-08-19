@@ -27,7 +27,7 @@ export default function ListProduct({ product }) {
     // Use actualQuantity which includes Buy X Get Y bonus
     const cartItem = { ...product, quantity: Number(actualQuantity) };
     dispatch(addToCart(cartItem));
-    
+
     // Show success toast notification
     ToastNotification.success(`Added ${actualQuantity} ${itemid} to cart!`);
     // setShowModal(true);
@@ -81,8 +81,8 @@ export default function ListProduct({ product }) {
 
       <div className="flex-grow">
         {inStock ? (
-          <Paragraph className="text-green-700 font-semibold mb-2"> 
-            Current Stock  
+          <Paragraph className="text-green-700 font-semibold mb-2">
+            Current Stock
           </Paragraph>
         ) : (
           <Paragraph className="text-red-600 font-semibold mb-2">

@@ -240,7 +240,11 @@ export default function CartPage() {
                   <span className="font-medium">First delivery:</span>{" "}
                   <span>{formatLocalDateToronto(firstDeliveryDate)}</span>
                   <span className="ml-1">
-                    ({interval === "1" ? "every 1 month" : `every ${interval} months`})
+                    (
+                    {interval === "1"
+                      ? "every 1 month"
+                      : `every ${interval} months`}
+                    )
                   </span>
                 </div>
               )}

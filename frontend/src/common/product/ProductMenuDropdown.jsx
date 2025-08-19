@@ -18,7 +18,11 @@ export default function ProductMenuDropdown({ categories }) {
   };
 
   return (
-    <div className="relative" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+    <div
+      className="relative"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
       <span className="text-sm text-gray-700 hover:text-orange-600 cursor-pointer">
         Products
       </span>

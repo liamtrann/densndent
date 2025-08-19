@@ -40,7 +40,6 @@ const partnerKeys = [
   "palmero",
   "parkell",
   "hager",
-
 ];
 
 const partners = partnerKeys.map((key) => ({

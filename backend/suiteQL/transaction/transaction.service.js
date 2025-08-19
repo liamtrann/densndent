@@ -22,6 +22,16 @@ class TransactionService {
         return results.items || [];
     }
 
+    // Get order details by transaction ID with grouping by itemtype
+    async getOrderDetailsByTransaction(transactionId, limit, offset) {
+        if (!transactionId) throw new Error('Transaction ID is required');
+
+        const sql = `SELECT tl.item, tl.itemtype, tl.memo, tl.rate, tl.rateamount, tl.netamount, SUM(tl.quantity) AS total_quantity, COUNT(*) AS line_count, i.itemid, i.displayname, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url FROM transactionLine tl LEFT JOIN item i ON tl.item = i.id WHERE tl.itemtype = 'InvtPart' AND tl.transaction = '${transactionId}' GROUP BY tl.item, tl.itemtype, tl.memo, tl.rate, tl.rateamount, tl.netamount, i.itemid, i.displayname ORDER BY tl.itemtype, tl.item`;
+
+        const results = await runQueryWithPagination(sql, limit, offset);
+        return results.items || [];
+    }
+
     // const sql = `SELECT tl.linecreateddate, i.id, i.itemid, i.totalquantityonhand, ip.price, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url FROM transactionLine tl INNER JOIN item i ON tl.item = i.id LEFT JOIN itemprice ip ON i.id = ip.item AND ip.pricelevel = 1 WHERE tl.entity = '${userId}' AND tl.itemtype = 'InvtPart' AND i.isonline = 'T' AND i.isinactive = 'F' GROUP BY tl.linecreateddate, i.id, i.itemid, i.totalquantityonhand, ip.price, i.displayname ORDER BY tl.linecreateddate DESC`;
 }
 

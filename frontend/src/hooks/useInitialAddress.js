@@ -15,11 +15,15 @@ export default function useInitialAddress(userInfo) {
         initialAddresses.push({
           id: Date.now(),
           fullName: `${userInfo.firstname} ${userInfo.lastname}`,
-          address: userInfo.shipping_address_name.split("\n")[0] || "Unknown Address",
+          address:
+            userInfo.shipping_address_name.split("\n")[0] || "Unknown Address",
           city: userInfo.shipping_city,
           state: userInfo.shipping_state,
           zip: userInfo.shipping_zip,
-          country: userInfo.shipping_country === "CA" ? "Canada" : userInfo.shipping_country,
+          country:
+            userInfo.shipping_country === "CA"
+              ? "Canada"
+              : userInfo.shipping_country,
           phone: userInfo.phone || "Phone not available",
           isDefaultShipping: true,
         });
@@ -35,14 +39,19 @@ export default function useInitialAddress(userInfo) {
           city: defaultAddr.city,
           state: defaultAddr.state,
           zip: defaultAddr.zip,
-          country: defaultAddr.country === "CA" ? "Canada" : defaultAddr.country,
+          country:
+            defaultAddr.country === "CA" ? "Canada" : defaultAddr.country,
           phone: userInfo.phone || "Phone not available",
           isDefaultShipping: true,
         });
       }
 
       // Check for addressbook entries if no addresses found yet
-      if (initialAddresses.length === 0 && userInfo.addressbook && userInfo.addressbook.length > 0) {
+      if (
+        initialAddresses.length === 0 &&
+        userInfo.addressbook &&
+        userInfo.addressbook.length > 0
+      ) {
         initialAddresses = userInfo.addressbook.map((addr, index) => ({
           id: Date.now() + index,
           fullName: `${userInfo.firstname} ${userInfo.lastname}`,

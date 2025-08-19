@@ -2,7 +2,6 @@
 export { default as AddressModal } from "./modals/AddressModal";
 export { default as CreateAddressModal } from "./modals/CreateAddressModal";
 
-
 // UI components
 export { default as Button } from "./ui/Button";
 export { default as InputField } from "./ui/InputField";
@@ -42,7 +41,6 @@ export { default as SectionTitle } from "./layout/SectionTitle";
 export { default as TitleSection } from "./TitleSection";
 // src/common/ui/index.js
 export { default as PurchaseOptions } from "./ui/PurchaseOptions";
-
 
 // Utility components
 export { default as ProtectedRoute } from "./utils/ProtectedRoute";

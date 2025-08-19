@@ -1,26 +1,80 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
-import api from 'api/api';
-import endpoint from 'api/endpoints';
+import api from "api/api";
+import endpoint from "api/endpoints";
 
 // Helper to build URL and select method
-const buildProductUrl = ({ type, id, limit, offset = 0, sort, minPrice, maxPrice }) => {
+const buildProductUrl = ({
+  type,
+  id,
+  limit,
+  offset = 0,
+  sort,
+  minPrice,
+  maxPrice,
+}) => {
   switch (type) {
     case "classification":
-      return { url: endpoint.GET_ITEMS_BY_CLASS({ classId: id, limit, offset, sort, minPrice, maxPrice }), method: "get" };
+      return {
+        url: endpoint.GET_ITEMS_BY_CLASS({
+          classId: id,
+          limit,
+          offset,
+          sort,
+          minPrice,
+          maxPrice,
+        }),
+        method: "get",
+      };
     case "brand":
-      return { url: endpoint.GET_ITEMS_BY_BRAND({ brand: id, limit, offset, sort, minPrice, maxPrice }), method: "get" };
+      return {
+        url: endpoint.GET_ITEMS_BY_BRAND({
+          brand: id,
+          limit,
+          offset,
+          sort,
+          minPrice,
+          maxPrice,
+        }),
+        method: "get",
+      };
     case "name":
-      return { url: endpoint.POST_GET_ITEMS_BY_NAME({ limit, offset, sort, minPrice, maxPrice }), method: "post" };
+      return {
+        url: endpoint.POST_GET_ITEMS_BY_NAME({
+          limit,
+          offset,
+          sort,
+          minPrice,
+          maxPrice,
+        }),
+        method: "post",
+      };
     case "category":
-      return { url: endpoint.GET_ITEMS_BY_CATEGORY({ category: id, limit, offset, sort, minPrice, maxPrice }), method: "get" };
+      return {
+        url: endpoint.GET_ITEMS_BY_CATEGORY({
+          category: id,
+          limit,
+          offset,
+          sort,
+          minPrice,
+          maxPrice,
+        }),
+        method: "get",
+      };
     case "all":
-      return { url: endpoint.GET_ALL_PRODUCTS({ limit, offset, sort }), method: "get" };
+      return {
+        url: endpoint.GET_ALL_PRODUCTS({ limit, offset, sort }),
+        method: "get",
+      };
     case "orderHistory":
       return {
-        url: endpoint.GET_ITEMS_ORDER_HISTORY_BY_USER({ userId: id, limit, offset }),
+        url: endpoint.GET_ITEMS_ORDER_HISTORY_BY_USER({
+          userId: id,
+          limit,
+          offset,
+        }),
         method: "get",
-        requiresAuth: true
+        requiresAuth: true,
       };
     default:
       throw new Error("Unknown product type");
@@ -30,15 +84,34 @@ const buildProductUrl = ({ type, id, limit, offset = 0, sort, minPrice, maxPrice
 const buildCountUrl = ({ type, id, minPrice, maxPrice }) => {
   switch (type) {
     case "classification":
-      return { url: endpoint.GET_COUNT_BY_CLASS({ classId: id, minPrice, maxPrice }), method: "get" };
+      return {
+        url: endpoint.GET_COUNT_BY_CLASS({ classId: id, minPrice, maxPrice }),
+        method: "get",
+      };
     case "brand":
-      return { url: endpoint.GET_COUNT_BY_BRAND({ brand: id, minPrice, maxPrice }), method: "get" };
+      return {
+        url: endpoint.GET_COUNT_BY_BRAND({ brand: id, minPrice, maxPrice }),
+        method: "get",
+      };
     case "name":
-      return { url: endpoint.POST_GET_COUNT_BY_NAME({ minPrice, maxPrice }), method: "post" };
+      return {
+        url: endpoint.POST_GET_COUNT_BY_NAME({ minPrice, maxPrice }),
+        method: "post",
+      };
     case "category":
-      return { url: endpoint.GET_COUNT_BY_CATEGORY({ category: id, minPrice, maxPrice }), method: "get" };
+      return {
+        url: endpoint.GET_COUNT_BY_CATEGORY({
+          category: id,
+          minPrice,
+          maxPrice,
+        }),
+        method: "get",
+      };
     case "all":
-      return { url: endpoint.GET_COUNT_ALL_PRODUCTS({ minPrice, maxPrice }), method: "get" };
+      return {
+        url: endpoint.GET_COUNT_ALL_PRODUCTS({ minPrice, maxPrice }),
+        method: "get",
+      };
     default:
       throw new Error("Unknown type");
   }
@@ -46,12 +119,22 @@ const buildCountUrl = ({ type, id, minPrice, maxPrice }) => {
 
 // Async thunk to fetch a page of products
 export const fetchProductsBy = createAsyncThunk(
-  'products/fetchPage',
-  async ({ type, id, page, limit, sort, minPrice, maxPrice, getAccessTokenSilently }, { rejectWithValue }) => {
-
+  "products/fetchPage",
+  async (
+    { type, id, page, limit, sort, minPrice, maxPrice, getAccessTokenSilently },
+    { rejectWithValue }
+  ) => {
     try {
       const offset = (page - 1) * limit;
-      const { url, method, requiresAuth } = buildProductUrl({ type, id, limit, offset, sort, minPrice, maxPrice });
+      const { url, method, requiresAuth } = buildProductUrl({
+        type,
+        id,
+        limit,
+        offset,
+        sort,
+        minPrice,
+        maxPrice,
+      });
       let res;
 
       // Set up headers for authenticated requests
@@ -88,7 +171,7 @@ export const fetchProductsBy = createAsyncThunk(
 
 // Async thunk to fetch count of products
 export const fetchCountBy = createAsyncThunk(
-  'products/fetchCountBy',
+  "products/fetchCountBy",
   async ({ type, id, minPrice, maxPrice }, { rejectWithValue }) => {
     try {
       const { url, method } = buildCountUrl({ type, id, minPrice, maxPrice });
@@ -104,11 +187,12 @@ export const fetchCountBy = createAsyncThunk(
       return rejectWithValue(err?.response?.data || err.message);
     }
   }
-); const productsSlice = createSlice({
-  name: 'products',
+);
+const productsSlice = createSlice({
+  name: "products",
   initialState: {
     productsByPage: {}, // key: `${id}_${limit}_${sort}_${priceKey}_${page}` => products[]
-    totalCounts: {},    // key: `${id}_${priceKey}` => total count (where id can be classId, brandId, "all", etc.)
+    totalCounts: {}, // key: `${id}_${priceKey}` => total count (where id can be classId, brandId, "all", etc.)
     isLoading: false,
     error: null,
   },
@@ -121,8 +205,9 @@ export const fetchCountBy = createAsyncThunk(
       })
       .addCase(fetchProductsBy.fulfilled, (state, action) => {
         state.isLoading = false;
-        const { id, page, products, total, limit, sort, minPrice, maxPrice } = action.payload;
-        const priceKey = `${minPrice || ''}_${maxPrice || ''}`;
+        const { id, page, products, total, limit, sort, minPrice, maxPrice } =
+          action.payload;
+        const priceKey = `${minPrice || ""}_${maxPrice || ""}`;
         const effectiveId = id || "all";
         const key = `${effectiveId}_${limit || 12}_${sort}_${priceKey}_${page}`;
         const countKey = `${effectiveId}_${priceKey}`;
@@ -140,7 +225,7 @@ export const fetchCountBy = createAsyncThunk(
       })
       .addCase(fetchCountBy.fulfilled, (state, action) => {
         const { id, count, minPrice, maxPrice } = action.payload;
-        const priceKey = `${minPrice || ''}_${maxPrice || ''}`;
+        const priceKey = `${minPrice || ""}_${maxPrice || ""}`;
         const countKey = `${id}_${priceKey}`;
         state.totalCounts[countKey] = count;
       });

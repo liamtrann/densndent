@@ -5,8 +5,8 @@
 Add the ToastProvider to your main App component:
 
 ```jsx
-import React from 'react';
-import { ToastProvider } from 'common';
+import React from "react";
+import { ToastProvider } from "common";
 // ... other imports
 
 function App() {
@@ -15,9 +15,7 @@ function App() {
       <div className="App">
         {/* Your existing app content */}
         <Router>
-          <Routes>
-            {/* Your routes */}
-          </Routes>
+          <Routes>{/* Your routes */}</Routes>
         </Router>
       </div>
     </ToastProvider>
@@ -30,8 +28,9 @@ export default App;
 ## 2. Usage Examples
 
 ### Basic Usage
+
 ```jsx
-import { Toast } from 'common';
+import { Toast } from "common";
 
 // Success toast
 Toast.success("Item added to cart!");
@@ -47,6 +46,7 @@ Toast.info("Processing your request...");
 ```
 
 ### Advanced Usage
+
 ```jsx
 // Loading toast with update
 const toastId = Toast.loading("Adding item to cart...");
@@ -59,17 +59,15 @@ Toast.update(toastId, {
 });
 
 // Promise-based toast (recommended for async operations)
-Toast.promise(
-  apiCall(),
-  {
-    loading: "Loading...",
-    success: "Success!",
-    error: "Error occurred!",
-  }
-);
+Toast.promise(apiCall(), {
+  loading: "Loading...",
+  success: "Success!",
+  error: "Error occurred!",
+});
 ```
 
 ### Cart-Specific Toasts
+
 ```jsx
 // Cart success with icon
 Toast.cartSuccess("🛒 Item added to cart!");
@@ -82,6 +80,7 @@ Toast.orderSuccess("✅ Order placed successfully!");
 ```
 
 ### Error Handling
+
 ```jsx
 try {
   // API call
@@ -94,16 +93,19 @@ try {
 ## 3. Components with Toast Integration
 
 ### ProductDetail Component
+
 - ✅ Shows promotion-specific toasts when Buy X Get Y is applied
 - ✅ Shows regular cart success toasts for normal additions
 - ✅ Displays bonus item information in notifications
 
 ### ListProduct Component
+
 - ✅ Uses reusable quantity handlers with Buy X Get Y logic
 - ✅ Shows promotion preview when bonus items are available
 - ✅ Ready for toast integration in handleAddToCart
 
 ### Cart Components
+
 - Ready for toast integration on quantity changes
 - Can show removal notifications
 - Can show stock limit warnings
@@ -111,6 +113,7 @@ try {
 ## 4. Customization
 
 ### Custom Toast Options
+
 ```jsx
 Toast.success("Custom message", {
   position: "bottom-right",
@@ -124,7 +127,9 @@ Toast.success("Custom message", {
 ```
 
 ### Custom Styling
+
 The Toast.css file provides custom styling. You can modify:
+
 - Colors for different toast types
 - Border styles
 - Typography
@@ -138,6 +143,7 @@ The Toast.css file provides custom styling. You can modify:
    - `Toast.apiError()` for API errors
 
 2. **Use promise-based toasts for async operations**:
+
    ```jsx
    Toast.promise(asyncOperation, {
      loading: "Processing...",
@@ -147,10 +153,11 @@ The Toast.css file provides custom styling. You can modify:
    ```
 
 3. **Provide meaningful messages**:
+
    ```jsx
    // Good
    Toast.success("Added 3 items + 3 bonus items to cart!");
-   
+
    // Bad
    Toast.success("Success!");
    ```

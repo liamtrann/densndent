@@ -4,10 +4,7 @@ import InputField from "../ui/InputField";
 import Dropdown from "../ui/Dropdown";
 import Button from "../ui/Button";
 import stateMappings from "../../config/states";
-import {
-  validatePhone,
-  validatePostalCode,
-} from "../../config/config";
+import { validatePhone, validatePostalCode } from "../../config/config";
 
 Modal.setAppElement("#root");
 
@@ -49,13 +46,11 @@ export default function AddressModal({ isOpen, onClose, onSave }) {
       newErrors.phone = "Phone number must be 10 digits";
     }
 
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSave = () => {
-
     const isValid = validateForm();
 
     if (!isValid) return;
@@ -82,11 +77,10 @@ export default function AddressModal({ isOpen, onClose, onSave }) {
 
   const states = stateMappings[formData.country?.toLowerCase?.()] || {};
   const stateOptions = Object.entries(states).map(([label, value]) => ({
-    label:
-      label
-        .split(" ")
-        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-        .join(" "),
+    label: label
+      .split(" ")
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" "),
     value,
   }));
 

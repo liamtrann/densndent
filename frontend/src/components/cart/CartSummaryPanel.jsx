@@ -11,7 +11,6 @@ import {
 import { formatCurrency } from "config/config";
 import { selectCartSubtotalWithDiscounts } from "@/redux/slices";
 
-
 // NEW: reusable purchase options
 import PurchaseOptions from "common/ui/PurchaseOptions";
 

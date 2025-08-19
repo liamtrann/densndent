@@ -26,12 +26,20 @@ const subscriptionsSlice = createSlice({
   initialState,
   reducers: {
     upsertSubscription: (state, action) => {
-      const { id, itemid, displayname, file_url, interval = "1" } = action.payload || {};
+      const {
+        id,
+        itemid,
+        displayname,
+        file_url,
+        interval = "1",
+      } = action.payload || {};
       if (!id) return;
 
       const idx = state.items.findIndex((s) => s.id === id);
       if (idx >= 0) {
-        state.items[idx].interval = String(interval || state.items[idx].interval || "1");
+        state.items[idx].interval = String(
+          interval || state.items[idx].interval || "1"
+        );
       } else {
         state.items.push({
           id,
