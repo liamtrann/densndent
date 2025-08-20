@@ -10,7 +10,6 @@ import {
   recentViews,
 } from "./slices";
 
-// ✅ Direct import (bypass barrel) so we don't depend on it exporting this
 import subscriptions from "./slices/subscriptionsSlice";
 
 const store = configureStore({
