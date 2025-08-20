@@ -1,5 +1,6 @@
 // components/BlueBanner.jsx
 import React, { useRef } from "react";
+
 import { Button, Loading, ErrorMessage } from "common";
 
 export default function BlueBanner({
@@ -134,7 +135,7 @@ export default function BlueBanner({
           </div>
         )}
 
-        {showButton && !loading && !error && (
+        {buttonText && showButton && !loading && !error && (
           <div className="flex justify-center mt-4">
             <Button onClick={buttonOnClick}>{buttonText}</Button>
           </div>
