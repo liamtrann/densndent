@@ -220,7 +220,7 @@ export default function ListSubscriptions() {
                   {/* Cancel (ghost danger) -> modal */}
                   <Button
                     variant="dangerGhost"
-                    className="h-10 px-4 whitespace-nowrap font-normal"
+                    className="h-10 px-4 whitespace-nowrap font-normal underline hover:no-underline"
                     disabled={isSaving || isCancelingRow}
                     onClick={() => setConfirming(s)}
                   >
