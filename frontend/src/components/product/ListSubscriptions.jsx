@@ -1,6 +1,6 @@
 // src/components/product/ListSubscriptions.jsx
 import React, { useEffect, useState } from "react";
-import { Button, Dropdown, Paragraph, ProductImage } from "common";
+import { Button, Dropdown, Loading, Paragraph, ProductImage } from "common";
 import api from "api/api";
 import endpoint from "api/endpoints";
 import { useSelector } from "react-redux";
@@ -128,7 +128,7 @@ export default function ListSubscriptions() {
   if (loading && items.length === 0) {
     return (
       <div className="text-center py-12">
-        <Paragraph>Loading subscriptions...</Paragraph>
+        <Loading />
       </div>
     );
   }
