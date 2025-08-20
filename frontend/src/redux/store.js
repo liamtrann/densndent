@@ -9,7 +9,6 @@ import {
   itemPriceAfterDiscount,
   recentViews,
 } from "./slices";
-
 import subscriptions from "./slices/subscriptionsSlice";
 
 const store = configureStore({
