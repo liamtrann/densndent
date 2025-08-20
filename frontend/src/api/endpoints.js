@@ -115,9 +115,10 @@ const endpoint = {
     if (sort) params.append("sort", sort);
     return `/suiteql/transaction/by-id?${params.toString()}`;
   },
-  GET_ORDER_DETAILS_BY_TRANSACTION: ({ transactionId, limit, offset }) => {
+  GET_ORDER_DETAILS_BY_TRANSACTION: ({ transactionId, userId, limit, offset }) => {
     const params = new URLSearchParams();
     if (transactionId) params.append("transactionId", transactionId);
+    if (userId) params.append("userId", userId);
     if (limit) params.append("limit", limit);
     if (offset) params.append("offset", offset);
     return `/suiteql/transaction/order-details-by-transaction?${params.toString()}`;

@@ -29,6 +29,9 @@ const GiftCardProgramPage = lazy(() => import("./pages/GiftCardProgramPage"));
 const OurPartners = lazy(() => import("./pages/OurPartners"));
 const Q3CataloguePage = lazy(() => import("./pages/Q3CataloguePage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+// at the top with other lazy imports
+const OrderDetails = lazy(() => import("./pages/OrderDetails"));
+
 
 // Simple placeholder components
 const BlogPage = lazy(() => import("./pages/BlogPage"));
@@ -299,6 +302,15 @@ export default function App() {
                     </CenteredContent>
                   }
                 />
+                <Route
+                  path="/profile/history/order/:transactionId"
+                  element={
+                    <CenteredContent>
+                      <OrderDetails />
+                    </CenteredContent>
+                  }
+                />
+
               </Route>
 
               <Route
