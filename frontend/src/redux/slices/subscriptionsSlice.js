@@ -152,11 +152,14 @@ const subscriptionSlice = createSlice({
       })
 
       // update interval
-      .addCase(updateSubscriptionIntervalOnServer.fulfilled, (state, action) => {
-        const { roId, interval } = action.payload || {};
-        const idx = state.items.findIndex((s) => s.roId === roId);
-        if (idx >= 0) state.items[idx].interval = interval;
-      })
+      .addCase(
+        updateSubscriptionIntervalOnServer.fulfilled,
+        (state, action) => {
+          const { roId, interval } = action.payload || {};
+          const idx = state.items.findIndex((s) => s.roId === roId);
+          if (idx >= 0) state.items[idx].interval = interval;
+        }
+      )
 
       // cancel
       .addCase(cancelSubscriptionOnServer.fulfilled, (state, action) => {

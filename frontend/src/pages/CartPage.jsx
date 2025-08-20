@@ -237,7 +237,7 @@ export default function CartPage() {
               {/* ✅ Subscription start date preview */}
               {isSubbed && (
                 <div className="mt-2 text-xs text-gray-600">
-                  <span className="font-medium">First delivery:</span>{" "}
+                  <span className="font-medium">Next delivery:</span>{" "}
                   <span>{formatLocalDateToronto(firstDeliveryDate)}</span>
                   <span className="ml-1">
                     (

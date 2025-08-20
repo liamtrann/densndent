@@ -23,8 +23,8 @@ export default function ListSubscriptions() {
   const [loading, setLoading] = useState(false);
 
   // per-row states
-  const [pending, setPending] = useState({});     // { [roId]: "1"|"2"|"3"|"6" }
-  const [saving, setSaving] = useState({});       // { [roId]: boolean }
+  const [pending, setPending] = useState({}); // { [roId]: "1"|"2"|"3"|"6" }
+  const [saving, setSaving] = useState({}); // { [roId]: boolean }
   const [canceling, setCanceling] = useState({}); // { [roId]: boolean }
   const [confirming, setConfirming] = useState(null); // the row we’re confirming
 
@@ -118,7 +118,9 @@ export default function ListSubscriptions() {
       }
     } catch (err) {
       console.error("Failed to cancel subscription:", err);
-      ToastNotification.error("Failed to cancel subscription. Please try again.");
+      ToastNotification.error(
+        "Failed to cancel subscription. Please try again."
+      );
     } finally {
       setCanceling((prev) => ({ ...prev, [s.roId]: false }));
       setConfirming(null);
