@@ -17,7 +17,8 @@ import {
 import { formatCurrency } from "config/config";
 
 /* ===== helpers ===== */
-const pick = (...vals) => vals.find((v) => v !== undefined && v !== null && v !== "");
+const pick = (...vals) =>
+  vals.find((v) => v !== undefined && v !== null && v !== "");
 const toNum = (v) => {
   if (v === undefined || v === null) return 0;
   if (typeof v === "number") return Number.isFinite(v) ? v : 0;
@@ -33,14 +34,19 @@ function normalizeLine(row) {
   );
   const qty = Math.abs(rawQty);
 
-  const rawRate = toNum(pick(row.rate, row.unitprice, row.price, row.rateamount, 0));
+  const rawRate = toNum(
+    pick(row.rate, row.unitprice, row.price, row.rateamount, 0)
+  );
   const rate = Math.abs(rawRate);
 
-  const rawAmount = toNum(pick(row.netamount, row.rateamount, row.amount, qty * rate));
+  const rawAmount = toNum(
+    pick(row.netamount, row.rateamount, row.amount, qty * rate)
+  );
   const amount = Math.abs(rawAmount);
 
   return {
-    lineId: pick(row.line, row.linenumber, row.lineId, row.seq) ?? Math.random(),
+    lineId:
+      pick(row.line, row.linenumber, row.lineId, row.seq) ?? Math.random(),
     sku: pick(row.itemid, row.itemId, row.item_id, row.sku, ""),
     name: pick(
       row.itemname,
@@ -95,7 +101,9 @@ export default function OrderDetails() {
       } catch (err) {
         if (mounted) {
           setLoadError(
-            err?.response?.data?.error || err?.message || "Failed to load order details"
+            err?.response?.data?.error ||
+              err?.message ||
+              "Failed to load order details"
           );
           setLines([]);
         }
@@ -130,13 +138,19 @@ export default function OrderDetails() {
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-10">
-      <Breadcrumb path={["Home", "Profile", "Purchase History", "Order Details"]} />
+      <Breadcrumb
+        path={["Home", "Profile", "Purchase History", "Order Details"]}
+      />
 
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-2xl font-bold text-gray-800">
-          {summary.trandisplayname || summary.tranid || `Order #${transactionId}`}
+          {summary.trandisplayname ||
+            summary.tranid ||
+            `Order #${transactionId}`}
         </h2>
-        <TextButton onClick={() => navigate(-1)}>← Back to Purchase History</TextButton>
+        <TextButton onClick={() => navigate(-1)}>
+          ← Back to Purchase History
+        </TextButton>
       </div>
 
       {/* Header summary */}
@@ -148,15 +162,21 @@ export default function OrderDetails() {
           </div>
           <div className="text-sm">
             <div className="text-gray-500">Placed on</div>
-            <div className="font-medium text-gray-900">{summary.trandate || "—"}</div>
+            <div className="font-medium text-gray-900">
+              {summary.trandate || "—"}
+            </div>
           </div>
           <div className="text-sm">
             <div className="text-gray-500">Status</div>
-            <div className="font-medium text-gray-900">{summary.status || "—"}</div>
+            <div className="font-medium text-gray-900">
+              {summary.status || "—"}
+            </div>
           </div>
           <div className="text-sm">
             <div className="text-gray-500">Carrier</div>
-            <div className="font-medium text-gray-900">{summary.shipcarrier || "—"}</div>
+            <div className="font-medium text-gray-900">
+              {summary.shipcarrier || "—"}
+            </div>
           </div>
         </div>
       </div>
@@ -168,12 +188,16 @@ export default function OrderDetails() {
         <ErrorMessage message={loadError} />
       ) : lines.length === 0 ? (
         <div className="bg-white border rounded shadow-sm p-6">
-          <Paragraph className="text-gray-600">No line items found for this order.</Paragraph>
+          <Paragraph className="text-gray-600">
+            No line items found for this order.
+          </Paragraph>
         </div>
       ) : (
         <>
           <div className="bg-white border rounded shadow-sm overflow-hidden">
-            <div className="px-5 py-4 border-b font-semibold text-gray-800">Items</div>
+            <div className="px-5 py-4 border-b font-semibold text-gray-800">
+              Items
+            </div>
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm">
                 <thead>
@@ -187,7 +211,10 @@ export default function OrderDetails() {
                 </thead>
                 <tbody>
                   {lines.map((l, idx) => (
-                    <tr key={l.lineId ?? idx} className="border-b last:border-b-0">
+                    <tr
+                      key={l.lineId ?? idx}
+                      className="border-b last:border-b-0"
+                    >
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
                           {l.image ? (
@@ -199,14 +226,18 @@ export default function OrderDetails() {
                           ) : (
                             <div className="w-12 h-12 rounded border bg-gray-50" />
                           )}
-                          <div className="font-medium text-gray-900">{l.name}</div>
+                          <div className="font-medium text-gray-900">
+                            {l.name}
+                          </div>
                         </div>
                       </td>
                       <td className="px-5 py-4 hidden sm:table-cell text-gray-600">
                         {l.sku || "—"}
                       </td>
                       <td className="px-5 py-4 text-right">{l.quantity}</td>
-                      <td className="px-5 py-4 text-right">{formatCurrency(l.rate)}</td>
+                      <td className="px-5 py-4 text-right">
+                        {formatCurrency(l.rate)}
+                      </td>
                       <td className="px-5 py-4 text-right font-semibold">
                         {formatCurrency(l.amount)}
                       </td>
@@ -219,7 +250,9 @@ export default function OrderDetails() {
             {/* Footer sums */}
             <div className="px-5 py-4 border-t">
               <div className="flex justify-end gap-10">
-                <div className="text-sm text-gray-600">Subtotal (items shown)</div>
+                <div className="text-sm text-gray-600">
+                  Subtotal (items shown)
+                </div>
                 <div className="text-base font-semibold text-gray-900">
                   {formatCurrency(subtotal)}
                 </div>
@@ -233,8 +266,8 @@ export default function OrderDetails() {
               </div>
 
               <div className="mt-3 text-xs text-gray-500 text-right">
-                Note: Order Total may include tax/shipping/fees not listed above. Items table only
-                shows inventory lines.
+                Note: Order Total may include tax/shipping/fees not listed
+                above. Items table only shows inventory lines.
               </div>
             </div>
           </div>

@@ -32,7 +32,6 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 // at the top with other lazy imports
 const OrderDetails = lazy(() => import("./pages/OrderDetails"));
 
-
 // Simple placeholder components
 const BlogPage = lazy(() => import("./pages/BlogPage"));
 
@@ -310,7 +309,6 @@ export default function App() {
                     </CenteredContent>
                   }
                 />
-
               </Route>
 
               <Route

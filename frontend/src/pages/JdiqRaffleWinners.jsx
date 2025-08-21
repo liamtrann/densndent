@@ -4,9 +4,7 @@ import { Breadcrumb, Paragraph } from "common";
 export default function JdiqRaffleWinners() {
   return (
     <div className="bg-white text-gray-800 px-6 py-10">
-      <Breadcrumb
-        path={["Home", "JDIQ raffle winners"]}
-      />
+      <Breadcrumb path={["Home", "JDIQ raffle winners"]} />
 
       <h1 className="text-2xl md:text-3xl lg:text-4xl font-semibold text-center text-white bg-[#275c8f] py-4 px-4 mb-8 uppercase tracking-wide">
         JDIQ Raffle Winners
