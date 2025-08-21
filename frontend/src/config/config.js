@@ -2,6 +2,83 @@ import { useState, useEffect } from "react";
 
 import api from "../api/api.js";
 
+/* =======================
+   Order/Number utils (NEW)
+   ======================= */
+
+// first non-null/undefined/empty value
+export const pick = (...vals) =>
+  vals.find((v) => v !== undefined && v !== null && v !== "");
+
+// robust numeric parse (handles strings like "$1,234.50")
+export function toNum(v) {
+  if (v === undefined || v === null) return 0;
+  if (typeof v === "number") return Number.isFinite(v) ? v : 0;
+  const n = parseFloat(String(v).replace(/[^\d.-]/g, ""));
+  return Number.isFinite(n) ? n : 0;
+}
+
+export const round2 = (n) => Math.round((toNum(n) + Number.EPSILON) * 100) / 100;
+
+/**
+ * Normalize a SuiteQL/REST order line into a predictable, positive-display shape.
+ * Ensures qty, rate, amount are ABS() so no leading "-" in the UI.
+ */
+export function normalizeOrderLine(row) {
+  const rawQty = toNum(
+    pick(row.total_quantity, row.quantity, row.qty, row.custcol_quantity, 0)
+  );
+  const quantity = Math.abs(rawQty);
+
+  const rawRate = toNum(pick(row.rate, row.unitprice, row.price, row.rateamount, 0));
+  const rate = Math.abs(rawRate);
+
+  const rawAmount = toNum(pick(row.netamount, row.rateamount, row.amount, quantity * rate));
+  const amount = Math.abs(rawAmount);
+
+  return {
+    lineId: pick(row.line, row.linenumber, row.lineId, row.seq) ?? Math.random(),
+    sku: pick(row.itemid, row.itemId, row.item_id, row.sku, ""),
+    name: pick(
+      row.itemname,
+      row.item_displayname,
+      row.displayname,
+      row.itemid,
+      row.name,
+      "Item"
+    ),
+    quantity,
+    rate,
+    amount,
+    image: pick(row.file_url, row.image, row.thumbnail, row.fileurl, ""),
+  };
+}
+
+/** Sum line amounts (already normalized) */
+export function computeLinesSubtotal(lines = []) {
+  const sum = lines.reduce((acc, l) => acc + toNum(l.amount), 0);
+  return round2(sum);
+}
+
+/**
+ * Prefer header total (may include tax/shipping/fees) with sensible fallbacks.
+ * Order of preference: totalAfterDiscount → foreigntotal → total → subtotal.
+ */
+export function computeOrderTotalFromSummary(summary = {}, subtotal = 0) {
+  const candidates = [
+    summary.totalAfterDiscount,
+    summary.foreigntotal,
+    summary.total,
+    subtotal,
+  ];
+  const firstValid = candidates.map(toNum).find((n) => Number.isFinite(n));
+  return round2(firstValid ?? subtotal);
+}
+
+/* =======================
+   Existing utilities
+   ======================= */
+
 function extractBuyGet(str) {
   const numbers = str.match(/\d+/g);
   return {
@@ -148,7 +225,6 @@ async function getTotalPriceAfterDiscount(productId, unitPrice, quantity) {
       promotionApplied: bestPromotion,
     };
   } catch (error) {
-    // console.error("Error calculating discount:", error);
     // Return original price if error occurs
     const originalTotal = Number(unitPrice) * Number(quantity);
     return {

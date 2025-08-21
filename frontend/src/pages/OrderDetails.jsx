@@ -14,52 +14,19 @@ import {
   TextButton,
   ProductImage,
 } from "common";
-import { formatCurrency } from "config/config";
 
-/* ===== helpers ===== */
-const pick = (...vals) => vals.find((v) => v !== undefined && v !== null && v !== "");
-const toNum = (v) => {
-  if (v === undefined || v === null) return 0;
-  if (typeof v === "number") return Number.isFinite(v) ? v : 0;
-  const n = parseFloat(String(v).replace(/[^\d.-]/g, ""));
-  return Number.isFinite(n) ? n : 0;
-};
-const round2 = (n) => Math.round((n + Number.EPSILON) * 100) / 100;
-
-function normalizeLine(row) {
-  // Some SuiteQL rows return negatives for SO lines. Make everything display-positive.
-  const rawQty = toNum(
-    pick(row.total_quantity, row.quantity, row.qty, row.custcol_quantity, 0)
-  );
-  const qty = Math.abs(rawQty);
-
-  const rawRate = toNum(pick(row.rate, row.unitprice, row.price, row.rateamount, 0));
-  const rate = Math.abs(rawRate);
-
-  const rawAmount = toNum(pick(row.netamount, row.rateamount, row.amount, qty * rate));
-  const amount = Math.abs(rawAmount);
-
-  return {
-    lineId: pick(row.line, row.linenumber, row.lineId, row.seq) ?? Math.random(),
-    sku: pick(row.itemid, row.itemId, row.item_id, row.sku, ""),
-    name: pick(
-      row.itemname,
-      row.item_displayname,
-      row.displayname,
-      row.itemid,
-      row.name,
-      "Item"
-    ),
-    quantity: qty,
-    rate,
-    amount,
-    image: pick(row.file_url, row.image, row.thumbnail, row.fileurl, ""),
-  };
-}
+// pull everything from your existing config (no local helpers here)
+import {
+  formatCurrency,
+  pick,
+  toNum,
+  round2,
+  normalizeOrderLine, // <- make sure this is exported from your config.js
+} from "config/config";
 
 export default function OrderDetails() {
   const { transactionId } = useParams();
-  const { state } = useLocation(); // from ListOrdersHistory
+  const { state } = useLocation(); // { orderSummary } from the list page
   const navigate = useNavigate();
   const { getAccessTokenSilently } = useAuth0();
   const userId = useSelector((s) => s.user.info?.id);
@@ -68,7 +35,7 @@ export default function OrderDetails() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
 
-  // Best-available summary values passed from the list page
+  // summary from the list page (used for header + total fallback)
   const summary = state?.orderSummary || {};
 
   useEffect(() => {
@@ -85,12 +52,28 @@ export default function OrderDetails() {
           transactionId,
           userId,
         });
+
         const res = await api.get(url, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
         const rows = res.data?.items || res.data || [];
-        const normalized = rows.map(normalizeLine);
+
+        // normalize via config helper, then ensure positive values + fill missing amount
+        const normalized = rows.map((row) => {
+          const base = normalizeOrderLine(row); // expects { lineId, sku, name, quantity, rate, amount, image }
+          const qty = Math.abs(toNum(base.quantity));
+          const rate = Math.abs(toNum(base.rate));
+          const amt = Math.abs(toNum(base.amount)) || round2(qty * rate);
+
+          return {
+            ...base,
+            quantity: qty,
+            rate,
+            amount: amt,
+          };
+        });
+
         if (mounted) setLines(normalized);
       } catch (err) {
         if (mounted) {
@@ -109,24 +92,23 @@ export default function OrderDetails() {
     };
   }, [transactionId, userId, getAccessTokenSilently]);
 
-  const subtotal = useMemo(
-    () => round2(lines.reduce((sum, l) => sum + toNum(l.amount), 0)),
-    [lines]
-  );
+  // subtotal from the visible lines
+  const subtotal = useMemo(() => {
+    const sum = lines.reduce((acc, l) => acc + Math.abs(toNum(l.amount)), 0);
+    return round2(sum);
+  }, [lines]);
 
-  // Prefer header total from the order (it may include shipping/tax/fees).
-  const orderTotal = useMemo(
-    () =>
-      toNum(
-        pick(
-          summary.totalAfterDiscount,
-          summary.foreigntotal,
-          summary.total,
-          subtotal // fallback
-        )
-      ),
-    [summary, subtotal]
-  );
+  // order total prefers header (may include tax/shipping); falls back to subtotal
+  const orderTotal = useMemo(() => {
+    const header = toNum(
+      pick(
+        summary.totalAfterDiscount,
+        summary.foreigntotal,
+        summary.total
+      )
+    );
+    return header > 0 ? round2(header) : subtotal;
+  }, [summary, subtotal]);
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-10">
@@ -216,7 +198,7 @@ export default function OrderDetails() {
               </table>
             </div>
 
-            {/* Footer sums */}
+            {/* Footer sums (exact layout you wanted) */}
             <div className="px-5 py-4 border-t">
               <div className="flex justify-end gap-10">
                 <div className="text-sm text-gray-600">Subtotal (items shown)</div>
