@@ -192,7 +192,7 @@ export default function ListSubscriptions() {
                     : `Every ${s.interval} months`}
                 </Paragraph>
                 <Paragraph className="text-xs text-gray-500 mt-1">
-                  Next delivery:{" "}
+                  Next Order:{" "}
                   <span className="font-medium">
                     {formatLocalDateToronto(nextDate)}
                   </span>
