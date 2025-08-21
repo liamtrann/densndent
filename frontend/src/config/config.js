@@ -38,6 +38,8 @@ export function normalizeOrderLine(row) {
 
   return {
     lineId: pick(row.line, row.linenumber, row.lineId, row.seq) ?? Math.random(),
+    // NEW: capture the product internal id for linking
+    productId: pick(row.itemId, row.item_id, row.item, row.internalid, row.id, null),
     sku: pick(row.itemid, row.itemId, row.item_id, row.sku, ""),
     name: pick(
       row.itemname,
@@ -54,25 +56,34 @@ export function normalizeOrderLine(row) {
   };
 }
 
-/** Sum line amounts (already normalized) */
+/** Sum line amounts (robust: prefers amount, falls back to qty*rate; always positive) */
 export function computeLinesSubtotal(lines = []) {
-  const sum = lines.reduce((acc, l) => acc + toNum(l.amount), 0);
+  const sum = lines.reduce((acc, l) => {
+    const qty = Math.abs(toNum(l?.quantity));
+    const rate = Math.abs(toNum(l?.rate));
+    const amount = toNum(l?.amount);
+    const lineTotal = Math.abs(amount > 0 ? amount : round2(qty * rate));
+    return acc + lineTotal;
+  }, 0);
   return round2(sum);
 }
 
 /**
  * Prefer header total (may include tax/shipping/fees) with sensible fallbacks.
- * Order of preference: totalAfterDiscount → foreigntotal → total → subtotal.
+ * Tries: totalAfterDiscount → foreigntotal → total → grandtotal; uses ABS() and
+ * falls back to the (positive) subtotal when header isn't a valid positive number.
  */
-export function computeOrderTotalFromSummary(summary = {}, subtotal = 0) {
-  const candidates = [
-    summary.totalAfterDiscount,
-    summary.foreigntotal,
-    summary.total,
-    subtotal,
-  ];
-  const firstValid = candidates.map(toNum).find((n) => Number.isFinite(n));
-  return round2(firstValid ?? subtotal);
+export function computeOrderTotalFromSummary(summary = {}, fallbackSubtotal = 0) {
+  const headerRaw = pick(
+    summary?.totalAfterDiscount,
+    summary?.foreigntotal,
+    summary?.total,
+    summary?.grandtotal
+  );
+  const header = Math.abs(toNum(headerRaw));
+  const subtotal = Math.abs(toNum(fallbackSubtotal));
+  const total = header > 0 ? header : subtotal;
+  return round2(total);
 }
 
 /* =======================
