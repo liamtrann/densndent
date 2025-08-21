@@ -281,7 +281,7 @@ export default function PurchaseHistory() {
 
           <div className="py-2 border-t border-gray-200 text-sm">
             <div className="flex justify-between">
-              <span className="text-gray-700">Earliest next delivery</span>
+              <span className="text-gray-700">Earliest next order</span>
               <span className="text-gray-900">
                 {earliestNextDate
                   ? formatLocalDateToronto(earliestNextDate)
