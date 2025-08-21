@@ -132,7 +132,7 @@ export default function App() {
                 }
               />
               <Route
-                path="/products/all-products"
+                path="/products"
                 element={
                   <LayoutWithCart>
                     <CenteredContent>
@@ -295,7 +295,7 @@ export default function App() {
                   }
                 />
                 <Route
-                  path="/profile/history"
+                  path="/purchase-history"
                   element={
                     <CenteredContent>
                       <PurchaseHistory />
