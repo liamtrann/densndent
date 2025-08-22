@@ -1,20 +1,23 @@
 import { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
 import api from "api/api";
 import endpoints from "api/endpoints";
 import { Button } from "common";
-import { formatPrice } from "config/config";
 
 import StripeWrapper from "../stripe/StripeWrapper";
 
 import PaymentForm from "./PaymentForm";
 import SavedPaymentMethods from "./SavedPaymentMethods";
 
-export default function StripeCheckout({ stripeCustomerId, orderTotal }) {
+export default function StripeCheckout({
+  stripeCustomerId,
+  orderTotal,
+  createPaymentIntent,
+  handlePaymentSuccess,
+  handlePaymentError,
+}) {
   const navigate = useNavigate();
-  const cart = useSelector((state) => state.cart.items);
 
   const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
@@ -59,48 +62,20 @@ export default function StripeCheckout({ stripeCustomerId, orderTotal }) {
     }
   }, [stripeCustomerId]);
 
-  const createPaymentIntent = async () => {
+  const handleCreatePaymentIntent = async () => {
     if (!selectedPaymentMethodId || !orderTotal) return;
 
     setLoading(true);
     setError(null);
 
     try {
-      const response = await api.post(endpoints.POST_CREATE_PAYMENT(), {
-        paymentMethod: selectedPaymentMethodId,
-        amount: formatPrice(orderTotal),
-        currency: "cad",
-        customerId: stripeCustomerId,
-        description: `Order payment for ${cart.length} item(s)`,
-      });
-
-      setPaymentIntent(response.data.paymentIntent);
+      const paymentIntent = await createPaymentIntent(selectedPaymentMethodId);
+      setPaymentIntent(paymentIntent);
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Failed to create payment intent"
-      );
+      setError(err.message);
     } finally {
       setLoading(false);
     }
-  };
-
-  const handlePaymentSuccess = (paymentResult) => {
-    // Handle successful payment
-    localStorage.removeItem("selectedPaymentMethodId");
-    localStorage.removeItem("paymentMethod");
-    // Clear cart or any other cleanup logic here if needed
-
-    navigate("/purchase-history", {
-      state: {
-        paymentIntent: paymentResult,
-        orderAmount: orderTotal,
-        paymentSuccessMessage: "Payment completed successfully!",
-      },
-    });
-  };
-
-  const handlePaymentError = (error) => {
-    setError(error.message || "Payment failed. Please try again.");
   };
 
   const handleSelectPaymentMethod = (paymentMethodId, paymentMethod = null) => {
@@ -182,7 +157,7 @@ export default function StripeCheckout({ stripeCustomerId, orderTotal }) {
           </Button>
 
           <Button
-            onClick={createPaymentIntent}
+            onClick={handleCreatePaymentIntent}
             disabled={!selectedPaymentMethodId || paymentIntent || loading}
           >
             {loading ? "Creating Payment..." : "Create Payment"}

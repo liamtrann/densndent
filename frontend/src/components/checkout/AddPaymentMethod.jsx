@@ -1,12 +1,17 @@
-import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
+import {
+  CardNumberElement,
+  CardExpiryElement,
+  CardCvcElement,
+  useStripe,
+  useElements,
+} from "@stripe/react-stripe-js";
 import { useState } from "react";
 
 import api from "api/api";
 import endpoints from "api/endpoints";
-import { Button } from "common";
+import { Button, InputField, Dropdown } from "common";
 
-const CARD_ELEMENT_OPTIONS = {
-  hidePostalCode: true, // Hide the postal code field in CardElement since we handle it separately
+const ELEMENT_OPTIONS = {
   style: {
     base: {
       color: "#424770",
@@ -26,7 +31,6 @@ const CARD_ELEMENT_OPTIONS = {
 
 export default function AddPaymentMethod({
   customerId,
-  billingAddress,
   onPaymentMethodAdded,
   onCancel,
 }) {
@@ -35,9 +39,14 @@ export default function AddPaymentMethod({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Form state for cardholder name only
+  // Form state for cardholder name and billing address
   const [cardInfo, setCardInfo] = useState({
     name: "",
+    address: "",
+    city: "",
+    state: "",
+    postalCode: "",
+    country: "CA",
   });
 
   const handleInputChange = (field, value) => {
@@ -54,36 +63,40 @@ export default function AddPaymentMethod({
       return;
     }
 
-    if (!billingAddress) {
-      setError("Please select a billing address first");
+    if (
+      !cardInfo.name ||
+      !cardInfo.address ||
+      !cardInfo.city ||
+      !cardInfo.state ||
+      !cardInfo.postalCode
+    ) {
+      setError("Please fill in all required billing address fields");
       return;
     }
 
     setLoading(true);
     setError(null);
 
-    const cardElement = elements.getElement(CardElement);
+    const cardNumberElement = elements.getElement(CardNumberElement);
 
-    // Prepare billing details using the selected address
+    // Prepare billing details using the form data
     const billingDetails = {
       name: cardInfo.name,
       address: {
-        country: billingAddress.country || "CA",
-        state: billingAddress.state || billingAddress.province,
-        city: billingAddress.city,
-        line1: billingAddress.line1 || billingAddress.address,
-        postal_code: billingAddress.zip || billingAddress.postalCode,
+        country: cardInfo.country,
+        state: cardInfo.state,
+        city: cardInfo.city,
+        line1: cardInfo.address,
+        postal_code: cardInfo.postalCode,
       },
     };
-
-    console.log(customerId, billingDetails);
 
     try {
       // Create payment method on the frontend
       const { error: stripeError, paymentMethod } =
         await stripe.createPaymentMethod({
           type: "card",
-          card: cardElement,
+          card: cardNumberElement,
           billing_details: billingDetails,
         });
 
@@ -107,7 +120,9 @@ export default function AddPaymentMethod({
         setCardInfo({
           name: "",
         });
-        cardElement.clear();
+        cardNumberElement.clear();
+        elements.getElement(CardExpiryElement).clear();
+        elements.getElement(CardCvcElement).clear();
       }
     } catch (err) {
       setError(
@@ -125,53 +140,134 @@ export default function AddPaymentMethod({
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Cardholder Name */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Cardholder Name *
-          </label>
-          <input
-            type="text"
-            value={cardInfo.name}
-            onChange={(e) => handleInputChange("name", e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="John Doe"
-            required
-          />
-        </div>
+        <InputField
+          label="Cardholder Name *"
+          name="name"
+          value={cardInfo.name}
+          onChange={(e) => handleInputChange("name", e.target.value)}
+          placeholder="John Doe"
+          required
+        />
 
         {/* Card Details */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
             Card Information *
           </label>
-          <div className="border border-gray-300 rounded-md p-3 focus-within:ring-2 focus-within:ring-blue-500">
-            <CardElement options={CARD_ELEMENT_OPTIONS} />
+
+          {/* Card Number */}
+          <div className="mb-3">
+            <label className="block mb-1 font-medium text-sm">
+              Card Number *
+            </label>
+            <div className="border rounded px-3 py-2 w-full focus-within:outline-none focus-within:ring-2 focus-within:ring-smiles-orange transition">
+              <CardNumberElement options={ELEMENT_OPTIONS} />
+            </div>
+          </div>
+
+          {/* Expiry and CVC Row */}
+          <div className="grid grid-cols-2 gap-3">
+            {/* Expiry Date */}
+            <div>
+              <label className="block mb-1 font-medium text-sm">
+                Expiry Date *
+              </label>
+              <div className="border rounded px-3 py-2 w-full focus-within:outline-none focus-within:ring-2 focus-within:ring-smiles-orange transition">
+                <CardExpiryElement options={ELEMENT_OPTIONS} />
+              </div>
+            </div>
+
+            {/* CVC */}
+            <div>
+              <label className="block mb-1 font-medium text-sm">CVC *</label>
+              <div className="border rounded px-3 py-2 w-full focus-within:outline-none focus-within:ring-2 focus-within:ring-smiles-orange transition">
+                <CardCvcElement options={ELEMENT_OPTIONS} />
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Display Selected Billing Address */}
-        {billingAddress ? (
-          <div className="bg-gray-50 p-4 rounded-md">
-            <h4 className="text-sm font-medium text-gray-700 mb-2">
-              Billing Address (from checkout)
-            </h4>
-            <div className="text-sm text-gray-600">
-              <div>{billingAddress.line1 || billingAddress.address}</div>
-              <div>
-                {billingAddress.city},{" "}
-                {billingAddress.state || billingAddress.province}{" "}
-                {billingAddress.postal_code || billingAddress.postalCode}
-              </div>
-              <div>{billingAddress.country || "Canada"}</div>
+        {/* Billing Address Form */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-4">
+            Billing Address *
+          </label>
+
+          <div className="grid grid-cols-6 gap-3">
+            {/* Street Address */}
+            <div className="col-span-6">
+              <InputField
+                label="Street Address *"
+                name="address"
+                value={cardInfo.address}
+                onChange={(e) =>
+                  setCardInfo({ ...cardInfo, address: e.target.value })
+                }
+                placeholder="Street address"
+                required
+              />
+            </div>
+
+            {/* City */}
+            <div className="col-span-3">
+              <InputField
+                label="City *"
+                name="city"
+                value={cardInfo.city}
+                onChange={(e) =>
+                  setCardInfo({ ...cardInfo, city: e.target.value })
+                }
+                placeholder="City"
+                required
+              />
+            </div>
+
+            {/* State/Province */}
+            <div className="col-span-3">
+              <InputField
+                label="State/Province *"
+                name="state"
+                value={cardInfo.state}
+                onChange={(e) =>
+                  setCardInfo({ ...cardInfo, state: e.target.value })
+                }
+                placeholder="State/Province"
+                required
+              />
+            </div>
+
+            {/* Postal Code */}
+            <div className="col-span-3">
+              <InputField
+                label="Postal Code *"
+                name="postalCode"
+                value={cardInfo.postalCode}
+                onChange={(e) =>
+                  setCardInfo({ ...cardInfo, postalCode: e.target.value })
+                }
+                placeholder="Postal code"
+                required
+              />
+            </div>
+
+            {/* Country */}
+            <div className="col-span-3">
+              <Dropdown
+                label="Country *"
+                name="country"
+                value={cardInfo.country}
+                onChange={(e) =>
+                  setCardInfo({ ...cardInfo, country: e.target.value })
+                }
+                options={[
+                  { label: "Canada", value: "CA" },
+                  { label: "United States", value: "US" },
+                ]}
+                required
+              />
             </div>
           </div>
-        ) : (
-          <div className="bg-yellow-50 p-4 rounded-md border border-yellow-200">
-            <p className="text-sm text-yellow-800">
-              Please select a billing address in the checkout flow
-            </p>
-          </div>
-        )}
+        </div>
 
         {/* Error Display */}
         {error && (

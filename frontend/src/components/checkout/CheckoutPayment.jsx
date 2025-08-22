@@ -262,9 +262,6 @@ export default function CheckoutPayment({
                   customerId={stripeCustomerId}
                   onPaymentMethodAdded={handlePaymentMethodAdded}
                   onCancel={() => setShowAddPaymentMethod(false)}
-                  billingAddress={addresses.find(
-                    (addr) => addr.id === selectedId
-                  )}
                 />
               ) : (
                 <SavedPaymentMethods

@@ -97,7 +97,7 @@ class StripeService {
         customer: customerId,
       });
     } catch (error) {
-      throw new Error(`Failed to attach payment method: ${error.message}`);
+      throw new Error(error.message);
     }
   }
 

@@ -219,7 +219,7 @@ class StripeController {
     } catch (err) {
       console.error("Error attaching payment method:", err);
       res.status(400).json({
-        message: "Could not attach payment method",
+        message: err.message,
         error: process.env.NODE_ENV === "development" ? err.message : undefined,
       });
     }

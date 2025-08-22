@@ -9,7 +9,11 @@ import endpoint from "api/endpoints";
 import { Loading } from "common";
 import ToastNotification from "common/toast/Toast";
 import Button from "common/ui/Button";
-import { buildIdempotencyKey, calculateNextRunDate } from "config/config";
+import {
+  buildIdempotencyKey,
+  calculateNextRunDate,
+  formatPrice,
+} from "config/config";
 
 import StripeCheckout from "./StripeCheckout";
 
@@ -47,12 +51,62 @@ export default function CheckoutReview({ stripeCustomerId, orderTotal }) {
     }
   }, []);
 
+  // Stripe Payment Functions
+  const createPaymentIntent = async (selectedPaymentMethodId) => {
+    if (!selectedPaymentMethodId || !orderTotal) return;
+
+    try {
+      const response = await api.post(endpoint.POST_CREATE_PAYMENT(), {
+        paymentMethod: selectedPaymentMethodId,
+        amount: formatPrice(orderTotal),
+        currency: "cad",
+        customerId: stripeCustomerId,
+        description: `Order payment for ${cartItems.length} item(s)`,
+      });
+
+      return response.data.paymentIntent;
+    } catch (err) {
+      throw new Error(
+        err.response?.data?.message || "Failed to create payment intent"
+      );
+    }
+  };
+
+  const handlePaymentSuccess = (paymentResult) => {
+    // Handle successful payment
+    localStorage.removeItem("selectedPaymentMethodId");
+    localStorage.removeItem("paymentMethod");
+    // Clear cart
+    dispatch(clearCart());
+
+    // Clear checkout addresses from localStorage
+    localStorage.removeItem("checkoutAddresses");
+    localStorage.removeItem("selectedAddressId");
+
+    navigate("/purchase-history", {
+      state: {
+        paymentIntent: paymentResult,
+        orderAmount: orderTotal,
+        paymentSuccessMessage: "Payment completed successfully!",
+      },
+    });
+  };
+
+  const handlePaymentError = (error) => {
+    ToastNotification.error(
+      error.message || "Payment failed. Please try again."
+    );
+  };
+
   // If payment method is card, show StripeCheckout instead
   if (paymentMethod === "card") {
     return (
       <StripeCheckout
         stripeCustomerId={stripeCustomerId}
         orderTotal={orderTotal}
+        createPaymentIntent={createPaymentIntent}
+        handlePaymentSuccess={handlePaymentSuccess}
+        handlePaymentError={handlePaymentError}
       />
     );
   }
@@ -67,12 +121,12 @@ export default function CheckoutReview({ stripeCustomerId, orderTotal }) {
     }
 
     // Check if user is a valid customer
-    if (userInfo.searchstage !== "Customer") {
-      ToastNotification.error(
-        "New customers must contact support to place orders. We only allow orders for existing customers. Please contact our support team."
-      );
-      return;
-    }
+    // if (userInfo.searchstage !== "Customer") {
+    //   ToastNotification.error(
+    //     "New customers must contact support to place orders. We only allow orders for existing customers. Please contact our support team."
+    //   );
+    //   return;
+    // }
 
     // Check if billing address is available
     if (!billingAddress) {
@@ -192,17 +246,9 @@ export default function CheckoutReview({ stripeCustomerId, orderTotal }) {
                 }
               );
 
-              console.log(
-                `✅ Created recurring order for item: ${item.itemid || item.id}`
-              );
+              // Recurring order created successfully
             } catch (recurringError) {
-              console.error(
-                `❌ Failed to create recurring order for item: ${
-                  item.itemid || item.id
-                }`,
-                recurringError
-              );
-              // Don't show error to user - main order was successful
+              // Failed to create recurring order - don't show error to user since main order was successful
             }
           }
 
