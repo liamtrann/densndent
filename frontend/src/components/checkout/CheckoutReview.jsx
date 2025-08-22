@@ -200,7 +200,7 @@ export default function CheckoutReview() {
       localStorage.removeItem("selectedAddressId");
 
       // Redirect to order history
-      navigate("/profile/history");
+      navigate("/purchase-history");
     } catch (error) {
       // Handle order placement error
       ToastNotification.error("Failed to place order. Please try again.");

@@ -20,7 +20,7 @@ export default function ProfilePage() {
         <h2 className="text-lg font-semibold text-gray-800">
           Recent Purchases
         </h2>
-        <TextButton onClick={() => navigate("/profile/history")}>
+        <TextButton onClick={() => navigate("/purchase-history")}>
           View Purchase History →
         </TextButton>
       </div>
