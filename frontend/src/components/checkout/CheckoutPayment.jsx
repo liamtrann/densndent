@@ -1,7 +1,7 @@
 import AddressModal from "common/modals/AddressModal";
 import AddressCard from "common/ui/AddressCard";
 import { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
+import { useSelector } from "react-redux"; // TODO: Use when customer integration is complete
 import { useNavigate } from "react-router-dom";
 
 import api from "api/api";
@@ -20,15 +20,24 @@ export default function CheckoutPayment({
   setAddresses,
   selectedId,
   setSelectedId,
+  onCustomerIdChange,
 }) {
-  const userInfo = useSelector((state) => state.user.info);
+  const userInfo = useSelector((state) => state.user.info); // TODO: Use when customer integration is complete
   const navigate = useNavigate();
 
   // Payment method states
   const [showAddPaymentMethod, setShowAddPaymentMethod] = useState(false);
   const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState(null);
-  const [customerId, setCustomerId] = useState("");
+  const [stripeCustomerId, setStripeCustomerId] = useState("");
   const [customerLoading, setCustomerLoading] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("card");
+
+  // Set payment method based on user status
+  useEffect(() => {
+    if (userInfo?.searchstage !== "Customer") {
+      setPaymentMethod("card");
+    }
+  }, [userInfo?.searchstage]);
 
   // Fetch Stripe customer by email when component mounts
   useEffect(() => {
@@ -42,7 +51,7 @@ export default function CheckoutPayment({
         );
 
         if (response.data.success && response.data.customer) {
-          setCustomerId(response.data.customer.id);
+          setStripeCustomerId(response.data.customer.id);
         } else {
           // No Stripe customer found for this email - could create one here if needed
         }
@@ -55,6 +64,13 @@ export default function CheckoutPayment({
 
     fetchStripeCustomer();
   }, [userInfo?.email]);
+
+  // Notify parent component when stripeCustomerId changes
+  useEffect(() => {
+    if (onCustomerIdChange) {
+      onCustomerIdChange(stripeCustomerId);
+    }
+  }, [stripeCustomerId, onCustomerIdChange]);
 
   // Save addresses and selectedId to localStorage whenever they change
   useEffect(() => {
@@ -109,7 +125,7 @@ export default function CheckoutPayment({
   };
 
   const handleCreateStripeCustomer = async () => {
-    if (!userInfo?.email || !userInfo?.name) {
+    if (!userInfo?.email) {
       alert("Please ensure your profile has email and name information.");
       return;
     }
@@ -118,12 +134,12 @@ export default function CheckoutPayment({
     try {
       const response = await api.post(endpoints.POST_CREATE_STRIPE_CUSTOMER(), {
         email: userInfo.email,
-        name: userInfo.name,
+        name: `${userInfo.firstname} ${userInfo.lastname}`,
         // Add any other user info you want to include
       });
 
       if (response.data?.customerId) {
-        setCustomerId(response.data.customerId);
+        setStripeCustomerId(response.data.customerId);
       }
     } catch (error) {
       alert("Failed to create payment account. Please try again.");
@@ -159,58 +175,106 @@ export default function CheckoutPayment({
           </div>
         </div>
 
-        {/* Payment Methods Section */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">Payment Methods</h3>
-            {!showAddPaymentMethod && customerId && (
-              <Button
-                variant="outline"
-                onClick={() => setShowAddPaymentMethod(true)}
-                disabled={customerLoading}
+        {/* Payment Method Selection */}
+        <div className="border rounded shadow-sm p-4 bg-white space-y-4">
+          <h3 className="font-semibold mb-2">Payment Method</h3>
+
+          {/* Tabs */}
+          <div className="flex space-x-4 border-b mb-4">
+            <button
+              className={`py-2 px-4 font-medium ${
+                paymentMethod === "card"
+                  ? "border-b-2 border-blue-600 text-blue-600"
+                  : "text-gray-600 hover:text-blue-600"
+              }`}
+              onClick={() => setPaymentMethod("card")}
+            >
+              Credit/Debit Card
+            </button>
+            {userInfo?.searchstage === "Customer" && (
+              <button
+                className={`py-2 px-4 font-medium ${
+                  paymentMethod === "invoice"
+                    ? "border-b-2 border-blue-600 text-blue-600"
+                    : "text-gray-600 hover:text-blue-600"
+                }`}
+                onClick={() => setPaymentMethod("invoice")}
               >
-                Add Payment Method
-              </Button>
+                Invoice
+              </button>
             )}
           </div>
 
-          {customerLoading ? (
-            <div className="bg-white p-6 rounded-lg shadow-sm border">
-              <div className="animate-pulse">
-                <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
-                <div className="space-y-3">
-                  <div className="h-16 bg-gray-200 rounded"></div>
-                  <div className="h-16 bg-gray-200 rounded"></div>
-                </div>
-              </div>
+          {/* Invoice Message */}
+          {paymentMethod === "invoice" && (
+            <div className="text-sm text-gray-700">
+              An invoice will be emailed to the billing address after the order
+              is confirmed.
             </div>
-          ) : !customerId ? (
-            <div className="bg-white p-6 rounded-lg shadow-sm border">
-              <div className="text-center text-gray-500">
-                <div className="text-lg mb-2">No Stripe Account Found</div>
-                <div className="text-sm mb-4">
-                  You need a Stripe customer account to manage payment methods.
-                </div>
-                <Button
-                  onClick={handleCreateStripeCustomer}
-                  disabled={customerLoading}
-                >
-                  {customerLoading ? "Creating..." : "Create Payment Account"}
-                </Button>
+          )}
+
+          {/* Credit/Debit Card Content - Show Payment Methods Section */}
+          {paymentMethod === "card" && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-md font-medium">Saved Payment Methods</h4>
+                {!showAddPaymentMethod && stripeCustomerId && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowAddPaymentMethod(true)}
+                    disabled={customerLoading}
+                  >
+                    Add Payment Method
+                  </Button>
+                )}
               </div>
+
+              {customerLoading ? (
+                <div className="bg-gray-50 p-6 rounded-lg border">
+                  <div className="animate-pulse">
+                    <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
+                    <div className="space-y-3">
+                      <div className="h-16 bg-gray-200 rounded"></div>
+                      <div className="h-16 bg-gray-200 rounded"></div>
+                    </div>
+                  </div>
+                </div>
+              ) : !stripeCustomerId ? (
+                <div className="bg-gray-50 p-6 rounded-lg border">
+                  <div className="text-center text-gray-500">
+                    <div className="text-lg mb-2">No Stripe Account Found</div>
+                    <div className="text-sm mb-4">
+                      You need a Stripe customer account to manage payment
+                      methods.
+                    </div>
+                    <Button
+                      onClick={handleCreateStripeCustomer}
+                      disabled={customerLoading}
+                    >
+                      {customerLoading
+                        ? "Creating..."
+                        : "Create Payment Account"}
+                    </Button>
+                  </div>
+                </div>
+              ) : showAddPaymentMethod ? (
+                <AddPaymentMethod
+                  customerId={stripeCustomerId}
+                  onPaymentMethodAdded={handlePaymentMethodAdded}
+                  onCancel={() => setShowAddPaymentMethod(false)}
+                  billingAddress={addresses.find(
+                    (addr) => addr.id === selectedId
+                  )}
+                />
+              ) : (
+                <SavedPaymentMethods
+                  customerId={stripeCustomerId}
+                  onSelectPaymentMethod={handleSelectPaymentMethod}
+                  selectedPaymentMethodId={selectedPaymentMethodId}
+                  showTitle={false}
+                />
+              )}
             </div>
-          ) : showAddPaymentMethod ? (
-            <AddPaymentMethod
-              customerId={customerId}
-              onPaymentMethodAdded={handlePaymentMethodAdded}
-              onCancel={() => setShowAddPaymentMethod(false)}
-            />
-          ) : (
-            <SavedPaymentMethods
-              customerId={customerId}
-              onSelectPaymentMethod={handleSelectPaymentMethod}
-              selectedPaymentMethodId={selectedPaymentMethodId}
-            />
           )}
         </div>
 
@@ -231,21 +295,27 @@ export default function CheckoutPayment({
           </label>
         </div>
 
-        {/* Continue to Stripe Checkout */}
+        {/* Continue to Review */}
         <div className="flex justify-end">
           <Button
             className="px-6 py-3"
             onClick={() => {
-              // Save selected payment method to localStorage for the next step
+              // Save selected payment method and payment type to localStorage for the next step
               localStorage.setItem(
                 "selectedPaymentMethodId",
-                selectedPaymentMethodId
+                selectedPaymentMethodId || ""
               );
-              navigate("/checkout/stripe");
+              localStorage.setItem("paymentMethod", paymentMethod);
+              navigate("/checkout/review");
             }}
-            disabled={!selectedId || !selectedPaymentMethodId || !customerId}
+            disabled={
+              !selectedId ||
+              (paymentMethod === "card" &&
+                (!selectedPaymentMethodId || !stripeCustomerId)) ||
+              (paymentMethod === "invoice" && !selectedId)
+            }
           >
-            Continue to Payment
+            Continue to Review
           </Button>
         </div>
 

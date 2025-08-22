@@ -10,6 +10,7 @@ export { default as Loading } from "./ui/Loading";
 export { default as ErrorMessage } from "./ui/ErrorMessage";
 export { default as Image } from "./ui/Image";
 export { default as Paragraph } from "./ui/Paragraph";
+export { default as MultiStepIndicator } from "./ui/MultiStepIndicator";
 
 // Product components
 export { default as ProductImage } from "./product/ProductImage";

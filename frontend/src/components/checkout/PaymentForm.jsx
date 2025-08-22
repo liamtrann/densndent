@@ -78,6 +78,10 @@ export default function PaymentForm({
       const response = await api.post(endpoints.POST_CONFIRM_PAYMENT(), {
         paymentMethod: paymentMethod.id,
         paymentIntent: paymentIntent.id,
+        automatic_payment_methods: {
+          enabled: true,
+          allow_redirects: "never", // <- key bit
+        },
       });
 
       handleServerResponse(response.data.paymentIntent);

@@ -8,6 +8,7 @@ export default function SavedPaymentMethods({
   customerId,
   onSelectPaymentMethod,
   selectedPaymentMethodId,
+  showTitle = true,
 }) {
   const [paymentMethods, setPaymentMethods] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -86,7 +87,9 @@ export default function SavedPaymentMethods({
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm border">
-      <h3 className="text-lg font-semibold mb-4">Saved Payment Methods</h3>
+      {showTitle && (
+        <h3 className="text-lg font-semibold mb-4">Saved Payment Methods</h3>
+      )}
 
       {paymentMethods.length === 0 ? (
         <div className="text-gray-500 text-center py-8">
@@ -104,7 +107,7 @@ export default function SavedPaymentMethods({
                   ? "border-blue-500 bg-blue-50"
                   : "border-gray-300 hover:border-gray-400"
               }`}
-              onClick={() => onSelectPaymentMethod(pm.id)}
+              onClick={() => onSelectPaymentMethod(pm.id, pm)}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
@@ -112,7 +115,7 @@ export default function SavedPaymentMethods({
                     type="radio"
                     name="paymentMethod"
                     checked={selectedPaymentMethodId === pm.id}
-                    onChange={() => onSelectPaymentMethod(pm.id)}
+                    onChange={() => onSelectPaymentMethod(pm.id, pm)}
                     className="text-blue-600"
                   />
                   <div>

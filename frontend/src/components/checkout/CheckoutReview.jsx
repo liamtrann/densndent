@@ -1,19 +1,19 @@
-import { useEffect, useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-
-import Button from "common/ui/Button";
-import { Loading } from "common";
-import ToastNotification from "common/toast/Toast";
+import { useNavigate } from "react-router-dom";
+import { clearCart } from "store/slices/cartSlice";
 
 import api from "api/api";
 import endpoint from "api/endpoints";
-
-import { clearCart } from "store/slices/cartSlice";
+import { Loading } from "common";
+import ToastNotification from "common/toast/Toast";
+import Button from "common/ui/Button";
 import { buildIdempotencyKey, calculateNextRunDate } from "config/config";
 
-export default function CheckoutReview() {
+import StripeCheckout from "./StripeCheckout";
+
+export default function CheckoutReview({ stripeCustomerId, orderTotal }) {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { getAccessTokenSilently } = useAuth0();
@@ -22,6 +22,7 @@ export default function CheckoutReview() {
   const [sameAsShipping, setSameAsShipping] = useState(true);
   const [billingAddress, setBillingAddress] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState("invoice");
+  const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState(null);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
   useEffect(() => {
@@ -31,9 +32,30 @@ export default function CheckoutReview() {
     const selected = Number(localStorage.getItem("selectedAddressId"));
     const selectedAddress = stored.find((addr) => addr.id === selected);
     setBillingAddress(selectedAddress);
+
+    // Get payment method and selected payment method ID from localStorage
+    const storedPaymentMethod = localStorage.getItem("paymentMethod");
+    const storedPaymentMethodId = localStorage.getItem(
+      "selectedPaymentMethodId"
+    );
+
+    if (storedPaymentMethod) {
+      setPaymentMethod(storedPaymentMethod);
+    }
+    if (storedPaymentMethodId) {
+      setSelectedPaymentMethodId(storedPaymentMethodId);
+    }
   }, []);
 
-  console.log(cartItems);
+  // If payment method is card, show StripeCheckout instead
+  if (paymentMethod === "card") {
+    return (
+      <StripeCheckout
+        stripeCustomerId={stripeCustomerId}
+        orderTotal={orderTotal}
+      />
+    );
+  }
 
   const handlePlaceOrder = async () => {
     // Check if user ID is available
@@ -198,6 +220,8 @@ export default function CheckoutReview() {
       // Clear checkout addresses from localStorage
       localStorage.removeItem("checkoutAddresses");
       localStorage.removeItem("selectedAddressId");
+      localStorage.removeItem("selectedPaymentMethodId");
+      localStorage.removeItem("paymentMethod");
 
       // Redirect to order history
       navigate("/purchase-history");
@@ -271,87 +295,28 @@ export default function CheckoutReview() {
             </label>
           </div>
 
-          {/* Payment Method */}
-          <div className="border rounded shadow-sm p-4 bg-white space-y-4">
+          {/* Payment Method Display */}
+          <div className="border rounded shadow-sm p-4 bg-white">
             <h3 className="font-semibold mb-2">Payment Method</h3>
-
-            {/* Tabs */}
-            <div className="flex space-x-4 border-b mb-4">
-              {/* <button
-                className={`py-2 px-4 font-medium ${
-                  paymentMethod === "card"
-                    ? "border-b-2 border-blue-600 text-blue-600"
-                    : "text-gray-600 hover:text-blue-600"
-                }`}
-                onClick={() => setPaymentMethod("card")}
-              >
-                Credit/Debit Card
-              </button> */}
-              <button
-                className={`py-2 px-4 font-medium ${
-                  paymentMethod === "invoice"
-                    ? "border-b-2 border-blue-600 text-blue-600"
-                    : "text-gray-600 hover:text-blue-600"
-                }`}
-                onClick={() => setPaymentMethod("invoice")}
-              >
-                Invoice
-              </button>
+            <div className="text-sm text-gray-700">
+              {paymentMethod === "invoice" ? (
+                <>
+                  <div className="font-medium">Invoice</div>
+                  <div className="text-gray-600 mt-1">
+                    An invoice will be emailed after order confirmation
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="font-medium">Credit/Debit Card</div>
+                  <div className="text-gray-600 mt-1">
+                    {selectedPaymentMethodId
+                      ? `Payment method selected (ID: ${selectedPaymentMethodId.slice(-4)})`
+                      : "Card payment method selected"}
+                  </div>
+                </>
+              )}
             </div>
-
-            {/* Credit Card Fields */}
-            {/* {paymentMethod === "card" && (
-              <>
-                <InputField
-                  label="Credit Card Number"
-                  type={showCardNumber ? "text" : "password"}
-                  value={cardNumber}
-                  onChange={(e) => setCardNumber(e.target.value)}
-                  placeholder="•••• •••• •••• 1234"
-                />
-                <Button
-                  variant="secondary"
-                  onClick={() => setShowCardNumber(!showCardNumber)}
-                >
-                  {showCardNumber ? "Hide" : "Show"}
-                </Button>
-
-                <InputField
-                  label="Name on Card"
-                  value={nameOnCard}
-                  onChange={(e) => setNameOnCard(e.target.value)}
-                />
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <InputField
-                    label="Expiration Month"
-                    value={expMonth}
-                    onChange={(e) => setExpMonth(e.target.value)}
-                    placeholder="MM"
-                  />
-                  <InputField
-                    label="Expiration Year"
-                    value={expYear}
-                    onChange={(e) => setExpYear(e.target.value)}
-                    placeholder="YYYY"
-                  />
-                  <InputField
-                    label="Security Code"
-                    type="password"
-                    value={securityCode}
-                    onChange={(e) => setSecurityCode(e.target.value)}
-                    placeholder="CVV"
-                  />
-                </div>
-              </>
-            )} */}
-
-            {/* Invoice Message */}
-            {paymentMethod === "invoice" && (
-              <div className="text-sm text-gray-700">
-                An invoice will be emailed to the billing address after the
-                order is confirmed.
-              </div>
-            )}
           </div>
 
           {/* Buttons */}

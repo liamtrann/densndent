@@ -385,6 +385,7 @@ class StripeController {
     try {
       const intent = await stripeService.confirmPaymentIntent(paymentIntent, {
         payment_method: paymentMethod,
+        return_url: `${process.env.FRONTEND_URL || "http://localhost:3000"}/purchase-history`,
       });
 
       /* Update the status of the payment to indicate confirmation */

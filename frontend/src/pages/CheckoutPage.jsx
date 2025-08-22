@@ -3,20 +3,15 @@ import { useAuth0 } from "@auth0/auth0-react";
 import CheckoutSummary from "components/checkout/CheckoutSummary";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import api from "api/api";
 import endpoint from "api/endpoints";
-import { Loading } from "common";
-import { handleTaxShippingEstimate } from "config";
+import { handleTaxShippingEstimate, calculateOrderTotal } from "config/config";
 
-import CheckoutPayment from "../components/checkout/CheckoutPayment";
-
-// Import the new modular sections
-import CheckoutReview from "../components/checkout/CheckoutReview";
-import StripeCheckout from "../components/checkout/StripeCheckout";
-
+import { MultiStepIndicator } from "@/common";
 import ToastNotification from "@/common/toast/Toast";
+import { CheckoutPayment, CheckoutReview } from "@/components/checkout";
 import useInitialAddress from "@/hooks/useInitialAddress";
 import { selectCartSubtotalWithDiscounts } from "@/redux/slices";
 
@@ -36,6 +31,7 @@ export default function CheckoutPage() {
   const [taxRate, setTaxRate] = useState(null);
   const [country, setCountry] = useState("ca");
   const [postalCode, setPostalCode] = useState("");
+  const [stripeCustomerId, setStripeCustomerId] = useState("");
 
   const userInfo = useSelector((state) => state.user.info);
   const cart = useSelector((state) => state.cart.items);
@@ -44,6 +40,9 @@ export default function CheckoutPage() {
   const subtotal = useSelector((state) =>
     selectCartSubtotalWithDiscounts(state, cart)
   );
+
+  // Calculate order total centrally
+  const { total } = calculateOrderTotal(subtotal, shippingCost, estimatedTax);
 
   const { addresses, setAddresses, selectedId, setSelectedId } =
     useInitialAddress(userInfo);
@@ -148,35 +147,52 @@ export default function CheckoutPage() {
             setAddresses={setAddresses}
             selectedId={selectedId}
             setSelectedId={setSelectedId}
+            onCustomerIdChange={setStripeCustomerId}
           />
         );
       case "review":
-        return <CheckoutReview />;
-      case "stripe":
-        return <StripeCheckout />;
+        return (
+          <CheckoutReview
+            stripeCustomerId={stripeCustomerId}
+            orderTotal={total}
+          />
+        );
       default:
         return null;
     }
   };
 
+  // Define steps for the multistep indicator
+  const steps = [
+    {
+      label: "Payment & Shipping",
+      description: "Select your payment method and shipping address",
+    },
+    {
+      label: "Review & Complete",
+      description: "Review your order details and complete your purchase",
+    },
+  ];
+
+  const getCurrentStep = () => {
+    const step = location.pathname.split("/")[2] || "payment";
+    return step === "review" ? 1 : 0;
+  };
+
+  const getCompletedStep = () => {
+    const step = location.pathname.split("/")[2] || "payment";
+    return step === "review" ? 0 : -1; // Step 0 is completed when we're on step 1 (review)
+  };
   return (
     <div className="max-w-6xl mx-auto px-6 py-10">
       <h1 className="text-3xl font-bold mb-4">Checkout</h1>
 
       {/* Step navigation */}
-      <div className="mb-6 text-sm text-gray-600">
-        <Link to="/checkout/payment" className="text-blue-600 hover:underline">
-          1. Payment & Shipping
-        </Link>
-        <span> / </span>
-        <Link to="/checkout/stripe" className="text-blue-600 hover:underline">
-          2. Complete Payment
-        </Link>
-        <span> / </span>
-        <Link to="/checkout/review" className="text-blue-600 hover:underline">
-          3. Review
-        </Link>
-      </div>
+      <MultiStepIndicator
+        steps={steps}
+        currentStep={getCurrentStep()}
+        completedStep={getCompletedStep()}
+      />
 
       {/* Page layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -187,6 +203,7 @@ export default function CheckoutPage() {
           shippingCost={shippingCost}
           estimatedTax={estimatedTax}
           taxRate={taxRate}
+          calculatedTotal={total}
         />
       </div>
     </div>

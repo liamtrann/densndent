@@ -1,69 +1,66 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
 import api from "api/api";
 import endpoints from "api/endpoints";
 import { Button } from "common";
+import { formatPrice } from "config/config";
 
 import StripeWrapper from "../stripe/StripeWrapper";
 
 import PaymentForm from "./PaymentForm";
 import SavedPaymentMethods from "./SavedPaymentMethods";
 
-import { selectCartSubtotalWithDiscounts } from "@/redux/slices";
-
-export default function StripeCheckout() {
+export default function StripeCheckout({ stripeCustomerId, orderTotal }) {
   const navigate = useNavigate();
   const cart = useSelector((state) => state.cart.items);
-
-  // Calculate subtotal with discounted prices
-  const subtotal = useSelector((state) =>
-    selectCartSubtotalWithDiscounts(state, cart)
-  );
 
   const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
   const [paymentIntent, setPaymentIntent] = useState(null);
-  const [customerId] = useState("cus_example123"); // TODO: Get from user data
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Load saved data from localStorage
+  // Load saved data from localStorage and fetch payment method details if needed
   useEffect(() => {
     const savedPaymentMethodId = localStorage.getItem(
       "selectedPaymentMethodId"
     );
-    if (savedPaymentMethodId) {
+
+    if (savedPaymentMethodId && stripeCustomerId) {
       setSelectedPaymentMethodId(savedPaymentMethodId);
-    }
-  }, []);
 
-  const fetchPaymentMethodDetails = useCallback(async () => {
-    try {
-      const response = await api.get(endpoints.GET_PAYMENT_METHODS(customerId));
-      const paymentMethod = response.data.paymentMethods.find(
-        (pm) => pm.id === selectedPaymentMethodId
-      );
-      setSelectedPaymentMethod(paymentMethod);
-    } catch (err) {
-      setError("Failed to load payment method details");
-    }
-  }, [customerId, selectedPaymentMethodId]);
+      // Fetch the payment method details for the saved ID
+      const fetchSavedPaymentMethod = async () => {
+        try {
+          const response = await api.get(
+            endpoints.GET_PAYMENT_METHODS(stripeCustomerId)
+          );
+          const paymentMethods = response.data.paymentMethods || [];
+          const paymentMethod = paymentMethods.find(
+            (pm) => pm.id === savedPaymentMethodId
+          );
+          if (paymentMethod) {
+            setSelectedPaymentMethod(paymentMethod);
+          } else {
+            // Payment method not found, clear saved data
+            localStorage.removeItem("selectedPaymentMethodId");
+            setSelectedPaymentMethodId(null);
+          }
+        } catch (error) {
+          // Clear invalid saved data on error
+          localStorage.removeItem("selectedPaymentMethodId");
+          setSelectedPaymentMethodId(null);
+        }
+      };
 
-  // Fetch payment method details when selected
-  useEffect(() => {
-    if (selectedPaymentMethodId && !selectedPaymentMethod) {
-      fetchPaymentMethodDetails();
+      fetchSavedPaymentMethod();
     }
-  }, [
-    selectedPaymentMethodId,
-    selectedPaymentMethod,
-    fetchPaymentMethodDetails,
-  ]);
+  }, [stripeCustomerId]);
 
   const createPaymentIntent = async () => {
-    if (!selectedPaymentMethodId || !subtotal) return;
+    if (!selectedPaymentMethodId || !orderTotal) return;
 
     setLoading(true);
     setError(null);
@@ -71,9 +68,9 @@ export default function StripeCheckout() {
     try {
       const response = await api.post(endpoints.POST_CREATE_PAYMENT(), {
         paymentMethod: selectedPaymentMethodId,
-        amount: subtotal, // Amount in dollars
+        amount: formatPrice(orderTotal),
         currency: "cad",
-        customerId: customerId,
+        customerId: stripeCustomerId,
         description: `Order payment for ${cart.length} item(s)`,
       });
 
@@ -90,10 +87,14 @@ export default function StripeCheckout() {
   const handlePaymentSuccess = (paymentResult) => {
     // Handle successful payment
     localStorage.removeItem("selectedPaymentMethodId");
-    navigate("/checkout/success", {
+    localStorage.removeItem("paymentMethod");
+    // Clear cart or any other cleanup logic here if needed
+
+    navigate("/purchase-history", {
       state: {
         paymentIntent: paymentResult,
-        orderAmount: subtotal,
+        orderAmount: orderTotal,
+        paymentSuccessMessage: "Payment completed successfully!",
       },
     });
   };
@@ -102,9 +103,9 @@ export default function StripeCheckout() {
     setError(error.message || "Payment failed. Please try again.");
   };
 
-  const handleSelectPaymentMethod = (paymentMethodId) => {
+  const handleSelectPaymentMethod = (paymentMethodId, paymentMethod = null) => {
     setSelectedPaymentMethodId(paymentMethodId);
-    setSelectedPaymentMethod(null);
+    setSelectedPaymentMethod(paymentMethod);
     setPaymentIntent(null);
     localStorage.setItem("selectedPaymentMethodId", paymentMethodId);
   };
@@ -127,28 +128,12 @@ export default function StripeCheckout() {
                 Select Payment Method
               </h2>
               <SavedPaymentMethods
-                customerId={customerId}
+                customerId={stripeCustomerId}
                 onSelectPaymentMethod={handleSelectPaymentMethod}
                 selectedPaymentMethodId={selectedPaymentMethodId}
+                showTitle={false}
               />
             </div>
-
-            {selectedPaymentMethodId && !paymentIntent && (
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <h3 className="font-medium mb-2">Ready to Pay</h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  Click "Create Payment" to proceed with your selected payment
-                  method.
-                </p>
-                <Button
-                  onClick={createPaymentIntent}
-                  disabled={loading}
-                  className="w-full"
-                >
-                  {loading ? "Creating Payment..." : "Create Payment"}
-                </Button>
-              </div>
-            )}
 
             {error && (
               <div className="bg-red-50 border border-red-200 p-4 rounded-lg">
@@ -159,7 +144,7 @@ export default function StripeCheckout() {
 
           {/* Right Column - Payment Form */}
           <div>
-            {selectedPaymentMethod && paymentIntent ? (
+            {paymentIntent && selectedPaymentMethod ? (
               <PaymentForm
                 paymentMethod={selectedPaymentMethod}
                 paymentIntent={paymentIntent}
@@ -167,43 +152,23 @@ export default function StripeCheckout() {
                 onPaymentError={handlePaymentError}
               />
             ) : (
-              <div className="bg-gray-50 p-8 rounded-lg text-center">
-                <div className="text-gray-500">
-                  <div className="text-4xl mb-4">💳</div>
-                  <h3 className="text-lg font-medium mb-2">
-                    Complete Payment Setup
-                  </h3>
-                  <p className="text-sm">
-                    Select a payment method and create a payment intent to
-                    continue
-                  </p>
+              <div className="space-y-6">
+                {/* Payment Setup Placeholder */}
+                <div className="bg-gray-50 p-8 rounded-lg text-center">
+                  <div className="text-gray-500">
+                    <div className="text-4xl mb-4">💳</div>
+                    <h3 className="text-lg font-medium mb-2">
+                      Complete Payment Setup
+                    </h3>
+                    <p className="text-sm">
+                      {!selectedPaymentMethodId
+                        ? "Select a payment method to continue"
+                        : "Click 'Create Payment' to proceed with the selected payment method"}
+                    </p>
+                  </div>
                 </div>
               </div>
             )}
-          </div>
-        </div>
-
-        {/* Order Summary */}
-        <div className="mt-8 bg-white p-6 rounded-lg shadow-sm border">
-          <h3 className="text-lg font-semibold mb-4">Order Summary</h3>
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Items ({cart.length})</span>
-              <span>${subtotal.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span>Shipping</span>
-              <span>$9.99</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span>Tax</span>
-              <span>Calculated at checkout</span>
-            </div>
-            <hr className="my-2" />
-            <div className="flex justify-between font-semibold">
-              <span>Total</span>
-              <span>${(subtotal + 9.99).toFixed(2)}</span>
-            </div>
           </div>
         </div>
 
@@ -214,6 +179,13 @@ export default function StripeCheckout() {
             onClick={() => navigate("/checkout/payment")}
           >
             ← Back to Payment & Shipping
+          </Button>
+
+          <Button
+            onClick={createPaymentIntent}
+            disabled={!selectedPaymentMethodId || paymentIntent || loading}
+          >
+            {loading ? "Creating Payment..." : "Create Payment"}
           </Button>
         </div>
       </div>

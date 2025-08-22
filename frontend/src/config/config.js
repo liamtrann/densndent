@@ -84,6 +84,25 @@ function calculateTotalCurrency(unitPrice, quantity, currency = "$") {
   return `${currency}${calculateTotalPrice(unitPrice, quantity)}`;
 }
 
+// Calculate order total with shipping and tax
+function calculateOrderTotal(
+  subtotal,
+  shippingCost = null,
+  estimatedTax = null
+) {
+  // Free shipping for orders $300 and above
+  const shipping =
+    subtotal >= 300 ? 0 : shippingCost !== null ? shippingCost : 9.99;
+  const tax = estimatedTax || 0;
+  const total = Number(subtotal) + Number(tax) + Number(shipping);
+
+  return {
+    shipping,
+    tax,
+    total,
+  };
+}
+
 // Calculate total price after discount based on promotions
 async function getTotalPriceAfterDiscount(productId, unitPrice, quantity) {
   try {
@@ -402,14 +421,26 @@ async function handleTaxShippingEstimate({
 
   try {
     // Normalize country values to lowercase codes
-    let normalizedCountry = country?.toLowerCase();
-    if (normalizedCountry === "canada") {
-      normalizedCountry = "ca";
-    } else if (
-      normalizedCountry === "usa" ||
-      normalizedCountry === "united states"
-    ) {
-      normalizedCountry = "us";
+    let normalizedCountry = country?.toLowerCase()?.trim();
+
+    // Map all possible country variations to standardized codes
+    const countryMap = {
+      ca: "ca",
+      canada: "ca",
+      can: "ca",
+      us: "us",
+      usa: "us",
+      america: "us",
+    };
+
+    normalizedCountry = countryMap[normalizedCountry];
+
+    // Ensure we only accept valid normalized countries
+    if (normalizedCountry !== "ca" && normalizedCountry !== "us") {
+      const errorMessage =
+        "Country not supported. Only Canada (ca) and United States (us) are supported.";
+      if (onError) onError(errorMessage);
+      return { success: false, error: errorMessage };
     }
 
     // Validate postal code before making API call
@@ -634,6 +665,7 @@ export {
   formatCurrency,
   calculateTotalPrice,
   calculateTotalCurrency,
+  calculateOrderTotal,
   getTotalPriceAfterDiscount,
   fetchLocationByPostalCode,
   calculateActualQuantity,
