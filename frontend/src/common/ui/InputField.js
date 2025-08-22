@@ -9,12 +9,35 @@ export default function InputField({
   className = "",
   checked,
   error,
+  // NEW:
+  wrapperClassName = "mb-2",
+  bare = false,
   ...props
 }) {
   const isCheckbox = type === "checkbox";
 
+  // Bare mode: render just the input (no wrapper/label/margins)
+  if (bare && !isCheckbox) {
+    return (
+      <input
+        type={type}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        className={classNames(
+          "border rounded px-2 py-1 w-full focus:outline-none focus:ring-2 transition",
+          error ? "border-red-500 focus:ring-red-400" : "focus:ring-smiles-orange",
+          // hide spinners on number inputs (Firefox + WebKit)
+          "appearance-none [appearance:textfield] [-moz-appearance:textfield]",
+          className
+        )}
+        {...props}
+      />
+    );
+  }
+
   return (
-    <div className="mb-2">
+    <div className={wrapperClassName}>
       {isCheckbox ? (
         <label className="flex items-center text-sm">
           <input
