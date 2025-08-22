@@ -1,19 +1,18 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
-import { Button } from "common";
 import AddressModal from "common/modals/AddressModal";
 import AddressCard from "common/ui/AddressCard";
+import { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
-/**
- * CheckoutPayment component handles address selection and shipping method selection
- * @param {boolean} isAddModalOpen - Whether the add address modal is open
- * @param {function} setAddModalOpen - Function to toggle the add address modal
- * @param {Array} addresses - Array of available addresses
- * @param {function} setAddresses - Function to update addresses array
- * @param {number|null} selectedId - ID of the currently selected address
- * @param {function} setSelectedId - Function to update selected address ID
- */
+import api from "api/api";
+import endpoints from "api/endpoints";
+import { Button } from "common";
+
+import StripeWrapper from "../stripe/StripeWrapper";
+
+import AddPaymentMethod from "./AddPaymentMethod";
+import SavedPaymentMethods from "./SavedPaymentMethods";
+
 export default function CheckoutPayment({
   isAddModalOpen,
   setAddModalOpen,
@@ -24,6 +23,38 @@ export default function CheckoutPayment({
 }) {
   const userInfo = useSelector((state) => state.user.info);
   const navigate = useNavigate();
+
+  // Payment method states
+  const [showAddPaymentMethod, setShowAddPaymentMethod] = useState(false);
+  const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState(null);
+  const [customerId, setCustomerId] = useState("");
+  const [customerLoading, setCustomerLoading] = useState(false);
+
+  // Fetch Stripe customer by email when component mounts
+  useEffect(() => {
+    const fetchStripeCustomer = async () => {
+      if (!userInfo?.email) return;
+
+      setCustomerLoading(true);
+      try {
+        const response = await api.get(
+          endpoints.GET_STRIPE_CUSTOMER_BY_EMAIL(userInfo.email)
+        );
+
+        if (response.data.success && response.data.customer) {
+          setCustomerId(response.data.customer.id);
+        } else {
+          // No Stripe customer found for this email - could create one here if needed
+        }
+      } catch (error) {
+        // Handle error - customer not found is expected for new users
+      } finally {
+        setCustomerLoading(false);
+      }
+    };
+
+    fetchStripeCustomer();
+  }, [userInfo?.email]);
 
   // Save addresses and selectedId to localStorage whenever they change
   useEffect(() => {
@@ -68,61 +99,163 @@ export default function CheckoutPayment({
     setAddModalOpen(false);
   };
 
-  return (
-    <div className="space-y-6">
-      {/* Address List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {addresses.map((addr) => (
-          <AddressCard
-            key={addr.id}
-            address={addr}
-            isSelected={addr.id === selectedId}
-            onSelect={() => handleSelectAddress(addr.id)}
-            onRemove={() => handleRemoveAddress(addr.id)}
-          />
-        ))}
+  const handlePaymentMethodAdded = (paymentMethod) => {
+    setShowAddPaymentMethod(false);
+    setSelectedPaymentMethodId(paymentMethod.id);
+  };
 
-        {/* Add Address Card */}
-        <div
-          className="border rounded shadow-sm p-4 flex items-center justify-center bg-gray-50 cursor-pointer hover:bg-gray-100"
-          onClick={() => setAddModalOpen(true)}
-        >
-          <div className="text-center text-gray-500">
-            <div className="text-3xl">＋</div>
-            <div>Add Address</div>
+  const handleSelectPaymentMethod = (paymentMethodId) => {
+    setSelectedPaymentMethodId(paymentMethodId);
+  };
+
+  const handleCreateStripeCustomer = async () => {
+    if (!userInfo?.email || !userInfo?.name) {
+      alert("Please ensure your profile has email and name information.");
+      return;
+    }
+
+    setCustomerLoading(true);
+    try {
+      const response = await api.post(endpoints.POST_CREATE_STRIPE_CUSTOMER(), {
+        email: userInfo.email,
+        name: userInfo.name,
+        // Add any other user info you want to include
+      });
+
+      if (response.data?.customerId) {
+        setCustomerId(response.data.customerId);
+      }
+    } catch (error) {
+      alert("Failed to create payment account. Please try again.");
+    } finally {
+      setCustomerLoading(false);
+    }
+  };
+
+  return (
+    <StripeWrapper>
+      <div className="space-y-6">
+        {/* Address List */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {addresses.map((addr) => (
+            <AddressCard
+              key={addr.id}
+              address={addr}
+              isSelected={addr.id === selectedId}
+              onSelect={() => handleSelectAddress(addr.id)}
+              onRemove={() => handleRemoveAddress(addr.id)}
+            />
+          ))}
+
+          {/* Add Address Card */}
+          <div
+            className="border rounded shadow-sm p-4 flex items-center justify-center bg-gray-50 cursor-pointer hover:bg-gray-100"
+            onClick={() => setAddModalOpen(true)}
+          >
+            <div className="text-center text-gray-500">
+              <div className="text-3xl">＋</div>
+              <div>Add Address</div>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Delivery Method */}
-      <div className="bg-white p-4 rounded shadow-sm">
-        <h3 className="font-semibold mb-2">Delivery Method</h3>
-        <label className="flex items-center border p-3 rounded cursor-pointer hover:border-orange-400 transition">
-          <input type="radio" name="delivery" defaultChecked className="mr-3" />
-          <div className="text-sm">
-            <div>ICS Ground – Online</div>
-            <div className="text-gray-500 text-xs">$9.99</div>
+        {/* Payment Methods Section */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">Payment Methods</h3>
+            {!showAddPaymentMethod && customerId && (
+              <Button
+                variant="outline"
+                onClick={() => setShowAddPaymentMethod(true)}
+                disabled={customerLoading}
+              >
+                Add Payment Method
+              </Button>
+            )}
           </div>
-        </label>
-      </div>
 
-      {/* Continue to Review */}
-      <div className="flex justify-end">
-        <Button
-          className="px-6 py-3"
-          onClick={() => navigate("/checkout/review")}
-          disabled={!selectedId}
-        >
-          Continue to Review
-        </Button>
-      </div>
+          {customerLoading ? (
+            <div className="bg-white p-6 rounded-lg shadow-sm border">
+              <div className="animate-pulse">
+                <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
+                <div className="space-y-3">
+                  <div className="h-16 bg-gray-200 rounded"></div>
+                  <div className="h-16 bg-gray-200 rounded"></div>
+                </div>
+              </div>
+            </div>
+          ) : !customerId ? (
+            <div className="bg-white p-6 rounded-lg shadow-sm border">
+              <div className="text-center text-gray-500">
+                <div className="text-lg mb-2">No Stripe Account Found</div>
+                <div className="text-sm mb-4">
+                  You need a Stripe customer account to manage payment methods.
+                </div>
+                <Button
+                  onClick={handleCreateStripeCustomer}
+                  disabled={customerLoading}
+                >
+                  {customerLoading ? "Creating..." : "Create Payment Account"}
+                </Button>
+              </div>
+            </div>
+          ) : showAddPaymentMethod ? (
+            <AddPaymentMethod
+              customerId={customerId}
+              onPaymentMethodAdded={handlePaymentMethodAdded}
+              onCancel={() => setShowAddPaymentMethod(false)}
+            />
+          ) : (
+            <SavedPaymentMethods
+              customerId={customerId}
+              onSelectPaymentMethod={handleSelectPaymentMethod}
+              selectedPaymentMethodId={selectedPaymentMethodId}
+            />
+          )}
+        </div>
 
-      {/* Address Modal */}
-      <AddressModal
-        isOpen={isAddModalOpen}
-        onClose={() => setAddModalOpen(false)}
-        onSave={handleSaveAddress}
-      />
-    </div>
+        {/* Delivery Method */}
+        <div className="bg-white p-4 rounded shadow-sm">
+          <h3 className="font-semibold mb-2">Delivery Method</h3>
+          <label className="flex items-center border p-3 rounded cursor-pointer hover:border-orange-400 transition">
+            <input
+              type="radio"
+              name="delivery"
+              defaultChecked
+              className="mr-3"
+            />
+            <div className="text-sm">
+              <div>ICS Ground – Online</div>
+              <div className="text-gray-500 text-xs">$9.99</div>
+            </div>
+          </label>
+        </div>
+
+        {/* Continue to Stripe Checkout */}
+        <div className="flex justify-end">
+          <Button
+            className="px-6 py-3"
+            onClick={() => {
+              // Save selected payment method to localStorage for the next step
+              localStorage.setItem(
+                "selectedPaymentMethodId",
+                selectedPaymentMethodId
+              );
+              navigate("/checkout/stripe");
+            }}
+            disabled={!selectedId || !selectedPaymentMethodId || !customerId}
+          >
+            Continue to Payment
+          </Button>
+        </div>
+
+        {/* Address Modal */}
+        <AddressModal
+          isOpen={isAddModalOpen}
+          onClose={() => setAddModalOpen(false)}
+          onSave={handleSaveAddress}
+        />
+      </div>
+    </StripeWrapper>
   );
 }

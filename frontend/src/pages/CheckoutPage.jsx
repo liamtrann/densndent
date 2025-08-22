@@ -1,21 +1,24 @@
 // src/pages/CheckoutPage.jsx
+import { useAuth0 } from "@auth0/auth0-react";
+import CheckoutSummary from "components/checkout/CheckoutSummary";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { useAuth0 } from "@auth0/auth0-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import api from "api/api";
 import endpoint from "api/endpoints";
 import { Loading } from "common";
-import CheckoutSummary from "components/checkout/CheckoutSummary";
 import { handleTaxShippingEstimate } from "config";
-import { selectCartSubtotalWithDiscounts } from "@/redux/slices";
-import ToastNotification from "@/common/toast/Toast";
+
+import CheckoutPayment from "../components/checkout/CheckoutPayment";
 
 // Import the new modular sections
-import CheckoutPayment from "../components/checkout/CheckoutPayment";
 import CheckoutReview from "../components/checkout/CheckoutReview";
+import StripeCheckout from "../components/checkout/StripeCheckout";
+
+import ToastNotification from "@/common/toast/Toast";
 import useInitialAddress from "@/hooks/useInitialAddress";
+import { selectCartSubtotalWithDiscounts } from "@/redux/slices";
 
 export default function CheckoutPage() {
   const { getAccessTokenSilently } = useAuth0();
@@ -149,6 +152,8 @@ export default function CheckoutPage() {
         );
       case "review":
         return <CheckoutReview />;
+      case "stripe":
+        return <StripeCheckout />;
       default:
         return null;
     }
@@ -161,11 +166,15 @@ export default function CheckoutPage() {
       {/* Step navigation */}
       <div className="mb-6 text-sm text-gray-600">
         <Link to="/checkout/payment" className="text-blue-600 hover:underline">
-          1. Payment
+          1. Payment & Shipping
+        </Link>
+        <span> / </span>
+        <Link to="/checkout/stripe" className="text-blue-600 hover:underline">
+          2. Complete Payment
         </Link>
         <span> / </span>
         <Link to="/checkout/review" className="text-blue-600 hover:underline">
-          2. Review
+          3. Review
         </Link>
       </div>
 
