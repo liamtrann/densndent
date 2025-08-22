@@ -50,7 +50,7 @@ export default function ProductListRows({ products = [] }) {
             <div className="flex-1 min-w-0">
               <Link
                 to={`/product/${p.id}`}
-                className="text-base font-semibold text-gray-900 hover:underline"
+                className="text-base font text-gray-900 hover:underline"
                 title={p.itemid || p.displayname}
               >
                 {p.itemid || p.displayname}
