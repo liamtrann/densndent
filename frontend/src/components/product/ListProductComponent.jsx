@@ -1,3 +1,4 @@
+// src/frontend/components/product/ListProductComponent.jsx
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { delayCall } from "api/util";
@@ -11,6 +12,8 @@ import {
 } from "common";
 import FilterOption from "../filters/FilterOption";
 import ProductListGrid from "./ProductListGrid";
+import ProductListRows from "./ProductListRows";
+
 export default function ListProductComponent({
   type,
   id,
@@ -20,6 +23,7 @@ export default function ListProductComponent({
   const [perPage, setPerPage] = useState(12);
   const [sort, setSort] = useState("");
   const [page, setPage] = useState(1);
+  const [view, setView] = useState("grid");          // <-- view state
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState({
     minPrice: "",
@@ -37,22 +41,18 @@ export default function ListProductComponent({
   const dispatch = useDispatch();
   const { minPrice, maxPrice } = appliedFilters;
   const priceKey = `${minPrice || ""}_${maxPrice || ""}`;
-  const effectiveId = id || "all"; // Use "all" when id is null
+  const effectiveId = id || "all";
   const key = `${effectiveId}_${perPage}_${sort}_${priceKey}_${page}`;
   const countKey = `${effectiveId}_${priceKey}`;
+
   const products = useSelector(
     (state) => state.products.productsByPage[key] || []
   );
   const isLoading = useSelector((state) => state.products.isLoading);
   const error = useSelector((state) => state.products.error);
-  // Use price-aware count key for filtered totals
   const total = useSelector((state) => {
-    // Try the price-aware count key first
     const count = state.products.totalCounts?.[countKey];
-    if (count !== undefined) {
-      return count;
-    }
-    return 0;
+    return count !== undefined ? count : 0;
   });
 
   useEffect(() => {
@@ -70,7 +70,6 @@ export default function ListProductComponent({
     }
   }, [dispatch, type, id, effectiveId]);
 
-  // Separate useEffect for fetching filtered count when filters are applied
   useEffect(() => {
     if (
       (id || type === "all") &&
@@ -127,19 +126,11 @@ export default function ListProductComponent({
 
   const totalPages = Math.ceil(total / perPage) || 1;
 
-  const handleFiltersChange = (newFilters) => {
-    setFilters(newFilters);
-    // Don't reset page or trigger API call here - only on Apply
-  };
+  const handleFiltersChange = (newFilters) => setFilters(newFilters);
 
   const handleApplyFilters = () => {
-    // Set the applied filters (this will trigger useEffect to fetch new data)
     setAppliedFilters(filters);
-
-    // Reset to first page when applying filters
     setPage(1);
-
-    // Fetch updated count with filters
     if (filters.minPrice || filters.maxPrice) {
       dispatch(
         fetchCountBy({
@@ -159,9 +150,7 @@ export default function ListProductComponent({
         {headerTitle}
       </h1>
 
-      {/* Desktop: 3-column layout, Mobile: Single column stack */}
       <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 items-start">
-        {/* Left Column: Filters - Hidden on mobile, shown on desktop */}
         {products.length > 0 && (
           <FilterOption
             className="hidden lg:block"
@@ -171,9 +160,7 @@ export default function ListProductComponent({
           />
         )}
 
-        {/* Center Column: Main product area */}
         <div className="flex-1 w-full">
-          {/* Mobile filter toggle button */}
           {products.length > 0 && (
             <div className="lg:hidden mb-4">
               <button
@@ -198,7 +185,6 @@ export default function ListProductComponent({
                 </svg>
               </button>
 
-              {/* Mobile filters dropdown */}
               {showMobileFilters && (
                 <div className="mt-2 bg-white border rounded-lg shadow-lg p-4">
                   <FilterOption
@@ -226,35 +212,39 @@ export default function ListProductComponent({
               sort={sort}
               onSortChange={(e) => setSort(e.target.value)}
               total={total}
+              view={view}
+              onViewChange={setView}
             />
           )}
+
           {products.length > 0 && (
             <div className="mb-4">
-              <Pagination
-                page={page}
-                totalPages={totalPages}
-                onPageChange={setPage}
-              />
+              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
             </div>
           )}
+
           {isLoading && <Loading message="Loading products..." />}
           {error && <ErrorMessage message={error} />}
+
           {!isLoading && !error && products.length === 0 && (
             <div className="text-gray-500 py-8 text-center">
               No products found for this category.
             </div>
           )}
+
+          {/* ⬇⬇ THE IMPORTANT FIX ⬇⬇ */}
           {!isLoading && !error && products.length > 0 && (
-            <ProductListGrid products={products} />
+            view === "list" ? (
+              <ProductListRows products={products} />
+            ) : (
+              <ProductListGrid products={products} />
+            )
           )}
-          {/* Bottom pagination for mobile */}
+          {/* ⬆⬆ THE IMPORTANT FIX ⬆⬆ */}
+
           {products.length > 0 && (
             <div className="mt-6">
-              <Pagination
-                page={page}
-                totalPages={totalPages}
-                onPageChange={setPage}
-              />
+              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
             </div>
           )}
         </div>

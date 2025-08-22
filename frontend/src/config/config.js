@@ -38,8 +38,7 @@ export function normalizeOrderLine(row) {
 
   return {
     lineId: pick(row.line, row.linenumber, row.lineId, row.seq) ?? Math.random(),
-    // NEW: capture the product internal id for linking
-    productId: pick(row.itemId, row.item_id, row.item, row.internalid, row.id, null),
+    productId: pick(row.item, row.itemId, row.item_id, row.internalid, row.id), // <-- add this
     sku: pick(row.itemid, row.itemId, row.item_id, row.sku, ""),
     name: pick(
       row.itemname,
@@ -588,9 +587,8 @@ function buildIdempotencyKey(
     .sort()
     .join("|");
   const windowBucket = Math.floor(Date.now() / (windowMins * 60 * 1000));
-  const raw = `${
-    userInfo?.id || "anon"
-  }|${shipMethodId}|${cartKey}|${windowBucket}`;
+  const raw = `${userInfo?.id || "anon"
+    }|${shipMethodId}|${cartKey}|${windowBucket}`;
 
   // Simple base64 makes it compact and header-safe
   try {
