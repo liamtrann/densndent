@@ -121,7 +121,9 @@ export default function PaymentForm({
     if (response.error) {
       setCvcError(response.error.message || "Payment failed");
       setIsProcessing(false);
-      ToastNotification.error(response.error.message || "Payment failed. Please try again.");
+      ToastNotification.error(
+        response.error.message || "Payment failed. Please try again."
+      );
       if (onPaymentError) {
         onPaymentError(response.error);
       }
@@ -130,9 +132,11 @@ export default function PaymentForm({
     } else if (response.status === "succeeded") {
       // Clear checkout data after successful payment
       clearCheckoutData();
-      
-      ToastNotification.success("Payment completed successfully! Your order has been placed.");
-      
+
+      ToastNotification.success(
+        "Payment completed successfully! Your order has been placed."
+      );
+
       setIsProcessing(false);
       if (onPaymentSuccess) {
         onPaymentSuccess(response);
@@ -142,12 +146,15 @@ export default function PaymentForm({
       setCvcError("Payment processing failed. Please try again.");
       ToastNotification.error("Payment processing failed. Please try again.");
     }
-  }  function handleAction(response) {
+  }
+  function handleAction(response) {
     stripe.handleCardAction(response.client_secret).then(function (result) {
       if (result.error) {
         setCvcError(result.error.message || "Authentication failed");
         setIsProcessing(false);
-        ToastNotification.error(result.error.message || "Authentication failed. Please try again.");
+        ToastNotification.error(
+          result.error.message || "Authentication failed. Please try again."
+        );
         if (onPaymentError) {
           onPaymentError(result.error);
         }
@@ -168,7 +175,9 @@ export default function PaymentForm({
           .catch((err) => {
             setCvcError("Payment confirmation failed after authentication");
             setIsProcessing(false);
-            ToastNotification.error("Payment confirmation failed after authentication. Please try again.");
+            ToastNotification.error(
+              "Payment confirmation failed after authentication. Please try again."
+            );
             if (onPaymentError) {
               onPaymentError(err);
             }
