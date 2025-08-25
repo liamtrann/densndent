@@ -3,13 +3,13 @@ import { useAuth0 } from "@auth0/auth0-react";
 import CheckoutSummary from "components/checkout/CheckoutSummary";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 import api from "api/api";
 import endpoint from "api/endpoints";
 import { handleTaxShippingEstimate, calculateOrderTotal } from "config/config";
 
-import { MultiStepIndicator } from "@/common";
+import { MultiStepIndicator, Loading, EmptyCart } from "@/common";
 import ToastNotification from "@/common/toast/Toast";
 import { CheckoutPayment, CheckoutReview } from "@/components/checkout";
 import useInitialAddress from "@/hooks/useInitialAddress";
@@ -18,7 +18,6 @@ import { selectCartSubtotalWithDiscounts } from "@/redux/slices";
 export default function CheckoutPage() {
   const { getAccessTokenSilently } = useAuth0();
   const location = useLocation();
-  const navigate = useNavigate();
   const [promoCode, setPromoCode] = useState("");
   const [isAddModalOpen, setAddModalOpen] = useState(false);
   const [shippingMethods, setShippingMethods] = useState([]);
@@ -32,6 +31,7 @@ export default function CheckoutPage() {
   const [country, setCountry] = useState("ca");
   const [postalCode, setPostalCode] = useState("");
   const [stripeCustomerId, setStripeCustomerId] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const userInfo = useSelector((state) => state.user.info);
   const cart = useSelector((state) => state.cart.items);
@@ -155,6 +155,8 @@ export default function CheckoutPage() {
           <CheckoutReview
             stripeCustomerId={stripeCustomerId}
             orderTotal={total}
+            isProcessing={isProcessing}
+            setIsProcessing={setIsProcessing}
           />
         );
       default:
@@ -183,8 +185,35 @@ export default function CheckoutPage() {
     const step = location.pathname.split("/")[2] || "payment";
     return step === "review" ? 0 : -1; // Step 0 is completed when we're on step 1 (review)
   };
+
+  // Check if cart is empty
+  if (!cart || cart.length === 0) {
+    return <EmptyCart />;
+  }
+
   return (
-    <div className="max-w-6xl mx-auto px-6 py-10">
+    <div className="max-w-6xl mx-auto px-6 py-10 relative">
+      {/* Loading Overlay for entire checkout page */}
+      {isProcessing && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-8 rounded-lg shadow-lg max-w-md text-center">
+            <Loading text="Processing payment and creating your order..." />
+            <div className="mt-4 space-y-2">
+              <p className="text-gray-700 font-medium">
+                Please don't close this window
+              </p>
+              <p className="text-sm text-gray-600">
+                We're securely processing your payment and setting up your
+                order. This may take a few minutes.
+              </p>
+              <p className="text-xs text-gray-500 mt-3">
+                You'll be redirected once the process is complete.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <h1 className="text-3xl font-bold mb-4">Checkout</h1>
 
       {/* Step navigation */}

@@ -4,10 +4,13 @@ import {
   CardCvcElement,
 } from "@stripe/react-stripe-js";
 import { useState } from "react";
+import { useDispatch } from "react-redux";
+import { clearCart } from "store/slices/cartSlice";
 
 import api from "api/api";
 import endpoints from "api/endpoints";
 import { Button } from "common";
+import ToastNotification from "common/toast/Toast";
 
 const CVC_ELEMENT_OPTIONS = {
   style: {
@@ -32,12 +35,27 @@ export default function PaymentForm({
   paymentIntent,
   onPaymentSuccess,
   onPaymentError,
+  buildOrderPayload,
+  isProcessing,
+  setIsProcessing,
 }) {
   const stripe = useStripe();
   const elements = useElements();
+  const dispatch = useDispatch();
 
   const [cvcError, setCvcError] = useState(null);
-  const [isProcessing, setIsProcessing] = useState(false);
+
+  // Function to clear cart and localStorage after successful payment
+  const clearCheckoutData = () => {
+    // Clear cart
+    dispatch(clearCart());
+
+    // Clear checkout-related localStorage items
+    localStorage.removeItem("selectedPaymentMethodId");
+    localStorage.removeItem("paymentMethod");
+    localStorage.removeItem("checkoutAddresses");
+    localStorage.removeItem("selectedAddressId");
+  };
 
   if (!paymentMethod || !paymentIntent) {
     return (
@@ -74,10 +92,14 @@ export default function PaymentForm({
         return;
       }
 
+      // Get order payload for payment confirmation
+      const orderData = buildOrderPayload ? buildOrderPayload() : null;
+
       // Confirm the payment
       const response = await api.post(endpoints.POST_CONFIRM_PAYMENT(), {
-        paymentMethod: paymentMethod.id,
-        paymentIntent: paymentIntent.id,
+        paymentIntentId: paymentIntent.id,
+        paymentMethodId: paymentMethod.id,
+        orderData: orderData,
         automatic_payment_methods: {
           enabled: true,
           allow_redirects: "never", // <- key bit
@@ -88,6 +110,7 @@ export default function PaymentForm({
     } catch (err) {
       setCvcError("Payment confirmation failed. Please try again.");
       setIsProcessing(false);
+      ToastNotification.error("Payment confirmation failed. Please try again.");
       if (onPaymentError) {
         onPaymentError(err);
       }
@@ -98,12 +121,18 @@ export default function PaymentForm({
     if (response.error) {
       setCvcError(response.error.message || "Payment failed");
       setIsProcessing(false);
+      ToastNotification.error(response.error.message || "Payment failed. Please try again.");
       if (onPaymentError) {
         onPaymentError(response.error);
       }
     } else if (response.next_action) {
       handleAction(response);
     } else if (response.status === "succeeded") {
+      // Clear checkout data after successful payment
+      clearCheckoutData();
+      
+      ToastNotification.success("Payment completed successfully! Your order has been placed.");
+      
       setIsProcessing(false);
       if (onPaymentSuccess) {
         onPaymentSuccess(response);
@@ -111,23 +140,27 @@ export default function PaymentForm({
     } else {
       setIsProcessing(false);
       setCvcError("Payment processing failed. Please try again.");
+      ToastNotification.error("Payment processing failed. Please try again.");
     }
-  }
-
-  function handleAction(response) {
+  }  function handleAction(response) {
     stripe.handleCardAction(response.client_secret).then(function (result) {
       if (result.error) {
         setCvcError(result.error.message || "Authentication failed");
         setIsProcessing(false);
+        ToastNotification.error(result.error.message || "Authentication failed. Please try again.");
         if (onPaymentError) {
           onPaymentError(result.error);
         }
       } else {
+        // Get order payload for re-confirmation after 3D Secure
+        const orderData = buildOrderPayload ? buildOrderPayload() : null;
+
         // Re-confirm the payment after 3D Secure
         api
           .post(endpoints.POST_CONFIRM_PAYMENT(), {
-            paymentIntent: paymentIntent.id,
-            paymentMethod: paymentMethod.id,
+            paymentIntentId: paymentIntent.id,
+            paymentMethodId: paymentMethod.id,
+            orderData: orderData,
           })
           .then((resp) => {
             handleServerResponse(resp.data.paymentIntent);
@@ -135,6 +168,7 @@ export default function PaymentForm({
           .catch((err) => {
             setCvcError("Payment confirmation failed after authentication");
             setIsProcessing(false);
+            ToastNotification.error("Payment confirmation failed after authentication. Please try again.");
             if (onPaymentError) {
               onPaymentError(err);
             }

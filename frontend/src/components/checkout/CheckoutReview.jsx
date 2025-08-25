@@ -17,7 +17,14 @@ import {
 
 import StripeCheckout from "./StripeCheckout";
 
-export default function CheckoutReview({ stripeCustomerId, orderTotal }) {
+import { SHIPPING_METHOD } from "@/constants/urls";
+
+export default function CheckoutReview({
+  stripeCustomerId,
+  orderTotal,
+  isProcessing,
+  setIsProcessing,
+}) {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { getAccessTokenSilently } = useAuth0();
@@ -27,7 +34,6 @@ export default function CheckoutReview({ stripeCustomerId, orderTotal }) {
   const [billingAddress, setBillingAddress] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState("invoice");
   const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState(null);
-  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
   useEffect(() => {
     const stored = JSON.parse(
@@ -50,6 +56,53 @@ export default function CheckoutReview({ stripeCustomerId, orderTotal }) {
       setSelectedPaymentMethodId(storedPaymentMethodId);
     }
   }, []);
+
+  // Build order payload for NetSuite integration
+  const buildOrderPayload = () => {
+    // Validate required data
+    if (!userInfo?.id || !cartItems?.length || !billingAddress) {
+      return null;
+    }
+
+    return {
+      entity: {
+        id: userInfo.id,
+        // type: userInfo.searchstage,
+      },
+      item: {
+        items: cartItems.map((item) => ({
+          item: {
+            id: item.id,
+          },
+          quantity: item.quantity,
+        })),
+      },
+      tobeEmailed: true,
+      email: userInfo.email,
+      shipMethod: {
+        id: SHIPPING_METHOD,
+      },
+      billingAddress: {
+        addr1: billingAddress.line1 || billingAddress.address,
+        addressee: billingAddress.fullName,
+        city: billingAddress.city,
+        country: { id: "CA" },
+        state: billingAddress.state,
+        zip: billingAddress.postalCode || billingAddress.zip,
+      },
+      shippingAddress: sameAsShipping
+        ? {
+            addr1: billingAddress.line1 || billingAddress.address,
+            addressee: billingAddress.fullName,
+            city: billingAddress.city,
+            country: { id: "CA" },
+            state: billingAddress.state,
+            zip: billingAddress.postalCode || billingAddress.zip,
+          }
+        : null,
+      paymentMethod: paymentMethod,
+    };
+  };
 
   // Stripe Payment Functions
   const createPaymentIntent = async (selectedPaymentMethodId) => {
@@ -107,6 +160,9 @@ export default function CheckoutReview({ stripeCustomerId, orderTotal }) {
         createPaymentIntent={createPaymentIntent}
         handlePaymentSuccess={handlePaymentSuccess}
         handlePaymentError={handlePaymentError}
+        buildOrderPayload={buildOrderPayload}
+        isProcessing={isProcessing}
+        setIsProcessing={setIsProcessing}
       />
     );
   }
@@ -144,51 +200,26 @@ export default function CheckoutReview({ stripeCustomerId, orderTotal }) {
       return;
     }
 
-    const orderPayload = {
-      entity: {
-        id: userInfo.id,
-        // type: userInfo.searchstage,
-      },
-      item: {
-        items: cartItems.map((item) => ({
-          item: {
-            id: item.id,
-          },
-          quantity: item.quantity,
-        })),
-      },
-      tobeEmailed: true,
-      email: userInfo.email,
-      shipMethod: {
-        id: "20412",
-      },
-      billingAddress: {
-        addr1: billingAddress.address,
-        addressee: billingAddress.fullName,
-        city: billingAddress.city,
-        country: { id: "CA" },
-        state: billingAddress.state,
-        zip: billingAddress.zip,
-      },
-      shippingAddress: sameAsShipping
-        ? {
-            addr1: billingAddress.address,
-            addressee: billingAddress.fullName,
-            city: billingAddress.city,
-            country: { id: "CA" },
-            state: billingAddress.state,
-            zip: billingAddress.zip,
-          }
-        : null,
-      paymentMethod: paymentMethod, // Optional: Include method
-    };
+    // Build order payload using the standardized function
+    const orderPayload = buildOrderPayload();
+    if (!orderPayload) {
+      ToastNotification.error(
+        "Unable to build order. Please check your information and try again."
+      );
+      return;
+    }
 
     try {
-      setIsPlacingOrder(true);
+      setIsProcessing(true);
       const token = await getAccessTokenSilently();
 
       // Build deterministic idempotency key matching backend window logic
-      const idemKey = buildIdempotencyKey(userInfo, cartItems, "20412", 10);
+      const idemKey = buildIdempotencyKey(
+        userInfo,
+        cartItems,
+        SHIPPING_METHOD,
+        10
+      );
 
       const response = await api.post(
         endpoint.POST_SALES_ORDER(),
@@ -275,14 +306,14 @@ export default function CheckoutReview({ stripeCustomerId, orderTotal }) {
       // Handle order placement error
       ToastNotification.error("Failed to place order. Please try again.");
     } finally {
-      setIsPlacingOrder(false);
+      setIsProcessing(false);
     }
   };
 
   return (
     <div className="space-y-6 relative">
       {/* Loading Overlay */}
-      {isPlacingOrder && (
+      {isProcessing && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-8 rounded-lg shadow-lg max-w-md text-center">
             <Loading text="Processing your order..." />
@@ -370,12 +401,12 @@ export default function CheckoutReview({ stripeCustomerId, orderTotal }) {
             <Button
               variant="secondary"
               onClick={() => navigate("/checkout/payment")}
-              disabled={isPlacingOrder}
+              disabled={isProcessing}
             >
               Back
             </Button>
-            <Button onClick={handlePlaceOrder} disabled={isPlacingOrder}>
-              {isPlacingOrder ? "Placing Order..." : "Place Order"}
+            <Button onClick={handlePlaceOrder} disabled={isProcessing}>
+              {isProcessing ? "Placing Order..." : "Place Order"}
             </Button>
           </div>
         </div>

@@ -75,3 +75,5 @@ export const URLS = {
     GOOGLE_PLUS: "https://plus.google.com",
   },
 };
+
+export const SHIPPING_METHOD = "20412"

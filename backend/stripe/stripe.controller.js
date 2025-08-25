@@ -1,4 +1,5 @@
 const stripeService = require("./stripe.service");
+const restApiService = require("../restapi/restapi.service");
 
 class StripeController {
   /**
@@ -367,42 +368,111 @@ class StripeController {
    * @param {Object} res - Express response object
    */
   async confirmPayment(req, res) {
-    const { paymentIntent, paymentMethod } = req.body;
+    const { paymentMethodId, paymentIntentId, orderData } = req.body;
 
-    // Basic validation
-    if (!paymentIntent) {
-      return res.status(400).json({
-        message: "Payment intent ID is required",
-      });
-    }
+    console.log(paymentMethodId);
+    console.log(paymentIntentId);
 
-    if (!paymentMethod) {
+    if (!paymentMethodId) {
       return res.status(400).json({
         message: "Payment method is required",
       });
     }
 
-    try {
-      const intent = await stripeService.confirmPaymentIntent(paymentIntent, {
-        payment_method: paymentMethod,
-        return_url: `${process.env.FRONTEND_URL || "http://localhost:3000"}/purchase-history`,
+    // Basic validation
+    if (!paymentIntentId) {
+      return res.status(400).json({
+        message: "Payment intent ID is required",
       });
+    }
 
-      /* Update the status of the payment to indicate confirmation */
-      res.status(200).json({
-        paymentIntent: {
-          id: intent.id,
-          status: intent.status,
-          client_secret: intent.client_secret,
-          amount: intent.amount,
-          currency: intent.currency,
-          next_action: intent.next_action,
-          charges: intent.charges,
-        },
-      });
+    try {
+      // 1. Confirm payment with Stripe
+      const paymentIntent = await stripeService.confirmPaymentIntent(
+        paymentIntentId,
+        {
+          payment_method: paymentMethodId,
+          return_url: `${process.env.FRONTEND_URL || "http://localhost:3000"}/purchase-history`,
+        }
+      );
+
+      console.log(paymentIntent);
+
+      // 2. If payment successful, create order directly
+      if (paymentIntent.status === "succeeded" && orderData) {
+        console.log(
+          `💳 [STRIPE] Creating sales order for payment: ${paymentIntent.id}`
+        );
+
+        try {
+          // Create sales order directly using NetSuite API
+          const salesOrder = await restApiService.postRecord(
+            "salesOrder",
+            orderData
+          );
+
+          console.log(
+            `✅ [STRIPE] Created sales order ID for payment: ${paymentIntent.id}`
+          );
+
+          res.status(200).json({
+            success: true,
+            paymentIntent: {
+              id: paymentIntent.id,
+              status: paymentIntent.status,
+              amount: paymentIntent.amount,
+              currency: paymentIntent.currency,
+              client_secret: paymentIntent.client_secret,
+              next_action: paymentIntent.next_action,
+              charges: paymentIntent.charges,
+            },
+            message: "Payment confirmed and order created successfully",
+          });
+        } catch (orderError) {
+          console.error(
+            `❌ [STRIPE] Sales order creation failed for payment ${paymentIntent.id}:`,
+            orderError.message
+          );
+
+          // Payment succeeded but order creation failed
+          res.status(200).json({
+            success: true,
+            paymentIntent: {
+              id: paymentIntent.id,
+              status: paymentIntent.status,
+              amount: paymentIntent.amount,
+              currency: paymentIntent.currency,
+              client_secret: paymentIntent.client_secret,
+              next_action: paymentIntent.next_action,
+              charges: paymentIntent.charges,
+            },
+            orderError: orderError.message,
+            message:
+              "Payment confirmed but order creation failed. Please contact support.",
+          });
+        }
+      } else {
+        res.status(200).json({
+          success: paymentIntent.status === "succeeded",
+          paymentIntent: {
+            id: paymentIntent.id,
+            status: paymentIntent.status,
+            client_secret: paymentIntent.client_secret,
+            amount: paymentIntent.amount,
+            currency: paymentIntent.currency,
+            next_action: paymentIntent.next_action,
+            charges: paymentIntent.charges,
+          },
+          message:
+            paymentIntent.status === "succeeded"
+              ? "Payment confirmed successfully"
+              : "Payment requires additional action",
+        });
+      }
     } catch (err) {
       console.error("Error confirming payment:", err);
       res.status(500).json({
+        success: false,
         message: "Could not confirm payment",
         error: process.env.NODE_ENV === "development" ? err.message : undefined,
       });

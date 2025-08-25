@@ -18,14 +18,17 @@ if (
   process.env.NODE_ENV !== "production" ||
   process.env.WORKER_MODE !== "false"
 ) {
-  console.log("🔧 [APP] Initializing Bull Queue and Worker...");
-  const { recurringOrderQueue } = require("./queue/orderQueue");
+  console.log("🔧 [APP] Initializing Bull Queues and Workers...");
+  const { recurringOrderQueue } = require("./queue/recurringOrderQueue");
+  const { stripeOrderQueue } = require("./queue/stripeOrderQueue");
   console.log(
-    "✅ [APP] Bull Queue worker initialized and ready to process jobs"
+    "✅ [APP] Bull Queue workers initialized and ready to process jobs"
   );
-  console.log("🎯 [APP] Worker is listening for recurring order jobs...");
+  console.log("🎯 [APP] Workers are listening for:");
+  console.log("  - Recurring order jobs");
+  console.log("  - Stripe order jobs");
 } else {
-  console.log("🌐 [APP] Running in web-only mode (worker disabled)");
+  console.log("🌐 [APP] Running in web-only mode (workers disabled)");
 }
 
 const app = express();

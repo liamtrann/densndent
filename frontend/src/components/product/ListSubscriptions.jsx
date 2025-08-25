@@ -199,7 +199,7 @@ export default function ListSubscriptions() {
                 </Paragraph>
 
                 <div className="mt-3 flex flex-wrap items-center gap-3">
-                  {/* <div className="w-48">
+                  <div className="w-48">
                     <Dropdown
                       label="Change interval"
                       value={intervalNow}
@@ -207,17 +207,17 @@ export default function ListSubscriptions() {
                       options={INTERVAL_OPTIONS}
                       className="h-10"
                     />
-                  </div> */}
+                  </div>
 
                   {/* Save (ghost) */}
-                  {/* <Button
+                  <Button
                     variant="ghost"
                     className="h-10 px-4 border border-gray-300 text-gray-700 hover:bg-gray-50"
                     disabled={!isDirty || isSaving || isCancelingRow}
                     onClick={() => handleSaveInterval(s)}
                   >
                     {isSaving ? "Saving..." : "Save"}
-                  </Button> */}
+                  </Button>
 
                   {/* Cancel (ghost danger) -> modal */}
                   <Button

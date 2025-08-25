@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 
 import api from "../api/api.js";
+import { SHIPPING_METHOD } from "@/constants/urls.js";
 
 function extractBuyGet(str) {
   const numbers = str.match(/\d+/g);
@@ -524,7 +525,7 @@ async function handleTaxShippingEstimate({
 function buildIdempotencyKey(
   userInfo,
   cartItems,
-  shipMethodId = "20412",
+  shipMethodId = SHIPPING_METHOD,
   windowMins = 10
 ) {
   const cartKey = (cartItems || [])

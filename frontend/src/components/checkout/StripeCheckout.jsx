@@ -16,6 +16,9 @@ export default function StripeCheckout({
   createPaymentIntent,
   handlePaymentSuccess,
   handlePaymentError,
+  buildOrderPayload,
+  isProcessing,
+  setIsProcessing,
 }) {
   const navigate = useNavigate();
 
@@ -125,6 +128,9 @@ export default function StripeCheckout({
                 paymentIntent={paymentIntent}
                 onPaymentSuccess={handlePaymentSuccess}
                 onPaymentError={handlePaymentError}
+                buildOrderPayload={buildOrderPayload}
+                isProcessing={isProcessing}
+                setIsProcessing={setIsProcessing}
               />
             ) : (
               <div className="space-y-6">
