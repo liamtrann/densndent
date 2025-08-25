@@ -120,7 +120,7 @@ export default function PaymentForm({
 
   function handleServerResponse(response) {
     const paymentIntent = response.paymentIntent || response;
-    
+
     if (paymentIntent.error) {
       setCvcError(paymentIntent.error.message || "Payment failed");
       setIsProcessing(false);
@@ -137,7 +137,7 @@ export default function PaymentForm({
       clearCheckoutData();
 
       // Show different message based on whether it's queued or direct processing
-      const successMessage = response.jobId 
+      const successMessage = response.jobId
         ? "Payment completed successfully! Your order is being processed and you'll receive a confirmation email shortly."
         : "Payment completed successfully! Your order has been placed.";
 

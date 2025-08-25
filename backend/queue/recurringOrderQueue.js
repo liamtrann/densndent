@@ -128,7 +128,7 @@ async function enqueueOrder(orderData) {
       priority: orderData.priority || 1,
       delay: 1000, // 1 second delay
     });
-
+    
     // Wait max 5 seconds for the job to be added
     const job = await Promise.race([
       jobPromise,
@@ -184,6 +184,7 @@ async function processOrderLogic(order) {
     shipMethod: {
       id: "20412",
     },
+    tobeEmailed: true,
     externalId: externalId,
   };
 

@@ -68,7 +68,7 @@ export default function PreviewCartItem({
     >
       <ProductImage
         src={item.file_url || item.img1 || item.imageurl}
-        alt={item.itemid || item.displayname}
+        alt={item.displayname}
         className={`${imageSize} object-cover ${
           compact ? "" : "border rounded"
         } ${onItemClick ? "cursor-pointer" : ""}`}
@@ -81,7 +81,7 @@ export default function PreviewCartItem({
           }`}
           onClick={onItemClick ? () => onItemClick(item.id) : undefined}
         >
-          {item.itemid || item.displayname}
+          {item.displayname}
         </div>
 
         {item.stockdescription && (
