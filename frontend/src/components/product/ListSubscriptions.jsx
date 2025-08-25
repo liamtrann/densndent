@@ -23,9 +23,9 @@ const CTRL_SIZE = "h-9";
 const BTN_TIGHT = `${CTRL_SIZE} leading-none px-3 text-xs`;
 
 const STATUS_OPTIONS = [
-  { value: "active", label: "Active subscription" },
-  { value: "paused", label: "Pause subscription" },
-  { value: "canceled", label: "Cancel subscription" },
+  { value: "active", label: "Active" },
+  { value: "paused", label: "Pause" },
+  { value: "canceled", label: "Cancel" },
 ];
 
 /** Map status choice to backend payloads.
@@ -362,46 +362,59 @@ export default function ListSubscriptions() {
                   Estimated Delivery: <span className="font-medium">5 Days</span>
                 </Paragraph>
 
-                {/* Controls row */}
-                <div className="mt-3 flex flex-wrap items-center gap-3">
-                  {/* Change interval */}
-                  <div className="w-44">
-                    <Dropdown
-                      label="Change interval"
-                      value={intervalNow}
-                      onChange={(e) => handleIntervalChange(s, e.target.value)}
-                      options={INTERVAL_OPTIONS}
-                      className={`${CTRL_SIZE} py-0`}
-                    />
-                  </div>
-                  <Button
-                    variant="ghost"
-                    className={`${BTN_TIGHT} border border-gray-300 text-gray-700 hover:bg-gray-50`}
-                    disabled={!isDirtyInterval || isSavingInterval || isSavingNextDate || isSavingThisStatus}
-                    onClick={() => handleSaveInterval(s)}
-                  >
-                    {isSavingInterval ? "Saving..." : "Save"}
-                  </Button>
+               {/* Controls rows */}
+                <div className="mt-3 space-y-3">
+                  {/* Row 1: interval + Save (same size) */}
+                  {/* Row 1: Change interval + Save */}
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className="w-56">
+                      <Dropdown
+                        label="Change interval"
+                        value={intervalNow}
+                        onChange={(e) => handleIntervalChange(s, e.target.value)}
+                        options={INTERVAL_OPTIONS}
+                        className="h-10 text-sm w-full"
+                        wrapperClassName="mb-0"
+                      />
+                    </div>
 
-                  {/* Subscription status (Active / Pause / Cancel) */}
-                  <div className="w-56 ml-auto md:ml-6">
-                    <Dropdown
-                      label="Subscription"
-                      value={statusVal}
-                      onChange={(e) => handleStatusChange(s, e.target.value)}
-                      options={STATUS_OPTIONS}
-                      className={`${CTRL_SIZE} py-0`}
-                    />
+                    {/* move right with ml-6, adjust up/down with top-[-2px] */}
+                    <Button
+                      variant="ghost"
+                      className="h-10 text-sm w-56 ml-8 mt-5 relative top-[-2px] border border-gray-300 rounded px-3 text-gray-700 hover:bg-gray-50"
+                      disabled={!isDirtyInterval || isSavingInterval || isSavingNextDate || isSavingThisStatus}
+                      onClick={() => handleSaveInterval(s)}
+                    >
+                      {isSavingInterval ? "Saving..." : "Save"}
+                    </Button>
                   </div>
-                  <Button
-                    variant="ghost"
-                    className={`${BTN_TIGHT} border border-gray-300 text-gray-700 hover:bg-gray-50`}
-                    disabled={isSavingInterval || isSavingNextDate || isSavingThisStatus}
-                    onClick={() => handleSaveStatus(s)}
-                  >
-                    {isSavingThisStatus ? "Saving..." : "Save"}
-                  </Button>
+
+                  {/* Row 2: Subscription + Save */}
+                  <div className="mt-3 flex flex-wrap items-center gap-3">
+                    <div className="w-56">
+                      <Dropdown
+                        label="Subscription"
+                        value={statusVal}
+                        onChange={(e) => handleStatusChange(s, e.target.value)}
+                        options={STATUS_OPTIONS}
+                        className="h-10 text-sm w-full"
+                        wrapperClassName="mb-0"
+                      />
+                    </div>
+
+                    {/* same ml and width so it aligns vertically with the Save above */}
+                    <Button
+                      variant="ghost"
+                      className="h-10 text-sm w-56 ml-8 mt-5 relative top-[-2px] border border-gray-300 rounded px-3 text-gray-700 hover:bg-gray-50"
+                      disabled={isSavingInterval || isSavingNextDate || isSavingThisStatus}
+                      onClick={() => handleSaveStatus(s)}
+                    >
+                      {isSavingThisStatus ? "Saving..." : "Save"}
+                    </Button>
+                  </div>
+
                 </div>
+
               </div>
             </div>
           );
