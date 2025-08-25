@@ -1,8 +1,8 @@
 // src/pages/OrderDetails.jsx
-import React, { useMemo } from "react";
-import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
+import { useMemo } from "react";
 import { useSelector } from "react-redux";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 
 import {
   Breadcrumb,
@@ -10,17 +10,17 @@ import {
   ErrorMessage,
   Paragraph,
   TextButton,
+  StatusBadge,
 } from "common";
-
-import OrderMetaGrid from "../common/order/OrderMetaGrid";
-import OrderItemsTable from "../common/order/OrderItemsTable";
-import OrderSummaryTotals from "../common/order/OrderSummaryTotals";
-import useOrderDetails from "../hooks/useOrderDetails";
-
 import {
   computeLinesSubtotal,
   computeOrderTotalFromSummary,
 } from "config/config";
+
+import OrderItemsTable from "../common/order/OrderItemsTable";
+import OrderMetaGrid from "../common/order/OrderMetaGrid";
+import OrderSummaryTotals from "../common/order/OrderSummaryTotals";
+import useOrderDetails from "../hooks/useOrderDetails";
 
 export default function OrderDetails() {
   const { transactionId } = useParams();
@@ -35,8 +35,6 @@ export default function OrderDetails() {
     getAccessTokenSilently,
   });
 
-  console.log(lines)
-
   const summary = state?.orderSummary || {};
   const subtotal = useMemo(() => computeLinesSubtotal(lines), [lines]);
   const orderTotal = useMemo(
@@ -47,7 +45,14 @@ export default function OrderDetails() {
   const headerFields = [
     { label: "Order ID", value: transactionId },
     { label: "Placed on", value: summary.trandate || "—" },
-    { label: "Status", value: summary.status || "—" },
+    {
+      label: "Status",
+      value: summary.status ? (
+        <StatusBadge status={summary.status} showDescription={false} />
+      ) : (
+        "—"
+      ),
+    },
     { label: "Carrier", value: summary.shipcarrier || "—" },
   ];
 
@@ -82,7 +87,9 @@ export default function OrderDetails() {
         </div>
       ) : (
         <div className="bg-white border rounded shadow-sm overflow-hidden">
-          <div className="px-5 py-4 border-b font-semibold text-gray-800">Items</div>
+          <div className="px-5 py-4 border-b font-semibold text-gray-800">
+            Items
+          </div>
           <div className="overflow-x-auto">
             <OrderItemsTable lines={lines} />
           </div>

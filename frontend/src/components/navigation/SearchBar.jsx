@@ -74,7 +74,7 @@ export default function SearchBar({ onClose }) {
                       if (onClose) onClose();
                     }}
                   >
-                    {item.displayname}
+                    {item.itemid}
                   </div>
                 ))}
                 {/* "Search all" line */}

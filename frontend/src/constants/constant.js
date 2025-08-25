@@ -76,4 +76,101 @@ export const URLS = {
   },
 };
 
-export const SHIPPING_METHOD = "20412"
+export const SHIPPING_METHOD = "20412";
+
+export const ORDER_STATUS = {
+  "Pending Fulfillment": {
+    label: "Pending Fulfillment",
+    color: "bg-yellow-100 text-yellow-800 border-yellow-200",
+    icon: "⏳", // Clock icon
+    description: "Order is being processed",
+  },
+  "Partially Fulfilled": {
+    label: "Partially Fulfilled",
+    color: "bg-blue-100 text-blue-800 border-blue-200",
+    icon: "📦", // Package icon
+    description: "Some items have been shipped",
+  },
+  Fulfilled: {
+    label: "Fulfilled",
+    color: "bg-green-100 text-green-800 border-green-200",
+    icon: "✅", // Check mark
+    description: "Order has been completed",
+  },
+  Cancelled: {
+    label: "Cancelled",
+    color: "bg-red-100 text-red-800 border-red-200",
+    icon: "❌", // X mark
+    description: "Order has been cancelled",
+  },
+  Shipped: {
+    label: "Shipped",
+    color: "bg-purple-100 text-purple-800 border-purple-200",
+    icon: "🚚", // Truck icon
+    description: "Order is on its way",
+  },
+  Delivered: {
+    label: "Delivered",
+    color: "bg-green-100 text-green-800 border-green-200",
+    icon: "✅", // Check mark
+    description: "Order has been delivered",
+  },
+  Processing: {
+    label: "Processing",
+    color: "bg-orange-100 text-orange-800 border-orange-200",
+    icon: "⚙️", // Gear icon
+    description: "Order is being prepared",
+  },
+  "On Hold": {
+    label: "On Hold",
+    color: "bg-gray-100 text-gray-800 border-gray-200",
+    icon: "⏸️", // Pause icon
+    description: "Order is temporarily on hold",
+  },
+  Refunded: {
+    label: "Refunded",
+    color: "bg-red-100 text-red-800 border-red-200",
+    icon: "💰", // Money icon
+    description: "Order has been refunded",
+  },
+  Returned: {
+    label: "Returned",
+    color: "bg-orange-100 text-orange-800 border-orange-200",
+    icon: "↩️", // Return arrow
+    description: "Order has been returned",
+  },
+};
+
+// Helper function to get status configuration
+export const getOrderStatusConfig = (status) => {
+  return (
+    ORDER_STATUS[status] || {
+      label: status || "Unknown",
+      color: "bg-gray-100 text-gray-800 border-gray-200",
+      icon: "❓",
+      description: "Status unknown",
+    }
+  );
+};
+
+// Helper function to create status options from actual order data
+export const createStatusOptions = (orders = []) => {
+  // Get all unique statuses from actual orders
+  const actualStatuses = Array.from(
+    new Set(orders.map((o) => o.status || "Pending Fulfillment"))
+  );
+
+  // Create options array starting with "All"
+  const options = [{ value: "All", label: "All" }];
+
+  // Add options for actual statuses, using ORDER_STATUS config if available
+  actualStatuses.forEach((status) => {
+    const config = ORDER_STATUS[status];
+    options.push({
+      value: status,
+      label: config ? config.label : status, // Use predefined label or actual status
+    });
+  });
+
+  return options;
+};

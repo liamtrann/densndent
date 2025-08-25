@@ -55,14 +55,29 @@ export default function OrderItemsTable({ lines = [] }) {
       <tbody>
         {lines.map((l, idx) => (
           <tr key={l.lineId ?? idx} className="border-b last:border-b-0">
-            {/* Product Image ONLY (no link/text) */}
+            {/* Product Image with clickable link */}
             <td className="px-5 py-4">
               {l.image ? (
-                <ProductImage
-                  src={l.image}
-                  alt={l.name}
-                  className="w-20 h-20 object-contain border rounded"
-                />
+                l.productId ? (
+                  <Link
+                    to={`/product/${l.productId}`}
+                    className="block hover:opacity-80 transition-opacity focus:outline-none rounded"
+                    title={`View ${l.name}`}
+                    aria-label={`View ${l.name}`}
+                  >
+                    <ProductImage
+                      src={l.image}
+                      alt={l.name}
+                      className="w-20 h-20 object-contain border rounded cursor-pointer"
+                    />
+                  </Link>
+                ) : (
+                  <ProductImage
+                    src={l.image}
+                    alt={l.name}
+                    className="w-20 h-20 object-contain border rounded"
+                  />
+                )
               ) : (
                 <div className="w-20 h-20 rounded border bg-gray-50" />
               )}

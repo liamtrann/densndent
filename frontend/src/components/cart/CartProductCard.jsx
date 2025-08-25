@@ -21,7 +21,7 @@ export default function CartProductCard({
       <span className="cursor-pointer" onClick={() => onNavigate(item.id)}>
         <ProductImage
           src={item.file_url}
-          alt={item.displayname || "Product"}
+          alt={item.itemid || item.displayname || "Product"}
           className="h-32"
         />
       </span>
@@ -30,7 +30,7 @@ export default function CartProductCard({
           className="font-semibold mb-1 cursor-pointer hover:underline"
           onClick={() => onNavigate(item.id)}
         >
-          {item.displayname}
+          {item.itemid || item.displayname}
         </h2>
         <p className="text-gray-600">
           {formatCurrency(item.unitprice || item.price)}

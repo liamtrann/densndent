@@ -1,6 +1,6 @@
-import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Paragraph } from "common";
+
+import { Paragraph, StatusBadge } from "common";
 import { formatCurrency } from "config/config";
 
 export default function ListOrdersHistory({ orders = [] }) {
@@ -93,10 +93,8 @@ export default function ListOrdersHistory({ orders = [] }) {
                   )}
                 </div>
 
-                <div className="text-right">
-                  <Paragraph className="text-sm text-gray-600">
-                    {order.status}
-                  </Paragraph>
+                <div className="text-right flex flex-col items-end gap-1">
+                  <StatusBadge status={order.status || "Pending Fulfillment"} />
                   {order.foreigntotal && (
                     <Paragraph className="text-base font-semibold text-gray-800">
                       {formatCurrency(order.foreigntotal)}

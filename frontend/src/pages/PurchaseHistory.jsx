@@ -1,5 +1,15 @@
 // src/pages/PurchaseHistory.jsx
+import { useAuth0 } from "@auth0/auth0-react";
+import ListSubscriptions from "components/product/ListSubscriptions";
 import React, { useState, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import {
+  selectSubscriptions,
+  fetchSubscriptionsForCustomer,
+} from "store/slices/subscriptionsSlice";
+
+import api from "api/api";
+import endpoint from "api/endpoints";
 import {
   InputField,
   Dropdown,
@@ -9,16 +19,8 @@ import {
   Paragraph,
   TextButton,
 } from "common";
-import api from "api/api";
-import endpoint from "api/endpoints";
-import { useAuth0 } from "@auth0/auth0-react";
-import { useSelector, useDispatch } from "react-redux";
 import { ListOrdersHistory, ListProductHistory } from "components";
-import ListSubscriptions from "components/product/ListSubscriptions";
-import {
-  selectSubscriptions,
-  fetchSubscriptionsForCustomer,
-} from "store/slices/subscriptionsSlice";
+import { createStatusOptions } from "constants/constant";
 
 /* small date helpers for summary */
 function daysInMonth(y, m) {
@@ -71,12 +73,7 @@ export default function PurchaseHistory() {
     { value: "oldest", label: "Oldest First" },
   ];
 
-  const statusOptions = [
-    { value: "All", label: "All" },
-    ...Array.from(
-      new Set(orders.map((o) => o.status || "Pending Fulfillment"))
-    ).map((s) => ({ value: s, label: s })),
-  ];
+  const statusOptions = createStatusOptions(orders);
 
   // orders
   useEffect(() => {
@@ -147,7 +144,6 @@ export default function PurchaseHistory() {
   }, [activeTab, userInfo?.id, getAccessTokenSilently, dispatch]);
 
   // summary
-  const totalActive = subscriptions.length;
   const nextDates = subscriptions.map((s) => nextFromToday(s.interval));
   const earliestNextDate =
     nextDates.length > 0

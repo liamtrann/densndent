@@ -17,7 +17,7 @@ import {
 
 import StripeCheckout from "./StripeCheckout";
 
-import { SHIPPING_METHOD } from "@/constants/urls";
+import { SHIPPING_METHOD } from "@/constants/constant";
 
 export default function CheckoutReview({
   stripeCustomerId,

@@ -13,6 +13,7 @@ export { default as Paragraph } from "./ui/Paragraph";
 export { default as MultiStepIndicator } from "./ui/MultiStepIndicator";
 export { default as EmptyCart } from "./ui/EmptyCart";
 export { default as AddressCard } from "./ui/AddressCard";
+export { default as StatusBadge } from "./ui/StatusBadge";
 
 // Product components
 export { default as ProductImage } from "./product/ProductImage";
