@@ -106,7 +106,8 @@ export default function PaymentForm({
         },
       });
 
-      handleServerResponse(response.data.paymentIntent);
+      // Handle the new queue-based response structure
+      handleServerResponse(response.data);
     } catch (err) {
       setCvcError("Payment confirmation failed. Please try again.");
       setIsProcessing(false);
@@ -118,28 +119,33 @@ export default function PaymentForm({
   };
 
   function handleServerResponse(response) {
-    if (response.error) {
-      setCvcError(response.error.message || "Payment failed");
+    const paymentIntent = response.paymentIntent || response;
+    
+    if (paymentIntent.error) {
+      setCvcError(paymentIntent.error.message || "Payment failed");
       setIsProcessing(false);
       ToastNotification.error(
-        response.error.message || "Payment failed. Please try again."
+        paymentIntent.error.message || "Payment failed. Please try again."
       );
       if (onPaymentError) {
-        onPaymentError(response.error);
+        onPaymentError(paymentIntent.error);
       }
-    } else if (response.next_action) {
-      handleAction(response);
-    } else if (response.status === "succeeded") {
+    } else if (paymentIntent.next_action) {
+      handleAction(paymentIntent);
+    } else if (paymentIntent.status === "succeeded") {
       // Clear checkout data after successful payment
       clearCheckoutData();
 
-      ToastNotification.success(
-        "Payment completed successfully! Your order has been placed."
-      );
+      // Show different message based on whether it's queued or direct processing
+      const successMessage = response.jobId 
+        ? "Payment completed successfully! Your order is being processed and you'll receive a confirmation email shortly."
+        : "Payment completed successfully! Your order has been placed.";
+
+      ToastNotification.success(successMessage);
 
       setIsProcessing(false);
       if (onPaymentSuccess) {
-        onPaymentSuccess(response);
+        onPaymentSuccess(paymentIntent);
       }
     } else {
       setIsProcessing(false);
@@ -170,7 +176,7 @@ export default function PaymentForm({
             orderData: orderData,
           })
           .then((resp) => {
-            handleServerResponse(resp.data.paymentIntent);
+            handleServerResponse(resp.data);
           })
           .catch((err) => {
             setCvcError("Payment confirmation failed after authentication");
