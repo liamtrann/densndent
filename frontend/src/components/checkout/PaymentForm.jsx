@@ -136,10 +136,12 @@ export default function PaymentForm({
       // Clear checkout data after successful payment
       clearCheckoutData();
 
-      // Show different message based on whether it's queued or direct processing
-      const successMessage = response.jobId
-        ? "Payment completed successfully! Your order is being processed and you'll receive a confirmation email shortly."
-        : "Payment completed successfully! Your order has been placed.";
+      // Show different message based on whether order creation was completed
+      const successMessage = response.jobResult
+        ? "Payment and order completed successfully! You'll receive a confirmation email shortly."
+        : response.jobId
+          ? "Payment completed successfully! Your order has been created and you'll receive a confirmation email shortly."
+          : "Payment completed successfully! Your order has been placed.";
 
       ToastNotification.success(successMessage);
 

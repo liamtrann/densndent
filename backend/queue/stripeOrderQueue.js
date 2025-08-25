@@ -126,8 +126,29 @@ async function enqueueStripeOrder(paymentIntentId, orderData) {
 
   // Check queue health before adding job
   try {
-    const waitingCount = await stripeOrderQueue.getWaiting();
-    const activeCount = await stripeOrderQueue.getActive();
+    console.log(`🔧 [STRIPE-QUEUE] Starting queue health check...`);
+
+    // Add timeout to prevent hanging
+    const healthCheckPromise = Promise.all([
+      stripeOrderQueue.getWaiting(),
+      stripeOrderQueue.getActive(),
+    ]);
+
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(
+        () => reject(new Error("Health check timeout after 5 seconds")),
+        5000
+      )
+    );
+
+    const [waitingCount, activeCount] = await Promise.race([
+      healthCheckPromise,
+      timeoutPromise,
+    ]);
+
+    console.log(`✅ [STRIPE-QUEUE] Got waiting count: ${waitingCount.length}`);
+    console.log(`✅ [STRIPE-QUEUE] Got active count: ${activeCount.length}`);
+
     console.log(
       `📊 [STRIPE-QUEUE] Queue status - Waiting: ${waitingCount.length}, Active: ${activeCount.length}`
     );
@@ -136,6 +157,7 @@ async function enqueueStripeOrder(paymentIntentId, orderData) {
       `⚠️ [STRIPE-QUEUE] Queue health check failed:`,
       healthError.message
     );
+    console.log(`🔄 [STRIPE-QUEUE] Continuing despite health check failure...`);
   }
 
   try {
@@ -143,7 +165,10 @@ async function enqueueStripeOrder(paymentIntentId, orderData) {
       `📥 [STRIPE-QUEUE] Attempting to add job to queue for payment: ${paymentIntentId}`
     );
 
-    const job = await stripeOrderQueue.add(
+    console.log(`🔧 [STRIPE-QUEUE] Creating job with data...`);
+
+    // Add timeout to job creation to prevent hanging
+    const jobCreationPromise = stripeOrderQueue.add(
       "create-stripe-order",
       {
         paymentIntentId,
@@ -157,6 +182,19 @@ async function enqueueStripeOrder(paymentIntentId, orderData) {
           delay: 2000,
         },
       }
+    );
+
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(
+        () => reject(new Error("Job creation timeout after 10 seconds")),
+        10000
+      )
+    );
+
+    const job = await Promise.race([jobCreationPromise, timeoutPromise]);
+
+    console.log(
+      `✅ [STRIPE-QUEUE] Job created successfully with ID: ${job.id}`
     );
 
     console.log(

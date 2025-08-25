@@ -1,5 +1,9 @@
 const stripeService = require("./stripe.service");
 const restApiService = require("../restapi/restapi.service");
+const {
+  enqueueStripeOrder,
+  checkJobStatus,
+} = require("../queue/stripeOrderQueue");
 
 class StripeController {
   /**
@@ -398,21 +402,62 @@ class StripeController {
 
       console.log(paymentIntent);
 
-      // 2. If payment successful, create order directly
+      // 2. If payment successful, create order via queue
       if (paymentIntent.status === "succeeded" && orderData) {
         console.log(
-          `💳 [STRIPE] Creating sales order for payment: ${paymentIntent.id}`
+          `💳 [STRIPE] Enqueueing sales order for payment: ${paymentIntent.id}`
         );
 
         try {
-          // Create sales order directly using NetSuite API
-          const salesOrder = await restApiService.postRecord(
-            "salesOrder",
-            orderData
+          // Add payment intent ID to order data for tracking
+          const orderDataWithPayment = {
+            ...orderData,
+            stripePaymentIntentId: paymentIntent.id,
+          };
+
+          // Enqueue order creation and wait for completion
+          const job = await enqueueStripeOrder(
+            paymentIntent.id,
+            orderDataWithPayment
           );
 
+          // Wait for the job to complete
           console.log(
-            `✅ [STRIPE] Created sales order ID for payment: ${paymentIntent.id}`
+            `⏳ [STRIPE] Waiting for order creation job ${job?.id} to complete...`
+          );
+
+          // Wait for job completion with timeout
+          const jobResult = await new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => {
+              reject(new Error("Order creation timeout after 30 seconds"));
+            }, 30000); // 30 second timeout
+
+            // Check job status every 1 second
+            const checkStatus = async () => {
+              try {
+                const status = await checkJobStatus(job?.id);
+
+                if (status.status === "completed") {
+                  clearTimeout(timeout);
+                  resolve(status);
+                } else if (status.status === "failed") {
+                  clearTimeout(timeout);
+                  reject(new Error(`Order creation failed: ${status.message}`));
+                } else {
+                  // Job still processing, check again in 1 second
+                  setTimeout(checkStatus, 1000);
+                }
+              } catch (error) {
+                clearTimeout(timeout);
+                reject(error);
+              }
+            };
+
+            checkStatus();
+          });
+
+          console.log(
+            `✅ [STRIPE] Order creation completed successfully for payment: ${paymentIntent.id}`
           );
 
           res.status(200).json({
@@ -426,11 +471,13 @@ class StripeController {
               next_action: paymentIntent.next_action,
               charges: paymentIntent.charges,
             },
+            jobId: job?.id,
+            jobResult: jobResult,
             message: "Payment confirmed and order created successfully",
           });
         } catch (orderError) {
           console.error(
-            `❌ [STRIPE] Sales order creation failed for payment ${paymentIntent.id}:`,
+            `❌ [STRIPE] Order creation failed for payment ${paymentIntent.id}:`,
             orderError.message
           );
 
@@ -474,6 +521,38 @@ class StripeController {
       res.status(500).json({
         success: false,
         message: "Could not confirm payment",
+        error: process.env.NODE_ENV === "development" ? err.message : undefined,
+      });
+    }
+  }
+
+  /**
+   * Check order creation job status
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   */
+  async checkOrderJobStatus(req, res) {
+    try {
+      const { jobId } = req.params;
+
+      if (!jobId) {
+        return res.status(400).json({
+          success: false,
+          message: "Job ID is required",
+        });
+      }
+
+      const status = await checkJobStatus(jobId);
+
+      res.status(200).json({
+        success: true,
+        jobStatus: status,
+      });
+    } catch (err) {
+      console.error("Error checking job status:", err);
+      res.status(500).json({
+        success: false,
+        message: "Could not check job status",
         error: process.env.NODE_ENV === "development" ? err.message : undefined,
       });
     }
