@@ -18,18 +18,54 @@ import {
 
 import ToastNotification from "@/common/toast/Toast";
 
+/** UI-size helpers so all compact controls match */
+const CTRL_SIZE = "h-9";
+const BTN_TIGHT = `${CTRL_SIZE} leading-none px-3 text-xs`;
+
+const STATUS_OPTIONS = [
+  { value: "active", label: "Active subscription" },
+  { value: "paused", label: "Pause subscription" },
+  { value: "canceled", label: "Cancel subscription" },
+];
+
+/** Map status choice to backend payloads.
+ * Adjust IDs here if your NetSuite custom record uses different values:
+ *   1 = Active, 2 = Paused, 3 = Canceled
+ */
+const STATUS_PAYLOADS = {
+  active: { custrecord_ro_status: { id: "1" } },
+  paused: { custrecord_ro_status: { id: "2" } },
+  canceled: SUBSCRIPTION_CANCEL_PAYLOAD, // { custrecord_ro_status: { id: "3" } }
+};
+
 export default function ListSubscriptions() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
 
   // per-row states
-  const [pending, setPending] = useState({}); // { [roId]: "1"|"2"|"3"|"6" }
-  const [saving, setSaving] = useState({}); // { [roId]: boolean }
-  const [canceling, setCanceling] = useState({}); // { [roId]: boolean }
-  const [confirming, setConfirming] = useState(null); // the row we’re confirming
+  const [pending, setPending] = useState({});        // interval (string)
+  const [saving, setSaving] = useState({});          // saving interval flag
+
+  const [pendingDate, setPendingDate] = useState({}); // yyyy-mm-dd per roId
+  const [savingDate, setSavingDate] = useState({});   // saving date flag
+
+  // NEW: per-row subscription status
+  const [pendingStatus, setPendingStatus] = useState({}); // "active" | "paused" | "canceled"
+  const [savingStatus, setSavingStatus] = useState({});   // status save flag
+
+  // cancel confirm modal
+  const [confirming, setConfirming] = useState(null);     // row pending cancel
 
   const userInfo = useSelector((state) => state.user.info);
   const { getAccessTokenSilently } = useAuth0();
+
+  // helper → format Date as YYYY-MM-DD (local)
+  const toInputDate = (d) => {
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  };
 
   /** Fetch subscriptions */
   useEffect(() => {
@@ -38,30 +74,67 @@ export default function ListSubscriptions() {
       if (!userInfo?.id) return;
       setLoading(true);
       try {
-        const token = await getAccessTokenSilently(); // get the Auth0 access token and send it as Bearer
+        const token = await getAccessTokenSilently();
         const res = await api.get(
           endpoint.GET_RECURRING_ORDERS_BY_CUSTOMER({
             customerId: userInfo.id,
             timestamp: Date.now(),
           }),
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
+
         const raw = res.data?.items || res.data || [];
+
+        // build a status map from raw so we can prefill "paused" if present
+        const statusMap = {};
+        raw.forEach((r) => {
+          const sid = String(
+            r?.custrecord_ro_status?.id ??
+            r?.custrecord_ro_status ??
+            r?.statusId ??
+            r?.status ??
+            ""
+          );
+          statusMap[
+            r.id ?? r.internalid ?? r.roId
+          ] = sid === "3" ? "canceled" : sid === "2" ? "paused" : "active";
+        });
+
         const activeOnly = raw.filter((r) => !isSubscriptionCanceled(r));
         const subs = activeOnly.map(normalizeSubscriptionRecord);
 
         if (mounted) {
           setItems(subs);
-          const init = {};
-          subs.forEach((s) => (init[s.roId] = s.interval));
-          setPending(init);
+
+          // init interval state
+          const initIntervals = {};
+          subs.forEach((s) => (initIntervals[s.roId] = s.interval));
+          setPending(initIntervals);
+
+          // init date state (default to computed next from interval)
+          const initDates = {};
+          subs.forEach((s) => {
+            const computed = nextFromToday(s.interval);
+            initDates[s.roId] = toInputDate(computed);
+          });
+          setPendingDate(initDates);
+
+          // init status (use raw-derived map; canceled ones were filtered out)
+          const initStatus = {};
+          subs.forEach((s) => {
+            initStatus[s.roId] = statusMap[s.roId] || "active";
+          });
+          setPendingStatus(initStatus);
         }
       } catch (err) {
         console.error("Error loading subscriptions:", err);
         ToastNotification.error("Failed to load subscriptions.");
-        if (mounted) setItems([]);
+        if (mounted) {
+          setItems([]);
+          setPending({});
+          setPendingDate({});
+          setPendingStatus({});
+        }
       } finally {
         if (mounted) setLoading(false);
       }
@@ -72,6 +145,7 @@ export default function ListSubscriptions() {
     };
   }, [userInfo?.id, getAccessTokenSilently]);
 
+  /* ---------- Interval handlers ---------- */
   const handleIntervalChange = (s, value) => {
     setPending((prev) => ({ ...prev, [s.roId]: value }));
   };
@@ -82,11 +156,11 @@ export default function ListSubscriptions() {
 
     setSaving((prev) => ({ ...prev, [s.roId]: true }));
     try {
-      const token = await getAccessTokenSilently();  // include token on the interval update PATCH
+      const token = await getAccessTokenSilently();
       await api.patch(
-        endpoint.SET_RECURRING_ORDER_INTERVAL(s.roId),
+        endpoint.UPDATE_RECURRING_ORDER(s.roId),
         buildIntervalPatchPayload(selected),
-        { headers: { Authorization: `Bearer ${token}` } }  // ⬅️ token added here Bearer <token> is the standard way to send tokens.
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       setItems((prev) =>
@@ -103,22 +177,91 @@ export default function ListSubscriptions() {
     }
   };
 
+  /* ---------- Next Order DATE handlers ---------- */
+  const handleDateChange = (s, value) => {
+    setPendingDate((prev) => ({ ...prev, [s.roId]: value }));
+  };
+
+  const handleSaveDate = async (s) => {
+    const val = pendingDate[s.roId];
+    if (!val) return;
+
+    setSavingDate((prev) => ({ ...prev, [s.roId]: true }));
+    try {
+      const token = await getAccessTokenSilently();
+      await api.patch(
+        endpoint.UPDATE_RECURRING_ORDER(s.roId),
+        { custrecord_ro_next_run: val }, // backend field for next order date
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      ToastNotification.success("Next order date updated.");
+    } catch (err) {
+      console.error("Failed to update next order date:", err);
+      ToastNotification.error("Failed to update date. Please try again.");
+    } finally {
+      setSavingDate((prev) => ({ ...prev, [s.roId]: false }));
+    }
+  };
+
+  /* ---------- Status (Active/Pause/Cancel) handlers ---------- */
+  const handleStatusChange = (s, value) => {
+    setPendingStatus((prev) => ({ ...prev, [s.roId]: value }));
+  };
+
+  const handleSaveStatus = async (s) => {
+    const choice = pendingStatus[s.roId] || "active";
+
+    // If user picked "Cancel", defer to the confirmation modal.
+    if (choice === "canceled") {
+      setConfirming(s);
+      return;
+    }
+
+    // Otherwise: patch Active or Paused
+    setSavingStatus((prev) => ({ ...prev, [s.roId]: true }));
+    try {
+      const token = await getAccessTokenSilently();
+      const payload = STATUS_PAYLOADS[choice];
+      await api.patch(
+        endpoint.UPDATE_RECURRING_ORDER(s.roId),
+        payload,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      ToastNotification.success(
+        choice === "paused" ? "Subscription paused." : "Subscription activated."
+      );
+    } catch (err) {
+      console.error("Failed to update subscription status:", err);
+      ToastNotification.error("Failed to update subscription status.");
+    } finally {
+      setSavingStatus((prev) => ({ ...prev, [s.roId]: false }));
+    }
+  };
+
   /** Actually cancel (called by modal confirm) */
   const performCancel = async (s) => {
-    setCanceling((prev) => ({ ...prev, [s.roId]: true }));
+    setSavingStatus((prev) => ({ ...prev, [s.roId]: true }));
     try {
       const token = await getAccessTokenSilently();
       const response = await api.patch(
         endpoint.UPDATE_RECURRING_ORDER(s.roId),
-        SUBSCRIPTION_CANCEL_PAYLOAD,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        STATUS_PAYLOADS.canceled,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-
       if (response.status >= 200 && response.status < 300) {
+        // remove from list
         setItems((prev) => prev.filter((it) => it.roId !== s.roId));
         setPending((prev) => {
+          const cp = { ...prev };
+          delete cp[s.roId];
+          return cp;
+        });
+        setPendingDate((prev) => {
+          const cp = { ...prev };
+          delete cp[s.roId];
+          return cp;
+        });
+        setPendingStatus((prev) => {
           const cp = { ...prev };
           delete cp[s.roId];
           return cp;
@@ -129,11 +272,9 @@ export default function ListSubscriptions() {
       }
     } catch (err) {
       console.error("Failed to cancel subscription:", err);
-      ToastNotification.error(
-        "Failed to cancel subscription. Please try again."
-      );
+      ToastNotification.error("Failed to cancel subscription. Please try again.");
     } finally {
-      setCanceling((prev) => ({ ...prev, [s.roId]: false }));
+      setSavingStatus((prev) => ({ ...prev, [s.roId]: false }));
       setConfirming(null);
     }
   };
@@ -164,16 +305,18 @@ export default function ListSubscriptions() {
       <div className="space-y-4">
         {items.map((s) => {
           const intervalNow = pending[s.roId] ?? s.interval;
-          const nextDate = nextFromToday(s.interval);
-          const isDirty = intervalNow !== s.interval;
-          const isSaving = !!saving[s.roId];
-          const isCancelingRow = !!canceling[s.roId];
+          const isDirtyInterval = intervalNow !== s.interval;
+          const isSavingInterval = !!saving[s.roId];
+
+          const dateVal =
+            pendingDate[s.roId] || toInputDate(nextFromToday(s.interval));
+          const isSavingNextDate = !!savingDate[s.roId];
+
+          const statusVal = pendingStatus[s.roId] || "active";
+          const isSavingThisStatus = !!savingStatus[s.roId];
 
           return (
-            <div
-              key={s.roId}
-              className="flex items-start gap-4 border rounded-md p-3"
-            >
+            <div key={s.roId} className="flex items-start gap-4 border rounded-md p-3">
               <ProductImage
                 src={s.file_url}
                 alt={s.displayname || s.itemid || "Product"}
@@ -185,48 +328,78 @@ export default function ListSubscriptions() {
                     {s.displayname || s.itemid || `#${s.productId || s.roId}`}
                   </div>
                 </div>
+
+                {/* Interval (readable) */}
                 <Paragraph className="mt-1 text-sm text-gray-600">
-                  Interval:{" "}
-                  {s.interval === "1"
-                    ? "Every 1 month"
-                    : `Every ${s.interval} months`}
-                </Paragraph>
-                <Paragraph className="text-xs text-gray-500 mt-1">
-                  Next Order:{" "}
-                  <span className="font-medium">
-                    {formatLocalDateToronto(nextDate)}
-                  </span>
+                  Interval: {intervalNow === "1" ? "Every 1 month" : `Every ${intervalNow} months`}
                 </Paragraph>
 
+                {/* Next Order: editable date picker */}
+                <div className="mt-1 flex items-center gap-2">
+                  <span className="text-xs text-gray-500">Next Order:</span>
+                  <input
+                    type="date"
+                    className={`${CTRL_SIZE} border rounded px-2 text-xs`}
+                    value={dateVal}
+                    onChange={(e) => handleDateChange(s, e.target.value)}
+                    aria-label="Choose next order date"
+                  />
+                  <Button
+                    variant="ghost"
+                    className={`${BTN_TIGHT} border border-gray-300 text-gray-700 hover:bg-gray-50`}
+                    onClick={() => handleSaveDate(s)}
+                    disabled={isSavingNextDate || isSavingInterval || isSavingThisStatus}
+                  >
+                    {isSavingNextDate ? "Saving..." : "Save"}
+                  </Button>
+                  <span className="text-[11px] text-gray-400">
+                    ({formatLocalDateToronto(new Date(dateVal))})
+                  </span>
+                </div>
+
+                {/* Estimated delivery */}
+                <Paragraph className="text-xs text-gray-500 mt-1">
+                  Estimated Delivery: <span className="font-medium">5 Days</span>
+                </Paragraph>
+
+                {/* Controls row */}
                 <div className="mt-3 flex flex-wrap items-center gap-3">
-                  {/* <div className="w-48">
+                  {/* Change interval */}
+                  <div className="w-44">
                     <Dropdown
                       label="Change interval"
                       value={intervalNow}
                       onChange={(e) => handleIntervalChange(s, e.target.value)}
                       options={INTERVAL_OPTIONS}
-                      className="h-10"
+                      className={`${CTRL_SIZE} py-0`}
                     />
-                  </div> */}
-
-                  {/* Save (ghost) */}
-                  {/* <Button
+                  </div>
+                  <Button
                     variant="ghost"
-                    className="h-10 px-4 border border-gray-300 text-gray-700 hover:bg-gray-50"
-                    disabled={!isDirty || isSaving || isCancelingRow}
+                    className={`${BTN_TIGHT} border border-gray-300 text-gray-700 hover:bg-gray-50`}
+                    disabled={!isDirtyInterval || isSavingInterval || isSavingNextDate || isSavingThisStatus}
                     onClick={() => handleSaveInterval(s)}
                   >
-                    {isSaving ? "Saving..." : "Save"}
-                  </Button> */}
+                    {isSavingInterval ? "Saving..." : "Save"}
+                  </Button>
 
-                  {/* Cancel (ghost danger) -> modal */}
+                  {/* Subscription status (Active / Pause / Cancel) */}
+                  <div className="w-56 ml-auto md:ml-6">
+                    <Dropdown
+                      label="Subscription"
+                      value={statusVal}
+                      onChange={(e) => handleStatusChange(s, e.target.value)}
+                      options={STATUS_OPTIONS}
+                      className={`${CTRL_SIZE} py-0`}
+                    />
+                  </div>
                   <Button
-                    variant="dangerGhost"
-                    className="h-10 px-4 whitespace-nowrap font-normal underline hover:no-underline"
-                    disabled={isSaving || isCancelingRow}
-                    onClick={() => setConfirming(s)}
+                    variant="ghost"
+                    className={`${BTN_TIGHT} border border-gray-300 text-gray-700 hover:bg-gray-50`}
+                    disabled={isSavingInterval || isSavingNextDate || isSavingThisStatus}
+                    onClick={() => handleSaveStatus(s)}
                   >
-                    {isCancelingRow ? "Cancelling..." : "Cancel subscription"}
+                    {isSavingThisStatus ? "Saving..." : "Save"}
                   </Button>
                 </div>
               </div>
@@ -235,11 +408,11 @@ export default function ListSubscriptions() {
         })}
       </div>
 
-      {/* Confirmation Modal */}
+      {/* Confirmation Modal for "Cancel subscription" */}
       <ConfirmCancelSubscription
         open={!!confirming}
         productTitle={confirming?.displayname || confirming?.itemid}
-        loading={confirming ? !!canceling[confirming.roId] : false}
+        loading={confirming ? !!savingStatus[confirming.roId] : false}
         onClose={() => setConfirming(null)}
         onConfirm={() => confirming && performCancel(confirming)}
       />

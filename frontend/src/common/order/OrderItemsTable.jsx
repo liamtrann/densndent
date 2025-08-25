@@ -18,7 +18,7 @@ function HoverProductLink({ productId, children, name, sku, qty, rate }) {
         {children}
       </Link>
 
-      {/* Hover card (optional visual) */}
+      {/* Hover card (optional) */}
       <div
         className="pointer-events-none absolute left-0 top-full mt-2 z-10 w-60 bg-white border rounded shadow px-3 py-2 text-xs text-gray-700 opacity-0 translate-y-1 transition
                    group-hover:opacity-100 group-hover:translate-y-0"
@@ -43,8 +43,8 @@ export default function OrderItemsTable({ lines = [] }) {
     <table className="min-w-full text-sm">
       <thead>
         <tr className="text-left text-gray-600 border-b">
-          <th className="px-5 py-3">Product</th>
-          <th className="px-5 py-3 hidden sm:table-cell">SKU</th>
+          <th className="px-5 py-3">Product Image</th>
+          <th className="px-5 py-3 hidden sm:table-cell">Product Name</th>
           <th className="px-5 py-3 text-right">Qty</th>
           <th className="px-5 py-3 text-right">Unit Price</th>
           <th className="px-5 py-3 text-right">Line Total</th>
@@ -53,31 +53,20 @@ export default function OrderItemsTable({ lines = [] }) {
       <tbody>
         {lines.map((l, idx) => (
           <tr key={l.lineId ?? idx} className="border-b last:border-b-0">
-            {/* Product (image + linked name) */}
+            {/* Product Image ONLY (no link/text) */}
             <td className="px-5 py-4">
-              <div className="flex items-center gap-3">
-                {l.image ? (
-                  <ProductImage
-                    src={l.image}
-                    alt={l.name}
-                    className="w-12 h-12 object-contain border rounded"
-                  />
-                ) : (
-                  <div className="w-12 h-12 rounded border bg-gray-50" />
-                )}
-                <HoverProductLink
-                  productId={l.productId}
-                  name={l.name}
-                  sku={l.sku}
-                  qty={l.quantity}
-                  rate={l.rate}
-                >
-                  {l.name}
-                </HoverProductLink>
-              </div>
+              {l.image ? (
+                <ProductImage
+                  src={l.image}
+                  alt={l.name}
+                  className="w-12 h-12 object-contain border rounded"
+                />
+              ) : (
+                <div className="w-12 h-12 rounded border bg-gray-50" />
+              )}
             </td>
 
-            {/* SKU (linked the same way) */}
+            {/* Second column (still using your linked text) */}
             <td className="px-5 py-4 hidden sm:table-cell text-gray-600">
               {l.sku ? (
                 <HoverProductLink
@@ -90,7 +79,14 @@ export default function OrderItemsTable({ lines = [] }) {
                   {l.sku}
                 </HoverProductLink>
               ) : (
-                "—"
+                <HoverProductLink
+                  productId={l.productId}
+                  name={l.name}
+                  qty={l.quantity}
+                  rate={l.rate}
+                >
+                  {l.name}
+                </HoverProductLink>
               )}
             </td>
 
