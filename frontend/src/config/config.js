@@ -3,6 +3,93 @@ import { useState, useEffect } from "react";
 import api from "../api/api.js";
 import { SHIPPING_METHOD } from "@/constants/urls.js";
 
+/* =======================
+   Order/Number utils (NEW)
+   ======================= */
+
+// first non-null/undefined/empty value
+export const pick = (...vals) =>
+  vals.find((v) => v !== undefined && v !== null && v !== "");
+
+// robust numeric parse (handles strings like "$1,234.50")
+export function toNum(v) {
+  if (v === undefined || v === null) return 0;
+  if (typeof v === "number") return Number.isFinite(v) ? v : 0;
+  const n = parseFloat(String(v).replace(/[^\d.-]/g, ""));
+  return Number.isFinite(n) ? n : 0;
+}
+
+export const round2 = (n) => Math.round((toNum(n) + Number.EPSILON) * 100) / 100;
+
+/**
+ * Normalize a SuiteQL/REST order line into a predictable, positive-display shape.
+ * Ensures qty, rate, amount are ABS() so no leading "-" in the UI.
+ */
+export function normalizeOrderLine(row) {
+  const rawQty = toNum(
+    pick(row.total_quantity, row.quantity, row.qty, row.custcol_quantity, 0)
+  );
+  const quantity = Math.abs(rawQty);
+
+  const rawRate = toNum(pick(row.rate, row.unitprice, row.price, row.rateamount, 0));
+  const rate = Math.abs(rawRate);
+
+  const rawAmount = toNum(pick(row.netamount, row.rateamount, row.amount, quantity * rate));
+  const amount = Math.abs(rawAmount);
+
+  return {
+    lineId: pick(row.line, row.linenumber, row.lineId, row.seq) ?? Math.random(),
+    productId: pick(row.item, row.itemId, row.item_id, row.internalid, row.id), // <-- add this
+    sku: pick(row.itemid, row.itemId, row.item_id, row.sku, ""),
+    name: pick(
+      row.itemname,
+      row.item_displayname,
+      row.displayname,
+      row.itemid,
+      row.name,
+      "Item"
+    ),
+    quantity,
+    rate,
+    amount,
+    image: pick(row.file_url, row.image, row.thumbnail, row.fileurl, ""),
+  };
+}
+
+/** Sum line amounts (robust: prefers amount, falls back to qty*rate; always positive) */
+export function computeLinesSubtotal(lines = []) {
+  const sum = lines.reduce((acc, l) => {
+    const qty = Math.abs(toNum(l?.quantity));
+    const rate = Math.abs(toNum(l?.rate));
+    const amount = toNum(l?.amount);
+    const lineTotal = Math.abs(amount > 0 ? amount : round2(qty * rate));
+    return acc + lineTotal;
+  }, 0);
+  return round2(sum);
+}
+
+/**
+ * Prefer header total (may include tax/shipping/fees) with sensible fallbacks.
+ * Tries: totalAfterDiscount → foreigntotal → total → grandtotal; uses ABS() and
+ * falls back to the (positive) subtotal when header isn't a valid positive number.
+ */
+export function computeOrderTotalFromSummary(summary = {}, fallbackSubtotal = 0) {
+  const headerRaw = pick(
+    summary?.totalAfterDiscount,
+    summary?.foreigntotal,
+    summary?.total,
+    summary?.grandtotal
+  );
+  const header = Math.abs(toNum(headerRaw));
+  const subtotal = Math.abs(toNum(fallbackSubtotal));
+  const total = header > 0 ? header : subtotal;
+  return round2(total);
+}
+
+/* =======================
+   Existing utilities
+   ======================= */
+
 function extractBuyGet(str) {
   const numbers = str.match(/\d+/g);
   return {
@@ -168,7 +255,6 @@ async function getTotalPriceAfterDiscount(productId, unitPrice, quantity) {
       promotionApplied: bestPromotion,
     };
   } catch (error) {
-    // console.error("Error calculating discount:", error);
     // Return original price if error occurs
     const originalTotal = Number(unitPrice) * Number(quantity);
     return {
@@ -533,9 +619,8 @@ function buildIdempotencyKey(
     .sort()
     .join("|");
   const windowBucket = Math.floor(Date.now() / (windowMins * 60 * 1000));
-  const raw = `${
-    userInfo?.id || "anon"
-  }|${shipMethodId}|${cartKey}|${windowBucket}`;
+  const raw = `${userInfo?.id || "anon"
+    }|${shipMethodId}|${cartKey}|${windowBucket}`;
 
   // Simple base64 makes it compact and header-safe
   try {

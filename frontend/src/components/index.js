@@ -7,6 +7,13 @@ export { default as CartSummaryPanel } from "./cart/CartSummaryPanel";
 
 // Checkout components
 export { default as CheckoutSummary } from "./checkout/CheckoutSummary";
+export { default as AddPaymentMethod } from "./checkout/AddPaymentMethod";
+export { default as CheckoutPayment } from "./checkout/CheckoutPayment";
+export { default as CheckoutReview } from "./checkout/CheckoutReview";
+export { default as CheckoutShipping } from "./checkout/CheckoutShipping";
+export { default as PaymentForm } from "./checkout/PaymentForm";
+export { default as SavedPaymentMethods } from "./checkout/SavedPaymentMethods";
+export { default as StripeCheckout } from "./checkout/StripeCheckout";
 
 // Common components
 export { default as EstimateTotal } from "./EstimateTotal";
@@ -75,3 +82,6 @@ export { default as MailingList } from "./sections/MailingList";
 export { default as ShopByBrand } from "./sections/ShopByBrand";
 export { default as Sidebar } from "./sections/Sidebar";
 export { default as RecentlyViewedSection } from "./sections/RecentlyViewedSection";
+
+// Stripe components
+export { default as StripeWrapper } from "./stripe/StripeWrapper";

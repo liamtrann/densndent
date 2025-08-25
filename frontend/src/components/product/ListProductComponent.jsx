@@ -11,6 +11,8 @@ import {
 } from "common";
 import FilterOption from "../filters/FilterOption";
 import ProductListGrid from "./ProductListGrid";
+import ProductListRows from "./ProductListRows";
+
 export default function ListProductComponent({
   type,
   id,
@@ -20,6 +22,7 @@ export default function ListProductComponent({
   const [perPage, setPerPage] = useState(12);
   const [sort, setSort] = useState("");
   const [page, setPage] = useState(1);
+  const [view, setView] = useState("grid");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState({
     minPrice: "",
@@ -35,26 +38,22 @@ export default function ListProductComponent({
   });
 
   const dispatch = useDispatch();
-  const { minPrice, maxPrice } = appliedFilters;
-  const priceKey = `${minPrice || ""}_${maxPrice || ""}`;
-  const effectiveId = id || "all"; // Use "all" when id is null
+  const priceKey = `${appliedFilters.minPrice || ""}_${appliedFilters.maxPrice || ""}`;
+  const effectiveId = id || "all";
   const key = `${effectiveId}_${perPage}_${sort}_${priceKey}_${page}`;
   const countKey = `${effectiveId}_${priceKey}`;
+
   const products = useSelector(
     (state) => state.products.productsByPage[key] || []
   );
   const isLoading = useSelector((state) => state.products.isLoading);
   const error = useSelector((state) => state.products.error);
-  // Use price-aware count key for filtered totals
   const total = useSelector((state) => {
-    // Try the price-aware count key first
     const count = state.products.totalCounts?.[countKey];
-    if (count !== undefined) {
-      return count;
-    }
-    return 0;
+    return count !== undefined ? count : 0;
   });
 
+  // initial count
   useEffect(() => {
     setPage(1);
     setSort("");
@@ -70,7 +69,7 @@ export default function ListProductComponent({
     }
   }, [dispatch, type, id, effectiveId]);
 
-  // Separate useEffect for fetching filtered count when filters are applied
+  // filtered count
   useEffect(() => {
     if (
       (id || type === "all") &&
@@ -87,14 +86,9 @@ export default function ListProductComponent({
         )
       );
     }
-  }, [
-    dispatch,
-    type,
-    effectiveId,
-    appliedFilters.minPrice,
-    appliedFilters.maxPrice,
-  ]);
+  }, [dispatch, type, effectiveId, appliedFilters.minPrice, appliedFilters.maxPrice]);
 
+  // product page fetch
   useEffect(() => {
     if (id || type === "all") {
       if (!products || products.length === 0) {
@@ -127,19 +121,12 @@ export default function ListProductComponent({
 
   const totalPages = Math.ceil(total / perPage) || 1;
 
-  const handleFiltersChange = (newFilters) => {
-    setFilters(newFilters);
-    // Don't reset page or trigger API call here - only on Apply
-  };
+  const handleFiltersChange = (newFilters) => setFilters(newFilters);
 
   const handleApplyFilters = () => {
-    // Set the applied filters (this will trigger useEffect to fetch new data)
     setAppliedFilters(filters);
-
-    // Reset to first page when applying filters
     setPage(1);
 
-    // Fetch updated count with filters
     if (filters.minPrice || filters.maxPrice) {
       dispatch(
         fetchCountBy({
@@ -159,9 +146,8 @@ export default function ListProductComponent({
         {headerTitle}
       </h1>
 
-      {/* Desktop: 3-column layout, Mobile: Single column stack */}
       <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 items-start">
-        {/* Left Column: Filters - Hidden on mobile, shown on desktop */}
+        {/* Filters (desktop) */}
         {products.length > 0 && (
           <FilterOption
             className="hidden lg:block"
@@ -171,9 +157,9 @@ export default function ListProductComponent({
           />
         )}
 
-        {/* Center Column: Main product area */}
+        {/* Main area */}
         <div className="flex-1 w-full">
-          {/* Mobile filter toggle button */}
+          {/* Mobile filters */}
           {products.length > 0 && (
             <div className="lg:hidden mb-4">
               <button
@@ -182,23 +168,15 @@ export default function ListProductComponent({
               >
                 <span className="font-medium">Filters & Sort</span>
                 <svg
-                  className={`w-5 h-5 transform transition-transform ${
-                    showMobileFilters ? "rotate-180" : ""
-                  }`}
+                  className={`w-5 h-5 transform transition-transform ${showMobileFilters ? "rotate-180" : ""}`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
 
-              {/* Mobile filters dropdown */}
               {showMobileFilters && (
                 <div className="mt-2 bg-white border rounded-lg shadow-lg p-4">
                   <FilterOption
@@ -215,6 +193,7 @@ export default function ListProductComponent({
             </div>
           )}
 
+          {/* Toolbar with Grid/List toggle */}
           {products.length > 0 && (
             <ProductToolbar
               perPageOptions={[12, 24, 48]}
@@ -226,35 +205,38 @@ export default function ListProductComponent({
               sort={sort}
               onSortChange={(e) => setSort(e.target.value)}
               total={total}
+              view={view}
+              onViewChange={setView}
             />
           )}
+
+          {/* Top pagination */}
           {products.length > 0 && (
             <div className="mb-4">
-              <Pagination
-                page={page}
-                totalPages={totalPages}
-                onPageChange={setPage}
-              />
+              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
             </div>
           )}
+
           {isLoading && <Loading message="Loading products..." />}
           {error && <ErrorMessage message={error} />}
+
           {!isLoading && !error && products.length === 0 && (
-            <div className="text-gray-500 py-8 text-center">
-              No products found for this category.
-            </div>
+            <div className="text-gray-500 py-8 text-center">No products found for this category.</div>
           )}
+
+          {/* Actual products: switch Grid/List */}
           {!isLoading && !error && products.length > 0 && (
-            <ProductListGrid products={products} />
+            view === "grid" ? (
+              <ProductListGrid products={products} />
+            ) : (
+              <ProductListRows products={products} />
+            )
           )}
-          {/* Bottom pagination for mobile */}
+
+          {/* Bottom pagination */}
           {products.length > 0 && (
             <div className="mt-6">
-              <Pagination
-                page={page}
-                totalPages={totalPages}
-                onPageChange={setPage}
-              />
+              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
             </div>
           )}
         </div>
