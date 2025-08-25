@@ -98,29 +98,27 @@ export default function StripeCheckout({
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Left Column - Payment Method Selection */}
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-xl font-semibold mb-4">
-                Select Payment Method
-              </h2>
-              <SavedPaymentMethods
-                customerId={stripeCustomerId}
-                onSelectPaymentMethod={handleSelectPaymentMethod}
-                selectedPaymentMethodId={selectedPaymentMethodId}
-                showTitle={false}
-              />
-            </div>
-
-            {error && (
-              <div className="bg-red-50 border border-red-200 p-4 rounded-lg">
-                <p className="text-red-700 text-sm">{error}</p>
-              </div>
-            )}
+        <div className="space-y-8">
+          {/* Payment Method Selection */}
+          <div>
+            <h2 className="text-xl font-semibold mb-4">
+              Select Payment Method
+            </h2>
+            <SavedPaymentMethods
+              customerId={stripeCustomerId}
+              onSelectPaymentMethod={handleSelectPaymentMethod}
+              selectedPaymentMethodId={selectedPaymentMethodId}
+              showTitle={false}
+            />
           </div>
 
-          {/* Right Column - Payment Form */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 p-4 rounded-lg">
+              <p className="text-red-700 text-sm">{error}</p>
+            </div>
+          )}
+
+          {/* Payment Form */}
           <div>
             {paymentIntent && selectedPaymentMethod ? (
               <PaymentForm
