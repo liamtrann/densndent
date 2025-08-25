@@ -35,6 +35,8 @@ export default function OrderDetails() {
     getAccessTokenSilently,
   });
 
+  console.log(lines)
+
   const summary = state?.orderSummary || {};
   const subtotal = useMemo(() => computeLinesSubtotal(lines), [lines]);
   const orderTotal = useMemo(

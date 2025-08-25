@@ -1,11 +1,13 @@
 // src/common/order/OrderItemsTable.jsx
 import React from "react";
 import { Link } from "react-router-dom";
+
 import { ProductImage } from "common";
 import { formatCurrency } from "config/config";
 
 function HoverProductLink({ productId, children, name, sku, qty, rate }) {
-  if (!productId) return <span className="font-medium text-gray-900">{children}</span>;
+  if (!productId)
+    return <span className="font-medium text-gray-900">{children}</span>;
 
   return (
     <span className="relative inline-block group">
@@ -59,10 +61,10 @@ export default function OrderItemsTable({ lines = [] }) {
                 <ProductImage
                   src={l.image}
                   alt={l.name}
-                  className="w-12 h-12 object-contain border rounded"
+                  className="w-20 h-20 object-contain border rounded"
                 />
               ) : (
-                <div className="w-12 h-12 rounded border bg-gray-50" />
+                <div className="w-20 h-20 rounded border bg-gray-50" />
               )}
             </td>
 
