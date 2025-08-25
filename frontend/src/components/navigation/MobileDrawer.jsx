@@ -56,7 +56,7 @@ function MobileDrawer({
         <div>
           <div className="flex items-center">
             <Link
-              to="/products/all-products"
+              to="/products"
               onClick={onClose}
               className="flex-1 py-2"
             >
