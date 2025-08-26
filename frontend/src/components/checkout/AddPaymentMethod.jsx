@@ -1,3 +1,4 @@
+import { useAuth0 } from "@auth0/auth0-react";
 import {
   CardNumberElement,
   CardExpiryElement,
@@ -36,6 +37,7 @@ export default function AddPaymentMethod({
 }) {
   const stripe = useStripe();
   const elements = useElements();
+  const { getAccessTokenSilently } = useAuth0();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -57,8 +59,6 @@ export default function AddPaymentMethod({
   };
 
   const handleSubmit = async (event) => {
-
-    console.log("test")
     event.preventDefault();
 
     if (!stripe || !elements) {
@@ -108,11 +108,19 @@ export default function AddPaymentMethod({
         return;
       }
 
+      // Get the authorization token
+      const token = await getAccessTokenSilently();
+
       // Send payment method ID to backend to attach to customer
       const response = await api.post(
         endpoints.POST_ATTACH_PAYMENT_METHOD(customerId),
         {
           paymentMethod: paymentMethod,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 

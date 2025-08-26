@@ -109,13 +109,22 @@ export default function CheckoutReview({
     if (!selectedPaymentMethodId || !orderTotal) return;
 
     try {
-      const response = await api.post(endpoint.POST_CREATE_PAYMENT(), {
-        paymentMethod: selectedPaymentMethodId,
-        amount: formatPrice(orderTotal),
-        currency: "cad",
-        customerId: stripeCustomerId,
-        description: `Order payment for ${cartItems.length} item(s)`,
-      });
+      const token = await getAccessTokenSilently();
+      const response = await api.post(
+        endpoint.POST_CREATE_PAYMENT(),
+        {
+          paymentMethod: selectedPaymentMethodId,
+          amount: formatPrice(orderTotal),
+          currency: "cad",
+          customerId: stripeCustomerId,
+          description: `Order payment for ${cartItems.length} item(s)`,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       return response.data.paymentIntent;
     } catch (err) {

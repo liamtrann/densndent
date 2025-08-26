@@ -1,3 +1,4 @@
+import { useAuth0 } from "@auth0/auth0-react";
 import { useState, useEffect, useCallback } from "react";
 
 import api from "api/api";
@@ -10,6 +11,7 @@ export default function SavedPaymentMethods({
   selectedPaymentMethodId,
   showTitle = true,
 }) {
+  const { getAccessTokenSilently } = useAuth0();
   const [paymentMethods, setPaymentMethods] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -17,14 +19,22 @@ export default function SavedPaymentMethods({
   const fetchPaymentMethods = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await api.get(endpoints.GET_PAYMENT_METHODS(customerId));
+      const token = await getAccessTokenSilently();
+      const response = await api.get(
+        endpoints.GET_PAYMENT_METHODS(customerId),
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       setPaymentMethods(response.data.paymentMethods || []);
     } catch (err) {
       setError("Failed to load payment methods");
     } finally {
       setLoading(false);
     }
-  }, [customerId]);
+  }, [customerId, getAccessTokenSilently]);
 
   useEffect(() => {
     if (customerId) {
@@ -34,7 +44,12 @@ export default function SavedPaymentMethods({
 
   const handleRemovePaymentMethod = async (paymentMethodId) => {
     try {
-      await api.delete(endpoints.DELETE_PAYMENT_METHOD(paymentMethodId));
+      const token = await getAccessTokenSilently();
+      await api.delete(endpoints.DELETE_PAYMENT_METHOD(paymentMethodId), {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       setPaymentMethods((prev) =>
         prev.filter((pm) => pm.id !== paymentMethodId)
       );

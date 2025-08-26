@@ -1,6 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const stripeController = require("./stripe.controller");
+const { checkJwt } = require("../auth/middleware");
+
+// Apply checkJwt middleware to all routes
+router.use(checkJwt);
 
 // Create Stripe customer for existing customer
 router.post("/customer/create-stripe", stripeController.createStripeCustomer);

@@ -1,3 +1,4 @@
+import { useAuth0 } from "@auth0/auth0-react";
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
@@ -17,6 +18,7 @@ import { api, ENDPOINTS } from "@/api";
 
 export default function UserInfoCard({ customer }) {
   const userInfo = useSelector((state) => state.user.info);
+  const { getAccessTokenSilently } = useAuth0();
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -41,11 +43,20 @@ export default function UserInfoCard({ customer }) {
     }
 
     try {
-      const response = await api.post(ENDPOINTS.POST_CREATE_STRIPE_CUSTOMER(), {
-        email: userInfo.email,
-        name: `${userInfo.firstname} ${userInfo.lastname}`,
-        // Add any other user info you want to include
-      });
+      const token = await getAccessTokenSilently();
+      const response = await api.post(
+        ENDPOINTS.POST_CREATE_STRIPE_CUSTOMER(),
+        {
+          email: userInfo.email,
+          name: `${userInfo.firstname} ${userInfo.lastname}`,
+          // Add any other user info you want to include
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (response.data?.customerId) {
         dispatch(updateStripeCustomerId(response.data.customerId));

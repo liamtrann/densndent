@@ -1,3 +1,4 @@
+import { useAuth0 } from "@auth0/auth0-react";
 import AddressModal from "common/modals/AddressModal";
 import AddressCard from "common/ui/AddressCard";
 import { useState, useEffect } from "react";
@@ -25,6 +26,7 @@ export default function CheckoutPayment({
 }) {
   const userInfo = useSelector((state) => state.user.info);
   const stripeCustomerId = userInfo?.stripeCustomerId;
+  const { getAccessTokenSilently } = useAuth0();
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -108,11 +110,20 @@ export default function CheckoutPayment({
 
     setCustomerLoading(true);
     try {
-      const response = await api.post(endpoints.POST_CREATE_STRIPE_CUSTOMER(), {
-        email: userInfo.email,
-        name: `${userInfo.firstname} ${userInfo.lastname}`,
-        // Add any other user info you want to include
-      });
+      const token = await getAccessTokenSilently();
+      const response = await api.post(
+        endpoints.POST_CREATE_STRIPE_CUSTOMER(),
+        {
+          email: userInfo.email,
+          name: `${userInfo.firstname} ${userInfo.lastname}`,
+          // Add any other user info you want to include
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (response.data?.customerId) {
         dispatch(updateStripeCustomerId(response.data.customerId));

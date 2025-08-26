@@ -1,3 +1,4 @@
+import { useAuth0 } from "@auth0/auth0-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -21,6 +22,7 @@ export default function StripeCheckout({
   setIsProcessing,
 }) {
   const navigate = useNavigate();
+  const { getAccessTokenSilently } = useAuth0();
 
   const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
@@ -40,8 +42,14 @@ export default function StripeCheckout({
       // Fetch the payment method details for the saved ID
       const fetchSavedPaymentMethod = async () => {
         try {
+          const token = await getAccessTokenSilently();
           const response = await api.get(
-            endpoints.GET_PAYMENT_METHODS(stripeCustomerId)
+            endpoints.GET_PAYMENT_METHODS(stripeCustomerId),
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
           );
           const paymentMethods = response.data.paymentMethods || [];
           const paymentMethod = paymentMethods.find(
@@ -63,7 +71,7 @@ export default function StripeCheckout({
 
       fetchSavedPaymentMethod();
     }
-  }, [stripeCustomerId]);
+  }, [stripeCustomerId, getAccessTokenSilently]);
 
   const handleCreatePaymentIntent = async () => {
     if (!selectedPaymentMethodId || !orderTotal) return;

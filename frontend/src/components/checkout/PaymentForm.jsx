@@ -1,3 +1,4 @@
+import { useAuth0 } from "@auth0/auth0-react";
 import {
   useStripe,
   useElements,
@@ -42,6 +43,7 @@ export default function PaymentForm({
   const stripe = useStripe();
   const elements = useElements();
   const dispatch = useDispatch();
+  const { getAccessTokenSilently } = useAuth0();
 
   const [cvcError, setCvcError] = useState(null);
 
@@ -95,16 +97,27 @@ export default function PaymentForm({
       // Get order payload for payment confirmation
       const orderData = buildOrderPayload ? buildOrderPayload() : null;
 
+      // Get authentication token
+      const token = await getAccessTokenSilently();
+
       // Confirm the payment
-      const response = await api.post(endpoints.POST_CONFIRM_PAYMENT(), {
-        paymentIntentId: paymentIntent.id,
-        paymentMethodId: paymentMethod.id,
-        orderData: orderData,
-        automatic_payment_methods: {
-          enabled: true,
-          allow_redirects: "never", // <- key bit
+      const response = await api.post(
+        endpoints.POST_CONFIRM_PAYMENT(),
+        {
+          paymentIntentId: paymentIntent.id,
+          paymentMethodId: paymentMethod.id,
+          orderData: orderData,
+          automatic_payment_methods: {
+            enabled: true,
+            allow_redirects: "never", // <- key bit
+          },
         },
-      });
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       // Handle the new queue-based response structure
       handleServerResponse(response.data);
@@ -170,25 +183,42 @@ export default function PaymentForm({
         // Get order payload for re-confirmation after 3D Secure
         const orderData = buildOrderPayload ? buildOrderPayload() : null;
 
-        // Re-confirm the payment after 3D Secure
-        api
-          .post(endpoints.POST_CONFIRM_PAYMENT(), {
-            paymentIntentId: paymentIntent.id,
-            paymentMethodId: paymentMethod.id,
-            orderData: orderData,
+        // Get authentication token for re-confirmation
+        getAccessTokenSilently()
+          .then((token) => {
+            // Re-confirm the payment after 3D Secure
+            api
+              .post(
+                endpoints.POST_CONFIRM_PAYMENT(),
+                {
+                  paymentIntentId: paymentIntent.id,
+                  paymentMethodId: paymentMethod.id,
+                  orderData: orderData,
+                },
+                {
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                  },
+                }
+              )
+              .then((resp) => {
+                handleServerResponse(resp.data);
+              })
+              .catch((err) => {
+                setCvcError("Payment confirmation failed after authentication");
+                setIsProcessing(false);
+                ToastNotification.error(
+                  "Payment confirmation failed after authentication. Please try again."
+                );
+                if (onPaymentError) {
+                  onPaymentError(err);
+                }
+              });
           })
-          .then((resp) => {
-            handleServerResponse(resp.data);
-          })
-          .catch((err) => {
-            setCvcError("Payment confirmation failed after authentication");
+          .catch((tokenErr) => {
+            setCvcError("Failed to get authentication token");
             setIsProcessing(false);
-            ToastNotification.error(
-              "Payment confirmation failed after authentication. Please try again."
-            );
-            if (onPaymentError) {
-              onPaymentError(err);
-            }
+            ToastNotification.error("Authentication failed. Please try again.");
           });
       }
     });

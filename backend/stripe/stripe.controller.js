@@ -376,9 +376,6 @@ class StripeController {
   async confirmPayment(req, res) {
     const { paymentMethodId, paymentIntentId, orderData } = req.body;
 
-    console.log(paymentMethodId);
-    console.log(paymentIntentId);
-
     if (!paymentMethodId) {
       return res.status(400).json({
         message: "Payment method is required",
