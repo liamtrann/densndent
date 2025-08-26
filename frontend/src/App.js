@@ -280,9 +280,11 @@ export default function App() {
                 <Route
                   path="/profile"
                   element={
-                    <CenteredContent>
-                      <ProfilePage />
-                    </CenteredContent>
+                    <LayoutWithCart>
+                      <CenteredContent>
+                        <ProfilePage />
+                      </CenteredContent>
+                    </LayoutWithCart>
                   }
                 />
                 <Route
@@ -296,17 +298,21 @@ export default function App() {
                 <Route
                   path="/purchase-history"
                   element={
-                    <CenteredContent>
-                      <PurchaseHistory />
-                    </CenteredContent>
+                    <LayoutWithCart>
+                      <CenteredContent>
+                        <PurchaseHistory />
+                      </CenteredContent>
+                    </LayoutWithCart>
                   }
                 />
                 <Route
                   path="/profile/history/order/:transactionId"
                   element={
-                    <CenteredContent>
-                      <HistoryOrderDetails />
-                    </CenteredContent>
+                    <LayoutWithCart>
+                      <CenteredContent>
+                        <HistoryOrderDetails />
+                      </CenteredContent>
+                    </LayoutWithCart>
                   }
                 />
               </Route>

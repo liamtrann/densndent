@@ -402,8 +402,6 @@ class StripeController {
         }
       );
 
-      console.log(paymentIntent);
-
       // 2. If payment successful, create order via queue
       if (paymentIntent.status === "succeeded" && orderData) {
         console.log(
