@@ -97,6 +97,18 @@ export const ORDER_STATUS = {
     icon: "✅", // Check mark
     description: "Order has been completed",
   },
+  "Pending Approval": {
+    label: "Pending Approval",
+    color: "bg-amber-100 text-amber-800 border-amber-200",
+    icon: "⏳", // Clock icon
+    description: "Order is awaiting approval",
+  },
+  Approved: {
+    label: "Approved",
+    color: "bg-emerald-100 text-emerald-800 border-emerald-200",
+    icon: "✅", // Check mark
+    description: "Order has been approved",
+  },
   Cancelled: {
     label: "Cancelled",
     color: "bg-red-100 text-red-800 border-red-200",
@@ -121,23 +133,53 @@ export const ORDER_STATUS = {
     icon: "⚙️", // Gear icon
     description: "Order is being prepared",
   },
-  "On Hold": {
-    label: "On Hold",
+  Packed: {
+    label: "Packed",
+    color: "bg-indigo-100 text-indigo-800 border-indigo-200",
+    icon: "📦", // Package icon
+    description: "Order has been packed and ready for shipment",
+  },
+  Picked: {
+    label: "Picked",
+    color: "bg-cyan-100 text-cyan-800 border-cyan-200",
+    icon: "📋", // Clipboard icon
+    description: "Items have been picked from inventory",
+  },
+  Open: {
+    label: "Open",
+    color: "bg-blue-100 text-blue-800 border-blue-200",
+    icon: "�", // Open folder
+    description: "Order is open and active",
+  },
+  Closed: {
+    label: "Closed",
     color: "bg-gray-100 text-gray-800 border-gray-200",
-    icon: "⏸️", // Pause icon
-    description: "Order is temporarily on hold",
+    icon: "📁", // Closed folder
+    description: "Order has been closed",
   },
-  Refunded: {
-    label: "Refunded",
-    color: "bg-red-100 text-red-800 border-red-200",
-    icon: "💰", // Money icon
-    description: "Order has been refunded",
+  "In Progress": {
+    label: "In Progress",
+    color: "bg-sky-100 text-sky-800 border-sky-200",
+    icon: "�", // Refresh icon
+    description: "Order is currently being worked on",
   },
-  Returned: {
-    label: "Returned",
-    color: "bg-orange-100 text-orange-800 border-orange-200",
-    icon: "↩️", // Return arrow
-    description: "Order has been returned",
+  Paid: {
+    label: "Paid",
+    color: "bg-green-100 text-green-800 border-green-200",
+    icon: "💳", // Credit card icon
+    description: "Payment has been received",
+  },
+  Billed: {
+    label: "Billed",
+    color: "bg-teal-100 text-teal-800 border-teal-200",
+    icon: "📄", // Document icon
+    description: "Invoice has been generated",
+  },
+  "Paid In Full": {
+    label: "Paid In Full",
+    color: "bg-emerald-100 text-emerald-800 border-emerald-200",
+    icon: "💰", // Money bag icon
+    description: "Full payment has been received",
   },
 };
 
