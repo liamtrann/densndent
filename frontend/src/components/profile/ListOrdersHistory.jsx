@@ -28,7 +28,7 @@ export default function ListOrdersHistory({ orders = [] }) {
       {Object.entries(groupedOrders).map(([date, dateOrders]) => (
         <div key={date} className="border-b last:border-b-0">
           {/* Date Header */}
-          <div className="bg-gradient-to-r from-smiles-orange to-smiles-orange px-4 py-3 border-b">
+          <div className="bg-gradient-to-r from-gray-500 to-gray-500 px-4 py-3 border-b">
             <div className="flex items-center gap-2">
               <div className="bg-white/20 rounded-full p-1.5">
                 <svg
@@ -58,7 +58,11 @@ export default function ListOrdersHistory({ orders = [] }) {
 
           {/* Orders for this date */}
           {dateOrders
-            .sort((a, b) => (b.id || 0) - (a.id || 0))
+            .sort((a, b) => {
+              const nameA = a.trandisplayname || "";
+              const nameB = b.trandisplayname || "";
+              return nameB.localeCompare(nameA);
+            })
             .map((order) => (
               <div
                 key={order.id}
