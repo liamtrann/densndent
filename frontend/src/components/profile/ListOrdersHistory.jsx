@@ -76,8 +76,8 @@ export default function ListOrdersHistory({ orders = [] }) {
                     });
                   }
                 }}
-                className="p-4 border-b last:border-b-0 flex justify-between items-center cursor-pointer
-                           hover:bg-gray-50 focus:bg-gray-50 focus:outline-none"
+                className="p-4 border-b last:border-b-0 flex flex-col sm:flex-row justify-between items-start sm:items-center cursor-pointer
+                           hover:bg-gray-50 focus:bg-gray-50 focus:outline-none gap-3 sm:gap-0"
                 aria-label={`Open ${order.trandisplayname}`}
                 title="View order details"
               >
@@ -93,7 +93,7 @@ export default function ListOrdersHistory({ orders = [] }) {
                   )}
                 </div>
 
-                <div className="text-right flex flex-col items-end gap-1">
+                <div className="text-right sm:text-right w-full sm:w-auto flex flex-row sm:flex-col justify-between sm:justify-end items-center sm:items-end gap-2 sm:gap-1">
                   <StatusBadge status={order.status || "Pending Fulfillment"} />
                   {order.foreigntotal && (
                     <Paragraph className="text-base font-semibold text-gray-800">

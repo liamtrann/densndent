@@ -1,12 +1,61 @@
-// src/components/UserInfoCard.jsx
 import React, { useState } from "react";
-import SettingsCard from "./SettingsCard";
-import { CreateAddressModal } from "common";
+import { useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
+import { updateStripeCustomerId } from "store/slices/userSlice";
+
+import { CreateAddressModal, CloseButton } from "common";
+import Toast from "common/toast/Toast";
+
+import AddPaymentMethod from "../checkout/AddPaymentMethod";
+import SavedPaymentMethods from "../checkout/SavedPaymentMethods";
+import StripeWrapper from "../stripe/StripeWrapper";
+
 import ProfileEditCard from "./ProfileEditCard";
+import SettingsCard from "./SettingsCard";
+
+import { api, ENDPOINTS } from "@/api";
 
 export default function UserInfoCard({ customer }) {
+  const userInfo = useSelector((state) => state.user.info);
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
   const [showAddressModal, setShowAddressModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState(null);
+  const [paymentMethodsKey, setPaymentMethodsKey] = useState(0);
+  const dispatch = useDispatch();
+  const handleSelectPaymentMethod = (paymentMethodId) => {
+    setSelectedPaymentMethodId(paymentMethodId);
+  };
+
+  const handlePaymentMethodAdded = (paymentMethod) => {
+    setShowPaymentModal(false);
+    setSelectedPaymentMethodId(paymentMethod.id);
+    setPaymentMethodsKey((prev) => prev + 1); // Force re-render of SavedPaymentMethods
+    Toast.success("Payment method added successfully!");
+  };
+
+  const handleCreateStripeCustomer = async () => {
+    if (!userInfo?.email) {
+      Toast.error("Please ensure your profile has email and name information.");
+      return;
+    }
+
+    try {
+      const response = await api.post(ENDPOINTS.POST_CREATE_STRIPE_CUSTOMER(), {
+        email: userInfo.email,
+        name: `${userInfo.firstname} ${userInfo.lastname}`,
+        // Add any other user info you want to include
+      });
+
+      if (response.data?.customerId) {
+        dispatch(updateStripeCustomerId(response.data.customerId));
+        setPaymentMethodsKey((prev) => prev + 1); // Force re-render of SavedPaymentMethods
+        Toast.success("Stripe customer account created successfully!");
+      }
+    } catch (error) {
+      Toast.error("Failed to create payment account. Please try again.");
+    }
+  };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -88,8 +137,41 @@ export default function UserInfoCard({ customer }) {
 
       <SettingsCard
         title="Payment"
-        description="We have no default credit card on file for this account."
-        actionLabel="Add a Credit Card"
+        description={
+          <StripeWrapper>
+            <div>
+              {userInfo?.stripeCustomerId ? (
+                <div>
+                  <SavedPaymentMethods
+                    key={paymentMethodsKey}
+                    customerId={userInfo.stripeCustomerId}
+                    onSelectPaymentMethod={handleSelectPaymentMethod} // No selection needed in profile
+                    selectedPaymentMethodId={selectedPaymentMethodId}
+                    showTitle={false}
+                  />
+                </div>
+              ) : (
+                <div className="bg-gray-50 p-6 rounded-lg border">
+                  <div className="text-center text-gray-500">
+                    <div className="text-lg mb-2">No Stripe Account Found</div>
+                    <div className="text-sm mb-4">
+                      You need a Stripe customer account to manage payment
+                      methods.
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </StripeWrapper>
+        }
+        actionLabel={
+          userInfo?.stripeCustomerId ? "Add a Card" : "Create a Stripe Account"
+        }
+        onAction={() => {
+          userInfo?.stripeCustomerId
+            ? setShowPaymentModal(true)
+            : handleCreateStripeCustomer();
+        }}
       />
 
       {/* Address Modal */}
@@ -123,13 +205,41 @@ export default function UserInfoCard({ customer }) {
       {showEditProfileModal && !customer && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
           <div className="bg-white rounded p-6 w-full max-w-xl relative">
-            <button
-              onClick={() => setShowEditProfileModal(false)}
-              className="absolute top-2 right-4 text-xl font-bold text-gray-600 hover:text-gray-800"
-            >
-              &times;
-            </button>
+            <CloseButton onClick={() => setShowEditProfileModal(false)} />
             <ProfileEditCard onClose={() => setShowEditProfileModal(false)} />
+          </div>
+        </div>
+      )}
+
+      {/* Payment Modal */}
+      {showPaymentModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto relative m-4">
+            <CloseButton
+              onClick={() => setShowPaymentModal(false)}
+              className="z-10"
+            />
+
+            <StripeWrapper>
+              <div className="p-6">
+                <h2 className="text-2xl font-bold mb-6">Add Payment Method</h2>
+
+                {setShowPaymentModal ? (
+                  <AddPaymentMethod
+                    customerId={userInfo.stripeCustomerId}
+                    onPaymentMethodAdded={handlePaymentMethodAdded}
+                    onCancel={() => setShowPaymentModal(false)}
+                  />
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="text-gray-500 mb-4">
+                      No Stripe customer account found. Please set up your
+                      account first.
+                    </div>
+                  </div>
+                )}
+              </div>
+            </StripeWrapper>
           </div>
         </div>
       )}

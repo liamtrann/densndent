@@ -57,6 +57,8 @@ export default function AddPaymentMethod({
   };
 
   const handleSubmit = async (event) => {
+
+    console.log("test")
     event.preventDefault();
 
     if (!stripe || !elements) {

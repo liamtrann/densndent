@@ -1,8 +1,9 @@
 import AddressModal from "common/modals/AddressModal";
 import AddressCard from "common/ui/AddressCard";
 import { useState, useEffect } from "react";
-import { useSelector } from "react-redux"; // TODO: Use when customer integration is complete
+import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { updateStripeCustomerId } from "store/slices/userSlice";
 
 import api from "api/api";
 import endpoints from "api/endpoints";
@@ -22,13 +23,14 @@ export default function CheckoutPayment({
   setSelectedId,
   onCustomerIdChange,
 }) {
-  const userInfo = useSelector((state) => state.user.info); // TODO: Use when customer integration is complete
+  const userInfo = useSelector((state) => state.user.info);
+  const stripeCustomerId = userInfo?.stripeCustomerId;
+  const dispatch = useDispatch();
   const navigate = useNavigate();
 
   // Payment method states
   const [showAddPaymentMethod, setShowAddPaymentMethod] = useState(false);
   const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState(null);
-  const [stripeCustomerId, setStripeCustomerId] = useState("");
   const [customerLoading, setCustomerLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("card");
 
@@ -38,32 +40,6 @@ export default function CheckoutPayment({
       setPaymentMethod("card");
     }
   }, [userInfo?.searchstage]);
-
-  // Fetch Stripe customer by email when component mounts
-  useEffect(() => {
-    const fetchStripeCustomer = async () => {
-      if (!userInfo?.email) return;
-
-      setCustomerLoading(true);
-      try {
-        const response = await api.get(
-          endpoints.GET_STRIPE_CUSTOMER_BY_EMAIL(userInfo.email)
-        );
-
-        if (response.data.success && response.data.customer) {
-          setStripeCustomerId(response.data.customer.id);
-        } else {
-          // No Stripe customer found for this email - could create one here if needed
-        }
-      } catch (error) {
-        // Handle error - customer not found is expected for new users
-      } finally {
-        setCustomerLoading(false);
-      }
-    };
-
-    fetchStripeCustomer();
-  }, [userInfo?.email]);
 
   // Notify parent component when stripeCustomerId changes
   useEffect(() => {
@@ -139,7 +115,7 @@ export default function CheckoutPayment({
       });
 
       if (response.data?.customerId) {
-        setStripeCustomerId(response.data.customerId);
+        dispatch(updateStripeCustomerId(response.data.customerId));
       }
     } catch (error) {
       alert("Failed to create payment account. Please try again.");

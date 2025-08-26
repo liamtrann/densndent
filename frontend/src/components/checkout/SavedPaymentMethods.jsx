@@ -86,7 +86,7 @@ export default function SavedPaymentMethods({
   }
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm border">
+    <div className="bg-white p-4 rounded-lg shadow-sm border">
       {showTitle && (
         <h3 className="text-lg font-semibold mb-4">Saved Payment Methods</h3>
       )}
@@ -102,7 +102,7 @@ export default function SavedPaymentMethods({
           {paymentMethods.map((pm) => (
             <div
               key={pm.id}
-              className={`border rounded-lg p-4 cursor-pointer transition-all ${
+              className={`border rounded-lg p-2 cursor-pointer transition-all ${
                 selectedPaymentMethodId === pm.id
                   ? "border-blue-500 bg-blue-50"
                   : "border-gray-300 hover:border-gray-400"
