@@ -21,7 +21,7 @@ const ToastProvider = ({ children }) => {
         bodyClassName="toast-body"
         progressClassName="toast-progress"
         style={{
-          fontSize: "14px",
+          fontSize: "16px",
         }}
       />
     </>
