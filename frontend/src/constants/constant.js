@@ -216,3 +216,6 @@ export const createStatusOptions = (orders = []) => {
 
   return options;
 };
+
+export const OUT_OF_STOCK = "Out of Stock";
+export const CURRENT_IN_STOCK = "Current In Stock";

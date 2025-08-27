@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { Link } from "react-router-dom";
-import { Button, ProductImage, InputField } from "common";
 import { addToCart } from "store/slices/cartSlice";
+
+import { Button, ProductImage, InputField, DeliveryEstimate } from "common";
 import { formatCurrency, extractBuyGet } from "config/config";
+
+import { CURRENT_IN_STOCK, OUT_OF_STOCK } from "@/constants/constant";
 
 /** One product per row with responsive (mobile vs desktop) layouts */
 export default function ProductListRows({ products = [] }) {
@@ -77,16 +80,22 @@ export default function ProductListRows({ products = [] }) {
         const Badges = (
           <div className="mt-1 flex flex-wrap items-center gap-2">
             {inStock ? (
-              <span className="text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded text-xs font-medium">
-                Current Stock
-              </span>
+              <div className="flex flex-col gap-1">
+                <span className="text-smiles-blue bg-blue-50 border border-blue-200 px-2 py-0.5 rounded text-xs font-medium">
+                  {CURRENT_IN_STOCK}
+                </span>
+                <DeliveryEstimate inStock={true} size="small" className="rounded" />
+              </div>
             ) : (
-              <span className="text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded text-xs font-medium">
-                Out of stock
-              </span>
+              <div className="flex flex-col gap-1">
+                <span className="text-smiles-orange bg-orange-50 border border-orange-200 px-2 py-0.5 rounded text-xs font-medium">
+                  {OUT_OF_STOCK}
+                </span>
+                <DeliveryEstimate inStock={false} size="small" className="rounded" />
+              </div>
             )}
             {hasPromo && (
-              <span className="text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded text-xs font-semibold">
+              <span className="text-smiles-blue bg-blue-50 border border-blue-200 px-2 py-0.5 rounded text-xs font-semibold">
                 BUY {buy} GET {get}
               </span>
             )}
@@ -150,8 +159,7 @@ export default function ProductListRows({ products = [] }) {
                   <Button
                     onClick={() => add(p)}
                     className="w-full h-9 text-sm"
-                    disabled={!inStock}
-                    title={inStock ? "Add to Cart" : "Out of stock"}
+                    title="Add to Cart"
                   >
                     Add to Cart
                   </Button>
@@ -190,8 +198,7 @@ export default function ProductListRows({ products = [] }) {
                 <Button
                   onClick={() => add(p)}
                   className="w-full h-8 px-3 py-0 text-sm rounded-md"
-                  disabled={!inStock}
-                  title={inStock ? "Add to Cart" : "Out of stock"}
+                  title="Add to Cart"
                 >
                   Add to Cart
                 </Button>

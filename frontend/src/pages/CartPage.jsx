@@ -19,6 +19,7 @@ import { CartOrderSummary } from "../components";
 import { useInventoryCheck } from "../config";
 
 import { selectCartSubtotalWithDiscounts } from "@/redux/slices";
+import { OUT_OF_STOCK } from "@/constants/constant";
 
 // ✅ Reuse the shared purchase control
 
@@ -174,13 +175,13 @@ export default function CartPage() {
   const handleProceedToCheckout = async () => {
     const result = await checkInventory(cart.map((item) => item.id));
     if (!result) return;
-    const outOfStock = result.find((r) => !r || r.quantityavailable <= 0);
-    if (outOfStock) {
-      alert(
-        "Some items in your cart are out of stock or unavailable. Please review your cart."
-      );
-      return;
-    }
+    // const outOfStock = result.find((r) => !r || r.quantityavailable <= 0);
+    // if (outOfStock) {
+    //   alert(
+    //     "Some items in your cart are out of stock or unavailable. Please review your cart."
+    //   );
+    //   return;
+    // }
     navigate("/checkout");
   };
 
@@ -226,7 +227,7 @@ export default function CartPage() {
               />
 
               {inv && inv.quantityavailable <= 0 && (
-                <div className="text-red-600 text-sm mt-2">Out of stock</div>
+                <div className="text-red-600 text-sm mt-2">{OUT_OF_STOCK}</div>
               )}
 
               {/* ✅ Reusable Purchase Options */}

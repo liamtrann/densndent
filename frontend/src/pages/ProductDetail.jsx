@@ -1,8 +1,12 @@
 // src/pages/ProductDetail.jsx
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { Modal } from "components";
+import { useParams, useNavigate } from "react-router-dom";
+import { addToCart } from "store/slices/cartSlice";
+
+import api from "api/api";
+import endpoint from "api/endpoints";
+import { delayCall } from "api/util";
 import { Toast } from "common";
 import {
   Loading,
@@ -13,23 +17,23 @@ import {
   Button,
   ShowMoreHtml,
   Dropdown,
+  DeliveryEstimate,
 } from "common";
-import api from "api/api";
-import endpoint from "api/endpoints";
-import { delayCall } from "api/util";
-import { addToCart } from "store/slices/cartSlice";
-import { useRecentViews } from "../hooks/useRecentViews";
+import { Modal } from "components";
 import {
   getMatrixInfo,
   formatCurrency,
   useQuantityHandlers,
-  extractBuyGet,
 } from "config/config";
-import { addToRecentViews } from "../redux/slices/recentViewsSlice";
+
+import PurchaseOptions from "../common/ui/PurchaseOptions";
 import RecentlyViewedSection from "../components/sections/RecentlyViewedSection";
+import { useRecentViews } from "../hooks/useRecentViews";
+import { addToRecentViews } from "../redux/slices/recentViewsSlice";
 
 // ✅ Reusable purchase control
-import PurchaseOptions from "../common/ui/PurchaseOptions";
+
+import { CURRENT_IN_STOCK, OUT_OF_STOCK } from "@/constants/constant";
 
 /* ===== Date helpers (local) ===== */
 function daysInMonth(year, monthIndex) {
@@ -175,13 +179,19 @@ export default function ProductsPage() {
           </h2>
 
           {product.totalquantityonhand && product.totalquantityonhand > 0 ? (
-            <Paragraph className="text-green-700 font-semibold">
-              Current Stock: {product.totalquantityonhand}
-            </Paragraph>
+            <div className="mb-2">
+              <Paragraph className="text-smiles-blue font-semibold">
+                {CURRENT_IN_STOCK}: {product.totalquantityonhand}
+              </Paragraph>
+              <DeliveryEstimate inStock={true} size="default" />
+            </div>
           ) : (
-            <Paragraph className="text-red-600 font-semibold">
-              Out of stock
-            </Paragraph>
+            <div className="mb-2">
+              <Paragraph className="text-smiles-orange font-semibold">
+                {OUT_OF_STOCK}
+              </Paragraph>
+              <DeliveryEstimate inStock={false} size="default" />
+            </div>
           )}
 
           <div className="mt-2 mb-4">
@@ -225,11 +235,7 @@ export default function ProductsPage() {
                 <button
                   onClick={decrement}
                   className="px-2 h-9 text-sm hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                  disabled={
-                    !product.totalquantityonhand ||
-                    product.totalquantityonhand <= 0 ||
-                    Number(quantity) <= 1
-                  }
+                  disabled={Number(quantity) <= 1}
                 >
                   –
                 </button>
@@ -239,18 +245,10 @@ export default function ProductsPage() {
                   value={quantity}
                   onChange={handleQuantityChange}
                   className="flex-1 h-9 text-center text-sm border-0 focus:ring-1 focus:ring-blue-500"
-                  disabled={
-                    !product.totalquantityonhand ||
-                    product.totalquantityonhand <= 0
-                  }
                 />
                 <button
                   onClick={increment}
                   className="px-2 h-9 text-sm hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                  disabled={
-                    !product.totalquantityonhand ||
-                    product.totalquantityonhand <= 0
-                  }
                 >
                   +
                 </button>
@@ -303,21 +301,7 @@ export default function ProductsPage() {
           </div>
 
           {/* Add to Cart */}
-          <Button
-            className={`mt-6 w-full ${
-              !product.totalquantityonhand || product.totalquantityonhand <= 0
-                ? "bg-gray-300 text-gray-500 cursor-not-allowed opacity-60"
-                : ""
-            }`}
-            onClick={
-              product.totalquantityonhand && product.totalquantityonhand > 0
-                ? handleAddToCart
-                : undefined
-            }
-            disabled={
-              !product.totalquantityonhand || product.totalquantityonhand <= 0
-            }
-          >
+          <Button className={`mt-6 w-full`} onClick={handleAddToCart}>
             Add to Shopping Cart
           </Button>
         </div>
