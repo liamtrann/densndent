@@ -30,8 +30,7 @@ const OurPartners = lazy(() => import("./pages/OurPartners"));
 const Q3CataloguePage = lazy(() => import("./pages/Q3CataloguePage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 // at the top with other lazy imports
-const OrderDetails = lazy(() => import("./pages/OrderDetails"));
-
+const HistoryOrderDetails = lazy(() => import("./pages/HistoryOrderDetails"));
 
 // Simple placeholder components
 const BlogPage = lazy(() => import("./pages/BlogPage"));
@@ -132,7 +131,7 @@ export default function App() {
                 }
               />
               <Route
-                path="/products/all-products"
+                path="/products"
                 element={
                   <LayoutWithCart>
                     <CenteredContent>
@@ -281,9 +280,11 @@ export default function App() {
                 <Route
                   path="/profile"
                   element={
-                    <CenteredContent>
-                      <ProfilePage />
-                    </CenteredContent>
+                    <LayoutWithCart>
+                      <CenteredContent>
+                        <ProfilePage />
+                      </CenteredContent>
+                    </LayoutWithCart>
                   }
                 />
                 <Route
@@ -295,22 +296,25 @@ export default function App() {
                   }
                 />
                 <Route
-                  path="/profile/history"
+                  path="/purchase-history"
                   element={
-                    <CenteredContent>
-                      <PurchaseHistory />
-                    </CenteredContent>
+                    <LayoutWithCart>
+                      <CenteredContent>
+                        <PurchaseHistory />
+                      </CenteredContent>
+                    </LayoutWithCart>
                   }
                 />
                 <Route
                   path="/profile/history/order/:transactionId"
                   element={
-                    <CenteredContent>
-                      <OrderDetails />
-                    </CenteredContent>
+                    <LayoutWithCart>
+                      <CenteredContent>
+                        <HistoryOrderDetails />
+                      </CenteredContent>
+                    </LayoutWithCart>
                   }
                 />
-
               </Route>
 
               <Route

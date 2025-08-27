@@ -1,12 +1,15 @@
 import React, { useState } from "react";
+import { FiShoppingCart } from "react-icons/fi"; // cart icon
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { FiShoppingCart } from "react-icons/fi"; // cart icon
 import { addToCart } from "store/slices/cartSlice";
+
 // import CartConfirmationModal from "../cart/CartConfirmationModal";
-import { ProductImage, Paragraph, InputField } from "common";
+import { ProductImage, Paragraph, InputField, DeliveryEstimate } from "common";
 import { useQuantityHandlers } from "config/config";
+
 import ToastNotification from "@/common/toast/Toast";
+import { CURRENT_IN_STOCK, OUT_OF_STOCK } from "@/constants/constant";
 
 export default function ListProduct({ product }) {
   const { id, itemid, file_url, price, totalquantityonhand } = product;
@@ -81,13 +84,19 @@ export default function ListProduct({ product }) {
 
       <div className="flex-grow">
         {inStock ? (
-          <Paragraph className="text-green-700 font-semibold mb-2">
-            Current Stock
-          </Paragraph>
+          <div className="mb-2">
+            <Paragraph className="text-smiles-blue font-semibold">
+              {CURRENT_IN_STOCK}
+            </Paragraph>
+            <DeliveryEstimate inStock={true} size="small" />
+          </div>
         ) : (
-          <Paragraph className="text-red-600 font-semibold mb-2">
-            Out of stock
-          </Paragraph>
+          <div className="mb-2">
+            <Paragraph className="text-smiles-orange font-semibold">
+              {OUT_OF_STOCK}
+            </Paragraph>
+            <DeliveryEstimate inStock={false} size="small" />
+          </div>
         )}
       </div>
 
@@ -105,7 +114,7 @@ export default function ListProduct({ product }) {
           <button
             onClick={decrement}
             className="px-2 h-9 text-sm hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-            disabled={!inStock || Number(quantity) <= 1}
+            disabled={Number(quantity) <= 1}
           >
             –
           </button>
@@ -116,12 +125,10 @@ export default function ListProduct({ product }) {
             value={quantity}
             onChange={handleQuantityChange}
             className="w-12 h-9 text-center text-sm border-0 focus:ring-1 focus:ring-blue-500"
-            disabled={!inStock}
           />
           <button
             onClick={increment}
             className="px-2 h-9 text-sm hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-            disabled={!inStock}
           >
             +
           </button>
@@ -129,12 +136,8 @@ export default function ListProduct({ product }) {
 
         <FiShoppingCart
           size={30}
-          className={`transition-all duration-200 ${
-            inStock
-              ? "text-primary-blue hover:text-smiles-blue hover:scale-150 cursor-pointer"
-              : "text-gray-400 cursor-not-allowed"
-          }`}
-          onClick={inStock ? handleAddToCart : undefined}
+          className="text-primary-blue hover:text-smiles-blue hover:scale-150 cursor-pointer transition-all duration-200"
+          onClick={handleAddToCart}
           aria-label="Add to cart"
         />
       </div>

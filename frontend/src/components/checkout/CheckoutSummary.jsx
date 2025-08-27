@@ -1,10 +1,12 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+
 import { Button, Paragraph, PreviewCartItem } from "common";
-import { formatCurrency } from "config/config";
-import { selectCartSubtotalWithDiscounts } from "@/redux/slices";
 import { EstimateTotal } from "components";
+import { formatCurrency } from "config/config";
+
+import { selectCartSubtotalWithDiscounts } from "@/redux/slices";
 
 export default function CheckoutSummary({
   promoCode,
@@ -12,6 +14,7 @@ export default function CheckoutSummary({
   shippingCost = 0,
   estimatedTax = null,
   taxRate = null,
+  calculatedTotal = null,
 }) {
   const cart = useSelector((state) => state.cart.items);
   const navigate = useNavigate();
@@ -48,6 +51,7 @@ export default function CheckoutSummary({
         currency="$"
         showBreakdown={true}
         className="mb-4"
+        calculatedTotal={calculatedTotal}
       />
 
       {/* Promo Code */}

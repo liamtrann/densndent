@@ -1,17 +1,21 @@
 // src/common/CreateAddressModal.jsx
+import { useAuth0 } from "@auth0/auth0-react";
 import React, { useState, useEffect } from "react";
-import InputField from "../ui/InputField";
-import Dropdown from "../ui/Dropdown";
-import Button from "../ui/Button";
+import { useDispatch } from "react-redux";
+import { fetchUserInfo } from "store/slices/userSlice";
+
 import api from "api/api";
 import endpoint from "api/endpoints";
-import { useAuth0 } from "@auth0/auth0-react";
-import { useDispatch } from "react-redux";
+
 import FormSubmit from "../forms/FormSubmit";
+import Toast from "../toast/Toast";
+import Button from "../ui/Button";
+import CloseButton from "../ui/CloseButton";
+import Dropdown from "../ui/Dropdown";
+import InputField from "../ui/InputField";
+
 import Loading from "../ui/Loading";
 import ErrorMessage from "../ui/ErrorMessage";
-import Toast from "../toast/Toast";
-import { fetchUserInfo } from "store/slices/userSlice";
 
 export default function CreateAddressModal({
   onClose,
@@ -57,12 +61,7 @@ export default function CreateAddressModal({
       <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
         {error && <ErrorMessage message={error} />}
         <div className="bg-white w-full max-w-md p-6 rounded shadow-lg relative">
-          <button
-            className="absolute top-2 right-4 text-xl font-bold text-gray-600 hover:text-gray-800"
-            onClick={onClose}
-          >
-            &times;
-          </button>
+          <CloseButton onClick={onClose} />
           <h2 className="text-xl font-semibold mb-4">Update Address</h2>
           <div className="text-red-600 mb-4">
             You need to create your profile before you can update your address.
@@ -164,12 +163,7 @@ export default function CreateAddressModal({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
       <div className="bg-white w-full max-w-2xl p-6 rounded shadow-lg relative overflow-y-auto max-h-[90vh]">
-        <button
-          className="absolute top-2 right-4 text-xl font-bold text-gray-600 hover:text-gray-800"
-          onClick={onClose}
-        >
-          &times;
-        </button>
+        <CloseButton onClick={onClose} />
 
         <h2 className="text-xl font-semibold mb-4">Update Address</h2>
 

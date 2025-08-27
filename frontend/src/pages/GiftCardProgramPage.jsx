@@ -10,9 +10,7 @@ import {
 export default function GiftCardProgramPage() {
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
-      <Breadcrumb
-        path={["Home", "Promotions & Catalogues", "DND Gift Card Program"]}
-      />
+      <Breadcrumb path={["Home", "DND Gift Card Program"]} />
 
       <h1 className="text-4xl md:text-5xl font-extrabold text-orange-600 leading-tight mb-8">
         THE GIFT CARD PROGRAM

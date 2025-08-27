@@ -3,11 +3,14 @@
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   font-family: inherit;
+  min-width: 350px;
+  min-height: 60px;
 }
 
 .toast-body {
-  padding: 12px 16px;
-  line-height: 1.4;
+  padding: 16px 20px;
+  line-height: 1.5;
+  font-size: 16px;
 }
 
 .toast-progress {

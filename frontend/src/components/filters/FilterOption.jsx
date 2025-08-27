@@ -1,5 +1,8 @@
 import React from "react";
+
 import FilterSidebar from "./FilterSidebar";
+
+import { Button } from "@/common";
 
 export default function FilterOption({
   onApplyFilters,
@@ -11,12 +14,9 @@ export default function FilterOption({
     <div className={`w-[240px] shrink-0 ${className}`}>
       <FilterSidebar filters={filters} onFiltersChange={onFiltersChange} />
       <div className="mt-4 pt-4 border-t">
-        <button
-          onClick={onApplyFilters}
-          className="w-full bg-smiles-blue text-white py-2 px-4 rounded-lg hover:bg-blue-700"
-        >
+        <Button onClick={onApplyFilters} className="w-full mt-2">
           Apply Filters
-        </button>
+        </Button>
       </div>
     </div>
   );

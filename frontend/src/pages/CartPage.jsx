@@ -2,22 +2,26 @@
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { Modal } from "../components";
-import { delayCall } from "../api/util";
-import { useInventoryCheck } from "../config";
-import { CartOrderSummary } from "../components";
-import { ErrorMessage, Loading, PreviewCartItem } from "../common";
 import {
   addToCart,
   removeFromCart,
   updateQuantity,
   setItemSubscription, // ✅ per-item subscription
 } from "store/slices/cartSlice";
+
 import { formatPrice, formatCurrency } from "config/config";
+
+import { delayCall } from "../api/util";
+import { EmptyCart, ErrorMessage, Loading, PreviewCartItem } from "../common";
+import PurchaseOptions from "../common/ui/PurchaseOptions";
+import { Modal } from "../components";
+import { CartOrderSummary } from "../components";
+import { useInventoryCheck } from "../config";
+
 import { selectCartSubtotalWithDiscounts } from "@/redux/slices";
+import { OUT_OF_STOCK } from "@/constants/constant";
 
 // ✅ Reuse the shared purchase control
-import PurchaseOptions from "../common/ui/PurchaseOptions";
 
 /* =======================
    Date helpers (local-only)
@@ -171,13 +175,13 @@ export default function CartPage() {
   const handleProceedToCheckout = async () => {
     const result = await checkInventory(cart.map((item) => item.id));
     if (!result) return;
-    const outOfStock = result.find((r) => !r || r.quantityavailable <= 0);
-    if (outOfStock) {
-      alert(
-        "Some items in your cart are out of stock or unavailable. Please review your cart."
-      );
-      return;
-    }
+    // const outOfStock = result.find((r) => !r || r.quantityavailable <= 0);
+    // if (outOfStock) {
+    //   alert(
+    //     "Some items in your cart are out of stock or unavailable. Please review your cart."
+    //   );
+    //   return;
+    // }
     navigate("/checkout");
   };
 
@@ -188,10 +192,12 @@ export default function CartPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-10">
-      <h1 className="text-2xl font-bold mb-6 text-center">
-        SHOPPING CART ({cart.length} Product{cart.length !== 1 ? "s" : ""},{" "}
-        {totalQuantity} Item{totalQuantity !== 1 ? "s" : ""})
-      </h1>
+      {cart.length > 0 && (
+        <h1 className="text-2xl font-bold mb-6 text-center">
+          SHOPPING CART ({cart.length} Product{cart.length !== 1 ? "s" : ""},{" "}
+          {totalQuantity} Item{totalQuantity !== 1 ? "s" : ""})
+        </h1>
+      )}
 
       {/* Cart Items */}
       {cart.length > 0 ? (
@@ -221,7 +227,7 @@ export default function CartPage() {
               />
 
               {inv && inv.quantityavailable <= 0 && (
-                <div className="text-red-600 text-sm mt-2">Out of stock</div>
+                <div className="text-red-600 text-sm mt-2">{OUT_OF_STOCK}</div>
               )}
 
               {/* ✅ Reusable Purchase Options */}
@@ -259,9 +265,7 @@ export default function CartPage() {
           );
         })
       ) : (
-        <p className="text-center mt-6 text-sm text-blue-700 font-medium">
-          Your cart is empty.
-        </p>
+        <EmptyCart />
       )}
 
       {/* Remove Confirmation Modal */}

@@ -1,5 +1,4 @@
-import React from "react";
-import { calculateTotalCurrency, formatCurrency } from "config";
+import { formatCurrency } from "@/config/config";
 
 export default function EstimateTotal({
   subtotal,
@@ -9,12 +8,16 @@ export default function EstimateTotal({
   currency = "$",
   showBreakdown = true,
   className = "",
+  calculatedTotal = null,
 }) {
-  // Free shipping for orders $300 and above
+  // Use calculated total if provided, otherwise calculate locally
   const shipping =
     subtotal >= 300 ? 0 : shippingCost !== null ? shippingCost : 9.99;
   const tax = estimatedTax || 0;
-  const total = Number(subtotal) + Number(tax) + Number(shipping);
+  const total =
+    calculatedTotal !== null
+      ? calculatedTotal
+      : Number(subtotal) + Number(tax) + Number(shipping);
 
   if (!showBreakdown) {
     return (

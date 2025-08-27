@@ -20,10 +20,7 @@ export default function useInitialAddress(userInfo) {
           city: userInfo.shipping_city,
           state: userInfo.shipping_state,
           zip: userInfo.shipping_zip,
-          country:
-            userInfo.shipping_country === "CA"
-              ? "Canada"
-              : userInfo.shipping_country,
+          country: userInfo.shipping_country,
           phone: userInfo.phone || "Phone not available",
           isDefaultShipping: true,
         });
@@ -39,8 +36,7 @@ export default function useInitialAddress(userInfo) {
           city: defaultAddr.city,
           state: defaultAddr.state,
           zip: defaultAddr.zip,
-          country:
-            defaultAddr.country === "CA" ? "Canada" : defaultAddr.country,
+          country: defaultAddr.country,
           phone: userInfo.phone || "Phone not available",
           isDefaultShipping: true,
         });
@@ -59,7 +55,7 @@ export default function useInitialAddress(userInfo) {
           city: addr.city,
           state: addr.state,
           zip: addr.zip,
-          country: addr.country === "CA" ? "Canada" : addr.country,
+          country: addr.country,
           phone: addr.phone || userInfo.phone || "Phone not available",
           isDefaultShipping: index === 0, // First address is default
         }));

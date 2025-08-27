@@ -1,6 +1,6 @@
-import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Paragraph } from "common";
+
+import { Paragraph, StatusBadge } from "common";
 import { formatCurrency } from "config/config";
 
 export default function ListOrdersHistory({ orders = [] }) {
@@ -28,12 +28,21 @@ export default function ListOrdersHistory({ orders = [] }) {
       {Object.entries(groupedOrders).map(([date, dateOrders]) => (
         <div key={date} className="border-b last:border-b-0">
           {/* Date Header */}
-          <div className="bg-gradient-to-r from-smiles-orange to-smiles-orange px-4 py-3 border-b">
+          <div className="bg-gradient-to-r from-gray-500 to-gray-500 px-4 py-3 border-b">
             <div className="flex items-center gap-2">
               <div className="bg-white/20 rounded-full p-1.5">
-                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                <svg
+                  className="w-4 h-4 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
                 </svg>
               </div>
               <div>
@@ -49,7 +58,11 @@ export default function ListOrdersHistory({ orders = [] }) {
 
           {/* Orders for this date */}
           {dateOrders
-            .sort((a, b) => (b.id || 0) - (a.id || 0))
+            .sort((a, b) => {
+              const nameA = a.trandisplayname || "";
+              const nameB = b.trandisplayname || "";
+              return nameB.localeCompare(nameA);
+            })
             .map((order) => (
               <div
                 key={order.id}
@@ -67,8 +80,8 @@ export default function ListOrdersHistory({ orders = [] }) {
                     });
                   }
                 }}
-                className="p-4 border-b last:border-b-0 flex justify-between items-center cursor-pointer
-                           hover:bg-gray-50 focus:bg-gray-50 focus:outline-none"
+                className="p-4 border-b last:border-b-0 flex flex-col sm:flex-row justify-between items-start sm:items-center cursor-pointer
+                           hover:bg-gray-50 focus:bg-gray-50 focus:outline-none gap-3 sm:gap-0"
                 aria-label={`Open ${order.trandisplayname}`}
                 title="View order details"
               >
@@ -78,15 +91,14 @@ export default function ListOrdersHistory({ orders = [] }) {
                   </Paragraph>
                   {order.shipcarrier && (
                     <Paragraph className="text-sm text-gray-600">
-                      Carrier: <span className="font-medium">{order.shipcarrier}</span>
+                      Carrier:{" "}
+                      <span className="font-medium">{order.shipcarrier}</span>
                     </Paragraph>
                   )}
                 </div>
 
-                <div className="text-right">
-                  <Paragraph className="text-sm text-gray-600">
-                    {order.status}
-                  </Paragraph>
+                <div className="text-right sm:text-right w-full sm:w-auto flex flex-row sm:flex-col justify-between sm:justify-end items-center sm:items-end gap-2 sm:gap-1">
+                  <StatusBadge status={order.status || "Pending Fulfillment"} />
                   {order.foreigntotal && (
                     <Paragraph className="text-base font-semibold text-gray-800">
                       {formatCurrency(order.foreigntotal)}

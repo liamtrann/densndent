@@ -25,7 +25,7 @@ export default function ProductsDropdown({ classification }) {
   return (
     <div className="relative" onMouseEnter={enter} onMouseLeave={leave}>
       <Link
-        to="/products/all-products"
+        to="/products"
         className="text-sm text-gray-800 hover:text-orange-600 font-medium"
       >
         Products

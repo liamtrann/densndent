@@ -2,7 +2,7 @@
 import React from "react";
 import { Breadcrumb, Paragraph } from "common";
 import { Image } from "common";
-import { URLS } from "constants/urls";
+import { URLS } from "@/constants/constant";
 
 const partnerKeys = [
   "3m",

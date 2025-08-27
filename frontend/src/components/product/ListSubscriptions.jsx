@@ -175,11 +175,11 @@ export default function ListSubscriptions() {
 
     setSaving((prev) => ({ ...prev, [s.roId]: true }));
     try {
-      const token = await getAccessTokenSilently();
+      const token = await getAccessTokenSilently(); // include token on the interval update PATCH
       await api.patch(
         endpoint.UPDATE_RECURRING_ORDER(s.roId),
         buildIntervalPatchPayload(selected),
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } } // ⬅️ token added here Bearer <token> is the standard way to send tokens.
       );
 
       setItems((prev) =>

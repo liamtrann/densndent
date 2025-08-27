@@ -18,7 +18,7 @@ export default function AddressModal({ isOpen, onClose, onSave }) {
     zip: "",
     phone: "",
     isResidential: false,
-    country: "ca",
+    country: "CA",
   });
 
   const [errors, setErrors] = useState({});

@@ -139,7 +139,7 @@ export default function CartOrderSummary({
           )}
         </div>
         <button
-          className="w-full mt-4 bg-purple-800 text-white py-3 rounded hover:bg-purple-900"
+          className="w-full mt-4 bg-smiles-blue text-white py-3 rounded hover:bg-smiles-orange"
           onClick={handleProceedToCheckout}
           disabled={inventoryLoading}
         >

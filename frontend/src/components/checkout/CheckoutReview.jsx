@@ -1,19 +1,30 @@
-import { useEffect, useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-
-import Button from "common/ui/Button";
-import { Loading } from "common";
-import ToastNotification from "common/toast/Toast";
+import { useNavigate } from "react-router-dom";
+import { clearCart } from "store/slices/cartSlice";
 
 import api from "api/api";
 import endpoint from "api/endpoints";
+import { Loading } from "common";
+import ToastNotification from "common/toast/Toast";
+import Button from "common/ui/Button";
+import {
+  buildIdempotencyKey,
+  calculateNextRunDate,
+  formatPrice,
+} from "config/config";
 
-import { clearCart } from "store/slices/cartSlice";
-import { buildIdempotencyKey, calculateNextRunDate } from "config/config";
+import StripeCheckout from "./StripeCheckout";
 
-export default function CheckoutReview() {
+import { SHIPPING_METHOD } from "@/constants/constant";
+
+export default function CheckoutReview({
+  stripeCustomerId,
+  orderTotal,
+  isProcessing,
+  setIsProcessing,
+}) {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { getAccessTokenSilently } = useAuth0();
@@ -22,7 +33,7 @@ export default function CheckoutReview() {
   const [sameAsShipping, setSameAsShipping] = useState(true);
   const [billingAddress, setBillingAddress] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState("invoice");
-  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState(null);
 
   useEffect(() => {
     const stored = JSON.parse(
@@ -31,9 +42,139 @@ export default function CheckoutReview() {
     const selected = Number(localStorage.getItem("selectedAddressId"));
     const selectedAddress = stored.find((addr) => addr.id === selected);
     setBillingAddress(selectedAddress);
+
+    // Get payment method and selected payment method ID from localStorage
+    const storedPaymentMethod = localStorage.getItem("paymentMethod");
+    const storedPaymentMethodId = localStorage.getItem(
+      "selectedPaymentMethodId"
+    );
+
+    if (storedPaymentMethod) {
+      setPaymentMethod(storedPaymentMethod);
+    }
+    if (storedPaymentMethodId) {
+      setSelectedPaymentMethodId(storedPaymentMethodId);
+    }
   }, []);
 
-  console.log(cartItems);
+  // Build order payload for NetSuite integration
+  const buildOrderPayload = () => {
+    // Validate required data
+    if (!userInfo?.id || !cartItems?.length || !billingAddress) {
+      return null;
+    }
+
+    return {
+      entity: {
+        id: userInfo.id,
+        // type: userInfo.searchstage,
+      },
+      item: {
+        items: cartItems.map((item) => ({
+          item: {
+            id: item.id,
+          },
+          quantity: item.quantity,
+        })),
+      },
+      tobeEmailed: true,
+      email: userInfo.email,
+      shipMethod: {
+        id: SHIPPING_METHOD,
+      },
+      billingAddress: {
+        addr1: billingAddress.line1 || billingAddress.address,
+        addressee: billingAddress.fullName,
+        city: billingAddress.city,
+        country: { id: "CA" },
+        state: billingAddress.state,
+        zip: billingAddress.postalCode || billingAddress.zip,
+      },
+      shippingAddress: sameAsShipping
+        ? {
+            addr1: billingAddress.line1 || billingAddress.address,
+            addressee: billingAddress.fullName,
+            city: billingAddress.city,
+            country: { id: "CA" },
+            state: billingAddress.state,
+            zip: billingAddress.postalCode || billingAddress.zip,
+          }
+        : null,
+      paymentMethod: paymentMethod,
+    };
+  };
+
+  // Stripe Payment Functions
+  const createPaymentIntent = async (selectedPaymentMethodId) => {
+    if (!selectedPaymentMethodId || !orderTotal) return;
+
+    try {
+      const token = await getAccessTokenSilently();
+      const response = await api.post(
+        endpoint.POST_CREATE_PAYMENT(),
+        {
+          paymentMethod: selectedPaymentMethodId,
+          amount: formatPrice(orderTotal),
+          currency: "cad",
+          customerId: stripeCustomerId,
+          description: `Order payment for ${cartItems.length} item(s)`,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data.paymentIntent;
+    } catch (err) {
+      throw new Error(
+        err.response?.data?.message || "Failed to create payment intent"
+      );
+    }
+  };
+
+  const handlePaymentSuccess = (paymentResult) => {
+    // Handle successful payment
+    localStorage.removeItem("selectedPaymentMethodId");
+    localStorage.removeItem("paymentMethod");
+    // Clear cart
+    dispatch(clearCart());
+
+    // Clear checkout addresses from localStorage
+    localStorage.removeItem("checkoutAddresses");
+    localStorage.removeItem("selectedAddressId");
+
+    navigate("/purchase-history", {
+      state: {
+        paymentIntent: paymentResult,
+        orderAmount: orderTotal,
+        paymentSuccessMessage: "Payment completed successfully!",
+      },
+    });
+  };
+
+  const handlePaymentError = (error) => {
+    ToastNotification.error(
+      error.message || "Payment failed. Please try again."
+    );
+  };
+
+  // If payment method is card, show StripeCheckout instead
+  if (paymentMethod === "card") {
+    return (
+      <StripeCheckout
+        stripeCustomerId={stripeCustomerId}
+        orderTotal={orderTotal}
+        createPaymentIntent={createPaymentIntent}
+        handlePaymentSuccess={handlePaymentSuccess}
+        handlePaymentError={handlePaymentError}
+        buildOrderPayload={buildOrderPayload}
+        isProcessing={isProcessing}
+        setIsProcessing={setIsProcessing}
+      />
+    );
+  }
 
   const handlePlaceOrder = async () => {
     // Check if user ID is available
@@ -45,12 +186,12 @@ export default function CheckoutReview() {
     }
 
     // Check if user is a valid customer
-    if (userInfo.searchstage !== "Customer") {
-      ToastNotification.error(
-        "New customers must contact support to place orders. We only allow orders for existing customers. Please contact our support team."
-      );
-      return;
-    }
+    // if (userInfo.searchstage !== "Customer") {
+    //   ToastNotification.error(
+    //     "New customers must contact support to place orders. We only allow orders for existing customers. Please contact our support team."
+    //   );
+    //   return;
+    // }
 
     // Check if billing address is available
     if (!billingAddress) {
@@ -68,51 +209,26 @@ export default function CheckoutReview() {
       return;
     }
 
-    const orderPayload = {
-      entity: {
-        id: userInfo.id,
-        // type: userInfo.searchstage,
-      },
-      item: {
-        items: cartItems.map((item) => ({
-          item: {
-            id: item.id,
-          },
-          quantity: item.quantity,
-        })),
-      },
-      tobeEmailed: true,
-      email: userInfo.email,
-      shipMethod: {
-        id: "20412",
-      },
-      billingAddress: {
-        addr1: billingAddress.address,
-        addressee: billingAddress.fullName,
-        city: billingAddress.city,
-        country: { id: "CA" },
-        state: billingAddress.state,
-        zip: billingAddress.zip,
-      },
-      shippingAddress: sameAsShipping
-        ? {
-            addr1: billingAddress.address,
-            addressee: billingAddress.fullName,
-            city: billingAddress.city,
-            country: { id: "CA" },
-            state: billingAddress.state,
-            zip: billingAddress.zip,
-          }
-        : null,
-      paymentMethod: paymentMethod, // Optional: Include method
-    };
+    // Build order payload using the standardized function
+    const orderPayload = buildOrderPayload();
+    if (!orderPayload) {
+      ToastNotification.error(
+        "Unable to build order. Please check your information and try again."
+      );
+      return;
+    }
 
     try {
-      setIsPlacingOrder(true);
+      setIsProcessing(true);
       const token = await getAccessTokenSilently();
 
       // Build deterministic idempotency key matching backend window logic
-      const idemKey = buildIdempotencyKey(userInfo, cartItems, "20412", 10);
+      const idemKey = buildIdempotencyKey(
+        userInfo,
+        cartItems,
+        SHIPPING_METHOD,
+        10
+      );
 
       const response = await api.post(
         endpoint.POST_SALES_ORDER(),
@@ -170,17 +286,9 @@ export default function CheckoutReview() {
                 }
               );
 
-              console.log(
-                `✅ Created recurring order for item: ${item.itemid || item.id}`
-              );
+              // Recurring order created successfully
             } catch (recurringError) {
-              console.error(
-                `❌ Failed to create recurring order for item: ${
-                  item.itemid || item.id
-                }`,
-                recurringError
-              );
-              // Don't show error to user - main order was successful
+              // Failed to create recurring order - don't show error to user since main order was successful
             }
           }
 
@@ -198,21 +306,23 @@ export default function CheckoutReview() {
       // Clear checkout addresses from localStorage
       localStorage.removeItem("checkoutAddresses");
       localStorage.removeItem("selectedAddressId");
+      localStorage.removeItem("selectedPaymentMethodId");
+      localStorage.removeItem("paymentMethod");
 
       // Redirect to order history
-      navigate("/profile/history");
+      navigate("/purchase-history");
     } catch (error) {
       // Handle order placement error
       ToastNotification.error("Failed to place order. Please try again.");
     } finally {
-      setIsPlacingOrder(false);
+      setIsProcessing(false);
     }
   };
 
   return (
     <div className="space-y-6 relative">
       {/* Loading Overlay */}
-      {isPlacingOrder && (
+      {isProcessing && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-8 rounded-lg shadow-lg max-w-md text-center">
             <Loading text="Processing your order..." />
@@ -271,87 +381,28 @@ export default function CheckoutReview() {
             </label>
           </div>
 
-          {/* Payment Method */}
-          <div className="border rounded shadow-sm p-4 bg-white space-y-4">
+          {/* Payment Method Display */}
+          <div className="border rounded shadow-sm p-4 bg-white">
             <h3 className="font-semibold mb-2">Payment Method</h3>
-
-            {/* Tabs */}
-            <div className="flex space-x-4 border-b mb-4">
-              {/* <button
-                className={`py-2 px-4 font-medium ${
-                  paymentMethod === "card"
-                    ? "border-b-2 border-blue-600 text-blue-600"
-                    : "text-gray-600 hover:text-blue-600"
-                }`}
-                onClick={() => setPaymentMethod("card")}
-              >
-                Credit/Debit Card
-              </button> */}
-              <button
-                className={`py-2 px-4 font-medium ${
-                  paymentMethod === "invoice"
-                    ? "border-b-2 border-blue-600 text-blue-600"
-                    : "text-gray-600 hover:text-blue-600"
-                }`}
-                onClick={() => setPaymentMethod("invoice")}
-              >
-                Invoice
-              </button>
+            <div className="text-sm text-gray-700">
+              {paymentMethod === "invoice" ? (
+                <>
+                  <div className="font-medium">Invoice</div>
+                  <div className="text-gray-600 mt-1">
+                    An invoice will be emailed after order confirmation
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="font-medium">Credit/Debit Card</div>
+                  <div className="text-gray-600 mt-1">
+                    {selectedPaymentMethodId
+                      ? `Payment method selected (ID: ${selectedPaymentMethodId.slice(-4)})`
+                      : "Card payment method selected"}
+                  </div>
+                </>
+              )}
             </div>
-
-            {/* Credit Card Fields */}
-            {/* {paymentMethod === "card" && (
-              <>
-                <InputField
-                  label="Credit Card Number"
-                  type={showCardNumber ? "text" : "password"}
-                  value={cardNumber}
-                  onChange={(e) => setCardNumber(e.target.value)}
-                  placeholder="•••• •••• •••• 1234"
-                />
-                <Button
-                  variant="secondary"
-                  onClick={() => setShowCardNumber(!showCardNumber)}
-                >
-                  {showCardNumber ? "Hide" : "Show"}
-                </Button>
-
-                <InputField
-                  label="Name on Card"
-                  value={nameOnCard}
-                  onChange={(e) => setNameOnCard(e.target.value)}
-                />
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <InputField
-                    label="Expiration Month"
-                    value={expMonth}
-                    onChange={(e) => setExpMonth(e.target.value)}
-                    placeholder="MM"
-                  />
-                  <InputField
-                    label="Expiration Year"
-                    value={expYear}
-                    onChange={(e) => setExpYear(e.target.value)}
-                    placeholder="YYYY"
-                  />
-                  <InputField
-                    label="Security Code"
-                    type="password"
-                    value={securityCode}
-                    onChange={(e) => setSecurityCode(e.target.value)}
-                    placeholder="CVV"
-                  />
-                </div>
-              </>
-            )} */}
-
-            {/* Invoice Message */}
-            {paymentMethod === "invoice" && (
-              <div className="text-sm text-gray-700">
-                An invoice will be emailed to the billing address after the
-                order is confirmed.
-              </div>
-            )}
           </div>
 
           {/* Buttons */}
@@ -359,12 +410,12 @@ export default function CheckoutReview() {
             <Button
               variant="secondary"
               onClick={() => navigate("/checkout/payment")}
-              disabled={isPlacingOrder}
+              disabled={isProcessing}
             >
               Back
             </Button>
-            <Button onClick={handlePlaceOrder} disabled={isPlacingOrder}>
-              {isPlacingOrder ? "Placing Order..." : "Place Order"}
+            <Button onClick={handlePlaceOrder} disabled={isProcessing}>
+              {isProcessing ? "Placing Order..." : "Place Order"}
             </Button>
           </div>
         </div>

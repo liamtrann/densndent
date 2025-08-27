@@ -2,7 +2,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Image, TitleSection } from "common";
-import { URLS } from "constants/urls";
+import { URLS } from "@/constants/constant";
 import BlueBanner from "./BlueBanner";
 
 const brandKeys = [

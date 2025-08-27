@@ -1,6 +1,9 @@
 import React from "react";
-import { InputField, ProductImage } from "common";
+
+import { InputField, ProductImage, DeliveryEstimate } from "common";
 import { formatCurrency, calculateTotalCurrency } from "config/config";
+
+import { CURRENT_IN_STOCK, OUT_OF_STOCK } from "@/constants/constant";
 
 export default function CartProductCard({
   item,
@@ -41,17 +44,23 @@ export default function CartProductCard({
           </span>
         )}
         {typeof item.totalquantityonhand !== "undefined" && (
-          <p
-            className={
-              item.totalquantityonhand > 0
-                ? "text-green-700 font-semibold text-sm mb-1"
-                : "text-red-600 font-semibold text-sm mb-1"
-            }
-          >
-            {item.totalquantityonhand > 0
-              ? `Current Stock: ` //${item.totalquantityonhand} could add later
-              : "Out of stock"}
-          </p>
+          <div className="mb-2">
+            <p
+              className={
+                item.totalquantityonhand > 0
+                  ? "text-smiles-blue font-semibold text-sm mb-1"
+                  : "text-smiles-orange font-semibold text-sm mb-1"
+              }
+            >
+              {item.totalquantityonhand > 0
+                ? `${CURRENT_IN_STOCK}: ` //${item.totalquantityonhand} could add later
+                : OUT_OF_STOCK}
+            </p>
+            <DeliveryEstimate
+              inStock={item.totalquantityonhand > 0}
+              size="small"
+            />
+          </div>
         )}
         {/* Inventory check warning */}
         {inv && inv.quantityavailable <= 0 && (

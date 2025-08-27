@@ -16,7 +16,7 @@ export default function CartConfirmationModal({ product, quantity, onClose }) {
       image={product.file_url}
       product={[
         {
-          name: product.displayname || product.itemid,
+          name: product.displayname,
           price: product.price,
           stockdescription: product.stockdescription,
           quantity,

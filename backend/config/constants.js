@@ -1,0 +1,1 @@
+export const SHIPPING_METHOD = "20412"

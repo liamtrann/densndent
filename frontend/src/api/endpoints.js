@@ -115,7 +115,12 @@ const endpoint = {
     if (sort) params.append("sort", sort);
     return `/suiteql/transaction/by-id?${params.toString()}`;
   },
-  GET_ORDER_DETAILS_BY_TRANSACTION: ({ transactionId, userId, limit, offset }) => {
+  GET_ORDER_DETAILS_BY_TRANSACTION: ({
+    transactionId,
+    userId,
+    limit,
+    offset,
+  }) => {
     const params = new URLSearchParams();
     if (transactionId) params.append("transactionId", transactionId);
     if (userId) params.append("userId", userId);
@@ -197,6 +202,25 @@ const endpoint = {
   POST_CREATE_CUSTOMER: () => `/restapi/customer`,
   POST_RECURRING_ORDER: () => `/restapi/customrecord_recurring_order`,
   UPDATE_RECURRING_ORDER: (id) => `/restapi/customrecord_recurring_order/${id}`,
+
+  // Stripe Endpoints
+  // Customer endpoints
+  POST_CREATE_STRIPE_CUSTOMER: () => `/stripe/customer/create-stripe`,
+  GET_STRIPE_CUSTOMER: (customerId) => `/stripe/customer/${customerId}`,
+  GET_STRIPE_CUSTOMER_BY_EMAIL: (email) => `/stripe/customer/email/${email}`,
+  PUT_UPDATE_STRIPE_CUSTOMER: (customerId) => `/stripe/customer/${customerId}`,
+
+  // Payment method endpoints
+  POST_ATTACH_PAYMENT_METHOD: (customerId) =>
+    `/stripe/customer/${customerId}/payment-methods/attach`,
+  GET_PAYMENT_METHODS: (customerId) =>
+    `/stripe/customer/${customerId}/payment-methods`,
+  DELETE_PAYMENT_METHOD: (paymentMethodId) =>
+    `/stripe/payment-methods/${paymentMethodId}`,
+
+  // Payment endpoints
+  POST_CREATE_PAYMENT: () => `/stripe/payment/create`,
+  POST_CONFIRM_PAYMENT: () => `/stripe/payment/confirm`,
 };
 
 export default endpoint;
