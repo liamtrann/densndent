@@ -46,7 +46,7 @@ export default function ProductListRows({ products = [] }) {
 
   // Small aligned qty control (shared by both views)
   const QtyControl = ({ id }) => (
-    <div 
+    <div
       className="inline-flex items-stretch h-8 rounded border overflow-hidden"
       onClick={(e) => e.stopPropagation()}
     >
@@ -161,7 +161,7 @@ export default function ProductListRows({ products = [] }) {
         return (
           <div key={p.id} className="p-4">
             {/* ---------- Mobile layout (stacked) ---------- */}
-            <div 
+            <div
               className="md:hidden cursor-pointer"
               onClick={() => handleNavigate(p.id)}
             >
@@ -219,7 +219,7 @@ export default function ProductListRows({ products = [] }) {
             </div>
 
             {/* ---------- Desktop / Tablet layout ---------- */}
-            <div 
+            <div
               className="hidden md:flex md:flex-row items-center gap-4 cursor-pointer"
               onClick={() => handleNavigate(p.id)}
             >
