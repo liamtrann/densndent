@@ -11,18 +11,15 @@ import { Button, Dropdown, Loading, Paragraph, ProductImage } from "common";
 import {
   SUBSCRIPTION_INTERVAL_OPTIONS as INTERVAL_OPTIONS,
   normalizeSubscriptionRecord,
-  isSubscriptionCanceled,
   nextFromToday,
   formatLocalDateToronto,
   buildIntervalPatchPayload,
   SUBSCRIPTION_CANCEL_PAYLOAD,
 } from "config/config";
-
 import ToastNotification from "@/common/toast/Toast";
 
 /** UI-size helpers so all compact controls match */
 const CTRL_SIZE = "h-9";
-const BTN_TIGHT = `${CTRL_SIZE} leading-none px-3 text-xs`;
 
 // Compact status option labels
 const STATUS_OPTIONS = [
@@ -38,11 +35,59 @@ const STATUS_PAYLOADS = {
   canceled: SUBSCRIPTION_CANCEL_PAYLOAD,
 };
 
-/** Build the best href we can for a subscription row.
- * Prefer numeric/valid product id -> /product/:id,
- * else fall back to search by name so the user still lands somewhere useful.
- */
-// ListSubscriptions.jsx (helper)
+/* -----------------------------
+   Helpers to parse API responses
+   ----------------------------- */
+
+/** Normalize to "active" | "paused" | "canceled" from many shapes */
+function parseStatus(rec) {
+  const raw = rec?.custrecord_ro_status;
+  const id = raw?.id ?? raw?.value ?? rec?.statusId ?? rec?.status_id ?? null;
+  const text =
+    raw?.text ??
+    raw?.label ??
+    rec?.statusText ??
+    rec?.status_text ??
+    rec?.status ??
+    null;
+
+  const sid = String(id ?? "").trim();
+  const st = String(text ?? "").trim().toLowerCase();
+
+  if (sid === "3" || st.includes("cancel")) return "canceled";
+  if (sid === "2" || st.includes("pause")) return "paused";
+  if (sid === "1" || st.includes("active")) return "active";
+  return "active";
+}
+
+/** Extract a YYYY-MM-DD from various backend date fields (string or Date) */
+function pickNextRunDate(rec) {
+  const raw =
+    rec?.custrecord_ro_next_run ??
+    rec?.next_run ??
+    rec?.nextRun ??
+    rec?.nextrun ??
+    rec?.custrecord_next_run ??
+    rec?.custrecord_ro_nextrun ??
+    null;
+
+  if (!raw) return null;
+
+  const s = String(raw);
+  const m = s.match(/^(\d{4}-\d{2}-\d2)/); // intentionally loose
+  if (m) return m[1];
+
+  const d = new Date(raw);
+  if (!isNaN(d)) {
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  }
+  return null;
+}
+
+/** Best effort route for clicking through */
 function getProductHref(s) {
   const first =
     (s?.productId && String(s.productId).trim()) ||
@@ -51,24 +96,56 @@ function getProductHref(s) {
   return first ? `/product/${encodeURIComponent(first)}` : null;
 }
 
+/** Resolve a non-numeric id (or missing id) to a numeric internal id using your search endpoint. */
+async function resolveProductIdFlexible(maybe, fallbackText) {
+  const tryOne = async (query) => {
+    if (!query) return null;
+    const q = String(query).trim();
+    if (!q) return null;
+    try {
+      const res = await api.post(
+        endpoint.POST_GET_ITEMS_BY_NAME({ limit: 1 }),
+        { name: q }
+      );
+      const arr = Array.isArray(res.data) ? res.data : res.data?.items || res.data;
+      const first = Array.isArray(arr) ? arr[0] : undefined;
+      return first?.id ? String(first.id) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  // Already numeric?
+  if (/^\d+$/.test(String(maybe || ""))) return String(maybe);
+
+  // Try several candidates
+  return (
+    (await tryOne(maybe)) ||
+    (await tryOne(fallbackText)) ||
+    (await tryOne(String(fallbackText || "").replace(/\s*-\s*.*/, ""))) || // drop trailing " - XXX"
+    (await tryOne(
+      String(fallbackText || "")
+        .replace(/[^\w\s]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+    ))
+  );
+}
+
 export default function ListSubscriptions() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // per-row states (kept as-is)
+  // per-row working state
   const [pending, setPending] = useState({}); // interval
-  const [saving, setSaving] = useState({}); // interval save flag
-
   const [pendingDate, setPendingDate] = useState({}); // yyyy-mm-dd
-  const [savingDate, setSavingDate] = useState({}); // date save flag
-
   const [pendingStatus, setPendingStatus] = useState({}); // active/paused/canceled
-  const [savingStatus, setSavingStatus] = useState({}); // status save flag
 
-  // NEW: track original status so we can detect changes for the single Save
+  // baselines to detect dirty fields after initial load
   const [initialStatus, setInitialStatus] = useState({});
+  const [initialDate, setInitialDate] = useState({}); // yyyy-mm-dd baseline
 
-  // single bottom save flag per row
+  // one save button at the bottom per row
   const [savingRow, setSavingRow] = useState({});
 
   const [confirming, setConfirming] = useState(null);
@@ -76,7 +153,6 @@ export default function ListSubscriptions() {
   const userInfo = useSelector((state) => state.user.info);
   const { getAccessTokenSilently } = useAuth0();
 
-  // helper → format Date as YYYY-MM-DD (local)
   const toInputDate = (d) => {
     const yyyy = d.getFullYear();
     const mm = String(d.getMonth() + 1).padStart(2, "0");
@@ -87,6 +163,7 @@ export default function ListSubscriptions() {
   /** Fetch subscriptions */
   useEffect(() => {
     let mounted = true;
+
     async function load() {
       if (!userInfo?.id) return;
       setLoading(true);
@@ -102,47 +179,49 @@ export default function ListSubscriptions() {
 
         const raw = res.data?.items || res.data || [];
 
-        // status map for prefill
+        // Include PAUSED; exclude only CANCELED
+        const activeOrPaused = raw.filter((r) => parseStatus(r) !== "canceled");
+
+        // Normalize for the UI
+        const subs = activeOrPaused.map(normalizeSubscriptionRecord);
+
+        // Build maps for status and next run date
         const statusMap = {};
-        raw.forEach((r) => {
-          const sid = String(
-            r?.custrecord_ro_status?.id ??
-              r?.custrecord_ro_status ??
-              r?.statusId ??
-              r?.status ??
-              ""
-          );
-          statusMap[r.id ?? r.internalid ?? r.roId] =
-            sid === "3" ? "canceled" : sid === "2" ? "paused" : "active";
+        const dateMap = {};
+        activeOrPaused.forEach((r) => {
+          const roId = r.id ?? r.internalid ?? r.roId;
+          statusMap[roId] = parseStatus(r);
+          dateMap[roId] = pickNextRunDate(r);
         });
 
-        const activeOnly = raw.filter((r) => !isSubscriptionCanceled(r));
-        const subs = activeOnly.map(normalizeSubscriptionRecord);
+        if (!mounted) return;
 
-        if (mounted) {
-          setItems(subs);
+        // Set immediately so UI renders, then hydrate titles
+        setItems(subs);
 
-          // init interval state
-          const initIntervals = {};
-          subs.forEach((s) => (initIntervals[s.roId] = s.interval));
-          setPending(initIntervals);
+        // initialize interval working state
+        const initIntervals = {};
+        subs.forEach((s) => (initIntervals[s.roId] = s.interval));
+        setPending(initIntervals);
 
-          // init date state (default to computed next from interval)
-          const initDates = {};
-          subs.forEach((s) => {
-            const computed = nextFromToday(s.interval);
-            initDates[s.roId] = toInputDate(computed);
-          });
-          setPendingDate(initDates);
+        // initialize date baseline + working state
+        const initDates = {};
+        subs.forEach((s) => {
+          const fromApi = dateMap[s.roId];
+          initDates[s.roId] = fromApi || toInputDate(nextFromToday(s.interval));
+        });
+        setInitialDate(initDates);
+        setPendingDate(initDates);
 
-          // init status
-          const initStatus = {};
-          subs.forEach((s) => {
-            initStatus[s.roId] = statusMap[s.roId] || "active";
-          });
-          setPendingStatus(initStatus);
-          setInitialStatus(initStatus); // baseline for dirty detection
-        }
+        // initialize status baseline + working state
+        const initStatus = {};
+        subs.forEach((s) => {
+          initStatus[s.roId] = statusMap[s.roId] || "active";
+        });
+        setInitialStatus(initStatus);
+
+        // Always hydrate pretty product titles from PDP data
+        await hydratePrettyTitles(subs);
       } catch (err) {
         console.error("Error loading subscriptions:", err);
         ToastNotification.error("Failed to load subscriptions.");
@@ -150,6 +229,7 @@ export default function ListSubscriptions() {
           setItems([]);
           setPending({});
           setPendingDate({});
+          setInitialDate({});
           setPendingStatus({});
           setInitialStatus({});
         }
@@ -157,102 +237,62 @@ export default function ListSubscriptions() {
         if (mounted) setLoading(false);
       }
     }
+
+    /** Fetch real product titles for each row and update displayname/file_url. */
+    async function hydratePrettyTitles(list) {
+      // Map each row to a promise that ensures we end up with the PDP title
+      const enriched = await Promise.all(
+        list.map(async (s) => {
+          try {
+            // We prefer a numeric productId; otherwise resolve one from whatever text we have
+            const candidateText =
+              s.displayname || s.itemid || s.productId || `#${s.roId}`;
+            const pid = /^\d+$/.test(String(s.productId || ""))
+              ? String(s.productId)
+              : await resolveProductIdFlexible(s.productId, candidateText);
+
+            if (!pid) return s;
+
+            const res = await api.get(endpoint.GET_PRODUCT_BY_ID(pid));
+            const p = res?.data;
+            if (!p) return s;
+
+            return {
+              ...s,
+              // Use storefront PDP title (itemid in your system)
+              displayname: p.itemid || p.displayname || s.displayname || s.itemid,
+              itemid: p.itemid || s.itemid,
+              // If we had no image, fill it from PDP
+              file_url: s.file_url || p.file_url || s.file_url,
+              // Keep the resolved numeric id to make links sturdier
+              productId: String(pid),
+            };
+          } catch {
+            return s;
+          }
+        })
+      );
+
+      setItems(enriched);
+    }
+
     load();
     return () => {
       mounted = false;
     };
   }, [userInfo?.id, getAccessTokenSilently]);
 
-  /* ---------- Interval handlers (kept, though Save button removed) ---------- */
+  /* ---------- Handlers ---------- */
   const handleIntervalChange = (s, value) => {
     setPending((prev) => ({ ...prev, [s.roId]: value }));
   };
 
-  // kept for compatibility, no longer used in UI
-  const handleSaveInterval = async (s) => {
-    const selected = pending[s.roId];
-    if (!selected || selected === s.interval) return;
-
-    setSaving((prev) => ({ ...prev, [s.roId]: true }));
-    try {
-      const token = await getAccessTokenSilently(); // include token on the interval update PATCH
-      await api.patch(
-        endpoint.UPDATE_RECURRING_ORDER(s.roId),
-        buildIntervalPatchPayload(selected),
-        { headers: { Authorization: `Bearer ${token}` } } // ⬅️ token added here Bearer <token> is the standard way to send tokens.
-      );
-
-      setItems((prev) =>
-        prev.map((it) =>
-          it.roId === s.roId ? { ...it, interval: String(selected) } : it
-        )
-      );
-      ToastNotification.success("Subscription interval saved.");
-    } catch (err) {
-      console.error("Failed to update interval:", err);
-      ToastNotification.error("Failed to update interval. Please try again.");
-    } finally {
-      setSaving((prev) => ({ ...prev, [s.roId]: false }));
-    }
-  };
-
-  /* ---------- Next Order DATE handlers (Save removed) ---------- */
   const handleDateChange = (s, value) => {
     setPendingDate((prev) => ({ ...prev, [s.roId]: value }));
   };
 
-  // kept for compatibility, no longer used in UI
-  const handleSaveDate = async (s) => {
-    const val = pendingDate[s.roId];
-    if (!val) return;
-
-    setSavingDate((prev) => ({ ...prev, [s.roId]: true }));
-    try {
-      const token = await getAccessTokenSilently();
-      await api.patch(
-        endpoint.UPDATE_RECURRING_ORDER(s.roId),
-        { custrecord_ro_next_run: val },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      ToastNotification.success("Next order date updated.");
-    } catch (err) {
-      console.error("Failed to update next order date:", err);
-      ToastNotification.error("Failed to update date. Please try again.");
-    } finally {
-      setSavingDate((prev) => ({ ...prev, [s.roId]: false }));
-    }
-  };
-
-  /* ---------- Status (Active/Pause/Cancel) handlers ---------- */
   const handleStatusChange = (s, value) => {
     setPendingStatus((prev) => ({ ...prev, [s.roId]: value }));
-  };
-
-  // kept for compatibility, no longer used in UI
-  const handleSaveStatus = async (s) => {
-    const choice = pendingStatus[s.roId] || "active";
-
-    if (choice === "canceled") {
-      setConfirming(s);
-      return;
-    }
-
-    setSavingStatus((prev) => ({ ...prev, [s.roId]: true }));
-    try {
-      const token = await getAccessTokenSilently();
-      const payload = STATUS_PAYLOADS[choice];
-      await api.patch(endpoint.UPDATE_RECURRING_ORDER(s.roId), payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      ToastNotification.success(
-        choice === "paused" ? "Subscription paused." : "Subscription activated."
-      );
-    } catch (err) {
-      console.error("Failed to update subscription status:", err);
-      ToastNotification.error("Failed to update subscription status.");
-    } finally {
-      setSavingStatus((prev) => ({ ...prev, [s.roId]: false }));
-    }
   };
 
   /** Single bottom SAVE — saves interval + next date + status together */
@@ -260,29 +300,30 @@ export default function ListSubscriptions() {
     const roId = s.roId;
 
     const intervalNow = pending[roId] ?? s.interval;
-    const originalInterval = s.interval;
-    const isDirtyInterval = intervalNow !== originalInterval;
+    const isDirtyInterval = intervalNow !== s.interval;
 
-    const baselineNext = toInputDate(nextFromToday(s.interval));
-    const dateVal = pendingDate[roId] || baselineNext;
-    const isDirtyDate = dateVal !== baselineNext;
+    const dateVal = pendingDate[roId] ?? initialDate[roId];
+    const baselineDate = initialDate[roId];
+    const isDirtyDate = !!dateVal && dateVal !== baselineDate;
 
-    const statusVal = pendingStatus[roId] || "active";
-    const isDirtyStatus = (initialStatus[roId] || "active") !== statusVal;
+    const statusVal = pendingStatus[roId] ?? initialStatus[roId] ?? "active";
+    const isDirtyStatus =
+      (initialStatus[roId] ?? "active") !== (statusVal ?? "active");
 
-    // If cancel chosen, show confirm modal instead of patching now
+    // If cancel chosen, confirm + remove
     if (statusVal === "canceled") {
       setConfirming(s);
       return;
     }
 
-    // Build one PATCH payload (only changed fields)
+    // Build single PATCH payload with only changed fields
     const payload = {};
-    if (isDirtyInterval) Object.assign(payload, buildIntervalPatchPayload(intervalNow));
+    if (isDirtyInterval)
+      Object.assign(payload, buildIntervalPatchPayload(intervalNow));
     if (isDirtyDate) payload.custrecord_ro_next_run = dateVal;
     if (isDirtyStatus) Object.assign(payload, STATUS_PAYLOADS[statusVal]);
 
-    if (Object.keys(payload).length === 0) return; // nothing to save
+    if (Object.keys(payload).length === 0) return;
 
     setSavingRow((prev) => ({ ...prev, [roId]: true }));
     try {
@@ -291,7 +332,6 @@ export default function ListSubscriptions() {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      // reflect interval locally
       if (isDirtyInterval) {
         setItems((prev) =>
           prev.map((it) =>
@@ -299,10 +339,11 @@ export default function ListSubscriptions() {
           )
         );
       }
-
-      // update baseline status after save
       if (isDirtyStatus) {
         setInitialStatus((prev) => ({ ...prev, [roId]: statusVal }));
+      }
+      if (isDirtyDate) {
+        setInitialDate((prev) => ({ ...prev, [roId]: dateVal }));
       }
 
       ToastNotification.success("Subscription changes saved.");
@@ -315,6 +356,7 @@ export default function ListSubscriptions() {
   };
 
   /** Actually cancel (called by modal confirm) */
+  const [savingStatus, setSavingStatus] = useState({});
   const performCancel = async (s) => {
     setSavingStatus((prev) => ({ ...prev, [s.roId]: true }));
     try {
@@ -325,7 +367,6 @@ export default function ListSubscriptions() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (response.status >= 200 && response.status < 300) {
-        // remove from list
         setItems((prev) => prev.filter((it) => it.roId !== s.roId));
         setPending((prev) => {
           const cp = { ...prev };
@@ -333,6 +374,11 @@ export default function ListSubscriptions() {
           return cp;
         });
         setPendingDate((prev) => {
+          const cp = { ...prev };
+          delete cp[s.roId];
+          return cp;
+        });
+        setInitialDate((prev) => {
           const cp = { ...prev };
           delete cp[s.roId];
           return cp;
@@ -388,21 +434,21 @@ export default function ListSubscriptions() {
           const roId = s.roId;
 
           const intervalNow = pending[roId] ?? s.interval;
-          const dateVal =
-            pendingDate[roId] || toInputDate(nextFromToday(s.interval));
-          const statusVal = pendingStatus[roId] || "active";
+          const dateVal = pendingDate[roId] ?? initialDate[roId];
+          const statusVal =
+            pendingStatus[roId] ?? initialStatus[roId] ?? "active";
 
-          const baselineNext = toInputDate(nextFromToday(s.interval));
           const isDirtyInterval = intervalNow !== s.interval;
-          const isDirtyDate = dateVal !== baselineNext;
-          const isDirtyStatus = (initialStatus[roId] || "active") !== statusVal;
+          const isDirtyDate = !!dateVal && dateVal !== initialDate[roId];
+          const isDirtyStatus =
+            (initialStatus[roId] ?? "active") !== (statusVal ?? "active");
 
           const isSavingCombined = !!savingRow[roId];
 
           const href = getProductHref(s);
-          const title = s.displayname || s.itemid || `#${s.productId || s.roId}`;
+          const title =
+            s.displayname || s.itemid || `#${s.productId || s.roId}`;
 
-          // simple wrappers so we don't duplicate markup
           const ImageWrap = href
             ? ({ children }) => (
                 <Link
@@ -446,13 +492,14 @@ export default function ListSubscriptions() {
                   </div>
                 </div>
 
-                {/* Interval (readable) */}
                 <Paragraph className="mt-1 text-sm text-gray-600">
                   Interval:{" "}
-                  {intervalNow === "1" ? "Every 1 month" : `Every ${intervalNow} months`}
+                  {intervalNow === "1"
+                    ? "Every 1 month"
+                    : `Every ${intervalNow} months`}
                 </Paragraph>
 
-                {/* Next Order: editable date picker (Save removed here) */}
+                {/* Next Order: date picker */}
                 <div className="mt-1 flex items-center gap-2">
                   <span className="text-xs text-gray-500">Next Order:</span>
                   <input
@@ -472,7 +519,7 @@ export default function ListSubscriptions() {
                   Estimated Delivery: <span className="font-medium">5 Days</span>
                 </Paragraph>
 
-                {/* Controls row: Change interval + Subscription (side-by-side), no per-control Saves */}
+                {/* Controls: Change interval + Subscription */}
                 <div className="mt-3 flex flex-wrap items-end gap-3">
                   <div className="w-56">
                     <Dropdown
@@ -502,7 +549,10 @@ export default function ListSubscriptions() {
                   <Button
                     variant="ghost"
                     className="h-10 text-sm w-56 border border-gray-300 rounded px-3 text-gray-700 hover:bg-gray-50"
-                    disabled={!(isDirtyInterval || isDirtyDate || isDirtyStatus) || isSavingCombined}
+                    disabled={
+                      !(isDirtyInterval || isDirtyDate || isDirtyStatus) ||
+                      isSavingCombined
+                    }
                     onClick={() => handleSaveAll(s)}
                   >
                     {isSavingCombined ? "Saving..." : "Save"}
