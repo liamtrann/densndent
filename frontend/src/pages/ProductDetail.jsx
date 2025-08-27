@@ -67,7 +67,6 @@ function nextSubscriptionDateFromToday(intervalStr) {
 export default function ProductsPage({
   productId: propProductId = null,
   isModal = false,
-  onAddToCart: onAddToCartCallback = null,
 }) {
   const { id: rawId } = useParams();
   // Use prop productId if provided (for modal), otherwise use URL param
@@ -220,7 +219,6 @@ export default function ProductsPage({
       dispatch(addToCart(cartItem));
       Toast.success(`Added ${actualQuantity} ${product.itemid} to cart!`);
       // Call the callback if provided (for modal close)
-      if (onAddToCartCallback) onAddToCartCallback();
     });
   };
 

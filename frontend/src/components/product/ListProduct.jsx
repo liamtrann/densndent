@@ -5,7 +5,13 @@ import { useNavigate } from "react-router-dom";
 import { addToCart } from "store/slices/cartSlice";
 
 // import CartConfirmationModal from "../cart/CartConfirmationModal";
-import { ProductImage, Paragraph, InputField, DeliveryEstimate } from "common";
+import {
+  ProductImage,
+  Paragraph,
+  InputField,
+  DeliveryEstimate,
+  Button,
+} from "common";
 import { FlexibleModal } from "components/layout";
 import { useQuantityHandlers } from "config/config";
 
@@ -52,11 +58,13 @@ export default function ListProduct({ product }) {
         className="border p-4 rounded shadow hover:shadow-md transition flex flex-col h-full group relative cursor-pointer"
         onClick={handleNavigate}
       >
+        {/* Light grey hover overlay */}
+        <div className="absolute inset-0 bg-gray-200 opacity-0 group-hover:opacity-20 transition-opacity duration-200 rounded pointer-events-none"></div>
         <div className="relative group/image">
           <ProductImage src={file_url} />
           {/* Quick Look Button - Centered overlay on image hover */}
           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded">
-            <button
+            <Button
               onClick={(e) => {
                 e.stopPropagation(); // Prevent navigation when clicking quick look
                 setShowQuickLook(true);
@@ -65,7 +73,7 @@ export default function ListProduct({ product }) {
             >
               <FiEye size={14} />
               Quick Look
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -182,7 +190,6 @@ export default function ListProduct({ product }) {
         >
           <ProductDetail
             productId={id}
-            onAddToCart={() => setShowQuickLook(false)}
             isModal={true}
           />
         </FlexibleModal>

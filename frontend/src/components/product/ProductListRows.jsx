@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { FiEye } from "react-icons/fi";
+import { FiEye, FiShoppingCart } from "react-icons/fi";
 import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { addToCart } from "store/slices/cartSlice";
@@ -162,9 +162,11 @@ export default function ProductListRows({ products = [] }) {
           <div key={p.id} className="p-4">
             {/* ---------- Mobile layout (stacked) ---------- */}
             <div
-              className="md:hidden cursor-pointer"
+              className="md:hidden cursor-pointer relative group/mobile"
               onClick={() => handleNavigate(p.id)}
             >
+              {/* Light grey hover overlay for mobile */}
+              <div className="absolute inset-0 bg-gray-200 opacity-0 group-hover/mobile:opacity-20 transition-opacity duration-200 rounded pointer-events-none"></div>
               <div className="grid grid-cols-[5rem,1fr] gap-3">
                 {/* image */}
                 <div className="col-span-1 relative group">
@@ -173,20 +175,6 @@ export default function ProductListRows({ products = [] }) {
                     alt={p.itemid || p.displayname}
                     className="w-20 h-20 object-contain border rounded"
                   />
-                  {/* Quick Look Button overlay for mobile */}
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded">
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleQuickLook(p.id);
-                      }}
-                      className="p-1.5 text-white bg-primary-blue border border-primary-blue rounded hover:bg-smiles-blue transition-all duration-200 shadow-lg"
-                      title="Quick Look"
-                    >
-                      <FiEye size={12} />
-                    </button>
-                  </div>
                 </div>
 
                 {/* name + badges */}
@@ -202,27 +190,38 @@ export default function ProductListRows({ products = [] }) {
                   <QtyControl id={p.id} />
                 </div>
 
-                {/* button */}
-                <div className="col-span-2">
+                {/* buttons */}
+                <div className="col-span-2 flex justify-end items-center gap-2">
+                  {/* Quick Look button - appears on hover */}
                   <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleQuickLook(p.id);
+                    }}
+                    className="opacity-0 group-hover/desktop:opacity-100 transition-opacity duration-200 h-8 px-2 text-xs bg-gray-100 text-white-700 border border-gray-300 hover:bg-smiles-blue rounded flex items-center gap-1"
+                  >
+                    <FiEye size={12} />
+                  </Button>
+                  <FiShoppingCart
+                    size={30}
+                    className="text-primary-blue hover:text-smiles-blue hover:scale-150 cursor-pointer transition-all duration-200"
                     onClick={(e) => {
                       e.stopPropagation();
                       add(p);
                     }}
-                    className="w-full h-9 text-sm"
-                    title="Add to Cart"
-                  >
-                    Add to Cart
-                  </Button>
+                    aria-label="Add to cart"
+                  />
                 </div>
               </div>
             </div>
 
             {/* ---------- Desktop / Tablet layout ---------- */}
             <div
-              className="hidden md:flex md:flex-row items-center gap-4 cursor-pointer"
+              className="hidden md:flex md:flex-row items-center gap-4 cursor-pointer relative group/desktop"
               onClick={() => handleNavigate(p.id)}
             >
+              {/* Light grey hover overlay for desktop */}
+              <div className="absolute inset-0 bg-gray-200 opacity-0 group-hover/desktop:opacity-20 transition-opacity duration-200 rounded pointer-events-none"></div>
               {/* image */}
               <div className="w-24 shrink-0 relative group">
                 <ProductImage
@@ -230,21 +229,6 @@ export default function ProductListRows({ products = [] }) {
                   alt={p.itemid || p.displayname}
                   className="w-24 h-24 object-contain border rounded"
                 />
-                {/* Quick Look Button overlay for desktop */}
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded">
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleQuickLook(p.id);
-                    }}
-                    className="py-1.5 px-2 text-xs text-white bg-primary-blue border border-primary-blue rounded hover:bg-smiles-blue transition-all duration-200 flex items-center gap-1 shadow-lg"
-                    title="Quick Look"
-                  >
-                    <FiEye size={12} />
-                    Quick Look
-                  </button>
-                </div>
               </div>
 
               {/* name + badges + optional desc */}
@@ -260,18 +244,27 @@ export default function ProductListRows({ products = [] }) {
               {/* qty */}
               <QtyControl id={p.id} />
 
-              {/* add to cart */}
-              <div className="md:w-40">
+              {/* buttons */}
+              <div className="md:w-32 flex justify-end items-center gap-2">
+                {/* Quick Look button - appears on hover */}
                 <Button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleQuickLook(p.id);
+                  }}
+                  className="opacity-0 group-hover/desktop:opacity-100 transition-opacity duration-200 h-8 px-2 text-xs bg-gray-100 text-white-700 border border-gray-300 hover:bg-smiles-blue rounded flex items-center gap-1"
+                >
+                  <FiEye size={12} />
+                </Button>
+                <FiShoppingCart
+                  size={24}
+                  className="text-primary-blue hover:text-smiles-blue hover:scale-150 cursor-pointer transition-all duration-200"
                   onClick={(e) => {
                     e.stopPropagation();
                     add(p);
                   }}
-                  className="w-full h-8 px-3 py-0 text-sm rounded-md"
-                  title="Add to Cart"
-                >
-                  Add to Cart
-                </Button>
+                  aria-label="Add to cart"
+                />
               </div>
             </div>
           </div>
@@ -289,10 +282,6 @@ export default function ProductListRows({ products = [] }) {
         >
           <ProductDetail
             productId={quickLookProductId}
-            onAddToCart={() => {
-              setShowQuickLook(false);
-              setQuickLookProductId(null);
-            }}
             isModal={true}
           />
         </FlexibleModal>
