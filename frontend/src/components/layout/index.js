@@ -4,4 +4,5 @@ export { default as Header } from "./Header.jsx";
 export { default as LayoutWithCart } from "./LayoutWithCart.jsx";
 export { default as MainSection } from "./MainSection.jsx";
 export { default as Modal } from "./Modal.jsx";
+export { default as FlexibleModal } from "./FlexibleModal.jsx";
 export { default as VerifyEmailModal } from "./VerifyEmailModal.jsx";
