@@ -64,8 +64,14 @@ function nextSubscriptionDateFromToday(intervalStr) {
   return addMonthsSafe(new Date(), isNaN(interval) ? 1 : interval);
 }
 
-export default function ProductsPage() {
+export default function ProductsPage({
+  productId: propProductId = null,
+  isModal = false,
+  onAddToCart: onAddToCartCallback = null,
+}) {
   const { id: rawId } = useParams();
+  // Use prop productId if provided (for modal), otherwise use URL param
+  const effectiveRawId = propProductId || rawId;
   const [product, setProduct] = useState(null);
   const [alertModal, setAlertModal] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -143,11 +149,12 @@ export default function ProductsPage() {
         setError(null);
 
         // Resolve non-numeric to numeric id if needed
-        const pid = await resolveProductId(rawId);
+        const pid = await resolveProductId(effectiveRawId);
         if (!pid) throw new Error("Product not found");
 
         // Normalize URL to the numeric id for a cleaner/consistent PDP link
-        if (pid !== rawId) {
+        // Only navigate if we're not in modal mode and the ID changed
+        if (pid !== effectiveRawId && !isModal) {
           navigate(`/product/${pid}`, { replace: true });
         }
 
@@ -155,7 +162,9 @@ export default function ProductsPage() {
         if (abort) return;
 
         setProduct(res.data);
-        dispatch(addToRecentViews(res.data.id));
+        if (!isModal) {
+          dispatch(addToRecentViews(res.data.id));
+        }
         // reset PDP subscription UI on product change
         setIsSubscribed(false);
         setSubInterval("1");
@@ -171,7 +180,7 @@ export default function ProductsPage() {
     return () => {
       abort = true;
     };
-  }, [rawId, navigate, dispatch]);
+  }, [effectiveRawId, navigate, dispatch, isModal]);
 
   // fetch matrix/variants
   useEffect(() => {
@@ -194,8 +203,8 @@ export default function ProductsPage() {
   }, [product]);
 
   useEffect(() => {
-    if (rawId) addProductToRecentViews(rawId);
-  }, [rawId, addProductToRecentViews]);
+    if (effectiveRawId) addProductToRecentViews(effectiveRawId);
+  }, [effectiveRawId, addProductToRecentViews]);
 
   const handleAddToCart = () => {
     if (!product) return;
@@ -210,6 +219,8 @@ export default function ProductsPage() {
     delayCall(() => {
       dispatch(addToCart(cartItem));
       Toast.success(`Added ${actualQuantity} ${product.itemid} to cart!`);
+      // Call the callback if provided (for modal close)
+      if (onAddToCartCallback) onAddToCartCallback();
     });
   };
 
@@ -226,17 +237,21 @@ export default function ProductsPage() {
     : null;
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-10">
+    <div className={isModal ? "" : "max-w-6xl mx-auto px-6 py-10"}>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
         <div className="overflow-hidden">
           <ProductImage
             src={product.file_url}
-            className="w-full object-contain transition-transform duration-300 ease-in-out hover:scale-150 cursor-zoom-in"
+            className={`w-full object-contain transition-transform duration-300 ease-in-out ${
+              isModal ? "hover:scale-110" : "hover:scale-150 cursor-zoom-in"
+            }`}
           />
         </div>
 
         <div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">
+          <h2
+            className={`${isModal ? "text-xl" : "text-2xl"} font-bold text-gray-800 mb-2`}
+          >
             {product.itemid}
           </h2>
 
@@ -383,10 +398,12 @@ export default function ProductsPage() {
         </Modal>
       )}
 
-      {/* ✅ Recently Viewed Products Carousel */}
-      <div className="mt-20">
-        <RecentlyViewedSection />
-      </div>
+      {/* ✅ Recently Viewed Products Carousel - Only show on full page, not in modal */}
+      {!isModal && (
+        <div className="mt-20">
+          <RecentlyViewedSection />
+        </div>
+      )}
     </div>
   );
 }
