@@ -5,9 +5,10 @@ import { addToCart } from "store/slices/cartSlice";
 
 import { useQuantityHandlers } from "config/config";
 
-import ToastNotification from "@/common/toast/Toast";
-import ProductInListRow from "./ProductInListRow";
 import ProductInListGrid from "./ProductInListGrid";
+import ProductInListRow from "./ProductInListRow";
+
+import ToastNotification from "@/common/toast/Toast";
 
 export default function ListProduct({ product, listType = "grid" }) {
   const { id, itemid } = product;
