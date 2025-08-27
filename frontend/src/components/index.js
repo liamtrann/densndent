@@ -53,7 +53,6 @@ export { default as SearchBar } from "./navigation/SearchBar";
 export { default as ListProduct } from "./product/ListProduct";
 export { default as ListProductComponent } from "./product/ListProductComponent";
 export { default as ListProductPage } from "./product/ListProductPage";
-export { default as ProductGrid } from "./product/ProductGrid";
 export { default as ProductListGrid } from "./product/ProductListGrid";
 
 // Profile components

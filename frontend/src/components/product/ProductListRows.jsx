@@ -1,8 +1,5 @@
-import React, { useEffect, useState } from "react";
 import { FiEye, FiShoppingCart } from "react-icons/fi";
-import { useDispatch } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
-import { addToCart } from "store/slices/cartSlice";
+import { Link } from "react-router-dom";
 
 import { Button, ProductImage, InputField, DeliveryEstimate } from "common";
 import { FlexibleModal } from "components/layout";
@@ -13,39 +10,25 @@ import ProductDetail from "../../pages/ProductDetail";
 import { CURRENT_IN_STOCK, OUT_OF_STOCK } from "@/constants/constant";
 
 /** One product per row with responsive (mobile vs desktop) layouts */
-export default function ProductListRows({ products = [] }) {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-
-  // qty state per product id
-  const [qty, setQty] = useState({});
-  // Quick Look modal state
-  const [showQuickLook, setShowQuickLook] = useState(false);
-  const [quickLookProductId, setQuickLookProductId] = useState(null);
-
-  useEffect(() => {
-    setQty(Object.fromEntries(products.map((p) => [p.id, 1])));
-  }, [products]);
-
-  const setQ = (id, n) =>
-    setQty((s) => ({ ...s, [id]: Math.max(1, Number(n) || 1) }));
-
-  const add = (p) => {
-    const count = qty[p.id] || 1;
-    dispatch(addToCart({ ...p, quantity: count }));
-  };
-
-  const handleQuickLook = (productId) => {
-    setQuickLookProductId(productId);
-    setShowQuickLook(true);
-  };
-
-  const handleNavigate = (productId) => {
-    navigate(`/product/${productId}`);
-  };
+export default function ProductListRows({
+  product,
+  quantity,
+  actualQuantity,
+  handleQuantityChange,
+  increment,
+  decrement,
+  handleAddToCart,
+  handleNavigate,
+  showQuickLook,
+  quickLookProductId,
+  handleQuickLook,
+  handleCloseQuickLook,
+}) {
+  // Early return if no product
+  if (!product) return null;
 
   // Small aligned qty control (shared by both views)
-  const QtyControl = ({ id }) => (
+  const QtyControl = () => (
     <div
       className="inline-flex items-stretch h-8 rounded border overflow-hidden"
       onClick={(e) => e.stopPropagation()}
@@ -54,9 +37,9 @@ export default function ProductListRows({ products = [] }) {
         className="inline-flex items-center justify-center w-8 h-8 text-sm hover:bg-gray-50 disabled:opacity-50"
         onClick={(e) => {
           e.stopPropagation();
-          setQ(id, (qty[id] || 1) - 1);
+          decrement();
         }}
-        disabled={(qty[id] || 1) <= 1}
+        disabled={quantity <= 1}
         aria-label="Decrease quantity"
       >
         –
@@ -65,8 +48,8 @@ export default function ProductListRows({ products = [] }) {
       <InputField
         type="number"
         min="1"
-        value={qty[id] || 1}
-        onChange={(e) => setQ(id, e.target.value)}
+        value={quantity}
+        onChange={(e) => handleQuantityChange(e.target.value)}
         onClick={(e) => e.stopPropagation()}
         wrapperClassName="mb-0"
         variant="unstyled"
@@ -79,7 +62,7 @@ export default function ProductListRows({ products = [] }) {
         className="inline-flex items-center justify-center w-8 h-8 text-sm hover:bg-gray-50"
         onClick={(e) => {
           e.stopPropagation();
-          setQ(id, (qty[id] || 1) + 1);
+          increment();
         }}
         aria-label="Increase quantity"
       >
@@ -89,20 +72,16 @@ export default function ProductListRows({ products = [] }) {
   );
 
   return (
-    <div className="divide-y border rounded">
-      {products.map((p) => {
-        const inStock = Number(p.totalquantityonhand) > 0;
-        const { buy, get } = extractBuyGet(p.stockdescription || "");
-        const hasPromo = !!(buy && get);
-
+    <div className="p-4">
+      {(() => {
+        const inStock = Number(product.totalquantityonhand) > 0;
         const Name = (
-          <Link
-            to={`/product/${p.id}`}
+          <div
             className="text-base font-medium text-gray-900 hover:underline"
-            title={p.itemid || p.displayname}
+            title={product.itemid || product.displayname}
           >
-            {p.itemid || p.displayname}
-          </Link>
+            {product.itemid || product.displayname}
+          </div>
         );
 
         const Badges = (
@@ -130,40 +109,52 @@ export default function ProductListRows({ products = [] }) {
                 />
               </div>
             )}
-            {hasPromo && (
-              <span className="text-smiles-blue bg-blue-50 border border-blue-200 px-2 py-0.5 rounded text-xs font-semibold">
-                BUY {buy} GET {get}
-              </span>
+            {product.stockdescription && (
+              <div className="mb-2">
+                <span className="text-sm text-blue-600 font-medium bg-blue-50 px-2 py-1 rounded">
+                  {product.stockdescription}
+                </span>
+              </div>
+            )}
+            {actualQuantity > quantity && (
+              <div className="mb-2">
+                <span className="text-sm bg-gray-50 px-2 py-1 rounded">
+                  <span className="text-gray-600">Selected: {quantity}</span>
+                  <span className="text-green-600 font-medium ml-1">
+                    → Total: {actualQuantity} items
+                  </span>
+                </span>
+              </div>
             )}
           </div>
         );
 
-        const ShortDesc = p.storedetaileddescription ? (
+        const ShortDesc = product.storedetaileddescription ? (
           <div
             className="mt-1 text-sm text-gray-600 line-clamp-2"
-            title={p.storedetaileddescription.replace(/<[^>]*>/g, "")}
+            title={product.storedetaileddescription.replace(/<[^>]*>/g, "")}
             dangerouslySetInnerHTML={{
-              __html: p.storedetaileddescription,
+              __html: product.storedetaileddescription,
             }}
           />
-        ) : p.displayname ? (
+        ) : product.displayname ? (
           <div className="mt-1 text-sm text-gray-600 line-clamp-2">
-            {p.displayname}
+            {product.displayname}
           </div>
         ) : null;
 
         const Price = (
           <div className="text-lg md:text-xl font-bold text-gray-900">
-            {p.price != null ? formatCurrency(p.price) : "—"}
+            {product.price != null ? formatCurrency(product.price) : "—"}
           </div>
         );
 
         return (
-          <div key={p.id} className="p-4">
+          <>
             {/* ---------- Mobile layout (stacked) ---------- */}
             <div
               className="md:hidden cursor-pointer relative group/mobile"
-              onClick={() => handleNavigate(p.id)}
+              onClick={() => handleNavigate()}
             >
               {/* Light grey hover overlay for mobile */}
               <div className="absolute inset-0 bg-gray-200 opacity-0 group-hover/mobile:opacity-20 transition-opacity duration-200 rounded pointer-events-none"></div>
@@ -171,8 +162,8 @@ export default function ProductListRows({ products = [] }) {
                 {/* image */}
                 <div className="col-span-1 relative group">
                   <ProductImage
-                    src={p.file_url}
-                    alt={p.itemid || p.displayname}
+                    src={product.file_url}
+                    alt={product.itemid || product.displayname}
                     className="w-20 h-20 object-contain border rounded"
                   />
                 </div>
@@ -187,7 +178,14 @@ export default function ProductListRows({ products = [] }) {
                 {/* price + qty */}
                 <div className="col-span-2 mt-1 flex items-center justify-between">
                   {Price}
-                  <QtyControl id={p.id} />
+                  <div className="flex flex-col items-end gap-1">
+                    <QtyControl />
+                    {actualQuantity > quantity && (
+                      <span className="text-xs text-green-600 font-medium">
+                        = {actualQuantity} total
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {/* buttons */}
@@ -196,7 +194,7 @@ export default function ProductListRows({ products = [] }) {
                   <Button
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleQuickLook(p.id);
+                      handleQuickLook(product.id);
                     }}
                     className="opacity-0 group-hover/desktop:opacity-100 transition-opacity duration-200 h-8 px-2 text-xs bg-gray-100 text-white-700 border border-gray-300 hover:bg-smiles-blue rounded flex items-center gap-1"
                   >
@@ -207,9 +205,14 @@ export default function ProductListRows({ products = [] }) {
                     className="text-primary-blue hover:text-smiles-blue hover:scale-150 cursor-pointer transition-all duration-200"
                     onClick={(e) => {
                       e.stopPropagation();
-                      add(p);
+                      handleAddToCart();
                     }}
-                    aria-label="Add to cart"
+                    aria-label={`Add ${actualQuantity} to cart`}
+                    title={
+                      actualQuantity > quantity
+                        ? `Add ${actualQuantity} items (includes bonus!)`
+                        : `Add ${quantity} to cart`
+                    }
                   />
                 </div>
               </div>
@@ -218,15 +221,15 @@ export default function ProductListRows({ products = [] }) {
             {/* ---------- Desktop / Tablet layout ---------- */}
             <div
               className="hidden md:flex md:flex-row items-center gap-4 cursor-pointer relative group/desktop"
-              onClick={() => handleNavigate(p.id)}
+              onClick={() => handleNavigate()}
             >
               {/* Light grey hover overlay for desktop */}
               <div className="absolute inset-0 bg-gray-200 opacity-0 group-hover/desktop:opacity-20 transition-opacity duration-200 rounded pointer-events-none"></div>
               {/* image */}
               <div className="w-24 shrink-0 relative group">
                 <ProductImage
-                  src={p.file_url}
-                  alt={p.itemid || p.displayname}
+                  src={product.file_url}
+                  alt={product.itemid || product.displayname}
                   className="w-24 h-24 object-contain border rounded"
                 />
               </div>
@@ -242,7 +245,14 @@ export default function ProductListRows({ products = [] }) {
               <div className="md:w-32">{Price}</div>
 
               {/* qty */}
-              <QtyControl id={p.id} />
+              <div className="flex flex-col items-end gap-1">
+                <QtyControl />
+                {actualQuantity > quantity && (
+                  <span className="text-xs text-green-600 font-medium">
+                    = {actualQuantity} total
+                  </span>
+                )}
+              </div>
 
               {/* buttons */}
               <div className="md:w-32 flex justify-end items-center gap-2">
@@ -250,7 +260,7 @@ export default function ProductListRows({ products = [] }) {
                 <Button
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleQuickLook(p.id);
+                    handleQuickLook(product.id);
                   }}
                   className="opacity-0 group-hover/desktop:opacity-100 transition-opacity duration-200 h-8 px-2 text-xs bg-gray-100 text-white-700 border border-gray-300 hover:bg-smiles-blue rounded flex items-center gap-1"
                 >
@@ -261,29 +271,25 @@ export default function ProductListRows({ products = [] }) {
                   className="text-primary-blue hover:text-smiles-blue hover:scale-150 cursor-pointer transition-all duration-200"
                   onClick={(e) => {
                     e.stopPropagation();
-                    add(p);
+                    handleAddToCart();
                   }}
-                  aria-label="Add to cart"
+                  aria-label={`Add ${actualQuantity} to cart`}
+                  title={
+                    actualQuantity > quantity
+                      ? `Add ${actualQuantity} items (includes bonus!)`
+                      : `Add ${quantity} to cart`
+                  }
                 />
               </div>
             </div>
-          </div>
+          </>
         );
-      })}
+      })()}
 
       {/* Quick Look Modal */}
       {showQuickLook && quickLookProductId && (
-        <FlexibleModal
-          title="Quick Look"
-          onClose={() => {
-            setShowQuickLook(false);
-            setQuickLookProductId(null);
-          }}
-        >
-          <ProductDetail
-            productId={quickLookProductId}
-            isModal={true}
-          />
+        <FlexibleModal title="Quick Look" onClose={handleCloseQuickLook}>
+          <ProductDetail productId={quickLookProductId} isModal={true} />
         </FlexibleModal>
       )}
     </div>
