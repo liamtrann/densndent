@@ -5,10 +5,9 @@ import { addToCart } from "store/slices/cartSlice";
 
 import { useQuantityHandlers } from "config/config";
 
-import GridProduct from "./GridProduct";
-import ProductListRows from "./ProductListRows";
-
 import ToastNotification from "@/common/toast/Toast";
+import ProductInListRow from "./ProductInListRow";
+import ProductInListGrid from "./ProductInListGrid";
 
 export default function ListProduct({ product, listType = "grid" }) {
   const { id, itemid } = product;
@@ -52,7 +51,7 @@ export default function ListProduct({ product, listType = "grid" }) {
   // If listType is "grid", render the grid layout
   if (listType === "grid") {
     return (
-      <GridProduct
+      <ProductInListGrid
         product={product}
         quantity={quantity}
         actualQuantity={actualQuantity}
@@ -69,7 +68,7 @@ export default function ListProduct({ product, listType = "grid" }) {
 
   // For listType === "list", render using ProductListRows
   return (
-    <ProductListRows
+    <ProductInListRow
       product={product}
       quantity={quantity}
       actualQuantity={actualQuantity}

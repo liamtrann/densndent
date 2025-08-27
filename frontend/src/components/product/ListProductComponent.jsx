@@ -13,8 +13,8 @@ import {
 
 import FilterOption from "../filters/FilterOption";
 
-import ProductListGrid from "./ProductListGrid";
-import ProductListRowsMultiple from "./ProductListRowsMultiple";
+import ProductListGrid from "./ListGrids";
+import ListRows from "./ListRows";
 
 export default function ListProductComponent({
   type,
@@ -251,7 +251,7 @@ export default function ListProductComponent({
             (view === "grid" ? (
               <ProductListGrid products={products} />
             ) : (
-              <ProductListRowsMultiple products={products} />
+              <ListRows products={products} />
             ))}
 
           {/* Bottom pagination */}

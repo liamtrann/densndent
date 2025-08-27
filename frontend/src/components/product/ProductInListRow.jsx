@@ -10,7 +10,7 @@ import ProductDetail from "../../pages/ProductDetail";
 import { CURRENT_IN_STOCK, OUT_OF_STOCK } from "@/constants/constant";
 
 /** One product per row with responsive (mobile vs desktop) layouts */
-export default function ProductListRows({
+export default function ProductInListRow({
   product,
   quantity,
   actualQuantity,

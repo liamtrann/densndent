@@ -1,6 +1,6 @@
 import ListProduct from "./ListProduct"; // Will render each product in list format
 
-export default function ProductListRowsMultiple({ products }) {
+export default function ListRows({ products }) {
   return (
     <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
       {/* Desktop Header */}

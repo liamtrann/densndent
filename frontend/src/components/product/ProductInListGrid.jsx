@@ -13,7 +13,7 @@ import ProductDetail from "../../pages/ProductDetail";
 
 import { CURRENT_IN_STOCK, OUT_OF_STOCK } from "@/constants/constant";
 
-export default function GridProduct({
+export default function ProductInListGrid({
   product,
   quantity,
   actualQuantity,
