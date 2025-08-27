@@ -42,7 +42,6 @@ const STATUS_PAYLOADS = {
  * Prefer numeric/valid product id -> /product/:id,
  * else fall back to search by name so the user still lands somewhere useful.
  */
-// ListSubscriptions.jsx
 // ListSubscriptions.jsx (helper)
 function getProductHref(s) {
   const first =
@@ -52,13 +51,11 @@ function getProductHref(s) {
   return first ? `/product/${encodeURIComponent(first)}` : null;
 }
 
-
-
 export default function ListSubscriptions() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // per-row states
+  // per-row states (kept as-is)
   const [pending, setPending] = useState({}); // interval
   const [saving, setSaving] = useState({}); // interval save flag
 
@@ -67,6 +64,12 @@ export default function ListSubscriptions() {
 
   const [pendingStatus, setPendingStatus] = useState({}); // active/paused/canceled
   const [savingStatus, setSavingStatus] = useState({}); // status save flag
+
+  // NEW: track original status so we can detect changes for the single Save
+  const [initialStatus, setInitialStatus] = useState({});
+
+  // single bottom save flag per row
+  const [savingRow, setSavingRow] = useState({});
 
   const [confirming, setConfirming] = useState(null);
 
@@ -138,6 +141,7 @@ export default function ListSubscriptions() {
             initStatus[s.roId] = statusMap[s.roId] || "active";
           });
           setPendingStatus(initStatus);
+          setInitialStatus(initStatus); // baseline for dirty detection
         }
       } catch (err) {
         console.error("Error loading subscriptions:", err);
@@ -147,6 +151,7 @@ export default function ListSubscriptions() {
           setPending({});
           setPendingDate({});
           setPendingStatus({});
+          setInitialStatus({});
         }
       } finally {
         if (mounted) setLoading(false);
@@ -158,11 +163,12 @@ export default function ListSubscriptions() {
     };
   }, [userInfo?.id, getAccessTokenSilently]);
 
-  /* ---------- Interval handlers ---------- */
+  /* ---------- Interval handlers (kept, though Save button removed) ---------- */
   const handleIntervalChange = (s, value) => {
     setPending((prev) => ({ ...prev, [s.roId]: value }));
   };
 
+  // kept for compatibility, no longer used in UI
   const handleSaveInterval = async (s) => {
     const selected = pending[s.roId];
     if (!selected || selected === s.interval) return;
@@ -190,11 +196,12 @@ export default function ListSubscriptions() {
     }
   };
 
-  /* ---------- Next Order DATE handlers ---------- */
+  /* ---------- Next Order DATE handlers (Save removed) ---------- */
   const handleDateChange = (s, value) => {
     setPendingDate((prev) => ({ ...prev, [s.roId]: value }));
   };
 
+  // kept for compatibility, no longer used in UI
   const handleSaveDate = async (s) => {
     const val = pendingDate[s.roId];
     if (!val) return;
@@ -221,6 +228,7 @@ export default function ListSubscriptions() {
     setPendingStatus((prev) => ({ ...prev, [s.roId]: value }));
   };
 
+  // kept for compatibility, no longer used in UI
   const handleSaveStatus = async (s) => {
     const choice = pendingStatus[s.roId] || "active";
 
@@ -247,6 +255,65 @@ export default function ListSubscriptions() {
     }
   };
 
+  /** Single bottom SAVE — saves interval + next date + status together */
+  const handleSaveAll = async (s) => {
+    const roId = s.roId;
+
+    const intervalNow = pending[roId] ?? s.interval;
+    const originalInterval = s.interval;
+    const isDirtyInterval = intervalNow !== originalInterval;
+
+    const baselineNext = toInputDate(nextFromToday(s.interval));
+    const dateVal = pendingDate[roId] || baselineNext;
+    const isDirtyDate = dateVal !== baselineNext;
+
+    const statusVal = pendingStatus[roId] || "active";
+    const isDirtyStatus = (initialStatus[roId] || "active") !== statusVal;
+
+    // If cancel chosen, show confirm modal instead of patching now
+    if (statusVal === "canceled") {
+      setConfirming(s);
+      return;
+    }
+
+    // Build one PATCH payload (only changed fields)
+    const payload = {};
+    if (isDirtyInterval) Object.assign(payload, buildIntervalPatchPayload(intervalNow));
+    if (isDirtyDate) payload.custrecord_ro_next_run = dateVal;
+    if (isDirtyStatus) Object.assign(payload, STATUS_PAYLOADS[statusVal]);
+
+    if (Object.keys(payload).length === 0) return; // nothing to save
+
+    setSavingRow((prev) => ({ ...prev, [roId]: true }));
+    try {
+      const token = await getAccessTokenSilently();
+      await api.patch(endpoint.UPDATE_RECURRING_ORDER(roId), payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      // reflect interval locally
+      if (isDirtyInterval) {
+        setItems((prev) =>
+          prev.map((it) =>
+            it.roId === roId ? { ...it, interval: String(intervalNow) } : it
+          )
+        );
+      }
+
+      // update baseline status after save
+      if (isDirtyStatus) {
+        setInitialStatus((prev) => ({ ...prev, [roId]: statusVal }));
+      }
+
+      ToastNotification.success("Subscription changes saved.");
+    } catch (err) {
+      console.error("Failed to save subscription changes:", err);
+      ToastNotification.error("Failed to save. Please try again.");
+    } finally {
+      setSavingRow((prev) => ({ ...prev, [roId]: false }));
+    }
+  };
+
   /** Actually cancel (called by modal confirm) */
   const performCancel = async (s) => {
     setSavingStatus((prev) => ({ ...prev, [s.roId]: true }));
@@ -258,6 +325,7 @@ export default function ListSubscriptions() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (response.status >= 200 && response.status < 300) {
+        // remove from list
         setItems((prev) => prev.filter((it) => it.roId !== s.roId));
         setPending((prev) => {
           const cp = { ...prev };
@@ -270,6 +338,11 @@ export default function ListSubscriptions() {
           return cp;
         });
         setPendingStatus((prev) => {
+          const cp = { ...prev };
+          delete cp[s.roId];
+          return cp;
+        });
+        setInitialStatus((prev) => {
           const cp = { ...prev };
           delete cp[s.roId];
           return cp;
@@ -312,16 +385,19 @@ export default function ListSubscriptions() {
     <>
       <div className="space-y-4">
         {items.map((s) => {
-          const intervalNow = pending[s.roId] ?? s.interval;
-          const isDirtyInterval = intervalNow !== s.interval;
-          const isSavingInterval = !!saving[s.roId];
+          const roId = s.roId;
 
+          const intervalNow = pending[roId] ?? s.interval;
           const dateVal =
-            pendingDate[s.roId] || toInputDate(nextFromToday(s.interval));
-          const isSavingNextDate = !!savingDate[s.roId];
+            pendingDate[roId] || toInputDate(nextFromToday(s.interval));
+          const statusVal = pendingStatus[roId] || "active";
 
-          const statusVal = pendingStatus[s.roId] || "active";
-          const isSavingThisStatus = !!savingStatus[s.roId];
+          const baselineNext = toInputDate(nextFromToday(s.interval));
+          const isDirtyInterval = intervalNow !== s.interval;
+          const isDirtyDate = dateVal !== baselineNext;
+          const isDirtyStatus = (initialStatus[roId] || "active") !== statusVal;
+
+          const isSavingCombined = !!savingRow[roId];
 
           const href = getProductHref(s);
           const title = s.displayname || s.itemid || `#${s.productId || s.roId}`;
@@ -354,7 +430,7 @@ export default function ListSubscriptions() {
             : ({ children }) => <span className="text-gray-900">{children}</span>;
 
           return (
-            <div key={s.roId} className="flex items-start gap-4 border rounded-md p-3">
+            <div key={roId} className="flex items-start gap-4 border rounded-md p-3">
               <ImageWrap>
                 <ProductImage
                   src={s.file_url}
@@ -376,7 +452,7 @@ export default function ListSubscriptions() {
                   {intervalNow === "1" ? "Every 1 month" : `Every ${intervalNow} months`}
                 </Paragraph>
 
-                {/* Next Order: editable date picker */}
+                {/* Next Order: editable date picker (Save removed here) */}
                 <div className="mt-1 flex items-center gap-2">
                   <span className="text-xs text-gray-500">Next Order:</span>
                   <input
@@ -386,14 +462,6 @@ export default function ListSubscriptions() {
                     onChange={(e) => handleDateChange(s, e.target.value)}
                     aria-label="Choose next order date"
                   />
-                  <Button
-                    variant="ghost"
-                    className={`${BTN_TIGHT} border border-gray-300 text-gray-700 hover:bg-gray-50`}
-                    onClick={() => handleSaveDate(s)}
-                    disabled={isSavingNextDate || isSavingInterval || isSavingThisStatus}
-                  >
-                    {isSavingNextDate ? "Saving..." : "Save"}
-                  </Button>
                   <span className="text-[11px] text-gray-400">
                     ({formatLocalDateToronto(new Date(dateVal))})
                   </span>
@@ -404,58 +472,41 @@ export default function ListSubscriptions() {
                   Estimated Delivery: <span className="font-medium">5 Days</span>
                 </Paragraph>
 
-                {/* Controls (two rows) */}
-                <div className="mt-3 space-y-3">
-                  {/* Row 1: Change interval + Save (same width) */}
-                  <div className="flex flex-wrap items-center gap-3">
-                    <div className="w-56">
-                      <Dropdown
-                        label="Change interval"
-                        value={intervalNow}
-                        onChange={(e) => handleIntervalChange(s, e.target.value)}
-                        options={INTERVAL_OPTIONS}
-                        className="h-10 text-sm w-full"
-                        wrapperClassName="mb-0"
-                      />
-                    </div>
-
-                    <Button
-                      variant="ghost"
-                      className="h-10 text-sm w-56 ml-8 mt-5 relative top-[-2px] border border-gray-300 rounded px-3 text-gray-700 hover:bg-gray-50"
-                      disabled={
-                        !isDirtyInterval ||
-                        isSavingInterval ||
-                        isSavingNextDate ||
-                        isSavingThisStatus
-                      }
-                      onClick={() => handleSaveInterval(s)}
-                    >
-                      {isSavingInterval ? "Saving..." : "Save"}
-                    </Button>
+                {/* Controls row: Change interval + Subscription (side-by-side), no per-control Saves */}
+                <div className="mt-3 flex flex-wrap items-end gap-3">
+                  <div className="w-56">
+                    <Dropdown
+                      label="Change interval"
+                      value={intervalNow}
+                      onChange={(e) => handleIntervalChange(s, e.target.value)}
+                      options={INTERVAL_OPTIONS}
+                      className="h-10 text-sm w-full"
+                      wrapperClassName="mb-0"
+                    />
                   </div>
 
-                  {/* Row 2: Subscription + Save */}
-                  <div className="mt-3 flex flex-wrap items-center gap-3">
-                    <div className="w-56">
-                      <Dropdown
-                        label="Subscription"
-                        value={statusVal}
-                        onChange={(e) => handleStatusChange(s, e.target.value)}
-                        options={STATUS_OPTIONS}
-                        className="h-10 text-sm w-full"
-                        wrapperClassName="mb-0"
-                      />
-                    </div>
-
-                    <Button
-                      variant="ghost"
-                      className="h-10 text-sm w-56 ml-8 mt-5 relative top-[-2px] border border-gray-300 rounded px-3 text-gray-700 hover:bg-gray-50"
-                      disabled={isSavingInterval || isSavingNextDate || isSavingThisStatus}
-                      onClick={() => handleSaveStatus(s)}
-                    >
-                      {isSavingThisStatus ? "Saving..." : "Save"}
-                    </Button>
+                  <div className="w-56">
+                    <Dropdown
+                      label="Subscription"
+                      value={statusVal}
+                      onChange={(e) => handleStatusChange(s, e.target.value)}
+                      options={STATUS_OPTIONS}
+                      className="h-10 text-sm w-full"
+                      wrapperClassName="mb-0"
+                    />
                   </div>
+                </div>
+
+                {/* Single bottom Save */}
+                <div className="mt-3 flex justify-end">
+                  <Button
+                    variant="ghost"
+                    className="h-10 text-sm w-56 border border-gray-300 rounded px-3 text-gray-700 hover:bg-gray-50"
+                    disabled={!(isDirtyInterval || isDirtyDate || isDirtyStatus) || isSavingCombined}
+                    onClick={() => handleSaveAll(s)}
+                  >
+                    {isSavingCombined ? "Saving..." : "Save"}
+                  </Button>
                 </div>
               </div>
             </div>
