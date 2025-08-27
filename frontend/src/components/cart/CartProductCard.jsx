@@ -56,8 +56,8 @@ export default function CartProductCard({
                 ? `${CURRENT_IN_STOCK}: ` //${item.totalquantityonhand} could add later
                 : OUT_OF_STOCK}
             </p>
-            <DeliveryEstimate 
-              inStock={item.totalquantityonhand > 0} 
+            <DeliveryEstimate
+              inStock={item.totalquantityonhand > 0}
               size="small"
             />
           </div>

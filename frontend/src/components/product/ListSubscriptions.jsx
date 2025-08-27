@@ -1,7 +1,9 @@
+// src/components/product/ListSubscriptions.jsx
 import { useAuth0 } from "@auth0/auth0-react";
 import ConfirmCancelSubscription from "common/modals/ConfirmCancelSubscription";
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import { Link } from "react-router-dom";
 
 import api from "api/api";
 import endpoint from "api/endpoints";
@@ -22,39 +24,51 @@ import ToastNotification from "@/common/toast/Toast";
 const CTRL_SIZE = "h-9";
 const BTN_TIGHT = `${CTRL_SIZE} leading-none px-3 text-xs`;
 
+// Compact status option labels
 const STATUS_OPTIONS = [
-  { value: "active", label: "Active subscription" },
-  { value: "paused", label: "Pause subscription" },
-  { value: "canceled", label: "Cancel subscription" },
+  { value: "active", label: "Active" },
+  { value: "paused", label: "Pause" },
+  { value: "canceled", label: "Cancel" },
 ];
 
-/** Map status choice to backend payloads.
- * Adjust IDs here if your NetSuite custom record uses different values:
- *   1 = Active, 2 = Paused, 3 = Canceled
- */
+// Map status choice to backend payloads
 const STATUS_PAYLOADS = {
   active: { custrecord_ro_status: { id: "1" } },
   paused: { custrecord_ro_status: { id: "2" } },
-  canceled: SUBSCRIPTION_CANCEL_PAYLOAD, // { custrecord_ro_status: { id: "3" } }
+  canceled: SUBSCRIPTION_CANCEL_PAYLOAD,
 };
+
+/** Build the best href we can for a subscription row.
+ * Prefer numeric/valid product id -> /product/:id,
+ * else fall back to search by name so the user still lands somewhere useful.
+ */
+// ListSubscriptions.jsx
+// ListSubscriptions.jsx (helper)
+function getProductHref(s) {
+  const first =
+    (s?.productId && String(s.productId).trim()) ||
+    (s?.itemid && String(s.itemid).trim()) ||
+    (s?.displayname && String(s.displayname).trim());
+  return first ? `/product/${encodeURIComponent(first)}` : null;
+}
+
+
 
 export default function ListSubscriptions() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
 
   // per-row states
-  const [pending, setPending] = useState({});        // interval (string)
-  const [saving, setSaving] = useState({});          // saving interval flag
+  const [pending, setPending] = useState({}); // interval
+  const [saving, setSaving] = useState({}); // interval save flag
 
-  const [pendingDate, setPendingDate] = useState({}); // yyyy-mm-dd per roId
-  const [savingDate, setSavingDate] = useState({});   // saving date flag
+  const [pendingDate, setPendingDate] = useState({}); // yyyy-mm-dd
+  const [savingDate, setSavingDate] = useState({}); // date save flag
 
-  // NEW: per-row subscription status
-  const [pendingStatus, setPendingStatus] = useState({}); // "active" | "paused" | "canceled"
-  const [savingStatus, setSavingStatus] = useState({});   // status save flag
+  const [pendingStatus, setPendingStatus] = useState({}); // active/paused/canceled
+  const [savingStatus, setSavingStatus] = useState({}); // status save flag
 
-  // cancel confirm modal
-  const [confirming, setConfirming] = useState(null);     // row pending cancel
+  const [confirming, setConfirming] = useState(null);
 
   const userInfo = useSelector((state) => state.user.info);
   const { getAccessTokenSilently } = useAuth0();
@@ -85,19 +99,18 @@ export default function ListSubscriptions() {
 
         const raw = res.data?.items || res.data || [];
 
-        // build a status map from raw so we can prefill "paused" if present
+        // status map for prefill
         const statusMap = {};
         raw.forEach((r) => {
           const sid = String(
             r?.custrecord_ro_status?.id ??
-            r?.custrecord_ro_status ??
-            r?.statusId ??
-            r?.status ??
-            ""
+              r?.custrecord_ro_status ??
+              r?.statusId ??
+              r?.status ??
+              ""
           );
-          statusMap[
-            r.id ?? r.internalid ?? r.roId
-          ] = sid === "3" ? "canceled" : sid === "2" ? "paused" : "active";
+          statusMap[r.id ?? r.internalid ?? r.roId] =
+            sid === "3" ? "canceled" : sid === "2" ? "paused" : "active";
         });
 
         const activeOnly = raw.filter((r) => !isSubscriptionCanceled(r));
@@ -119,7 +132,7 @@ export default function ListSubscriptions() {
           });
           setPendingDate(initDates);
 
-          // init status (use raw-derived map; canceled ones were filtered out)
+          // init status
           const initStatus = {};
           subs.forEach((s) => {
             initStatus[s.roId] = statusMap[s.roId] || "active";
@@ -191,7 +204,7 @@ export default function ListSubscriptions() {
       const token = await getAccessTokenSilently();
       await api.patch(
         endpoint.UPDATE_RECURRING_ORDER(s.roId),
-        { custrecord_ro_next_run: val }, // backend field for next order date
+        { custrecord_ro_next_run: val },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       ToastNotification.success("Next order date updated.");
@@ -211,22 +224,18 @@ export default function ListSubscriptions() {
   const handleSaveStatus = async (s) => {
     const choice = pendingStatus[s.roId] || "active";
 
-    // If user picked "Cancel", defer to the confirmation modal.
     if (choice === "canceled") {
       setConfirming(s);
       return;
     }
 
-    // Otherwise: patch Active or Paused
     setSavingStatus((prev) => ({ ...prev, [s.roId]: true }));
     try {
       const token = await getAccessTokenSilently();
       const payload = STATUS_PAYLOADS[choice];
-      await api.patch(
-        endpoint.UPDATE_RECURRING_ORDER(s.roId),
-        payload,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.patch(endpoint.UPDATE_RECURRING_ORDER(s.roId), payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       ToastNotification.success(
         choice === "paused" ? "Subscription paused." : "Subscription activated."
       );
@@ -249,7 +258,6 @@ export default function ListSubscriptions() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (response.status >= 200 && response.status < 300) {
-        // remove from list
         setItems((prev) => prev.filter((it) => it.roId !== s.roId));
         setPending((prev) => {
           const cp = { ...prev };
@@ -315,23 +323,57 @@ export default function ListSubscriptions() {
           const statusVal = pendingStatus[s.roId] || "active";
           const isSavingThisStatus = !!savingStatus[s.roId];
 
+          const href = getProductHref(s);
+          const title = s.displayname || s.itemid || `#${s.productId || s.roId}`;
+
+          // simple wrappers so we don't duplicate markup
+          const ImageWrap = href
+            ? ({ children }) => (
+                <Link
+                  to={href}
+                  className="inline-block focus:outline-none focus:ring-2 focus:ring-smiles-orange rounded"
+                  aria-label={`View ${title}`}
+                  title={title}
+                >
+                  {children}
+                </Link>
+              )
+            : ({ children }) => <>{children}</>;
+
+          const TitleWrap = href
+            ? ({ children }) => (
+                <Link
+                  to={href}
+                  className="text-gray-900 hover:text-smiles-blue focus:outline-none focus:ring-2 focus:ring-smiles-orange rounded"
+                  aria-label={`View ${title}`}
+                  title={title}
+                >
+                  {children}
+                </Link>
+              )
+            : ({ children }) => <span className="text-gray-900">{children}</span>;
+
           return (
             <div key={s.roId} className="flex items-start gap-4 border rounded-md p-3">
-              <ProductImage
-                src={s.file_url}
-                alt={s.displayname || s.itemid || "Product"}
-                className="w-16 h-16 object-contain border rounded"
-              />
+              <ImageWrap>
+                <ProductImage
+                  src={s.file_url}
+                  alt={title}
+                  className="w-16 h-16 object-contain border rounded"
+                />
+              </ImageWrap>
+
               <div className="flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <div className="font-semibold text-gray-800">
-                    {s.displayname || s.itemid || `#${s.productId || s.roId}`}
+                    <TitleWrap>{title}</TitleWrap>
                   </div>
                 </div>
 
                 {/* Interval (readable) */}
                 <Paragraph className="mt-1 text-sm text-gray-600">
-                  Interval: {intervalNow === "1" ? "Every 1 month" : `Every ${intervalNow} months`}
+                  Interval:{" "}
+                  {intervalNow === "1" ? "Every 1 month" : `Every ${intervalNow} months`}
                 </Paragraph>
 
                 {/* Next Order: editable date picker */}
@@ -362,45 +404,58 @@ export default function ListSubscriptions() {
                   Estimated Delivery: <span className="font-medium">5 Days</span>
                 </Paragraph>
 
-                {/* Controls row */}
-                <div className="mt-3 flex flex-wrap items-center gap-3">
-                  {/* Change interval */}
-                  <div className="w-44">
-                    <Dropdown
-                      label="Change interval"
-                      value={intervalNow}
-                      onChange={(e) => handleIntervalChange(s, e.target.value)}
-                      options={INTERVAL_OPTIONS}
-                      className={`${CTRL_SIZE} py-0`}
-                    />
-                  </div>
-                  <Button
-                    variant="ghost"
-                    className={`${BTN_TIGHT} border border-gray-300 text-gray-700 hover:bg-gray-50`}
-                    disabled={!isDirtyInterval || isSavingInterval || isSavingNextDate || isSavingThisStatus}
-                    onClick={() => handleSaveInterval(s)}
-                  >
-                    {isSavingInterval ? "Saving..." : "Save"}
-                  </Button>
+                {/* Controls (two rows) */}
+                <div className="mt-3 space-y-3">
+                  {/* Row 1: Change interval + Save (same width) */}
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className="w-56">
+                      <Dropdown
+                        label="Change interval"
+                        value={intervalNow}
+                        onChange={(e) => handleIntervalChange(s, e.target.value)}
+                        options={INTERVAL_OPTIONS}
+                        className="h-10 text-sm w-full"
+                        wrapperClassName="mb-0"
+                      />
+                    </div>
 
-                  {/* Subscription status (Active / Pause / Cancel) */}
-                  <div className="w-56 ml-auto md:ml-6">
-                    <Dropdown
-                      label="Subscription"
-                      value={statusVal}
-                      onChange={(e) => handleStatusChange(s, e.target.value)}
-                      options={STATUS_OPTIONS}
-                      className={`${CTRL_SIZE} py-0`}
-                    />
+                    <Button
+                      variant="ghost"
+                      className="h-10 text-sm w-56 ml-8 mt-5 relative top-[-2px] border border-gray-300 rounded px-3 text-gray-700 hover:bg-gray-50"
+                      disabled={
+                        !isDirtyInterval ||
+                        isSavingInterval ||
+                        isSavingNextDate ||
+                        isSavingThisStatus
+                      }
+                      onClick={() => handleSaveInterval(s)}
+                    >
+                      {isSavingInterval ? "Saving..." : "Save"}
+                    </Button>
                   </div>
-                  <Button
-                    variant="ghost"
-                    className={`${BTN_TIGHT} border border-gray-300 text-gray-700 hover:bg-gray-50`}
-                    disabled={isSavingInterval || isSavingNextDate || isSavingThisStatus}
-                    onClick={() => handleSaveStatus(s)}
-                  >
-                    {isSavingThisStatus ? "Saving..." : "Save"}
-                  </Button>
+
+                  {/* Row 2: Subscription + Save */}
+                  <div className="mt-3 flex flex-wrap items-center gap-3">
+                    <div className="w-56">
+                      <Dropdown
+                        label="Subscription"
+                        value={statusVal}
+                        onChange={(e) => handleStatusChange(s, e.target.value)}
+                        options={STATUS_OPTIONS}
+                        className="h-10 text-sm w-full"
+                        wrapperClassName="mb-0"
+                      />
+                    </div>
+
+                    <Button
+                      variant="ghost"
+                      className="h-10 text-sm w-56 ml-8 mt-5 relative top-[-2px] border border-gray-300 rounded px-3 text-gray-700 hover:bg-gray-50"
+                      disabled={isSavingInterval || isSavingNextDate || isSavingThisStatus}
+                      onClick={() => handleSaveStatus(s)}
+                    >
+                      {isSavingThisStatus ? "Saving..." : "Save"}
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>

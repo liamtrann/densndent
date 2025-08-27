@@ -84,14 +84,22 @@ export default function ProductListRows({ products = [] }) {
                 <span className="text-smiles-blue bg-blue-50 border border-blue-200 px-2 py-0.5 rounded text-xs font-medium">
                   {CURRENT_IN_STOCK}
                 </span>
-                <DeliveryEstimate inStock={true} size="small" className="rounded" />
+                <DeliveryEstimate
+                  inStock={true}
+                  size="small"
+                  className="rounded"
+                />
               </div>
             ) : (
               <div className="flex flex-col gap-1">
                 <span className="text-smiles-orange bg-orange-50 border border-orange-200 px-2 py-0.5 rounded text-xs font-medium">
                   {OUT_OF_STOCK}
                 </span>
-                <DeliveryEstimate inStock={false} size="small" className="rounded" />
+                <DeliveryEstimate
+                  inStock={false}
+                  size="small"
+                  className="rounded"
+                />
               </div>
             )}
             {hasPromo && (

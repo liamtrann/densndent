@@ -65,7 +65,7 @@ function nextSubscriptionDateFromToday(intervalStr) {
 }
 
 export default function ProductsPage() {
-  const { id } = useParams();
+  const { id: rawId } = useParams();
   const [product, setProduct] = useState(null);
   const [alertModal, setAlertModal] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -90,26 +90,88 @@ export default function ProductsPage() {
     decrement,
   } = useQuantityHandlers(1, product?.stockdescription);
 
-  // fetch product
+  /**
+   * Resolve any non-numeric :id to a numeric internal id
+   * - If it's already numeric, return as-is.
+   * - Otherwise, search by name/SKU and return the first hit's id.
+   */
+  async function resolveProductId(maybeId) {
+    const s = String(maybeId || "").trim();
+
+    // If numeric (typical internalid), use directly
+    if (/^\d+$/.test(s)) return s;
+
+    const query = decodeURIComponent(s);
+
+    // Try a few forgiving variations to improve hit rate
+    const candidates = [
+      query,
+      query.replace(/\s*-\s*.*/, ""), // drop trailing " - ABC"
+      query
+        .replace(/[^\w\s]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim(), // strip punctuation
+    ];
+
+    for (const q of candidates) {
+      try {
+        // Your backend expects { name: "<search string>" }
+        const res = await api.post(
+          endpoint.POST_GET_ITEMS_BY_NAME({ limit: 1 }),
+          { name: q }
+        );
+        const arr = Array.isArray(res.data)
+          ? res.data
+          : res.data?.items || res.data;
+        const first = Array.isArray(arr) ? arr[0] : undefined;
+        if (first?.id) return String(first.id);
+      } catch {
+        // keep trying next candidate
+      }
+    }
+
+    return null;
+  }
+
+  // fetch product (with resolving step)
   useEffect(() => {
+    let abort = false;
+
     async function fetchProduct() {
       try {
         setLoading(true);
         setError(null);
-        const res = await api.get(endpoint.GET_PRODUCT_BY_ID(id));
+
+        // Resolve non-numeric to numeric id if needed
+        const pid = await resolveProductId(rawId);
+        if (!pid) throw new Error("Product not found");
+
+        // Normalize URL to the numeric id for a cleaner/consistent PDP link
+        if (pid !== rawId) {
+          navigate(`/product/${pid}`, { replace: true });
+        }
+
+        const res = await api.get(endpoint.GET_PRODUCT_BY_ID(pid));
+        if (abort) return;
+
         setProduct(res.data);
         dispatch(addToRecentViews(res.data.id));
         // reset PDP subscription UI on product change
         setIsSubscribed(false);
         setSubInterval("1");
       } catch (err) {
+        if (abort) return;
         setError(err?.response?.data?.error || "Failed to load product.");
       } finally {
-        setLoading(false);
+        if (!abort) setLoading(false);
       }
     }
+
     fetchProduct();
-  }, [id, dispatch]);
+    return () => {
+      abort = true;
+    };
+  }, [rawId, navigate, dispatch]);
 
   // fetch matrix/variants
   useEffect(() => {
@@ -132,8 +194,8 @@ export default function ProductsPage() {
   }, [product]);
 
   useEffect(() => {
-    if (id) addProductToRecentViews(id);
-  }, [id, addProductToRecentViews]);
+    if (rawId) addProductToRecentViews(rawId);
+  }, [rawId, addProductToRecentViews]);
 
   const handleAddToCart = () => {
     if (!product) return;

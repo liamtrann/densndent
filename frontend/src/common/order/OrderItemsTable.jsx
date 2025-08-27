@@ -55,29 +55,31 @@ export default function OrderItemsTable({ lines = [] }) {
       <tbody>
         {lines.map((l, idx) => (
           <tr key={l.lineId ?? idx} className="border-b last:border-b-0">
-            {/* Product Image with clickable link */}
+            {/* Product Image -> clickable if productId exists */}
             <td className="px-5 py-4">
-              {l.image ? (
-                l.productId ? (
-                  <Link
-                    to={`/product/${l.productId}`}
-                    className="block hover:opacity-80 transition-opacity focus:outline-none rounded"
-                    title={`View ${l.name}`}
-                    aria-label={`View ${l.name}`}
-                  >
+              {l.productId ? (
+                <Link
+                  to={`/product/${l.productId}`}
+                  title={l.name}
+                  aria-label={`View ${l.name}`}
+                  className="inline-block focus:outline-none focus:ring-2 focus:ring-smiles-orange rounded"
+                >
+                  {l.image ? (
                     <ProductImage
                       src={l.image}
                       alt={l.name}
-                      className="w-20 h-20 object-contain border rounded cursor-pointer"
+                      className="w-12 h-12 object-contain border rounded"
                     />
-                  </Link>
-                ) : (
-                  <ProductImage
-                    src={l.image}
-                    alt={l.name}
-                    className="w-20 h-20 object-contain border rounded"
-                  />
-                )
+                  ) : (
+                    <div className="w-12 h-12 rounded border bg-gray-50" />
+                  )}
+                </Link>
+              ) : l.image ? (
+                <ProductImage
+                  src={l.image}
+                  alt={l.name}
+                  className="w-12 h-12 object-contain border rounded"
+                />
               ) : (
                 <div className="w-20 h-20 rounded border bg-gray-50" />
               )}

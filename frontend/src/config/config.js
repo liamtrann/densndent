@@ -712,9 +712,72 @@ export function nextFromToday(intervalStr) {
  * Normalize a backend recurring-order record into a single, predictable shape.
  * Works with minor field-name differences coming from SuiteQL/REST.
  */
+/**
+ * Normalize a backend recurring-order record into a single, predictable shape.
+ * Works with minor field-name differences coming from SuiteQL/REST.
+ */
+// config.js
+// config.js
 export function normalizeSubscriptionRecord(r) {
   const roId = r.id ?? r.internalid ?? r.roId;
-  const productId = r.itemId ?? r.item_id ?? r.productId;
+
+  // Try every common place NetSuite may put the item
+  const raw =
+    r.item ??
+    r.custrecord_ro_item ??
+    r.custrecord_item ??
+    r.iteminternalid ??
+    r.item_internalid ??
+    r.itemId ??
+    r.item_id ??
+    r.internalid_item ??
+    r.item_internal_id ??
+    r.productId ??
+    null;
+
+  // Extract a numeric internalid from any shape
+  const pickNumericId = (v) => {
+    if (v == null) return undefined;
+
+    if (Array.isArray(v)) {
+      for (const el of v) {
+        const got = pickNumericId(el);
+        if (got) return got;
+      }
+      return undefined;
+    }
+
+    if (typeof v === "object") {
+      const candidate =
+        v.id ??
+        v.internalid ??
+        v.internalId ??
+        v.value ??
+        v.itemid ??
+        v.itemId ??
+        v.item_id ??
+        v.item;
+      return pickNumericId(candidate);
+    }
+
+    const s = String(v).trim();
+    if (!s || s === "[object Object]") return undefined;
+
+    // JSON payload like {"id":"20412"} or [{"id":20412}]
+    if ((s.startsWith("{") && s.endsWith("}")) || (s.startsWith("[") && s.endsWith("]"))) {
+      try {
+        const parsed = JSON.parse(s);
+        return pickNumericId(parsed);
+      } catch {/* ignore */}
+    }
+
+    // Accept things like "20412", "id=20412", "internalid:20412"
+    const m = s.match(/(\d{3,})/);
+    return m ? m[1] : undefined;
+  };
+
+  const productId = pickNumericId(raw); // numeric string if we found one
+
   return {
     roId,
     productId,
@@ -736,6 +799,10 @@ export function normalizeSubscriptionRecord(r) {
     ),
   };
 }
+
+
+
+
 
 /** Detect if a recurring order is canceled (status "3") regardless of field shape */
 export function isSubscriptionCanceled(rec) {
