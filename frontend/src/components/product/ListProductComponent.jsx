@@ -12,9 +12,8 @@ import {
 } from "common";
 
 import FilterOption from "../filters/FilterOption";
-
-import ProductListGrid from "./ListGrids";
 import ListRows from "./ListRows";
+import ListGrids from "./ListGrids";
 
 export default function ListProductComponent({
   type,
@@ -249,7 +248,7 @@ export default function ListProductComponent({
             !error &&
             products.length > 0 &&
             (view === "grid" ? (
-              <ProductListGrid products={products} />
+              <ListGrids products={products} />
             ) : (
               <ListRows products={products} />
             ))}
