@@ -184,7 +184,6 @@ function WeekdayPicker({ valueMonIdx, onChange }) {
 export default function ProductsPage({
   productId: propProductId = null,
   isModal = false,
-  onAddToCart: onAddToCartCallback = null,
 }) {
   const { id: rawId } = useParams();
   const effectiveRawId = propProductId || rawId;
@@ -358,7 +357,7 @@ export default function ProductsPage({
     delayCall(() => {
       dispatch(addToCart(cartItem));
       Toast.success(`Added ${actualQuantity} ${product.itemid} to cart!`);
-      if (onAddToCartCallback) onAddToCartCallback();
+      // Call the callback if provided (for modal close)
     });
   };
 

@@ -57,6 +57,7 @@ export default function PaymentForm({
     localStorage.removeItem("paymentMethod");
     localStorage.removeItem("checkoutAddresses");
     localStorage.removeItem("selectedAddressId");
+    localStorage.removeItem("pendingPaymentIntent");
   };
 
   if (!paymentMethod || !paymentIntent) {
@@ -125,6 +126,10 @@ export default function PaymentForm({
       setCvcError("Payment confirmation failed. Please try again.");
       setIsProcessing(false);
       ToastNotification.error("Payment confirmation failed. Please try again.");
+
+      // Clear potentially invalid payment intent from localStorage
+      localStorage.removeItem("pendingPaymentIntent");
+
       if (onPaymentError) {
         onPaymentError(err);
       }
@@ -140,6 +145,10 @@ export default function PaymentForm({
       ToastNotification.error(
         paymentIntent.error.message || "Payment failed. Please try again."
       );
+
+      // Clear potentially invalid payment intent from localStorage
+      localStorage.removeItem("pendingPaymentIntent");
+
       if (onPaymentError) {
         onPaymentError(paymentIntent.error);
       }
@@ -166,6 +175,9 @@ export default function PaymentForm({
       setIsProcessing(false);
       setCvcError("Payment processing failed. Please try again.");
       ToastNotification.error("Payment processing failed. Please try again.");
+
+      // Clear potentially invalid payment intent from localStorage
+      localStorage.removeItem("pendingPaymentIntent");
     }
   }
   function handleAction(response) {
@@ -176,6 +188,10 @@ export default function PaymentForm({
         ToastNotification.error(
           result.error.message || "Authentication failed. Please try again."
         );
+
+        // Clear potentially invalid payment intent from localStorage
+        localStorage.removeItem("pendingPaymentIntent");
+
         if (onPaymentError) {
           onPaymentError(result.error);
         }
@@ -210,6 +226,10 @@ export default function PaymentForm({
                 ToastNotification.error(
                   "Payment confirmation failed after authentication. Please try again."
                 );
+
+                // Clear potentially invalid payment intent from localStorage
+                localStorage.removeItem("pendingPaymentIntent");
+
                 if (onPaymentError) {
                   onPaymentError(err);
                 }
@@ -219,6 +239,9 @@ export default function PaymentForm({
             setCvcError("Failed to get authentication token");
             setIsProcessing(false);
             ToastNotification.error("Authentication failed. Please try again.");
+
+            // Clear potentially invalid payment intent from localStorage
+            localStorage.removeItem("pendingPaymentIntent");
           });
       }
     });

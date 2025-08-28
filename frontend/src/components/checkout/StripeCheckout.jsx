@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import api from "api/api";
 import endpoints from "api/endpoints";
 import { Button } from "common";
+import { formatPrice } from "config/config";
 
 import StripeWrapper from "../stripe/StripeWrapper";
 
@@ -35,9 +36,34 @@ export default function StripeCheckout({
     const savedPaymentMethodId = localStorage.getItem(
       "selectedPaymentMethodId"
     );
+    const savedPaymentIntent = localStorage.getItem("pendingPaymentIntent");
 
     if (savedPaymentMethodId && stripeCustomerId) {
       setSelectedPaymentMethodId(savedPaymentMethodId);
+
+      // Restore saved payment intent if it exists and is still valid
+      if (savedPaymentIntent) {
+        try {
+          const parsedPaymentIntent = JSON.parse(savedPaymentIntent);
+
+          // Basic validation - check if payment intent is in a valid state and matches current order total
+          if (
+            parsedPaymentIntent.id &&
+            (parsedPaymentIntent.status === "requires_confirmation" ||
+              parsedPaymentIntent.status === "requires_action") &&
+            parsedPaymentIntent.amount === formatPrice(orderTotal) * 100
+          ) {
+            // Stripe stores amount in cents
+            setPaymentIntent(parsedPaymentIntent);
+          } else {
+            // Payment intent is not valid or doesn't match current order, remove it
+            localStorage.removeItem("pendingPaymentIntent");
+          }
+        } catch (error) {
+          // Invalid saved payment intent, remove it
+          localStorage.removeItem("pendingPaymentIntent");
+        }
+      }
 
       // Fetch the payment method details for the saved ID
       const fetchSavedPaymentMethod = async () => {
@@ -60,30 +86,73 @@ export default function StripeCheckout({
           } else {
             // Payment method not found, clear saved data
             localStorage.removeItem("selectedPaymentMethodId");
+            localStorage.removeItem("pendingPaymentIntent");
             setSelectedPaymentMethodId(null);
+            setPaymentIntent(null);
           }
         } catch (error) {
           // Clear invalid saved data on error
           localStorage.removeItem("selectedPaymentMethodId");
+          localStorage.removeItem("pendingPaymentIntent");
           setSelectedPaymentMethodId(null);
+          setPaymentIntent(null);
         }
       };
 
       fetchSavedPaymentMethod();
     }
-  }, [stripeCustomerId, getAccessTokenSilently]);
+  }, [stripeCustomerId, getAccessTokenSilently, orderTotal]);
+
+  // Clear payment intent if order total changes significantly or becomes 0
+  useEffect(() => {
+    if (paymentIntent && orderTotal !== undefined) {
+      const currentIntentAmount = paymentIntent.amount / 100; // Convert from cents
+      const currentOrderTotal = formatPrice(orderTotal);
+
+      // If order total changed or is 0, clear the payment intent
+      if (
+        currentOrderTotal === 0 ||
+        Math.abs(currentIntentAmount - currentOrderTotal) > 0.01
+      ) {
+        setPaymentIntent(null);
+        localStorage.removeItem("pendingPaymentIntent");
+      }
+    }
+  }, [orderTotal, paymentIntent]);
 
   const handleCreatePaymentIntent = async () => {
     if (!selectedPaymentMethodId || !orderTotal) return;
+
+    // Check if we already have a valid payment intent for the same order total
+    if (
+      paymentIntent &&
+      (paymentIntent.status === "requires_confirmation" ||
+        paymentIntent.status === "requires_action") &&
+      paymentIntent.amount === formatPrice(orderTotal) * 100
+    ) {
+      // Stripe stores amount in cents
+      // Already have a pending payment intent for the same amount, no need to create a new one
+      return;
+    }
 
     setLoading(true);
     setError(null);
 
     try {
-      const paymentIntent = await createPaymentIntent(selectedPaymentMethodId);
-      setPaymentIntent(paymentIntent);
+      const newPaymentIntent = await createPaymentIntent(
+        selectedPaymentMethodId
+      );
+      setPaymentIntent(newPaymentIntent);
+
+      // Save the payment intent to localStorage to persist across page refreshes
+      localStorage.setItem(
+        "pendingPaymentIntent",
+        JSON.stringify(newPaymentIntent)
+      );
     } catch (err) {
       setError(err.message);
+      // Clear any invalid payment intent from localStorage
+      localStorage.removeItem("pendingPaymentIntent");
     } finally {
       setLoading(false);
     }
@@ -92,7 +161,10 @@ export default function StripeCheckout({
   const handleSelectPaymentMethod = (paymentMethodId, paymentMethod = null) => {
     setSelectedPaymentMethodId(paymentMethodId);
     setSelectedPaymentMethod(paymentMethod);
+
+    // Clear payment intent when payment method changes
     setPaymentIntent(null);
+    localStorage.removeItem("pendingPaymentIntent");
     localStorage.setItem("selectedPaymentMethodId", paymentMethodId);
   };
 
@@ -150,7 +222,11 @@ export default function StripeCheckout({
                     <p className="text-sm">
                       {!selectedPaymentMethodId
                         ? "Select a payment method to continue"
-                        : "Click 'Create Payment' to proceed with the selected payment method"}
+                        : paymentIntent &&
+                            (paymentIntent.status === "requires_confirmation" ||
+                              paymentIntent.status === "requires_action")
+                          ? "Payment is ready! You can now complete the payment below."
+                          : "Click 'Create Payment' to proceed with the selected payment method"}
                     </p>
                   </div>
                 </div>
@@ -170,9 +246,21 @@ export default function StripeCheckout({
 
           <Button
             onClick={handleCreatePaymentIntent}
-            disabled={!selectedPaymentMethodId || paymentIntent || loading}
+            disabled={
+              !selectedPaymentMethodId ||
+              (paymentIntent &&
+                (paymentIntent.status === "requires_confirmation" ||
+                  paymentIntent.status === "requires_action")) ||
+              loading
+            }
           >
-            {loading ? "Creating Payment..." : "Create Payment"}
+            {loading
+              ? "Creating Payment..."
+              : paymentIntent &&
+                  (paymentIntent.status === "requires_confirmation" ||
+                    paymentIntent.status === "requires_action")
+                ? "Payment Ready"
+                : "Create Payment"}
           </Button>
         </div>
       </div>

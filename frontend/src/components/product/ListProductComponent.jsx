@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { delayCall } from "api/util";
 import { fetchProductsBy, fetchCountBy } from "store/slices/productsSlice";
+
+import { delayCall } from "api/util";
 import {
   Breadcrumb,
   ErrorMessage,
@@ -9,9 +10,10 @@ import {
   Pagination,
   ProductToolbar,
 } from "common";
+
 import FilterOption from "../filters/FilterOption";
-import ProductListGrid from "./ProductListGrid";
-import ProductListRows from "./ProductListRows";
+import ListRows from "./ListRows";
+import ListGrids from "./ListGrids";
 
 export default function ListProductComponent({
   type,
@@ -86,7 +88,13 @@ export default function ListProductComponent({
         )
       );
     }
-  }, [dispatch, type, effectiveId, appliedFilters.minPrice, appliedFilters.maxPrice]);
+  }, [
+    dispatch,
+    type,
+    effectiveId,
+    appliedFilters.minPrice,
+    appliedFilters.maxPrice,
+  ]);
 
   // product page fetch
   useEffect(() => {
@@ -173,7 +181,12 @@ export default function ListProductComponent({
                   stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
                 </svg>
               </button>
 
@@ -213,7 +226,11 @@ export default function ListProductComponent({
           {/* Top pagination */}
           {products.length > 0 && (
             <div className="mb-4">
-              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                onPageChange={setPage}
+              />
             </div>
           )}
 
@@ -221,22 +238,29 @@ export default function ListProductComponent({
           {error && <ErrorMessage message={error} />}
 
           {!isLoading && !error && products.length === 0 && (
-            <div className="text-gray-500 py-8 text-center">No products found for this category.</div>
+            <div className="text-gray-500 py-8 text-center">
+              No products found for this category.
+            </div>
           )}
 
           {/* Actual products: switch Grid/List */}
-          {!isLoading && !error && products.length > 0 && (
-            view === "grid" ? (
-              <ProductListGrid products={products} />
+          {!isLoading &&
+            !error &&
+            products.length > 0 &&
+            (view === "grid" ? (
+              <ListGrids products={products} />
             ) : (
-              <ProductListRows products={products} />
-            )
-          )}
+              <ListRows products={products} />
+            ))}
 
           {/* Bottom pagination */}
           {products.length > 0 && (
             <div className="mt-6">
-              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                onPageChange={setPage}
+              />
             </div>
           )}
         </div>
