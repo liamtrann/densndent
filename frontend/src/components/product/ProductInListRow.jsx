@@ -88,7 +88,7 @@ export default function ProductInListRow({
           <div className="mt-1 flex flex-wrap items-center gap-2">
             {inStock ? (
               <div className="flex flex-col gap-1">
-                <span className="text-smiles-blue bg-blue-50 border border-blue-200 px-2 py-0.5 rounded text-xs font-medium">
+                <span className="text-smiles-blue px-2 py-0.5 rounded text-sm font-medium">
                   {CURRENT_IN_STOCK}
                 </span>
                 <DeliveryEstimate
@@ -99,7 +99,7 @@ export default function ProductInListRow({
               </div>
             ) : (
               <div className="flex flex-col gap-1">
-                <span className="text-smiles-orange bg-orange-50 border border-orange-200 px-2 py-0.5 rounded text-xs font-medium">
+                <span className="text-smiles-orange px-2 py-0.5 rounded text-sm font-medium">
                   {OUT_OF_STOCK}
                 </span>
                 <DeliveryEstimate
