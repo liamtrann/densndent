@@ -822,6 +822,93 @@ export const SUBSCRIPTION_CANCEL_PAYLOAD = {
   custrecord_ro_status: { id: "3" },
 };
 
+/* ──────────────────────────────────────────────────────────────────────────
+   Scheduling utilities (shared by PDP + Subscriptions)
+   ────────────────────────────────────────────────────────────────────────── */
+export const DateUtils = {
+  // Keep helpers as properties to avoid top-level duplicate identifiers
+  daysInMonth: (y, m) => new Date(y, m + 1, 0).getDate(),
+
+  addMonthsSafe(date, months) {
+    const day = date.getDate();
+    const targetMonth = date.getMonth() + months;
+    const targetYear = date.getFullYear() + Math.floor(targetMonth / 12);
+    const normalizedMonth = ((targetMonth % 12) + 12) % 12;
+    const endDay = this.daysInMonth(targetYear, normalizedMonth);
+    const d = new Date(date);
+    d.setFullYear(targetYear, normalizedMonth, Math.min(day, endDay));
+    return d;
+  },
+
+  toInput(date) {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, "0");
+    const dd = String(date.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  },
+
+  fmtToronto(date) {
+    return date.toLocaleDateString("en-CA", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      timeZone: "America/Toronto",
+    });
+  },
+
+  nextSubscriptionDateFromToday(intervalStr) {
+    const n = parseInt(intervalStr || "1", 10);
+    return this.addMonthsSafe(new Date(), isNaN(n) ? 1 : n);
+  },
+};
+
+export const DOW_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]; // Mon index 0..6
+export const jsIdxFromMonIdx = (monIdx) => (monIdx + 1) % 7; // Mon0..Sun6 -> JS Sun0..Sat6
+export const monIdxFromJsIdx = (jsIdx) => (jsIdx + 6) % 7; // JS Sun0..Sat6 -> Mon0..Sun6
+
+export const nextDateForWeekdayFrom = (baseDate, monIdx) => {
+  const jsTarget = jsIdxFromMonIdx(monIdx);
+  const start = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate());
+  const diff = (jsTarget - start.getDay() + 7) % 7;
+  const result = new Date(start);
+  result.setDate(start.getDate() + diff);
+  return result;
+};
+
+
+// config/config.js
+
+// …existing imports and exports…
+
+/** Resolve any non-numeric id to a numeric internal id via your search endpoint. */
+export async function resolveProductIdByNameOrId(maybeId) {
+  const s = String(maybeId || "").trim();
+  if (/^\d+$/.test(s)) return s;
+
+  const { default: endpoint } = await import("../api/endpoints.js");
+  const { default: api } = await import("../api/api.js");
+
+  const query = decodeURIComponent(s);
+  const candidates = [
+    query,
+    query.replace(/\s*-\s*.*/, ""),
+    query.replace(/[^\w\s]/g, " ").replace(/\s+/g, " ").trim(),
+  ];
+
+  for (const q of candidates) {
+    try {
+      const res = await api.post(endpoint.POST_GET_ITEMS_BY_NAME({ limit: 1 }), { name: q });
+      const arr = Array.isArray(res.data) ? res.data : res.data?.items || res.data;
+      const first = Array.isArray(arr) ? arr[0] : undefined;
+      if (first?.id) return String(first.id);
+    } catch {
+      /* continue */
+    }
+  }
+  return null;
+}
+
+
 export {
   extractBuyGet,
   getMatrixInfo,

@@ -1,16 +1,11 @@
 // src/pages/ProductDetail.jsx
-import React, { useState, useEffect, useMemo } from "react";
+import React from "react";
 import { useDispatch } from "react-redux";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { addToCart } from "store/slices/cartSlice";
 
-import api from "api/api";
-import endpoint from "api/endpoints";
-import { delayCall } from "api/util";
-import { Toast } from "common";
 import {
   Loading,
-  ErrorMessage,
   ProductImage,
   Paragraph,
   InputField,
@@ -19,74 +14,16 @@ import {
   Dropdown,
   DeliveryEstimate,
 } from "common";
-import { Modal } from "components";
-import {
-  getMatrixInfo,
-  formatCurrency,
-  useQuantityHandlers,
-} from "config/config";
-
+import { getMatrixInfo, useQuantityHandlers } from "config/config";
 import PurchaseOptions from "../common/ui/PurchaseOptions";
 import RecentlyViewedSection from "../components/sections/RecentlyViewedSection";
-import { useRecentViews } from "../hooks/useRecentViews";
-import { addToRecentViews } from "../redux/slices/recentViewsSlice";
 
+import useProductDetail from "../hooks/useProductDetail";
 import { CURRENT_IN_STOCK, OUT_OF_STOCK } from "@/constants/constant";
 
-/* ──────────────────────────────────────────────────────────────────────────
-   Date & weekday utilities
-   ────────────────────────────────────────────────────────────────────────── */
-const DateUtils = {
-  daysInMonth: (y, m) => new Date(y, m + 1, 0).getDate(),
-  addMonthsSafe(date, months) {
-    const d = new Date(date.getTime());
-    const day = d.getDate();
-    const targetMonth = d.getMonth() + months;
-    const targetYear = d.getFullYear() + Math.floor(targetMonth / 12);
-    const normalizedMonth = ((targetMonth % 12) + 12) % 12;
-    const endDay = this.daysInMonth(targetYear, normalizedMonth);
-    const clamped = Math.min(day, endDay);
-    const res = new Date(d);
-    res.setFullYear(targetYear, normalizedMonth, clamped);
-    return res;
-  },
-  toInput(d) {
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    const dd = String(d.getDate()).padStart(2, "0");
-    return `${yyyy}-${mm}-${dd}`;
-  },
-  fmtToronto(d) {
-    return d.toLocaleDateString("en-CA", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      timeZone: "America/Toronto",
-    });
-  },
-  nextSubscriptionDateFromToday(intervalStr) {
-    const interval = parseInt(intervalStr || "1", 10);
-    return this.addMonthsSafe(new Date(), isNaN(interval) ? 1 : interval);
-  },
-};
-
-const DOW_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]; // Mon index 0..6
-const jsIdxFromMonIdx = (monIdx) => (monIdx + 1) % 7; // Mon0..Sun6 -> JS Sun0..Sat6
-const monIdxFromJsIdx = (jsIdx) => (jsIdx + 6) % 7; // JS Sun0..Sat6 -> Mon0..Sun6
-function nextDateForWeekdayFrom(baseDate, monIdx) {
-  const jsTarget = jsIdxFromMonIdx(monIdx);
-  const start = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate());
-  const diff = (jsTarget - start.getDay() + 7) % 7;
-  const result = new Date(start);
-  result.setDate(start.getDate() + diff);
-  return result;
-}
-
-/* ──────────────────────────────────────────────────────────────────────────
-   Small, reusable UI pieces
-   ────────────────────────────────────────────────────────────────────────── */
+/* Small local UI atoms */
 function StockBlock({ inStockQty }) {
-  const inStock = !!inStockQty && inStockQty > 0;
+  const inStock = Number(inStockQty) > 0;
   return inStock ? (
     <div className="mb-2">
       <Paragraph className="text-smiles-blue font-semibold">
@@ -114,6 +51,7 @@ function QuantityInput({ quantity, onChange, onDec, onInc, badge }) {
             onClick={onDec}
             className="px-2 h-9 text-sm hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             disabled={Number(quantity) <= 1}
+            aria-label="Decrease quantity"
           >
             –
           </button>
@@ -123,10 +61,12 @@ function QuantityInput({ quantity, onChange, onDec, onInc, badge }) {
             value={quantity}
             onChange={onChange}
             className="flex-1 h-9 text-center text-sm border-0 focus:ring-1 focus:ring-blue-500"
+            aria-label="Quantity"
           />
           <button
             onClick={onInc}
             className="px-2 h-9 text-sm hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+            aria-label="Increase quantity"
           >
             +
           </button>
@@ -155,15 +95,14 @@ function MatrixDropdown({ matrixType, options, value, onChange }) {
   );
 }
 
-function WeekdayPicker({ valueMonIdx, onChange }) {
+function WeekdayPicker({ labels, valueMonIdx, onChange }) {
   return (
     <div>
       <div className="block text-sm font-medium mb-2">Preferred delivery day</div>
       <div className="flex items-end gap-6">
-        {DOW_LABELS.map((lbl, i) => (
-          <div key={lbl} className="flex flex-col items-center">
+        {labels.map((lbl, i) => (
+          <label key={lbl} className="flex flex-col items-center cursor-pointer">
             <div className="text-sm mb-1">{lbl}</div>
-            {/* Checkbox visuals; single-select behavior */}
             <input
               type="checkbox"
               className="w-4 h-4"
@@ -171,46 +110,44 @@ function WeekdayPicker({ valueMonIdx, onChange }) {
               onChange={() => onChange(i)}
               aria-label={`Choose ${lbl} delivery`}
             />
-          </div>
+          </label>
         ))}
       </div>
     </div>
   );
 }
 
-/* ──────────────────────────────────────────────────────────────────────────
-   Page
-   ────────────────────────────────────────────────────────────────────────── */
-export default function ProductsPage({
-  productId: propProductId = null,
-  isModal = false,
-}) {
-  const { id: rawId } = useParams();
-  const effectiveRawId = propProductId || rawId;
-
-  const [product, setProduct] = useState(null);
-  const [alertModal, setAlertModal] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const navigate = useNavigate();
+export default function ProductsPage({ productId: propProductId = null, isModal = false }) {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-  const [matrixOptions, setMatrixOptions] = useState([]);
-  const [selectedMatrixOption, setSelectedMatrixOption] = useState("");
+  const {
+    product,
+    matrixOptions,
+    selectedMatrixOption,
+    setSelectedMatrixOption,
 
-  // PDP subscription controls
-  const [isSubscribed, setIsSubscribed] = useState(false);
-  const [subInterval, setSubInterval] = useState("1");
-  const [subStatus, setSubStatus] = useState("active"); // "active" | "paused"
-  const [subDate, setSubDate] = useState(
-    DateUtils.toInput(DateUtils.nextSubscriptionDateFromToday("1"))
-  );
-  const [dateTouched, setDateTouched] = useState(false);
-  const [preferredDow, setPreferredDow] = useState(
-    monIdxFromJsIdx(new Date().getDay())
-  );
+    isSubscribed,
+    setIsSubscribed,
+    subInterval,
+    setSubInterval,
+    subStatus,
+    setSubStatus,
+    subDate,
+    setSubDate,
+    dateTouched,
+    setDateTouched,
+    preferredDow,
+    setPreferredDow,
 
-  const { addProductToRecentViews } = useRecentViews();
+    priceDisplay,
+
+    DOW_LABELS,
+    DateUtils,
+    nextDateForWeekdayFrom,
+  } = useProductDetail({ productId: propProductId, isModal });
+
+  const { matrixType, options: matrixOptionsList } = getMatrixInfo(matrixOptions);
 
   const {
     quantity,
@@ -220,152 +157,21 @@ export default function ProductsPage({
     decrement,
   } = useQuantityHandlers(1, product?.stockdescription);
 
-  const priceDisplay = useMemo(
-    () => (product?.price ? formatCurrency(product.price) : null),
-    [product?.price]
-  );
+  if (!product) return <Loading text="Loading product..." />;
 
-  /** Resolve any non-numeric :id to a numeric internal id */
-  async function resolveProductId(maybeId) {
-    const s = String(maybeId || "").trim();
-    if (/^\d+$/.test(s)) return s;
-
-    const query = decodeURIComponent(s);
-    const candidates = [
-      query,
-      query.replace(/\s*-\s*.*/, ""),
-      query.replace(/[^\w\s]/g, " ").replace(/\s+/g, " ").trim(),
-    ];
-
-    for (const q of candidates) {
-      try {
-        const res = await api.post(
-          endpoint.POST_GET_ITEMS_BY_NAME({ limit: 1 }),
-          { name: q }
-        );
-        const arr = Array.isArray(res.data)
-          ? res.data
-          : res.data?.items || res.data;
-        const first = Array.isArray(arr) ? arr[0] : undefined;
-        if (first?.id) return String(first.id);
-      } catch {
-        /* keep trying next candidate */
-      }
-    }
-    return null;
-  }
-
-  // fetch product (with resolving step)
-  useEffect(() => {
-    let abort = false;
-
-    async function fetchProduct() {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const pid = await resolveProductId(effectiveRawId);
-        if (!pid) throw new Error("Product not found");
-
-        if (pid !== effectiveRawId && !isModal) {
-          navigate(`/product/${pid}`, { replace: true });
-        }
-
-        const res = await api.get(endpoint.GET_PRODUCT_BY_ID(pid));
-        if (abort) return;
-
-        setProduct(res.data);
-        if (!isModal) dispatch(addToRecentViews(res.data.id));
-
-        // reset PDP subscription UI on product change
-        setIsSubscribed(false);
-        setSubInterval("1");
-        setSubStatus("active");
-        const initial = DateUtils.nextSubscriptionDateFromToday("1");
-        setSubDate(DateUtils.toInput(initial));
-        setDateTouched(false);
-        setPreferredDow(monIdxFromJsIdx(initial.getDay()));
-      } catch (err) {
-        if (abort) return;
-        setError(err?.response?.data?.error || "Failed to load product.");
-      } finally {
-        if (!abort) setLoading(false);
-      }
-    }
-
-    fetchProduct();
-    return () => {
-      abort = true;
-    };
-  }, [effectiveRawId, navigate, dispatch, isModal]);
-
-  // fetch matrix/variants
-  useEffect(() => {
-    if (!product?.custitem39) return;
-    async function fetchMatrixOptions() {
-      try {
-        const res = await api.post(endpoint.POST_GET_PRODUCT_BY_PARENT(), {
-          parent: product.custitem39,
-        });
-        setMatrixOptions(res.data || []);
-      } catch {
-        setMatrixOptions([]);
-      }
-    }
-    delayCall(fetchMatrixOptions);
-  }, [product?.custitem39]);
-
-  useEffect(() => {
-    if (product) setSelectedMatrixOption(product.id);
-  }, [product]);
-
-  useEffect(() => {
-    if (effectiveRawId) addProductToRecentViews(effectiveRawId);
-  }, [effectiveRawId, addProductToRecentViews]);
-
-  // When interval changes and user hasn't edited date, move the next date accordingly
-  useEffect(() => {
-    if (isSubscribed && !dateTouched) {
-      const suggested = DateUtils.nextSubscriptionDateFromToday(subInterval);
-      setSubDate(DateUtils.toInput(suggested));
-      setPreferredDow(monIdxFromJsIdx(suggested.getDay()));
-    }
-  }, [subInterval, isSubscribed, dateTouched]);
-
-  // Keep preferred weekday synced to manual date changes
-  useEffect(() => {
-    if (!subDate) return;
-    const jsIdx = new Date(subDate).getDay();
-    setPreferredDow(monIdxFromJsIdx(jsIdx));
-  }, [subDate]);
-
-  /* ─────────── Add to cart ─────────── */
+  /* add to cart (unchanged behavior) */
   const handleAddToCart = () => {
-    if (!product) return;
-
     const cartItem = {
       ...product,
       quantity: Number(actualQuantity),
-      // PDP subscription selections carried into cart
       subscriptionEnabled: isSubscribed,
       subscriptionInterval: isSubscribed ? subInterval : null,
       subscriptionNextDate: isSubscribed ? subDate : null, // YYYY-MM-DD
       subscriptionStatus: isSubscribed ? subStatus : null, // "active" | "paused"
-      subscriptionPreferredDow: isSubscribed ? DOW_LABELS[preferredDow] : null, // "Mon".."Sun"
+      subscriptionPreferredDow: isSubscribed ? DOW_LABELS[preferredDow] : null,
     };
-
-    delayCall(() => {
-      dispatch(addToCart(cartItem));
-      Toast.success(`Added ${actualQuantity} ${product.itemid} to cart!`);
-      // Call the callback if provided (for modal close)
-    });
+    dispatch(addToCart(cartItem));
   };
-
-  const { matrixType, options: matrixOptionsList } = getMatrixInfo(matrixOptions);
-
-  if (loading) return <Loading text="Loading product..." />;
-  if (error) return <ErrorMessage message={error} />;
-  if (!product) return null;
 
   return (
     <div className={isModal ? "" : "max-w-6xl mx-auto px-6 py-10"}>
@@ -429,7 +235,7 @@ export default function ProductsPage({
                 setIsSubscribed(true);
                 const suggested = DateUtils.nextSubscriptionDateFromToday(subInterval);
                 setSubDate(DateUtils.toInput(suggested));
-                setPreferredDow(monIdxFromJsIdx(suggested.getDay()));
+                setPreferredDow(((suggested.getDay() + 6) % 7)); // monIdxFromJsIdx inline to avoid another import
                 setDateTouched(false);
               }}
               onIntervalChange={(val) => setSubInterval(val)}
@@ -438,45 +244,45 @@ export default function ProductsPage({
             {isSubscribed && (
               <div className="mt-3 space-y-4">
                 {/* Next order date + subscription (aligned) */}
-                  <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-6 items-start">
-                    {/* Date (fixed width and own label) */}
-                    <div className="w-56">
-                      <label className="block text-sm font-medium mb-1">Next order date</label>
-                      <input
-                        type="date"
-                        className="h-9 border rounded px-2 text-sm w-full"
-                        value={subDate}
-                        onChange={(e) => {
-                          setSubDate(e.target.value);
-                          setDateTouched(true);
-                        }}
-                        aria-label="Choose next order date"
-                      />
-                      <div className="text-[11px] text-gray-500 mt-1">
-                        ({DateUtils.fmtToronto(new Date(subDate))})
-                      </div>
-                    </div>
-
-                    {/* Subscription status (same width and *our* label for consistent spacing) */}
-                    <div className="w-56">
-                      <label className="block text-sm font-medium mb-1">Subscription</label>
-                      <Dropdown
-                        label=""                       // prevent Dropdown from adding its own label
-                        value={subStatus}
-                        onChange={(e) => setSubStatus(e.target.value)}
-                        options={[
-                          { value: "active", label: "Active" },
-                          { value: "paused", label: "Pause" },
-                        ]}
-                        className="h-9 text-sm w-full"
-                        wrapperClassName="mb-0"
-                      />
+                <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-6 items-start">
+                  {/* Date */}
+                  <div className="w-56">
+                    <label className="block text-sm font-medium mb-1">Next order date</label>
+                    <InputField
+                      type="date"
+                      className="h-9 border rounded px-2 text-sm w-full"
+                      value={subDate}
+                      onChange={(e) => {
+                        setSubDate(e.target.value);
+                        setDateTouched(true);
+                      }}
+                      aria-label="Choose next order date"
+                    />
+                    <div className="text-[11px] text-gray-500 mt-1">
+                      ({DateUtils.fmtToronto(new Date(subDate))})
                     </div>
                   </div>
 
+                  {/* Subscription status */}
+                  <div className="w-56">
+                    <label className="block text-sm font-medium mb-1">Subscription</label>
+                    <Dropdown
+                      label=""
+                      value={subStatus}
+                      onChange={(e) => setSubStatus(e.target.value)}
+                      options={[
+                        { value: "active", label: "Active" },
+                        { value: "paused", label: "Pause" },
+                      ]}
+                      className="h-9 text-sm w-full"
+                      wrapperClassName="mb-0"
+                    />
+                  </div>
+                </div>
 
                 {/* Preferred delivery weekday */}
                 <WeekdayPicker
+                  labels={DOW_LABELS}
                   valueMonIdx={preferredDow}
                   onChange={(monIdx) => {
                     setPreferredDow(monIdx);
@@ -494,13 +300,6 @@ export default function ProductsPage({
           </Button>
         </div>
       </div>
-
-      {/* Alert Modal */}
-      {alertModal && (
-        <Modal title="Stock Limit Exceeded" onClose={() => setAlertModal(false)} onCloseText="OK">
-          <p>Sorry, only {product.totalquantityonhand} in stock. Please adjust your quantity.</p>
-        </Modal>
-      )}
 
       {!isModal && (
         <div className="mt-20">
