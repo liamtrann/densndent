@@ -438,39 +438,43 @@ export default function ProductsPage({
 
             {isSubscribed && (
               <div className="mt-3 space-y-4">
-                {/* Next order date + subscription status */}
-                <div className="flex flex-wrap items-end gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Next order date</label>
-                    <input
-                      type="date"
-                      className="h-9 border rounded px-2 text-sm"
-                      value={subDate}
-                      onChange={(e) => {
-                        setSubDate(e.target.value);
-                        setDateTouched(true);
-                      }}
-                      aria-label="Choose next order date"
-                    />
-                    <div className="text-[11px] text-gray-500 mt-1">
-                      ({DateUtils.fmtToronto(new Date(subDate))})
+                {/* Next order date + subscription (aligned) */}
+                  <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-6 items-start">
+                    {/* Date (fixed width and own label) */}
+                    <div className="w-56">
+                      <label className="block text-sm font-medium mb-1">Next order date</label>
+                      <input
+                        type="date"
+                        className="h-9 border rounded px-2 text-sm w-full"
+                        value={subDate}
+                        onChange={(e) => {
+                          setSubDate(e.target.value);
+                          setDateTouched(true);
+                        }}
+                        aria-label="Choose next order date"
+                      />
+                      <div className="text-[11px] text-gray-500 mt-1">
+                        ({DateUtils.fmtToronto(new Date(subDate))})
+                      </div>
+                    </div>
+
+                    {/* Subscription status (same width and *our* label for consistent spacing) */}
+                    <div className="w-56">
+                      <label className="block text-sm font-medium mb-1">Subscription</label>
+                      <Dropdown
+                        label=""                       // prevent Dropdown from adding its own label
+                        value={subStatus}
+                        onChange={(e) => setSubStatus(e.target.value)}
+                        options={[
+                          { value: "active", label: "Active" },
+                          { value: "paused", label: "Pause" },
+                        ]}
+                        className="h-9 text-sm w-full"
+                        wrapperClassName="mb-0"
+                      />
                     </div>
                   </div>
 
-                  <div className="w-56">
-                    <Dropdown
-                      label="Subscription"
-                      value={subStatus}
-                      onChange={(e) => setSubStatus(e.target.value)}
-                      options={[
-                        { value: "active", label: "Active" },
-                        { value: "paused", label: "Pause" },
-                      ]}
-                      className="h-9 text-sm w-full"
-                      wrapperClassName="mb-0"
-                    />
-                  </div>
-                </div>
 
                 {/* Preferred delivery weekday */}
                 <WeekdayPicker

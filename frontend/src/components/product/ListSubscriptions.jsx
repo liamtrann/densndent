@@ -35,6 +35,11 @@ const STATUS_PAYLOADS = {
   canceled: SUBSCRIPTION_CANCEL_PAYLOAD,
 };
 
+/** ALWAYS include this in the PATCH so the backend stores preferred delivery days */
+const DEFAULT_PREFERRED_DELIVERY = {
+  items: [{ id: 1 }, { id: 2 }, { id: 3 }],
+};
+
 /* -----------------------------
    Helpers to parse API responses
    ----------------------------- */
@@ -240,11 +245,9 @@ export default function ListSubscriptions() {
 
     /** Fetch real product titles for each row and update displayname/file_url. */
     async function hydratePrettyTitles(list) {
-      // Map each row to a promise that ensures we end up with the PDP title
       const enriched = await Promise.all(
         list.map(async (s) => {
           try {
-            // We prefer a numeric productId; otherwise resolve one from whatever text we have
             const candidateText =
               s.displayname || s.itemid || s.productId || `#${s.roId}`;
             const pid = /^\d+$/.test(String(s.productId || ""))
@@ -259,12 +262,9 @@ export default function ListSubscriptions() {
 
             return {
               ...s,
-              // Use storefront PDP title (itemid in your system)
               displayname: p.itemid || p.displayname || s.displayname || s.itemid,
               itemid: p.itemid || s.itemid,
-              // If we had no image, fill it from PDP
               file_url: s.file_url || p.file_url || s.file_url,
-              // Keep the resolved numeric id to make links sturdier
               productId: String(pid),
             };
           } catch {
@@ -316,14 +316,17 @@ export default function ListSubscriptions() {
       return;
     }
 
-    // Build single PATCH payload with only changed fields
-    const payload = {};
+    // Build single PATCH payload (always include preferred delivery)
+    const payload = {
+      custrecord_prefer_delivery: DEFAULT_PREFERRED_DELIVERY,
+    };
     if (isDirtyInterval)
       Object.assign(payload, buildIntervalPatchPayload(intervalNow));
     if (isDirtyDate) payload.custrecord_ro_next_run = dateVal;
     if (isDirtyStatus) Object.assign(payload, STATUS_PAYLOADS[statusVal]);
 
-    if (Object.keys(payload).length === 0) return;
+    // If literally nothing changed AND you don't want to force a save for preferred delivery,
+    // you could early-return here. We keep the preferred-delivery write enabled by not returning.
 
     setSavingRow((prev) => ({ ...prev, [roId]: true }));
     try {
