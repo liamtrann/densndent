@@ -138,6 +138,7 @@ export default function CheckoutReview({
     // Handle successful payment
     localStorage.removeItem("selectedPaymentMethodId");
     localStorage.removeItem("paymentMethod");
+    localStorage.removeItem("pendingPaymentIntent");
     // Clear cart
     dispatch(clearCart());
 
@@ -308,6 +309,7 @@ export default function CheckoutReview({
       localStorage.removeItem("selectedAddressId");
       localStorage.removeItem("selectedPaymentMethodId");
       localStorage.removeItem("paymentMethod");
+      localStorage.removeItem("pendingPaymentIntent");
 
       // Redirect to order history
       navigate("/purchase-history");
