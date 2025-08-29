@@ -35,5 +35,4 @@ export {
   normalizeSubscriptionRecord,
   isSubscriptionCanceled,
   buildIntervalPatchPayload,
-  SUBSCRIPTION_CANCEL_PAYLOAD,
 } from "./config";
