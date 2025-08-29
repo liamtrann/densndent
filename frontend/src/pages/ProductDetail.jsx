@@ -1,5 +1,5 @@
 // src/pages/ProductDetail.jsx
-import React from "react";
+import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { addToCart } from "store/slices/cartSlice";
@@ -14,14 +14,16 @@ import {
   Dropdown,
   DeliveryEstimate,
   Toast,
+  WeekdaySelector,
 } from "common";
 import { getMatrixInfo, useQuantityHandlers } from "config/config";
+
 import PurchaseOptions from "../common/ui/PurchaseOptions";
 import RecentlyViewedSection from "../components/sections/RecentlyViewedSection";
-
 import useProductDetail from "../hooks/useProductDetail";
-import { CURRENT_IN_STOCK, OUT_OF_STOCK } from "@/constants/constant";
+
 import { delayCall } from "@/api/util";
+import { CURRENT_IN_STOCK, OUT_OF_STOCK } from "@/constants/constant";
 
 /* Small local UI atoms */
 function StockBlock({ inStockQty }) {
@@ -97,29 +99,10 @@ function MatrixDropdown({ matrixType, options, value, onChange }) {
   );
 }
 
-function WeekdayPicker({ labels, valueMonIdx, onChange }) {
-  return (
-    <div>
-      <div className="block text-sm font-medium mb-2">Preferred delivery day</div>
-      <div className="flex items-end gap-6">
-        {labels.map((lbl, i) => (
-          <label key={lbl} className="flex flex-col items-center cursor-pointer">
-            <div className="text-sm mb-1">{lbl}</div>
-            <input
-              type="checkbox"
-              className="w-4 h-4"
-              checked={valueMonIdx === i}
-              onChange={() => onChange(i)}
-              aria-label={`Choose ${lbl} delivery`}
-            />
-          </label>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-export default function ProductsPage({ productId: propProductId = null, isModal = false }) {
+export default function ProductsPage({
+  productId: propProductId = null,
+  isModal = false,
+}) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -149,7 +132,11 @@ export default function ProductsPage({ productId: propProductId = null, isModal 
     nextDateForWeekdayFrom,
   } = useProductDetail({ productId: propProductId, isModal });
 
-  const { matrixType, options: matrixOptionsList } = getMatrixInfo(matrixOptions);
+  // Add state for multiple preferred delivery days
+  const [preferredDeliveryDays, setPreferredDeliveryDays] = useState([]);
+
+  const { matrixType, options: matrixOptionsList } =
+    getMatrixInfo(matrixOptions);
 
   const {
     quantity,
@@ -171,6 +158,9 @@ export default function ProductsPage({ productId: propProductId = null, isModal 
       subscriptionNextDate: isSubscribed ? subDate : null, // YYYY-MM-DD
       subscriptionStatus: isSubscribed ? subStatus : null, // "active" | "paused"
       subscriptionPreferredDow: isSubscribed ? DOW_LABELS[preferredDow] : null,
+      subscriptionPreferredDeliveryDays: isSubscribed
+        ? preferredDeliveryDays
+        : null,
     };
 
     delayCall(() => {
@@ -195,18 +185,27 @@ export default function ProductsPage({ productId: propProductId = null, isModal 
 
         {/* DETAILS */}
         <div>
-          <h2 className={`${isModal ? "text-xl" : "text-2xl"} font-bold text-gray-800 mb-2`}>
+          <h2
+            className={`${isModal ? "text-xl" : "text-2xl"} font-bold text-gray-800 mb-2`}
+          >
             {product.itemid}
           </h2>
 
           <StockBlock inStockQty={product.totalquantityonhand} />
 
           <div className="mt-2 mb-4">
-            {priceDisplay && <div className="text-3xl font-bold text-gray-800">{priceDisplay}</div>}
+            {priceDisplay && (
+              <div className="text-3xl font-bold text-gray-800">
+                {priceDisplay}
+              </div>
+            )}
           </div>
 
           {product.storedetaileddescription && (
-            <ShowMoreHtml html={product.storedetaileddescription} maxLength={400} />
+            <ShowMoreHtml
+              html={product.storedetaileddescription}
+              maxLength={400}
+            />
           )}
 
           <div className="text-sm text-gray-500 mt-4">MPN: {product.mpn}</div>
@@ -237,13 +236,21 @@ export default function ProductsPage({ productId: propProductId = null, isModal 
               name={`pdp-${product.id}`}
               isSubscribed={isSubscribed}
               interval={subInterval}
-              onOneTime={() => setIsSubscribed(false)}
+              onOneTime={() => {
+                setIsSubscribed(false);
+                setPreferredDeliveryDays([]);
+              }}
               onSubscribe={() => {
                 setIsSubscribed(true);
-                const suggested = DateUtils.nextSubscriptionDateFromToday(subInterval);
+                const suggested =
+                  DateUtils.nextSubscriptionDateFromToday(subInterval);
                 setSubDate(DateUtils.toInput(suggested));
-                setPreferredDow(((suggested.getDay() + 6) % 7)); // monIdxFromJsIdx inline to avoid another import
+                setPreferredDow((suggested.getDay() + 6) % 7); // monIdxFromJsIdx inline to avoid another import
                 setDateTouched(false);
+                // Set default preferred delivery days (Monday, Wednesday, Friday)
+                if (preferredDeliveryDays.length === 0) {
+                  setPreferredDeliveryDays([0, 2, 4]);
+                }
               }}
               onIntervalChange={(val) => setSubInterval(val)}
             />
@@ -254,7 +261,9 @@ export default function ProductsPage({ productId: propProductId = null, isModal 
                 <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-6 items-start">
                   {/* Date */}
                   <div className="w-56">
-                    <label className="block text-sm font-medium mb-1">Next order date</label>
+                    <label className="block text-sm font-medium mb-1">
+                      Next order date
+                    </label>
                     <InputField
                       type="date"
                       className="h-9 border rounded px-2 text-sm w-full"
@@ -272,7 +281,9 @@ export default function ProductsPage({ productId: propProductId = null, isModal 
 
                   {/* Subscription status */}
                   <div className="w-56">
-                    <label className="block text-sm font-medium mb-1">Subscription</label>
+                    <label className="block text-sm font-medium mb-1">
+                      Subscription
+                    </label>
                     <Dropdown
                       label=""
                       value={subStatus}
@@ -287,17 +298,19 @@ export default function ProductsPage({ productId: propProductId = null, isModal 
                   </div>
                 </div>
 
-                {/* Preferred delivery weekday */}
-                <WeekdayPicker
-                  labels={DOW_LABELS}
-                  valueMonIdx={preferredDow}
-                  onChange={(monIdx) => {
-                    setPreferredDow(monIdx);
-                    const next = nextDateForWeekdayFrom(new Date(), monIdx);
-                    setSubDate(DateUtils.toInput(next));
-                    setDateTouched(true);
-                  }}
-                />
+                {/* Preferred delivery weekdays */}
+                <div className="mt-4">
+                  <WeekdaySelector
+                    label="Preferred delivery days"
+                    selectedDays={preferredDeliveryDays}
+                    onChange={setPreferredDeliveryDays}
+                    className="w-full"
+                  />
+                  <div className="text-xs text-gray-500 mt-1">
+                    Select the days you prefer to receive your subscription
+                    deliveries
+                  </div>
+                </div>
               </div>
             )}
           </div>
