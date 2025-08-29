@@ -24,12 +24,7 @@ export default function useSubscriptionsList() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Single pending state object for all changes
-  const [pending, setPending] = useState({});
-
-  // baselines to detect dirty fields after initial load
-  const [initialData, setInitialData] = useState({});
-
+  // Only track which rows are saving
   const [savingRow, setSavingRow] = useState({});
   const [savingStatus, setSavingStatus] = useState({});
   const [confirming, setConfirming] = useState(null);
@@ -57,21 +52,18 @@ export default function useSubscriptionsList() {
       const activeOrPaused = raw.filter((r) => parseStatus(r) !== "canceled");
       const subs = activeOrPaused.map(normalizeSubscriptionRecord);
 
-      // Build maps for status and next run date
-      const statusMap = {};
-      const dateMap = {};
-      const deliveryMap = {};
-      activeOrPaused.forEach((r) => {
-        const roId = r.id ?? r.internalid ?? r.roId;
-        statusMap[roId] = parseStatus(r);
-        dateMap[roId] = pickNextRunDate(r);
+      // Enrich subscriptions with additional data
+      const enrichedSubs = subs.map((s) => {
+        const rawRecord = activeOrPaused.find(
+          (r) => (r.id ?? r.internalid ?? r.roId) === s.roId
+        );
 
         // Parse delivery days from preferdelivery field
         let deliveryDays = [];
-        if (r.preferdelivery) {
+        if (rawRecord?.preferdelivery) {
           try {
             // Handle comma-separated string format like "1, 3, 4, 5"
-            deliveryDays = r.preferdelivery
+            deliveryDays = rawRecord.preferdelivery
               .split(",")
               .map((day) => parseInt(day.trim()))
               .filter((day) => !isNaN(day) && day >= 1 && day <= 7);
@@ -79,52 +71,26 @@ export default function useSubscriptionsList() {
             deliveryDays = [];
           }
         }
-        deliveryMap[roId] = deliveryDays;
-      });
 
-      setItems(subs);
-
-      // Initialize single pending state and baseline data
-      const initData = {};
-      const initPending = {};
-      subs.forEach((s) => {
-        const roId = s.roId;
-        const fromApi = dateMap[roId];
-        const nextRunDate =
-          fromApi || DateUtils.toInput(nextFromToday(s.interval));
-        const status = statusMap[roId] || "active";
-        const deliveryDays = deliveryMap[roId] || [];
-
-        // Store baseline data
-        initData[roId] = {
-          interval: s.interval,
-          date: nextRunDate,
-          status: status,
-          deliveryDays: deliveryDays,
-        };
-
-        // Initialize pending state with current values
-        initPending[roId] = {
-          interval: s.interval,
-          date: nextRunDate,
-          status: status,
+        return {
+          ...s,
+          status: parseStatus(rawRecord) || "active",
+          nextrun:
+            pickNextRunDate(rawRecord) ||
+            DateUtils.toInput(nextFromToday(s.interval)),
           deliveryDays: deliveryDays,
         };
       });
 
-      setInitialData(initData);
-      setPending(initPending);
+      setItems(enrichedSubs);
 
       // Hydrate PDP titles/images
-      const hydrated = await enrichSubscriptionsWithPdp(subs);
+      const hydrated = await enrichSubscriptionsWithPdp(enrichedSubs);
       setItems(hydrated);
-      
     } catch (err) {
       console.error("Error loading subscriptions:", err);
       ToastNotification.error("Failed to load subscriptions.");
       setItems([]);
-      setPending({});
-      setInitialData({});
     } finally {
       setLoading(false);
     }
@@ -135,66 +101,31 @@ export default function useSubscriptionsList() {
   }, [load]);
 
   /* ---------- Handlers ---------- */
-  const handleIntervalChange = (s, value) =>
-    setPending((prev) => ({
-      ...prev,
-      [s.roId]: { ...prev[s.roId], interval: value },
-    }));
+  /** Save form data from React Hook Form */
+  const handleSaveSubscription = async (subscription, formData) => {
+    const roId = subscription.roId;
 
-  const handleDateChange = (s, value) =>
-    setPending((prev) => ({
-      ...prev,
-      [s.roId]: { ...prev[s.roId], date: value },
-    }));
-
-  const handleStatusChange = (s, value) =>
-    setPending((prev) => ({
-      ...prev,
-      [s.roId]: { ...prev[s.roId], status: value },
-    }));
-
-  const handleDeliveryChange = (s, value) =>
-    setPending((prev) => ({
-      ...prev,
-      [s.roId]: { ...prev[s.roId], deliveryDays: value },
-    }));
-
-  /** Single bottom SAVE — saves interval + next date + status + delivery days together */
-  const handleSaveAll = async (s) => {
-    const roId = s.roId;
-
-    const currentPending = pending[roId] || {};
-    const currentInitial = initialData[roId] || {};
-
-    const intervalNow = currentPending.interval ?? s.interval;
-    const isDirtyInterval = intervalNow !== s.interval;
-
-    const dateVal = currentPending.date ?? currentInitial.date;
-    const baselineDate = currentInitial.date;
-    const isDirtyDate = !!dateVal && dateVal !== baselineDate;
-
-    const statusVal =
-      currentPending.status ?? currentInitial.status ?? "active";
-    const isDirtyStatus =
-      (currentInitial.status ?? "active") !== (statusVal ?? "active");
-
-    const deliveryVal =
-      currentPending.deliveryDays ?? currentInitial.deliveryDays ?? [];
-    const baselineDelivery = currentInitial.deliveryDays ?? [];
-    const isDirtyDelivery =
-      JSON.stringify(deliveryVal) !== JSON.stringify(baselineDelivery);
-
-    if (statusVal === "canceled") {
-      setConfirming(s);
+    // Check if canceling
+    if (formData.status === "canceled") {
+      setConfirming(subscription);
       return;
     }
 
+    // Build payload with only changed fields
     const payload = buildRecurringOrderPatch({
-      interval: isDirtyInterval ? intervalNow : undefined,
-      date: isDirtyDate ? dateVal : undefined,
-      status: isDirtyStatus ? statusVal : undefined,
-      deliveryDays: isDirtyDelivery ? deliveryVal : undefined,
-      includePreferredDelivery: true, // required
+      interval:
+        formData.interval !== subscription.interval
+          ? formData.interval
+          : undefined,
+      date: formData.date !== subscription.nextrun ? formData.date : undefined,
+      status:
+        formData.status !== subscription.status ? formData.status : undefined,
+      deliveryDays:
+        JSON.stringify(formData.deliveryDays) !==
+        JSON.stringify(subscription.deliveryDays)
+          ? formData.deliveryDays
+          : undefined,
+      includePreferredDelivery: true,
     });
 
     setSavingRow((prev) => ({ ...prev, [roId]: true }));
@@ -248,18 +179,12 @@ export default function useSubscriptionsList() {
     // data
     items,
     loading,
-    // state maps
-    pending,
-    initialData,
+    // state
     savingRow,
     savingStatus,
     confirming,
     // handlers
-    handleIntervalChange,
-    handleDateChange,
-    handleStatusChange,
-    handleDeliveryChange,
-    handleSaveAll,
+    handleSaveSubscription,
     performCancel,
     setConfirming,
   };

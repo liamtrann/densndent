@@ -12,16 +12,10 @@ export default function ListSubscriptions() {
   const {
     items,
     loading,
-    pending,
-    initialData,
     savingRow,
     savingStatus,
     confirming,
-    handleIntervalChange,
-    handleDateChange,
-    handleStatusChange,
-    handleDeliveryChange,
-    handleSaveAll,
+    handleSaveSubscription,
     performCancel,
     setConfirming,
   } = useSubscriptionsList();
@@ -52,45 +46,23 @@ export default function ListSubscriptions() {
       <div className="space-y-4">
         {items.map((s) => {
           const roId = s.roId;
+          const isSaving = !!savingRow[roId];
 
-          const currentPending = pending[roId] || {};
-          const currentInitial = initialData[roId] || {};
-
-          const intervalNow = currentPending.interval ?? s.interval;
-          const dateVal = currentPending.date ?? currentInitial.date;
-          const statusVal =
-            currentPending.status ?? currentInitial.status ?? "active";
-          const deliveryVal =
-            currentPending.deliveryDays ?? currentInitial.deliveryDays ?? [];
-
-          const isDirtyInterval = intervalNow !== s.interval;
-          const isDirtyDate = !!dateVal && dateVal !== currentInitial.date;
-          const isDirtyStatus =
-            (currentInitial.status ?? "active") !== (statusVal ?? "active");
-          const isDirtyDelivery =
-            JSON.stringify(deliveryVal) !==
-            JSON.stringify(currentInitial.deliveryDays ?? []);
-
-          const isSavingCombined = !!savingRow[roId];
+          // Create initial data object for React Hook Form
+          const initialData = {
+            interval: s.interval || "1",
+            date: s.nextrun || "",
+            status: s.status || "active",
+            deliveryDays: s.deliveryDays || [],
+          };
 
           return (
             <SubscriptionRow
               key={roId}
               s={s}
-              intervalNow={intervalNow}
-              dateVal={dateVal}
-              statusVal={statusVal}
-              deliveryVal={deliveryVal}
-              isDirtyInterval={isDirtyInterval}
-              isDirtyDate={isDirtyDate}
-              isDirtyStatus={isDirtyStatus}
-              isDirtyDelivery={isDirtyDelivery}
-              isSavingCombined={isSavingCombined}
-              onChangeInterval={handleIntervalChange}
-              onChangeDate={handleDateChange}
-              onChangeStatus={handleStatusChange}
-              onChangeDelivery={handleDeliveryChange}
-              onSave={handleSaveAll}
+              initialData={initialData}
+              onSave={handleSaveSubscription}
+              isSaving={isSaving}
             />
           );
         })}
