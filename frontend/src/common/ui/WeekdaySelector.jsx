@@ -1,5 +1,7 @@
 import PropTypes from "prop-types";
 
+import { formatDeliveryDays } from "config/config";
+
 const WeekdaySelector = ({
   selectedDays = [],
   onChange,
@@ -13,9 +15,10 @@ const WeekdaySelector = ({
   const handleDayToggle = (dayIndex) => {
     if (disabled) return;
 
-    const newSelectedDays = selectedDays.includes(dayIndex)
-      ? selectedDays.filter((day) => day !== dayIndex)
-      : [...selectedDays, dayIndex].sort();
+    const dayValue = dayIndex + 1; // Convert 0-based index to 1-based value
+    const newSelectedDays = selectedDays.includes(dayValue)
+      ? selectedDays.filter((day) => day !== dayValue)
+      : [...selectedDays, dayValue].sort();
 
     onChange(newSelectedDays);
   };
@@ -23,13 +26,13 @@ const WeekdaySelector = ({
   // Quick select handlers
   const handleSelectWholeWeek = () => {
     if (disabled) return;
-    const allDays = [0, 1, 2, 3, 4, 5, 6]; // All 7 days
+    const allDays = [1, 2, 3, 4, 5, 6, 7]; // All 7 days (1-based)
     onChange(allDays);
   };
 
   const handleSelectWeekdays = () => {
     if (disabled) return;
-    const weekdays = [0, 1, 2, 3, 4]; // Monday to Friday
+    const weekdays = [1, 2, 3, 4, 5]; // Monday to Friday (1-based)
     onChange(weekdays);
   };
 
@@ -42,7 +45,7 @@ const WeekdaySelector = ({
   const isWholeWeekSelected = selectedDays.length === 7;
   const isWeekdaysSelected =
     selectedDays.length === 5 &&
-    [0, 1, 2, 3, 4].every((day) => selectedDays.includes(day));
+    [1, 2, 3, 4, 5].every((day) => selectedDays.includes(day));
 
   const containerClass = inline
     ? "flex flex-wrap gap-4"
@@ -112,62 +115,65 @@ const WeekdaySelector = ({
       )}
 
       <div className={containerClass}>
-        {dayLabels.map((dayLabel, index) => (
-          <label
-            key={index}
-            className={`
-              relative flex items-center justify-center min-w-[60px] cursor-pointer px-4 py-3 
-              rounded-lg border-2 font-medium text-sm select-none
-              shadow-sm hover:shadow-md transform hover:scale-105
-              ${
-                selectedDays.includes(index)
-                  ? "bg-gradient-to-br from-orange-50 to-orange-100 border-orange-400 text-orange-800 shadow-orange-200"
-                  : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300"
-              }
-              ${disabled ? "opacity-50 cursor-not-allowed transform-none hover:shadow-sm" : ""}
-              transition-all duration-200 ease-in-out
-            `}
-          >
-            {/* Hidden checkbox */}
-            <input
-              type="checkbox"
-              checked={selectedDays.includes(index)}
-              onChange={() => handleDayToggle(index)}
-              disabled={disabled}
-              className="sr-only"
-            />
-
-            {/* Custom checkbox indicator */}
-            <div
+        {dayLabels.map((dayLabel, index) => {
+          const dayValue = index + 1; // Convert 0-based index to 1-based value
+          return (
+            <label
+              key={index}
               className={`
-              absolute top-2 right-2 w-4 h-4 rounded-full border-2 flex items-center justify-center
-              ${
-                selectedDays.includes(index)
-                  ? "bg-orange-500 border-orange-500"
-                  : "bg-white border-gray-300"
-              }
-              transition-all duration-200 ease-in-out
-            `}
+                relative flex items-center justify-center min-w-[60px] cursor-pointer px-4 py-3 
+                rounded-lg border-2 font-medium text-sm select-none
+                shadow-sm hover:shadow-md transform hover:scale-105
+                ${
+                  selectedDays.includes(dayValue)
+                    ? "bg-gradient-to-br from-orange-50 to-orange-100 border-orange-400 text-orange-800 shadow-orange-200"
+                    : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300"
+                }
+                ${disabled ? "opacity-50 cursor-not-allowed transform-none hover:shadow-sm" : ""}
+                transition-all duration-200 ease-in-out
+              `}
             >
-              {selectedDays.includes(index) && (
-                <svg
-                  className="w-2.5 h-2.5 text-white"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              )}
-            </div>
+              {/* Hidden checkbox */}
+              <input
+                type="checkbox"
+                checked={selectedDays.includes(dayValue)}
+                onChange={() => handleDayToggle(index)}
+                disabled={disabled}
+                className="sr-only"
+              />
 
-            {/* Day label */}
-            <span className="font-semibold">{dayLabel}</span>
-          </label>
-        ))}
+              {/* Custom checkbox indicator */}
+              <div
+                className={`
+                absolute top-2 right-2 w-4 h-4 rounded-full border-2 flex items-center justify-center
+                ${
+                  selectedDays.includes(dayValue)
+                    ? "bg-orange-500 border-orange-500"
+                    : "bg-white border-gray-300"
+                }
+                transition-all duration-200 ease-in-out
+              `}
+              >
+                {selectedDays.includes(dayValue) && (
+                  <svg
+                    className="w-2.5 h-2.5 text-white"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                )}
+              </div>
+
+              {/* Day label */}
+              <span className="font-semibold">{dayLabel}</span>
+            </label>
+          );
+        })}
       </div>
 
       {/* Selected days summary */}
@@ -177,16 +183,9 @@ const WeekdaySelector = ({
             <span className="text-orange-700 font-medium text-sm">
               ✅ Selected days:
             </span>
-            <div className="flex flex-wrap gap-1">
-              {selectedDays.map((index) => (
-                <span
-                  key={index}
-                  className="inline-block px-2 py-1 bg-orange-200 text-orange-800 text-xs font-semibold rounded-full"
-                >
-                  {dayLabels[index]}
-                </span>
-              ))}
-            </div>
+            <span className="text-orange-800 text-sm font-semibold">
+              {formatDeliveryDays(selectedDays)}
+            </span>
           </div>
         </div>
       )}

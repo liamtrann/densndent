@@ -275,6 +275,9 @@ export default function CheckoutReview({
                 custrecord_ro_interval_unit: { id: "2" },
                 custrecord_ro_next_run: nextRunDate,
                 custrecord_ro_status: { id: "1" },
+                custrecord_prefer_delivery: (
+                  item.subscriptionPreferredDeliveryDays || []
+                ).join(", "),
               };
 
               await api.post(

@@ -1,10 +1,18 @@
 // src/components/product/SubscriptionRow.jsx
 import React from "react";
 import { Link } from "react-router-dom";
-import { Button, Dropdown, Paragraph, ProductImage } from "common";
+
+import {
+  Button,
+  Dropdown,
+  Paragraph,
+  ProductImage,
+  WeekdaySelector,
+} from "common";
 import {
   SUBSCRIPTION_INTERVAL_OPTIONS as INTERVAL_OPTIONS,
   formatLocalDateToronto,
+  formatDeliveryDays,
 } from "config/config";
 import {
   STATUS_OPTIONS,
@@ -17,16 +25,19 @@ export default function SubscriptionRow({
   intervalNow,
   dateVal,
   statusVal,
+  deliveryVal,
   isDirtyInterval,
   isDirtyDate,
   isDirtyStatus,
+  isDirtyDelivery,
   isSavingCombined,
   onChangeInterval,
   onChangeDate,
   onChangeStatus,
+  onChangeDelivery,
   onSave,
 }) {
-  const href  = getProductHref(s);
+  const href = getProductHref(s);
   const title = s.displayname || s.itemid || `#${s.productId || s.roId}`;
 
   const ImageWrap = href
@@ -73,7 +84,10 @@ export default function SubscriptionRow({
         </div>
 
         <Paragraph className="mt-1 text-sm text-gray-600">
-          Interval: {intervalNow === "1" ? "Every 1 month" : `Every ${intervalNow} months`}
+          Interval:{" "}
+          {intervalNow === "1"
+            ? "Every 1 month"
+            : `Every ${intervalNow} months`}
         </Paragraph>
 
         {/* Next Order: date picker */}
@@ -95,6 +109,22 @@ export default function SubscriptionRow({
         <Paragraph className="text-xs text-gray-500 mt-1">
           Estimated Delivery: <span className="font-medium">5 Days</span>
         </Paragraph>
+
+        {/* Preferred Delivery Days */}
+        <div className="mt-2">
+          <span className="text-xs text-gray-500 block mb-2">
+            Preferred Delivery Days:
+          </span>
+          <div className="text-xs text-gray-600 mb-2">
+            {deliveryVal && deliveryVal.length > 0
+              ? formatDeliveryDays(deliveryVal)
+              : "No preference set"}
+          </div>
+          <WeekdaySelector
+            selectedDays={deliveryVal || []}
+            onChange={(days) => onChangeDelivery(s, days)}
+          />
+        </div>
 
         {/* Controls: Change interval + Subscription */}
         <div className="mt-3 flex flex-wrap items-end gap-3">
@@ -127,8 +157,12 @@ export default function SubscriptionRow({
             variant="ghost"
             className="h-10 text-sm w-56 border border-gray-300 rounded px-3 text-gray-700 hover:bg-gray-50"
             disabled={
-              !(isDirtyInterval || isDirtyDate || isDirtyStatus) ||
-              isSavingCombined
+              !(
+                isDirtyInterval ||
+                isDirtyDate ||
+                isDirtyStatus ||
+                isDirtyDelivery
+              ) || isSavingCombined
             }
             onClick={() => onSave(s)}
           >

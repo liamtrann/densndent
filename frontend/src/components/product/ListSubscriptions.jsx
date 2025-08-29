@@ -1,19 +1,31 @@
 // src/components/product/ListSubscriptions.jsx
-import React from "react";
 import ConfirmCancelSubscription from "common/modals/ConfirmCancelSubscription";
+import React from "react";
+
 import { Loading, Paragraph } from "common";
+
 import SubscriptionRow from "./SubscriptionRow";
+
 import useSubscriptionsList from "@/hooks/useSubscriptionsList";
 
 export default function ListSubscriptions() {
   const {
-    items, loading,
-    pending, pendingDate, pendingStatus,
-    initialDate, initialStatus,
-    savingRow, savingStatus, confirming,
+    items,
+    loading,
+    pending,
+    pendingDate,
+    pendingStatus,
+    pendingDelivery,
+    initialDate,
+    initialStatus,
+    initialDelivery,
+    savingRow,
+    savingStatus,
+    confirming,
     handleIntervalChange,
     handleDateChange,
     handleStatusChange,
+    handleDeliveryChange,
     handleSaveAll,
     performCancel,
     setConfirming,
@@ -40,6 +52,8 @@ export default function ListSubscriptions() {
     );
   }
 
+  console.log(items);
+
   return (
     <>
       <div className="space-y-4">
@@ -47,13 +61,19 @@ export default function ListSubscriptions() {
           const roId = s.roId;
 
           const intervalNow = pending[roId] ?? s.interval;
-          const dateVal     = pendingDate[roId] ?? initialDate[roId];
-          const statusVal   = pendingStatus[roId] ?? initialStatus[roId] ?? "active";
+          const dateVal = pendingDate[roId] ?? initialDate[roId];
+          const statusVal =
+            pendingStatus[roId] ?? initialStatus[roId] ?? "active";
+          const deliveryVal =
+            pendingDelivery[roId] ?? initialDelivery[roId] ?? [];
 
           const isDirtyInterval = intervalNow !== s.interval;
-          const isDirtyDate     = !!dateVal && dateVal !== initialDate[roId];
-          const isDirtyStatus   =
+          const isDirtyDate = !!dateVal && dateVal !== initialDate[roId];
+          const isDirtyStatus =
             (initialStatus[roId] ?? "active") !== (statusVal ?? "active");
+          const isDirtyDelivery =
+            JSON.stringify(deliveryVal) !==
+            JSON.stringify(initialDelivery[roId] ?? []);
 
           const isSavingCombined = !!savingRow[roId];
 
@@ -64,13 +84,16 @@ export default function ListSubscriptions() {
               intervalNow={intervalNow}
               dateVal={dateVal}
               statusVal={statusVal}
+              deliveryVal={deliveryVal}
               isDirtyInterval={isDirtyInterval}
               isDirtyDate={isDirtyDate}
               isDirtyStatus={isDirtyStatus}
+              isDirtyDelivery={isDirtyDelivery}
               isSavingCombined={isSavingCombined}
               onChangeInterval={handleIntervalChange}
               onChangeDate={handleDateChange}
               onChangeStatus={handleStatusChange}
+              onChangeDelivery={handleDeliveryChange}
               onSave={handleSaveAll}
             />
           );

@@ -764,11 +764,16 @@ export function normalizeSubscriptionRecord(r) {
     if (!s || s === "[object Object]") return undefined;
 
     // JSON payload like {"id":"20412"} or [{"id":20412}]
-    if ((s.startsWith("{") && s.endsWith("}")) || (s.startsWith("[") && s.endsWith("]"))) {
+    if (
+      (s.startsWith("{") && s.endsWith("}")) ||
+      (s.startsWith("[") && s.endsWith("]"))
+    ) {
       try {
         const parsed = JSON.parse(s);
         return pickNumericId(parsed);
-      } catch {/* ignore */}
+      } catch {
+        /* ignore */
+      }
     }
 
     // Accept things like "20412", "id=20412", "internalid:20412"
@@ -799,10 +804,6 @@ export function normalizeSubscriptionRecord(r) {
     ),
   };
 }
-
-
-
-
 
 /** Detect if a recurring order is canceled (status "3") regardless of field shape */
 export function isSubscriptionCanceled(rec) {
@@ -863,15 +864,31 @@ export const DOW_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]; // 
 export const jsIdxFromMonIdx = (monIdx) => (monIdx + 1) % 7; // Mon0..Sun6 -> JS Sun0..Sat6
 export const monIdxFromJsIdx = (jsIdx) => (jsIdx + 6) % 7; // JS Sun0..Sat6 -> Mon0..Sun6
 
+// Convert day numbers (1-7) to readable text
+export const formatDeliveryDays = (dayNumbers) => {
+  if (!dayNumbers || dayNumbers.length === 0) return "No preferences set";
+
+  const dayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  return (
+    dayNumbers
+      .map((dayNum) => dayLabels[dayNum - 1]) // Convert 1-based to 0-based
+      .filter(Boolean) // Remove undefined values
+      .join(", ") || "No preferences set"
+  );
+};
+
 export const nextDateForWeekdayFrom = (baseDate, monIdx) => {
   const jsTarget = jsIdxFromMonIdx(monIdx);
-  const start = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate());
+  const start = new Date(
+    baseDate.getFullYear(),
+    baseDate.getMonth(),
+    baseDate.getDate()
+  );
   const diff = (jsTarget - start.getDay() + 7) % 7;
   const result = new Date(start);
   result.setDate(start.getDate() + diff);
   return result;
 };
-
 
 // config/config.js
 
@@ -889,13 +906,21 @@ export async function resolveProductIdByNameOrId(maybeId) {
   const candidates = [
     query,
     query.replace(/\s*-\s*.*/, ""),
-    query.replace(/[^\w\s]/g, " ").replace(/\s+/g, " ").trim(),
+    query
+      .replace(/[^\w\s]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim(),
   ];
 
   for (const q of candidates) {
     try {
-      const res = await api.post(endpoint.POST_GET_ITEMS_BY_NAME({ limit: 1 }), { name: q });
-      const arr = Array.isArray(res.data) ? res.data : res.data?.items || res.data;
+      const res = await api.post(
+        endpoint.POST_GET_ITEMS_BY_NAME({ limit: 1 }),
+        { name: q }
+      );
+      const arr = Array.isArray(res.data)
+        ? res.data
+        : res.data?.items || res.data;
       const first = Array.isArray(arr) ? arr[0] : undefined;
       if (first?.id) return String(first.id);
     } catch {
@@ -904,9 +929,6 @@ export async function resolveProductIdByNameOrId(maybeId) {
   }
   return null;
 }
-
-
-
 
 export {
   extractBuyGet,

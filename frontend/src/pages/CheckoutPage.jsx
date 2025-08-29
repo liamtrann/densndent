@@ -2,14 +2,20 @@
 import { useAuth0 } from "@auth0/auth0-react";
 import CheckoutSummary from "components/checkout/CheckoutSummary";
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { useLocation } from "react-router-dom";
+import { setItemSubscription } from "store/slices/cartSlice";
 
 import api from "api/api";
 import endpoint from "api/endpoints";
 import { handleTaxShippingEstimate, calculateOrderTotal } from "config/config";
 
-import { MultiStepIndicator, Loading, EmptyCart } from "@/common";
+import {
+  MultiStepIndicator,
+  Loading,
+  EmptyCart,
+  WeekdaySelector,
+} from "@/common";
 import ToastNotification from "@/common/toast/Toast";
 import { CheckoutPayment, CheckoutReview } from "@/components/checkout";
 import useInitialAddress from "@/hooks/useInitialAddress";
@@ -18,6 +24,7 @@ import { selectCartSubtotalWithDiscounts } from "@/redux/slices";
 export default function CheckoutPage() {
   const { getAccessTokenSilently } = useAuth0();
   const location = useLocation();
+  const dispatch = useDispatch();
   const [promoCode, setPromoCode] = useState("");
   const [isAddModalOpen, setAddModalOpen] = useState(false);
   const [shippingMethods, setShippingMethods] = useState([]);
@@ -46,6 +53,19 @@ export default function CheckoutPage() {
 
   const { addresses, setAddresses, selectedId, setSelectedId } =
     useInitialAddress(userInfo);
+
+  // Handler for updating preferred delivery days
+  const handleDeliveryDaysChange = (item, newDeliveryDays) => {
+    dispatch(
+      setItemSubscription({
+        id: item.id,
+        flavor: item.flavor,
+        enabled: item.subscriptionEnabled,
+        interval: item.subscriptionInterval,
+        preferredDeliveryDays: newDeliveryDays,
+      })
+    );
+  };
 
   const fetchShippingMethods = async (itemId) => {
     try {
@@ -233,6 +253,8 @@ export default function CheckoutPage() {
           estimatedTax={estimatedTax}
           taxRate={taxRate}
           calculatedTotal={total}
+          cart={cart}
+          onDeliveryDaysChange={handleDeliveryDaysChange}
         />
       </div>
     </div>
