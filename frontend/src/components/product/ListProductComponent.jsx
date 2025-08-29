@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchProductsBy, fetchCountBy } from "store/slices/productsSlice";
+import { fetchProductsBy, fetchCountBy } from "store/slices/productsSlice"; //gets a page of products.gets the total count so you can paginate.
 
-import { delayCall } from "api/util";
+import { delayCall } from "api/util"; //delayCall is a small debouncer/throttle helper (prevents firing requests too fast)
 import {
   Breadcrumb,
   ErrorMessage,

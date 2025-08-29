@@ -3,25 +3,25 @@ import { useParams } from "react-router-dom";
 import ListProductComponent from "./ListProductComponent";
 
 export default function ListProductPage({ by }) {
-  const { name, brandName, nameAndId, categoryNameAndId } = useParams();
+  const { name, brandName, nameAndId, categoryNameAndId } = useParams(); //useParams() Pulls named segments from ur route. u’re expecting some combination of: name, brandName, nameAndId, categoryNameAndId.
 
   // Parse name and ID based on the 'by' prop
   const parseNameAndId = () => {
     switch (by) {
       case "name": {
         // Convert dashes back to spaces for name-based queries
-        const textName = name?.replaceAll("-", " ") || "";
+        const textName = name?.replaceAll("-", " ") || ""; //Converts dashes back to spaces for nicer display and searching
         return {
           displayName: textName || "Unknown Product",
           id: textName,
-          headerTitle: (name || "UNKNOWN").toUpperCase(),
+          headerTitle: (name || "UNKNOWN").toUpperCase(), //Uppercases a headerTitle for the page heading
         };
       }
       case "brand": {
         // For brand, use brandName parameter
         const brand = brandName || "";
         return {
-          displayName: brand || "Unknown Brand",
+          displayName: brand || "Unknown Brand", //turns dashes back to spaces,Uses that as both the id (for querying by name) and the displayName. Uppercase for the header.
           id: brand,
           headerTitle: (brand || "UNKNOWN BRAND").toUpperCase(),
         };
@@ -69,11 +69,11 @@ export default function ListProductPage({ by }) {
 
         return {
           displayName: parsedName || "Unknown Category",
-          id: 273, // Default ID for "Monthly Specials"
+          id: 273, // Default ID for "Monthly Specials" //the returned id is hard-coded to 273 (comment says this equals “Monthly Specials”).
           headerTitle: (parsedName || "UNKNOWN CATEGORY").toUpperCase(),
         };
       }
-      case "all": {
+      case "all": { //The “show everything” page.
         // For all products, no specific ID or name parsing needed
         return {
           displayName: "All Products",
@@ -95,7 +95,7 @@ export default function ListProductPage({ by }) {
   const { displayName, id, headerTitle } = parseNameAndId();
 
   // Map 'by' prop to the expected type for ListProductComponent
-  const getComponentType = () => {
+  const getComponentType = () => { //Converts this page’s by prop to the type string the child component expects.
     switch (by) {
       case "class":
         return "classification";
