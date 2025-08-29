@@ -13,12 +13,7 @@ export default function ListSubscriptions() {
     items,
     loading,
     pending,
-    pendingDate,
-    pendingStatus,
-    pendingDelivery,
-    initialDate,
-    initialStatus,
-    initialDelivery,
+    initialData,
     savingRow,
     savingStatus,
     confirming,
@@ -52,28 +47,29 @@ export default function ListSubscriptions() {
     );
   }
 
-  console.log(items);
-
   return (
     <>
       <div className="space-y-4">
         {items.map((s) => {
           const roId = s.roId;
 
-          const intervalNow = pending[roId] ?? s.interval;
-          const dateVal = pendingDate[roId] ?? initialDate[roId];
+          const currentPending = pending[roId] || {};
+          const currentInitial = initialData[roId] || {};
+
+          const intervalNow = currentPending.interval ?? s.interval;
+          const dateVal = currentPending.date ?? currentInitial.date;
           const statusVal =
-            pendingStatus[roId] ?? initialStatus[roId] ?? "active";
+            currentPending.status ?? currentInitial.status ?? "active";
           const deliveryVal =
-            pendingDelivery[roId] ?? initialDelivery[roId] ?? [];
+            currentPending.deliveryDays ?? currentInitial.deliveryDays ?? [];
 
           const isDirtyInterval = intervalNow !== s.interval;
-          const isDirtyDate = !!dateVal && dateVal !== initialDate[roId];
+          const isDirtyDate = !!dateVal && dateVal !== currentInitial.date;
           const isDirtyStatus =
-            (initialStatus[roId] ?? "active") !== (statusVal ?? "active");
+            (currentInitial.status ?? "active") !== (statusVal ?? "active");
           const isDirtyDelivery =
             JSON.stringify(deliveryVal) !==
-            JSON.stringify(initialDelivery[roId] ?? []);
+            JSON.stringify(currentInitial.deliveryDays ?? []);
 
           const isSavingCombined = !!savingRow[roId];
 

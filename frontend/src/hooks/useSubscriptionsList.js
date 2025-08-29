@@ -1,6 +1,6 @@
 // src/hooks/useSubscriptionsList.js
 import { useAuth0 } from "@auth0/auth0-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSelector } from "react-redux";
 
 import api from "api/api";
@@ -24,16 +24,11 @@ export default function useSubscriptionsList() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // per-row working state
-  const [pending, setPending] = useState({}); // interval
-  const [pendingDate, setPendingDate] = useState({}); // yyyy-mm-dd
-  const [pendingStatus, setPendingStatus] = useState({}); // active/paused/canceled
-  const [pendingDelivery, setPendingDelivery] = useState({}); // preferred delivery days
+  // Single pending state object for all changes
+  const [pending, setPending] = useState({});
 
   // baselines to detect dirty fields after initial load
-  const [initialStatus, setInitialStatus] = useState({});
-  const [initialDate, setInitialDate] = useState({}); // yyyy-mm-dd baseline
-  const [initialDelivery, setInitialDelivery] = useState({}); // delivery days baseline
+  const [initialData, setInitialData] = useState({});
 
   const [savingRow, setSavingRow] = useState({});
   const [savingStatus, setSavingStatus] = useState({});
@@ -42,144 +37,150 @@ export default function useSubscriptionsList() {
   const userInfo = useSelector((state) => state.user.info);
   const { getAccessTokenSilently } = useAuth0();
 
-  useEffect(() => {
-    let mounted = true;
+  // Extract load function so it can be reused
+  const load = useCallback(async () => {
+    if (!userInfo?.id) return;
+    setLoading(true);
+    try {
+      const token = await getAccessTokenSilently();
+      const res = await api.get(
+        endpoint.GET_RECURRING_ORDERS_BY_CUSTOMER({
+          customerId: userInfo.id,
+          timestamp: Date.now(),
+        }),
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-    async function load() {
-      if (!userInfo?.id) return;
-      setLoading(true);
-      try {
-        const token = await getAccessTokenSilently();
-        const res = await api.get(
-          endpoint.GET_RECURRING_ORDERS_BY_CUSTOMER({
-            customerId: userInfo.id,
-            timestamp: Date.now(),
-          }),
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+      const raw = res.data || [];
 
-        const raw = res.data || [];
+      // Normalize + exclude canceled
+      const activeOrPaused = raw.filter((r) => parseStatus(r) !== "canceled");
+      const subs = activeOrPaused.map(normalizeSubscriptionRecord);
 
-        // Normalize + exclude canceled
-        const activeOrPaused = raw.filter((r) => parseStatus(r) !== "canceled");
-        const subs = activeOrPaused.map(normalizeSubscriptionRecord);
+      // Build maps for status and next run date
+      const statusMap = {};
+      const dateMap = {};
+      const deliveryMap = {};
+      activeOrPaused.forEach((r) => {
+        const roId = r.id ?? r.internalid ?? r.roId;
+        statusMap[roId] = parseStatus(r);
+        dateMap[roId] = pickNextRunDate(r);
 
-        // Build maps for status and next run date
-        const statusMap = {};
-        const dateMap = {};
-        const deliveryMap = {};
-        activeOrPaused.forEach((r) => {
-          const roId = r.id ?? r.internalid ?? r.roId;
-          statusMap[roId] = parseStatus(r);
-          dateMap[roId] = pickNextRunDate(r);
-
-          // Parse delivery days from preferdelivery field
-          let deliveryDays = [];
-          if (r.preferdelivery) {
-            try {
-              // Handle comma-separated string format like "1, 3, 4, 5"
-              deliveryDays = r.preferdelivery
-                .split(",")
-                .map((day) => parseInt(day.trim()))
-                .filter((day) => !isNaN(day) && day >= 1 && day <= 7);
-            } catch (e) {
-              deliveryDays = [];
-            }
+        // Parse delivery days from preferdelivery field
+        let deliveryDays = [];
+        if (r.preferdelivery) {
+          try {
+            // Handle comma-separated string format like "1, 3, 4, 5"
+            deliveryDays = r.preferdelivery
+              .split(",")
+              .map((day) => parseInt(day.trim()))
+              .filter((day) => !isNaN(day) && day >= 1 && day <= 7);
+          } catch (e) {
+            deliveryDays = [];
           }
-          deliveryMap[roId] = deliveryDays;
-        });
-
-        if (!mounted) return;
-
-        setItems(subs);
-
-        // init interval working state
-        const initIntervals = {};
-        subs.forEach((s) => (initIntervals[s.roId] = s.interval));
-        setPending(initIntervals);
-
-        // init date baseline + working
-        const initDates = {};
-        subs.forEach((s) => {
-          const fromApi = dateMap[s.roId];
-          initDates[s.roId] =
-            fromApi || DateUtils.toInput(nextFromToday(s.interval));
-        });
-        setInitialDate(initDates);
-        setPendingDate(initDates);
-
-        // init status baseline + working
-        const initStatus = {};
-        subs.forEach((s) => {
-          initStatus[s.roId] = statusMap[s.roId] || "active";
-        });
-        setInitialStatus(initStatus);
-
-        // init delivery days baseline + working
-        const initDelivery = {};
-        subs.forEach((s) => {
-          initDelivery[s.roId] = deliveryMap[s.roId] || [];
-        });
-        setInitialDelivery(initDelivery);
-        setPendingDelivery(initDelivery);
-
-        // Hydrate PDP titles/images
-        const hydrated = await enrichSubscriptionsWithPdp(subs);
-        if (mounted) setItems(hydrated);
-      } catch (err) {
-        console.error("Error loading subscriptions:", err);
-        ToastNotification.error("Failed to load subscriptions.");
-        if (mounted) {
-          setItems([]);
-          setPending({});
-          setPendingDate({});
-          setInitialDate({});
-          setPendingStatus({});
-          setInitialStatus({});
         }
-      } finally {
-        if (mounted) setLoading(false);
-      }
+        deliveryMap[roId] = deliveryDays;
+      });
+
+      setItems(subs);
+
+      // Initialize single pending state and baseline data
+      const initData = {};
+      const initPending = {};
+      subs.forEach((s) => {
+        const roId = s.roId;
+        const fromApi = dateMap[roId];
+        const nextRunDate =
+          fromApi || DateUtils.toInput(nextFromToday(s.interval));
+        const status = statusMap[roId] || "active";
+        const deliveryDays = deliveryMap[roId] || [];
+
+        // Store baseline data
+        initData[roId] = {
+          interval: s.interval,
+          date: nextRunDate,
+          status: status,
+          deliveryDays: deliveryDays,
+        };
+
+        // Initialize pending state with current values
+        initPending[roId] = {
+          interval: s.interval,
+          date: nextRunDate,
+          status: status,
+          deliveryDays: deliveryDays,
+        };
+      });
+
+      setInitialData(initData);
+      setPending(initPending);
+
+      // Hydrate PDP titles/images
+      const hydrated = await enrichSubscriptionsWithPdp(subs);
+      setItems(hydrated);
+      
+    } catch (err) {
+      console.error("Error loading subscriptions:", err);
+      ToastNotification.error("Failed to load subscriptions.");
+      setItems([]);
+      setPending({});
+      setInitialData({});
+    } finally {
+      setLoading(false);
     }
-
-    console.log(items);
-
-    load();
-    return () => {
-      mounted = false;
-    };
   }, [userInfo?.id, getAccessTokenSilently]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   /* ---------- Handlers ---------- */
   const handleIntervalChange = (s, value) =>
-    setPending((prev) => ({ ...prev, [s.roId]: value }));
+    setPending((prev) => ({
+      ...prev,
+      [s.roId]: { ...prev[s.roId], interval: value },
+    }));
 
   const handleDateChange = (s, value) =>
-    setPendingDate((prev) => ({ ...prev, [s.roId]: value }));
+    setPending((prev) => ({
+      ...prev,
+      [s.roId]: { ...prev[s.roId], date: value },
+    }));
 
   const handleStatusChange = (s, value) =>
-    setPendingStatus((prev) => ({ ...prev, [s.roId]: value }));
+    setPending((prev) => ({
+      ...prev,
+      [s.roId]: { ...prev[s.roId], status: value },
+    }));
 
   const handleDeliveryChange = (s, value) =>
-    setPendingDelivery((prev) => ({ ...prev, [s.roId]: value }));
+    setPending((prev) => ({
+      ...prev,
+      [s.roId]: { ...prev[s.roId], deliveryDays: value },
+    }));
 
   /** Single bottom SAVE — saves interval + next date + status + delivery days together */
   const handleSaveAll = async (s) => {
     const roId = s.roId;
 
-    const intervalNow = pending[roId] ?? s.interval;
+    const currentPending = pending[roId] || {};
+    const currentInitial = initialData[roId] || {};
+
+    const intervalNow = currentPending.interval ?? s.interval;
     const isDirtyInterval = intervalNow !== s.interval;
 
-    const dateVal = pendingDate[roId] ?? initialDate[roId];
-    const baselineDate = initialDate[roId];
+    const dateVal = currentPending.date ?? currentInitial.date;
+    const baselineDate = currentInitial.date;
     const isDirtyDate = !!dateVal && dateVal !== baselineDate;
 
-    const statusVal = pendingStatus[roId] ?? initialStatus[roId] ?? "active";
+    const statusVal =
+      currentPending.status ?? currentInitial.status ?? "active";
     const isDirtyStatus =
-      (initialStatus[roId] ?? "active") !== (statusVal ?? "active");
+      (currentInitial.status ?? "active") !== (statusVal ?? "active");
 
-    const deliveryVal = pendingDelivery[roId] ?? initialDelivery[roId] ?? [];
-    const baselineDelivery = initialDelivery[roId] ?? [];
+    const deliveryVal =
+      currentPending.deliveryDays ?? currentInitial.deliveryDays ?? [];
+    const baselineDelivery = currentInitial.deliveryDays ?? [];
     const isDirtyDelivery =
       JSON.stringify(deliveryVal) !== JSON.stringify(baselineDelivery);
 
@@ -203,17 +204,8 @@ export default function useSubscriptionsList() {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (isDirtyInterval) {
-        setItems((prev) =>
-          prev.map((it) =>
-            it.roId === roId ? { ...it, interval: String(intervalNow) } : it
-          )
-        );
-      }
-      if (isDirtyStatus) setInitialStatus((p) => ({ ...p, [roId]: statusVal }));
-      if (isDirtyDate) setInitialDate((p) => ({ ...p, [roId]: dateVal }));
-      if (isDirtyDelivery)
-        setInitialDelivery((p) => ({ ...p, [roId]: deliveryVal }));
+      // Refresh data by calling the load function again
+      await load();
 
       ToastNotification.success("Subscription changes saved.");
     } catch (err) {
@@ -235,42 +227,8 @@ export default function useSubscriptionsList() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (response.status >= 200 && response.status < 300) {
-        setItems((prev) => prev.filter((it) => it.roId !== s.roId));
-        setPending((p) => {
-          const c = { ...p };
-          delete c[s.roId];
-          return c;
-        });
-        setPendingDate((p) => {
-          const c = { ...p };
-          delete c[s.roId];
-          return c;
-        });
-        setInitialDate((p) => {
-          const c = { ...p };
-          delete c[s.roId];
-          return c;
-        });
-        setPendingStatus((p) => {
-          const c = { ...p };
-          delete c[s.roId];
-          return c;
-        });
-        setInitialStatus((p) => {
-          const c = { ...p };
-          delete c[s.roId];
-          return c;
-        });
-        setPendingDelivery((p) => {
-          const c = { ...p };
-          delete c[s.roId];
-          return c;
-        });
-        setInitialDelivery((p) => {
-          const c = { ...p };
-          delete c[s.roId];
-          return c;
-        });
+        // Refresh data by calling the load function again
+        await load();
         ToastNotification.success("Subscription canceled.");
       } else {
         throw new Error("Failed to cancel subscription");
@@ -292,12 +250,7 @@ export default function useSubscriptionsList() {
     loading,
     // state maps
     pending,
-    pendingDate,
-    pendingStatus,
-    pendingDelivery,
-    initialDate,
-    initialStatus,
-    initialDelivery,
+    initialData,
     savingRow,
     savingStatus,
     confirming,
