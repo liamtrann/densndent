@@ -276,10 +276,27 @@ async function processStripeOrderLogic(orderData) {
   );
   console.log(`📧 [STRIPE-QUEUE] Order will be emailed to: ${orderData.email}`);
 
+  // Add memo with Stripe payment information
+  const today = new Date().toISOString().slice(0, 10);
+  const memo = orderData.stripePaymentIntentId
+    ? `STRIPE Payment - Payment ID: ${orderData.stripePaymentIntentId} - Created: ${today}`
+    : `STRIPE Payment - Created: ${today}`;
+
+  // Add memo to order data
+  const finalOrderData = {
+    ...orderData,
+    memo: memo,
+  };
+
+  console.log(`📝 [STRIPE-QUEUE] Adding memo: ${memo}`);
+
   try {
     console.log(`🚀 [STRIPE-QUEUE] Sending order to NetSuite...`);
 
-    const salesOrder = await restApiService.postRecord("salesOrder", orderData);
+    const salesOrder = await restApiService.postRecord(
+      "salesOrder",
+      finalOrderData
+    );
 
     console.log(
       `💰 [STRIPE-QUEUE] Created sales order ID: ${salesOrder.id} for payment: ${orderData.stripePaymentIntentId}`
@@ -293,6 +310,7 @@ async function processStripeOrderLogic(orderData) {
       itemCount: orderData.item?.items?.length || 0,
       paymentIntentId: orderData.stripePaymentIntentId,
       email: orderData.email,
+      memo: memo,
     });
 
     throw new Error(`Sales order creation failed: ${error.message}`);

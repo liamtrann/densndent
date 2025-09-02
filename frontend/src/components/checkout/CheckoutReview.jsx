@@ -64,6 +64,13 @@ export default function CheckoutReview({
       return null;
     }
 
+    // Create memo based on payment method
+    const today = new Date().toISOString().slice(0, 10);
+    const memo =
+      paymentMethod === "invoice"
+        ? `INVOICE Payment - Sales Order by Invoice - Created: ${today}`
+        : `Payment Method: ${paymentMethod} - Created: ${today}`;
+
     return {
       entity: {
         id: userInfo.id,
@@ -101,6 +108,7 @@ export default function CheckoutReview({
           }
         : null,
       paymentMethod: paymentMethod,
+      memo: memo,
     };
   };
 
@@ -276,7 +284,9 @@ export default function CheckoutReview({
                 custrecord_ro_next_run: nextRunDate,
                 custrecord_ro_status: { id: "1" },
                 custrecord_prefer_delivery: {
-                  items: (item.subscriptionPreferredDeliveryDays || []).map(dayNum => ({ id: dayNum }))
+                  items: (item.subscriptionPreferredDeliveryDays || []).map(
+                    (dayNum) => ({ id: dayNum })
+                  ),
                 },
               };
 
