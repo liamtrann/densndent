@@ -14,6 +14,7 @@ import {
   SUBSCRIPTION_INTERVAL_OPTIONS as INTERVAL_OPTIONS,
   formatLocalDateToronto,
   formatDeliveryDays,
+  DateUtils,
 } from "config/config";
 import {
   STATUS_OPTIONS,
@@ -112,10 +113,11 @@ export default function SubscriptionRow({ s, initialData, onSave, isSaving }) {
               render={({ field }) => (
                 <input
                   type="date"
+                  min={DateUtils.toInput(new Date())}
                   className={`${SUBS_CTRL_HEIGHT_CLASS} border rounded px-2 text-xs`}
                   value={field.value}
                   onChange={field.onChange}
-                  aria-label="Choose next order date"
+                  aria-label="Choose next order date (cannot be in the past)"
                 />
               )}
             />

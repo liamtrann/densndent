@@ -31,7 +31,8 @@
     "@craco/craco": "^7.1.0",
     "@stripe/react-stripe-js": "^3.9.2",
     "@stripe/stripe-js": "^7.9.0",
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "react-hook-form": "^7.62.0"
   },
   "devDependencies": {
     "rimraf": "^5.0.5"
