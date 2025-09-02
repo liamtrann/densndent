@@ -1,7 +1,13 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+
 import { ProductImage } from "common";
-import { calculateTotalCurrency, formatCurrency } from "config/config";
+import {
+  calculateTotalCurrency,
+  formatCurrency,
+  formatDeliveryDays,
+} from "config/config";
+
 import {
   calculatePriceAfterDiscount,
   selectPriceDataByKey,
@@ -94,6 +100,13 @@ export default function PreviewCartItem({
           <div className="text-xs text-white font-medium bg-smiles-gentleBlue px-1.5 py-0.5 rounded inline-block mt-1 mb-1">
             Subscription: Every {item.subscriptionInterval}{" "}
             {item.subscriptionUnit}
+          </div>
+        )}
+
+        {item.subscriptionEnabled && item.subscriptionPreferredDeliveryDays && (
+          <div className="text-xs text-orange-700 font-medium bg-orange-50 px-2 py-1 rounded inline-block mt-1 mb-1">
+            Prefer Delivery days:{" "}
+            {formatDeliveryDays(item.subscriptionPreferredDeliveryDays)}
           </div>
         )}
 

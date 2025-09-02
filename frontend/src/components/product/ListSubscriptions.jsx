@@ -1,20 +1,21 @@
 // src/components/product/ListSubscriptions.jsx
-import React from "react";
 import ConfirmCancelSubscription from "common/modals/ConfirmCancelSubscription";
+import React from "react";
+
 import { Loading, Paragraph } from "common";
+
 import SubscriptionRow from "./SubscriptionRow";
+
 import useSubscriptionsList from "@/hooks/useSubscriptionsList";
 
 export default function ListSubscriptions() {
   const {
-    items, loading,
-    pending, pendingDate, pendingStatus,
-    initialDate, initialStatus,
-    savingRow, savingStatus, confirming,
-    handleIntervalChange,
-    handleDateChange,
-    handleStatusChange,
-    handleSaveAll,
+    items,
+    loading,
+    savingRow,
+    savingStatus,
+    confirming,
+    handleSaveSubscription,
     performCancel,
     setConfirming,
   } = useSubscriptionsList();
@@ -45,33 +46,23 @@ export default function ListSubscriptions() {
       <div className="space-y-4">
         {items.map((s) => {
           const roId = s.roId;
+          const isSaving = !!savingRow[roId];
 
-          const intervalNow = pending[roId] ?? s.interval;
-          const dateVal     = pendingDate[roId] ?? initialDate[roId];
-          const statusVal   = pendingStatus[roId] ?? initialStatus[roId] ?? "active";
-
-          const isDirtyInterval = intervalNow !== s.interval;
-          const isDirtyDate     = !!dateVal && dateVal !== initialDate[roId];
-          const isDirtyStatus   =
-            (initialStatus[roId] ?? "active") !== (statusVal ?? "active");
-
-          const isSavingCombined = !!savingRow[roId];
+          // Create initial data object for React Hook Form
+          const initialData = {
+            interval: s.interval || "1",
+            date: s.nextrun || "",
+            status: s.status || "active",
+            deliveryDays: s.deliveryDays || [],
+          };
 
           return (
             <SubscriptionRow
               key={roId}
               s={s}
-              intervalNow={intervalNow}
-              dateVal={dateVal}
-              statusVal={statusVal}
-              isDirtyInterval={isDirtyInterval}
-              isDirtyDate={isDirtyDate}
-              isDirtyStatus={isDirtyStatus}
-              isSavingCombined={isSavingCombined}
-              onChangeInterval={handleIntervalChange}
-              onChangeDate={handleDateChange}
-              onChangeStatus={handleStatusChange}
-              onSave={handleSaveAll}
+              initialData={initialData}
+              onSave={handleSaveSubscription}
+              isSaving={isSaving}
             />
           );
         })}

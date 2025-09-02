@@ -16,6 +16,7 @@ export { default as AddressCard } from "./ui/AddressCard";
 export { default as StatusBadge } from "./ui/StatusBadge";
 export { default as CloseButton } from "./ui/CloseButton";
 export { default as DeliveryEstimate } from "./ui/DeliveryEstimate";
+export { default as WeekdaySelector } from "./ui/WeekdaySelector";
 
 // Product components
 export { default as ProductImage } from "./product/ProductImage";

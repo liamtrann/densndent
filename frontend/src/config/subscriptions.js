@@ -86,11 +86,23 @@ export function buildRecurringOrderPatch({
   interval,
   date,
   status,
+  deliveryDays,
   includePreferredDelivery = true,
 }) {
   const payload = {};
   if (includePreferredDelivery) {
-    payload.custrecord_prefer_delivery = DEFAULT_PREFERRED_DELIVERY;
+    if (
+      deliveryDays &&
+      Array.isArray(deliveryDays) &&
+      deliveryDays.length > 0
+    ) {
+      // Format as JSON for updates: {"items": [{"id": 1}, {"id": 2}, {"id": 3}]}
+      payload.custrecord_prefer_delivery = {
+        items: deliveryDays.map((dayNum) => ({ id: dayNum })),
+      };
+    } else {
+      payload.custrecord_prefer_delivery = DEFAULT_PREFERRED_DELIVERY;
+    }
   }
   if (interval != null)
     Object.assign(payload, buildIntervalPatchPayload(interval));
