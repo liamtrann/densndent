@@ -171,7 +171,6 @@ class StripeController {
     const { paymentMethod } = req.body;
     const { customerId } = req.params;
 
-    console.log(paymentMethod)
 
     /* Before Edit */
     /*

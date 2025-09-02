@@ -19,8 +19,6 @@ if (
   process.env.WORKER_MODE !== "false"
 ) {
   console.log("🔧 [APP] Initializing Bull Queues and Workers...");
-  const { recurringOrderQueue } = require("./queue/recurringOrderQueue");
-  const { stripeOrderQueue } = require("./queue/stripeOrderQueue");
   console.log(
     "✅ [APP] Bull Queue workers initialized and ready to process jobs"
   );
