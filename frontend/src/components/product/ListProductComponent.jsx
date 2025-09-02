@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchProductsBy, fetchCountBy } from "store/slices/productsSlice"; //gets a page of products.gets the total count so you can paginate.
+import React, { useEffect, useState } from "react"; //useState for local UI state. useEffect to run code when inputs change (e.g., fetch data).
+import { useDispatch, useSelector } from "react-redux"; //useDispatch lets the component send actions to the Redux store. useSelector lets it read values from the Redux store
+import { fetchProductsBy, fetchCountBy } from "store/slices/productsSlice"; //gfetchProductsBy → get one page of products. fetchCountBy → get the total count (needed to know how many pages exist)
 
 import { delayCall } from "api/util"; //delayCall is a small debouncer/throttle helper (prevents firing requests too fast)
 import {
@@ -16,50 +16,50 @@ import ListRows from "./ListRows";
 import ListGrids from "./ListGrids";
 
 export default function ListProductComponent({
-  type,
-  id,
-  breadcrumbPath,
-  headerTitle,
+  type, // how to query (e.g., by brand/class/category/name/all).
+  id, //the id or text for the query (or null for “all”).
+  breadcrumbPath, // array of breadcrumb labels.
+  headerTitle //big title at the top.
 }) {
-  const [perPage, setPerPage] = useState(12);
-  const [sort, setSort] = useState("");
+  const [perPage, setPerPage] = useState(12); //number of products per page (defaults to 12)
+  const [sort, setSort] = useState(""); //current sort choice (empty string means “default” sort)
   const [page, setPage] = useState(1);
   const [view, setView] = useState("grid");
-  const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [showMobileFilters, setShowMobileFilters] = useState(false); //whether the mobile filter panel is open.
   const [appliedFilters, setAppliedFilters] = useState({
     minPrice: "",
     maxPrice: "",
     selectedCategories: [],
-    selectedBrands: [],
+    selectedBrands: [], //filters that are actually applied to the query right now
   });
   const [filters, setFilters] = useState({
     minPrice: "",
     maxPrice: "",
     selectedCategories: [],
-    selectedBrands: [],
+    selectedBrands: [], //filters the user is currently editing in the sidebar/panel (not applied yet)
   });
 
-  const dispatch = useDispatch();
-  const priceKey = `${appliedFilters.minPrice || ""}_${appliedFilters.maxPrice || ""}`;
-  const effectiveId = id || "all";
-  const key = `${effectiveId}_${perPage}_${sort}_${priceKey}_${page}`;
-  const countKey = `${effectiveId}_${priceKey}`;
+  const dispatch = useDispatch(); //use this to fire the thunks
+  const priceKey = `${appliedFilters.minPrice || ""}_${appliedFilters.maxPrice || ""}`; //builds a small string representing the current price range (used in cache keys).
+  const effectiveId = id || "all"; //if no id was passed, treat it as “all
+  const key = `${effectiveId}_${perPage}_${sort}_${priceKey}_${page}`; //key identifies the exact product page for the current query
+  const countKey = `${effectiveId}_${priceKey}`; //countKey identifies the total count result for the current id + price range.
 
   const products = useSelector(
     (state) => state.products.productsByPage[key] || []
   );
   const isLoading = useSelector((state) => state.products.isLoading);
   const error = useSelector((state) => state.products.error);
-  const total = useSelector((state) => {
+  const total = useSelector((state) => { //look up the total product count for the current countKey
     const count = state.products.totalCounts?.[countKey];
     return count !== undefined ? count : 0;
   });
 
   // initial count
   useEffect(() => {
-    setPage(1);
+    setPage(1); //reset page + sort because you’re looking at a new query context
     setSort("");
-    if (id || type === "all") {
+    if (id || type === "all") { //if there is a target (id or “all”), request the total count for that context
       return delayCall(() =>
         dispatch(
           fetchCountBy({
@@ -75,7 +75,7 @@ export default function ListProductComponent({
   useEffect(() => {
     if (
       (id || type === "all") &&
-      (appliedFilters.minPrice || appliedFilters.maxPrice)
+      (appliedFilters.minPrice || appliedFilters.maxPrice) //only runs when a min or max price is actually applied
     ) {
       return delayCall(() =>
         dispatch(
@@ -83,7 +83,7 @@ export default function ListProductComponent({
             type,
             id: effectiveId === "all" ? null : effectiveId,
             minPrice: appliedFilters.minPrice,
-            maxPrice: appliedFilters.maxPrice,
+            maxPrice: appliedFilters.maxPrice, //updates the total count for that price window.
           })
         )
       );
@@ -99,7 +99,7 @@ export default function ListProductComponent({
   // product page fetch
   useEffect(() => {
     if (id || type === "all") {
-      if (!products || products.length === 0) {
+      if (!products || products.length === 0) { //when any of the query inputs (page, perPage, sort, price filters) change. if no cached data for the new key (products.length === 0), fetch it. if the cache already has this page, nothing happens (fast!)
         return delayCall(() => {
           dispatch(
             fetchProductsBy({
@@ -127,9 +127,9 @@ export default function ListProductComponent({
     appliedFilters.maxPrice,
   ]);
 
-  const totalPages = Math.ceil(total / perPage) || 1;
+  const totalPages = Math.ceil(total / perPage) || 1; //how many pages should the pagination show (at least 1)
 
-  const handleFiltersChange = (newFilters) => setFilters(newFilters);
+  const handleFiltersChange = (newFilters) => setFilters(newFilters); //updates the editing filters from the sidebar.
 
   const handleApplyFilters = () => {
     setAppliedFilters(filters);
@@ -139,7 +139,7 @@ export default function ListProductComponent({
       dispatch(
         fetchCountBy({
           type,
-          id: effectiveId === "all" ? null : effectiveId,
+          id: effectiveId === "all" ? null : effectiveId, //if a price filter is involved, refresh the count right away
           minPrice: filters.minPrice,
           maxPrice: filters.maxPrice,
         })
