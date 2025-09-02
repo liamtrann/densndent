@@ -114,10 +114,10 @@ export default function ListProductPage({ by }) {
 
   return (
     <ListProductComponent
-      type={getComponentType()}
-      id={id}
+      type={getComponentType()} // TYPE="CLASSIFICATION" or "brand"
+      id={id} // id=28
       breadcrumbPath={["Home", "Products", displayName || "Unknown"]}
-      headerTitle={headerTitle}
+      headerTitle={headerTitle} // needle
     />
   );
 }

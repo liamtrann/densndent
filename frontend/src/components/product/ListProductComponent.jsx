@@ -24,7 +24,9 @@ export default function ListProductComponent({
   const [perPage, setPerPage] = useState(12); //number of products per page (defaults to 12)
   const [sort, setSort] = useState(""); //current sort choice (empty string means “default” sort)
   const [page, setPage] = useState(1);
-  const [view, setView] = useState("grid");
+
+  const [view, setView] = useState("grid"); //GRID -----------<
+
   const [showMobileFilters, setShowMobileFilters] = useState(false); //whether the mobile filter panel is open.
   const [appliedFilters, setAppliedFilters] = useState({
     minPrice: "",
@@ -39,12 +41,14 @@ export default function ListProductComponent({
     selectedBrands: [], //filters the user is currently editing in the sidebar/panel (not applied yet)
   });
 
+  //Cache keys (so you don’t refetch the same page)
   const dispatch = useDispatch(); //use this to fire the thunks
   const priceKey = `${appliedFilters.minPrice || ""}_${appliedFilters.maxPrice || ""}`; //builds a small string representing the current price range (used in cache keys).
   const effectiveId = id || "all"; //if no id was passed, treat it as “all
   const key = `${effectiveId}_${perPage}_${sort}_${priceKey}_${page}`; //key identifies the exact product page for the current query
   const countKey = `${effectiveId}_${priceKey}`; //countKey identifies the total count result for the current id + price range.
 
+  //The list pulls from the Redux store using this key:
   const products = useSelector(
     (state) => state.products.productsByPage[key] || []
   );
@@ -55,7 +59,7 @@ export default function ListProductComponent({
     return count !== undefined ? count : 0;
   });
 
-  // initial count
+  // initial count(total number of items for the current context)
   useEffect(() => {
     setPage(1); //reset page + sort because you’re looking at a new query context
     setSort("");
@@ -71,7 +75,7 @@ export default function ListProductComponent({
     }
   }, [dispatch, type, id, effectiveId]);
 
-  // filtered count
+  // filtered count (if price filters are applied):
   useEffect(() => {
     if (
       (id || type === "all") &&
@@ -96,7 +100,7 @@ export default function ListProductComponent({
     appliedFilters.maxPrice,
   ]);
 
-  // product page fetch
+  // product page fetch (the actual list of items):
   useEffect(() => {
     if (id || type === "all") {
       if (!products || products.length === 0) { //when any of the query inputs (page, perPage, sort, price filters) change. if no cached data for the new key (products.length === 0), fetch it. if the cache already has this page, nothing happens (fast!)
@@ -219,7 +223,7 @@ export default function ListProductComponent({
               onSortChange={(e) => setSort(e.target.value)}
               total={total}
               view={view}
-              onViewChange={setView}
+              onViewChange={setView} // ← GRID/LIST toggle flows through here
             />
           )}
 
@@ -247,7 +251,7 @@ export default function ListProductComponent({
           {!isLoading &&
             !error &&
             products.length > 0 &&
-            (view === "grid" ? (
+            (view === "grid" ? ( //If view === "grid" → render <ListGrids products={products} /> Else → render <ListRows products={products} />
               <ListGrids products={products} />
             ) : (
               <ListRows products={products} />
