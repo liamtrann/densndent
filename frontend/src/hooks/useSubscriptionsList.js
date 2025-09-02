@@ -1,45 +1,45 @@
 // src/hooks/useSubscriptionsList.js
-import { useAuth0 } from "@auth0/auth0-react";
+import { useAuth0 } from "@auth0/auth0-react"; //useAuth0() gives you getAccessTokenSilently() so you can call your API with an Authorization header.
 import { useEffect, useState, useCallback } from "react";
 import { useSelector } from "react-redux";
 
 import api from "api/api";
 import endpoint from "api/endpoints";
 import {
-  normalizeSubscriptionRecord,
-  nextFromToday,
-  DateUtils,
+  normalizeSubscriptionRecord, //normalizeSubscriptionRecord → turns a messy record from NetSuite into a clean shape { roId, interval, displayname, file_url, ... }
+  nextFromToday, //compute a future date by adding N months.
+  DateUtils, //date formatting helpers (e.g., to YYYY-MM-DD).
 } from "config/config";
 import {
-  parseStatus,
-  pickNextRunDate,
-  enrichSubscriptionsWithPdp,
-  STATUS_PAYLOADS,
+  parseStatus, //“active” | “paused” | “canceled” from many possible field shapes.
+  pickNextRunDate, //grab next run date from whichever field exists; returns "YYYY-MM-DD" or null
+  enrichSubscriptionsWithPdp, //fetch PDP for each item to fill better title/image.
+  STATUS_PAYLOADS, //the exact PATCH payloads your backend expects for status changes
   buildRecurringOrderPatch,
 } from "config/subscriptions";
 
-import ToastNotification from "@/common/toast/Toast";
+import ToastNotification from "@/common/toast/Toast"; //your toast helper to show success/error banners.
 
 export default function useSubscriptionsList() {
-  const [items, setItems] = useState([]);
+  const [items, setItems] = useState([]); //the subscription rows for the page, and a simple loading flag.
   const [loading, setLoading] = useState(false);
 
   // Only track which rows are saving
-  const [savingRow, setSavingRow] = useState({});
-  const [savingStatus, setSavingStatus] = useState({});
-  const [confirming, setConfirming] = useState(null);
+  const [savingRow, setSavingRow] = useState({}); //a map { [roId]: true } while saving changes to that row (so you can disable its Save button).
+  const [savingStatus, setSavingStatus] = useState({}); //a map used when canceling a subscription (so the confirm modal can show a spinner).
+  const [confirming, setConfirming] = useState(null); //holds the row being canceled; if set, your confirm modal is open
 
-  const userInfo = useSelector((state) => state.user.info);
+  const userInfo = useSelector((state) => state.user.info); //current user (for customerId) and the function to mint an access token
   const { getAccessTokenSilently } = useAuth0();
 
   // Extract load function so it can be reused
   const load = useCallback(async () => {
-    if (!userInfo?.id) return;
+    if (!userInfo?.id) return; //if no logged-in user, bail
     setLoading(true);
     try {
       const token = await getAccessTokenSilently();
       const res = await api.get(
-        endpoint.GET_RECURRING_ORDERS_BY_CUSTOMER({
+        endpoint.GET_RECURRING_ORDERS_BY_CUSTOMER({ //call your “recurring orders by customer” endpoint; timestamp busts caches.
           customerId: userInfo.id,
           timestamp: Date.now(),
         }),
@@ -49,8 +49,8 @@ export default function useSubscriptionsList() {
       const raw = res.data || [];
 
       // Normalize + exclude canceled
-      const activeOrPaused = raw.filter((r) => parseStatus(r) !== "canceled");
-      const subs = activeOrPaused.map(normalizeSubscriptionRecord);
+      const activeOrPaused = raw.filter((r) => parseStatus(r) !== "canceled"); //drop canceled rows for the list view
+      const subs = activeOrPaused.map(normalizeSubscriptionRecord); //normalize every row to a predictable shape
 
       // Enrich subscriptions with additional data
       const enrichedSubs = subs.map((s) => {
@@ -63,7 +63,7 @@ export default function useSubscriptionsList() {
         if (rawRecord?.preferdelivery) {
           try {
             // Handle comma-separated string format like "1, 3, 4, 5"
-            deliveryDays = rawRecord.preferdelivery
+            deliveryDays = rawRecord.preferdelivery //read preferdelivery (backend sends it as a comma string), turn it into an array of ints [1..7] (Mon..Sun or whatever your mapping is).
               .split(",")
               .map((day) => parseInt(day.trim()))
               .filter((day) => !isNaN(day) && day >= 1 && day <= 7);
@@ -74,7 +74,7 @@ export default function useSubscriptionsList() {
 
         return {
           ...s,
-          status: parseStatus(rawRecord) || "active",
+          status: parseStatus(rawRecord) || "active", //compute status and nextrun (use a fallback date if missing).
           nextrun:
             pickNextRunDate(rawRecord) ||
             DateUtils.toInput(nextFromToday(s.interval)),
@@ -85,8 +85,8 @@ export default function useSubscriptionsList() {
       setItems(enrichedSubs);
 
       // Hydrate PDP titles/images
-      const hydrated = await enrichSubscriptionsWithPdp(enrichedSubs);
-      setItems(hydrated);
+      const hydrated = await enrichSubscriptionsWithPdp(enrichedSubs); //then, in the background, call PDP for each product id to fill nicer displayname/itemid/file_url
+      setItems(hydrated); //when that finishes, update the list again so titles/images improve
     } catch (err) {
       console.error("Error loading subscriptions:", err);
       ToastNotification.error("Failed to load subscriptions.");
@@ -96,7 +96,7 @@ export default function useSubscriptionsList() {
     }
   }, [userInfo?.id, getAccessTokenSilently]);
 
-  useEffect(() => {
+  useEffect(() => { //one place that decides when to fetch data
     load();
   }, [load]);
 
@@ -125,13 +125,13 @@ export default function useSubscriptionsList() {
         JSON.stringify(subscription.deliveryDays)
           ? formData.deliveryDays
           : undefined,
-      includePreferredDelivery: true,
+      includePreferredDelivery: true, //includePreferredDelivery: true tells the builder to attach whatever backend shape your API needs for the “preferred delivery” field so it always persists correctly.
     });
 
     setSavingRow((prev) => ({ ...prev, [roId]: true }));
     try {
       const token = await getAccessTokenSilently();
-      await api.patch(endpoint.UPDATE_RECURRING_ORDER(roId), payload, {
+      await api.patch(endpoint.UPDATE_RECURRING_ORDER(roId), payload, { //show a spinner on that row; PATCH; then call load() to refresh everything; toast success; clear spinner.
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -148,7 +148,7 @@ export default function useSubscriptionsList() {
   };
 
   /** Actually cancel (called by modal confirm) */
-  const performCancel = async (s) => {
+  const performCancel = async (s) => { //sends the standard “canceled” payload; reloads on success; manages modal/spinner/notifications.
     setSavingStatus((prev) => ({ ...prev, [s.roId]: true }));
     try {
       const token = await getAccessTokenSilently();
