@@ -115,9 +115,9 @@ export default function ListProductPage({ by }) {
   return (
     <ListProductComponent
       type={getComponentType()} // TYPE="CLASSIFICATION" or "brand"
-      id={id} // id=28
+      id={id} // id=28 or 89
       breadcrumbPath={["Home", "Products", displayName || "Unknown"]}
-      headerTitle={headerTitle} // needle
+      headerTitle={headerTitle} // needle or AMALGAM
     />
   );
 }

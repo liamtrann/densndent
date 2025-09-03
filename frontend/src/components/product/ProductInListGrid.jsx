@@ -41,11 +41,17 @@ export default function ProductInListGrid({
           <ProductImage src={file_url} />
           {/* Quick Look Button - Centered overlay on image hover */}
           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded">
+
+
             <Button
               onClick={(e) => {
                 e.stopPropagation(); // Prevent navigation when clicking quick look
                 setShowQuickLook(true);
               }}
+
+
+
+              
               className="py-2 px-4 text-sm text-white bg-primary-blue border border-primary-blue rounded hover:bg-smiles-blue transition-all duration-200 flex items-center justify-center gap-2 shadow-lg"
             >
               <FiEye size={14} />
