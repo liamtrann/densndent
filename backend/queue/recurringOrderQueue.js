@@ -228,7 +228,10 @@ async function processOrderLogic(order) {
       parseFloat(
         retrievedOrder.foreigntotal || retrievedOrder.totalcostestimate
       ) || 0;
-    const stripeAmount = Math.round(orderTotal * 100); // Convert to cents for Stripe
+
+    // Import toCents function for safe amount conversion
+    const { toCents } = require("../stripe/stripe.controller");
+    const stripeAmount = toCents(orderTotal); // Safely convert to cents for Stripe
 
     console.log(
       `💵 [RECURRING-QUEUE] Sales order ${salesOrderId} (External ID: ${externalId}) total: $${orderTotal.toFixed(2)}`

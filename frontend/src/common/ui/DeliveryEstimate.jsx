@@ -12,12 +12,12 @@ const DeliveryEstimate = ({
     large: "text-base px-4 py-3",
   };
 
-  const baseClasses = `mt-1 rounded-md border ${sizeClasses[size]} ${className}`;
+  const baseClasses = `mt-1 rounded-md ${sizeClasses[size]} ${className}`;
 
   if (inStock) {
     return (
       <p
-        className={`${baseClasses} text-smiles-blue bg-blue-50 border-blue-200`}
+        className={`${baseClasses} text-smiles-blue`}
       >
         {showIcon && "📦 "}Estimated delivery: 1-2 days
       </p>
@@ -26,7 +26,7 @@ const DeliveryEstimate = ({
 
   return (
     <p
-      className={`${baseClasses} text-smiles-orange bg-orange-50 border-orange-200`}
+      className={`${baseClasses} text-smiles-orange`}
     >
       {showIcon && "📦 "}Estimated delivery: 5-7 days
     </p>

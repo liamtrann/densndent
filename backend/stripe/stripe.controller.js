@@ -5,12 +5,21 @@ const {
   checkJobStatus,
 } = require("../queue/stripeOrderQueue");
 
+function toCents(amount) {
+  // Handle null/undefined/invalid values
+  if (amount === null || amount === undefined || isNaN(amount)) {
+    return 0;
+  }
+
+  // Convert to number and round to avoid floating point issues
+  const dollars = Number(amount);
+  const cents = Math.round(dollars * 100);
+
+  // Ensure it's a positive integer
+  return Math.max(0, cents);
+}
+
 class StripeController {
-  /**
-   * Create Stripe customer for existing customer
-   * @param {Object} req - Express request object
-   * @param {Object} res - Express response object
-   */
   async createStripeCustomer(req, res) {
     const { email, name, phone } = req.body;
 
@@ -51,12 +60,6 @@ class StripeController {
       });
     }
   }
-
-  /**
-   * Get customer information
-   * @param {Object} req - Express request object
-   * @param {Object} res - Express response object
-   */
   async getCustomer(req, res) {
     try {
       const { customerId } = req.params;
@@ -85,11 +88,6 @@ class StripeController {
     }
   }
 
-  /**
-   * Update customer information
-   * @param {Object} req - Express request object
-   * @param {Object} res - Express response object
-   */
   async updateCustomer(req, res) {
     try {
       const { customerId } = req.params;
@@ -121,12 +119,6 @@ class StripeController {
       });
     }
   }
-
-  /**
-   * Get customer by email
-   * @param {Object} req - Express request object
-   * @param {Object} res - Express response object
-   */
   async getCustomerByEmail(req, res) {
     const { email } = req.params;
 
@@ -162,15 +154,9 @@ class StripeController {
     }
   }
 
-  /**
-   * Attach payment method to customer
-   * @param {Object} req - Express request object
-   * @param {Object} res - Express response object
-   */
   async attachPaymentMethod(req, res) {
     const { paymentMethod } = req.body;
     const { customerId } = req.params;
-
 
     /* Before Edit */
     /*
@@ -231,11 +217,6 @@ class StripeController {
     }
   }
 
-  /**
-   * List payment methods for customer
-   * @param {Object} req - Express request object
-   * @param {Object} res - Express response object
-   */
   async listPaymentMethods(req, res) {
     try {
       const { customerId } = req.params;
@@ -268,11 +249,6 @@ class StripeController {
     }
   }
 
-  /**
-   * Detach payment method from customer
-   * @param {Object} req - Express request object
-   * @param {Object} res - Express response object
-   */
   async detachPaymentMethod(req, res) {
     try {
       const { paymentMethodId } = req.params;
@@ -299,11 +275,6 @@ class StripeController {
     }
   }
 
-  /**
-   * Create payment intent
-   * @param {Object} req - Express request object
-   * @param {Object} res - Express response object
-   */
   async createPayment(req, res) {
     const {
       paymentMethod,
@@ -339,7 +310,7 @@ class StripeController {
 
     try {
       const paymentIntent = await stripeService.createPaymentIntent({
-        amount: amount * 100, // Convert to cents
+        amount: toCents(amount), // Safely convert to cents
         currency: currency,
         customer: customerId,
         payment_method: paymentMethod,
@@ -366,12 +337,6 @@ class StripeController {
       });
     }
   }
-
-  /**
-   * Confirm payment intent
-   * @param {Object} req - Express request object
-   * @param {Object} res - Express response object
-   */
   async confirmPayment(req, res) {
     const { paymentMethodId, paymentIntentId, orderData } = req.body;
 
@@ -556,3 +521,4 @@ class StripeController {
 }
 
 module.exports = new StripeController();
+module.exports.toCents = toCents;

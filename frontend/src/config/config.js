@@ -566,19 +566,23 @@ async function handleTaxShippingEstimate({
           });
           const taxRates = await api.get(taxUrl);
 
-          // Calculate estimated tax
+          // Get shipping cost first
+          const shippingRes = await api.get(
+            endpoint.GET_SHIPPING_METHOD(Number(SHIPPING_METHOD))
+          );
+          const shippingCost = shippingRes.data?.shippingflatrateamount ?? 9.99;
+
+          // Calculate final shipping cost (free shipping for orders $300+)
+          const finalShippingCost = Number(subtotal) >= 300 ? 0 : shippingCost;
+
+          // Calculate estimated tax on subtotal + shipping
           const totalTaxRate = taxRates.data?.rates?.total;
           let estimatedTax = null;
 
           if (totalTaxRate && subtotal) {
-            estimatedTax = Number(subtotal) * Number(totalTaxRate);
+            const taxableAmount = Number(subtotal) + finalShippingCost;
+            estimatedTax = taxableAmount * Number(totalTaxRate);
           }
-
-          // Get shipping cost
-          const shippingRes = await api.get(
-            endpoint.GET_SHIPPING_METHOD(20412)
-          );
-          const shippingCost = shippingRes.data?.shippingflatrateamount ?? 9.99;
 
           const estimateData = {
             estimatedTax,

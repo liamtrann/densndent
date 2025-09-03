@@ -17,7 +17,7 @@ export default function EstimateTotal({
   const total =
     calculatedTotal !== null
       ? calculatedTotal
-      : Number(subtotal) + Number(tax) + Number(shipping);
+      : Number(subtotal) + Number(shipping) + Number(tax);
 
   if (!showBreakdown) {
     return (
@@ -34,6 +34,21 @@ export default function EstimateTotal({
 
   return (
     <div className={`${className}`}>
+      {/* Shipping Row */}
+      <div className="flex justify-between items-center py-2 border-t border-gray-200 text-base font-semibold">
+        <span className="text-gray-700 flex items-center gap-2">
+          Shipping
+          {subtotal >= 300 && (
+            <span className="text-xs text-green-600 font-medium">
+              (FREE on orders $300+)
+            </span>
+          )}
+        </span>
+        <span className="text-gray-900">
+          {shipping === 0 ? "FREE" : formatCurrency(shipping, currency)}
+        </span>
+      </div>
+
       {/* Estimated Tax Row */}
       {estimatedTax !== null && (
         <div className="flex justify-between items-center py-2 border-t border-gray-200 text-base font-semibold">
@@ -50,21 +65,6 @@ export default function EstimateTotal({
           </span>
         </div>
       )}
-
-      {/* Shipping Row */}
-      <div className="flex justify-between items-center py-2 border-t border-gray-200 text-base font-semibold">
-        <span className="text-gray-700 flex items-center gap-2">
-          Shipping
-          {subtotal >= 300 && (
-            <span className="text-xs text-green-600 font-medium">
-              (FREE on orders $300+)
-            </span>
-          )}
-        </span>
-        <span className="text-gray-900">
-          {shipping === 0 ? "FREE" : formatCurrency(shipping, currency)}
-        </span>
-      </div>
 
       {/* Estimated Total Row */}
       <div className="flex justify-between items-center py-2 border-t border-gray-300 text-lg font-bold">
