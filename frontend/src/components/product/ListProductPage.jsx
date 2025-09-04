@@ -21,7 +21,7 @@ export default function ListProductPage({ by }) {
         // For brand, use brandName parameter
         const brand = brandName || "";
         return {
-          displayName: brand || "Unknown Brand", //turns dashes back to spaces,Uses that as both the id (for querying by name) and the displayName. Uppercase for the header.
+          displayName: brand || "Unknown Brand", 
           id: brand,
           headerTitle: (brand || "UNKNOWN BRAND").toUpperCase(),
         };

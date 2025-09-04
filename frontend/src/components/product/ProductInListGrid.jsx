@@ -25,7 +25,7 @@ export default function ProductInListGrid({
   showQuickLook,
   setShowQuickLook,
 }) {
-  const { id, itemid, file_url, price, totalquantityonhand } = product; //pull out fields you use multiple times to keep JSX tidy
+  const { id, itemid, file_url, price, totalquantityonhand } = product; 
 
   const inStock = totalquantityonhand && totalquantityonhand > 0;
 

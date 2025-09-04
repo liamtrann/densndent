@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react"; //useState for local UI state. useEffect to run code when inputs change (e.g., fetch data).
-import { useDispatch, useSelector } from "react-redux"; //useDispatch lets the component send actions to the Redux store. useSelector lets it read values from the Redux store
-import { fetchProductsBy, fetchCountBy } from "store/slices/productsSlice"; //gfetchProductsBy → get one page of products. fetchCountBy → get the total count (needed to know how many pages exist)
+import React, { useEffect, useState } from "react"; 
+import { useDispatch, useSelector } from "react-redux"; 
+import { fetchProductsBy, fetchCountBy } from "store/slices/productsSlice"; 
 
 import { delayCall } from "api/util"; //delayCall is a small debouncer/throttle helper (prevents firing requests too fast)
 import {
@@ -16,12 +16,12 @@ import ListRows from "./ListRows";
 import ListGrids from "./ListGrids";
 
 export default function ListProductComponent({
-  type, // how to query (e.g., by brand/class/category/name/all).
-  id, //the id or text for the query (or null for “all”).
-  breadcrumbPath, // array of breadcrumb labels.
-  headerTitle //big title at the top.
+  type, 
+  id,
+  breadcrumbPath, 
+  headerTitle 
 }) {
-  const [perPage, setPerPage] = useState(12); //number of products per page (defaults to 12)
+  const [perPage, setPerPage] = useState(12); 
   const [sort, setSort] = useState(""); //current sort choice (empty string means “default” sort)
   const [page, setPage] = useState(1);
 
@@ -31,7 +31,7 @@ export default function ListProductComponent({
 
 
 
-  const [showMobileFilters, setShowMobileFilters] = useState(false); //whether the mobile filter panel is open.
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState({
     minPrice: "",
     maxPrice: "",
@@ -42,22 +42,17 @@ export default function ListProductComponent({
     minPrice: "",
     maxPrice: "",
     selectedCategories: [],
-    selectedBrands: [], //filters the user is currently editing in the sidebar/panel (not applied yet)
+    selectedBrands: [], 
   });
 
 
-
-  //Cache keys (so you don’t refetch the same page)
   const dispatch = useDispatch(); //use this to fire the thunks
-  const priceKey = `${appliedFilters.minPrice || ""}_${appliedFilters.maxPrice || ""}`; //builds a small string representing the current price range (used in cache keys).
+  const priceKey = `${appliedFilters.minPrice || ""}_${appliedFilters.maxPrice || ""}`;
   const effectiveId = id || "all"; //if no id was passed, treat it as “all
-  const key = `${effectiveId}_${perPage}_${sort}_${priceKey}_${page}`; //key identifies the exact product page for the current query
-  const countKey = `${effectiveId}_${priceKey}`; //countKey identifies the total count result for the current id + price range.
+  const key = `${effectiveId}_${perPage}_${sort}_${priceKey}_${page}`; 
+  const countKey = `${effectiveId}_${priceKey}`;
 
 
-
-
-  //the component reads data from Redux using useSelector:
   const products = useSelector(
     (state) => state.products.productsByPage[key] || []
   );
@@ -72,14 +67,10 @@ export default function ListProductComponent({
   });
  
 
-
-
-
-  //if that page isn’t cached yet, the useEffect hooks dispatch fetchCountBy and fetchProductsBy to load them, and the component re-renders when the store updates
   useEffect(() => {
-    setPage(1); //reset page + sort because you’re looking at a new query context
+    setPage(1); 
     setSort("");
-    if (id || type === "all") { //if there is a target (id or “all”), request the total count for that context
+    if (id || type === "all") { 
       return delayCall(() =>
 
 
@@ -133,7 +124,7 @@ export default function ListProductComponent({
   // product page fetch (the actual list of items):
   useEffect(() => {
     if (id || type === "all") {
-      if (!products || products.length === 0) { //when any of the query inputs (page, perPage, sort, price filters) change. if no cached data for the new key (products.length === 0), fetch it. if the cache already has this page, nothing happens (fast!)
+      if (!products || products.length === 0) { 
         return delayCall(() => {
           dispatch(
             fetchProductsBy({
@@ -161,9 +152,9 @@ export default function ListProductComponent({
     appliedFilters.maxPrice,
   ]);
 
-  const totalPages = Math.ceil(total / perPage) || 1; //how many pages should the pagination show (at least 1)
+  const totalPages = Math.ceil(total / perPage) || 1; 
 
-  const handleFiltersChange = (newFilters) => setFilters(newFilters); //updates the editing filters from the sidebar.
+  const handleFiltersChange = (newFilters) => setFilters(newFilters); 
 
   const handleApplyFilters = () => {
     setAppliedFilters(filters);
@@ -173,7 +164,7 @@ export default function ListProductComponent({
       dispatch(
         fetchCountBy({
           type,
-          id: effectiveId === "all" ? null : effectiveId, //if a price filter is involved, refresh the count right away
+          id: effectiveId === "all" ? null : effectiveId, 
           minPrice: filters.minPrice,
           maxPrice: filters.maxPrice,
         })
@@ -283,8 +274,8 @@ export default function ListProductComponent({
           {!isLoading &&
             !error &&
             products.length > 0 &&
-            (view === "grid" ? ( //If view === "grid" → render <ListGrids products={products} /> Else → render <ListRows products={products} />
-              <ListGrids products={products} /> //grid maps each product into ProductInListGrid tiles (image, name, price, stock, quick look, add to cart).
+            (view === "grid" ? ( 
+              <ListGrids products={products} />
             ) : (
               <ListRows products={products} />
             ))}
