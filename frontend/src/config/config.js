@@ -645,6 +645,17 @@ function buildIdempotencyKey(
   }
 }
 
+// Generate a secure random password for NetSuite user creation
+function generateRandomPassword(length = 16) {
+  const chars =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
+  let password = "";
+  for (let i = 0; i < length; i++) {
+    password += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return password;
+}
+
 // Calculate next run date for custrecord_ro_next_run field
 function calculateNextRunDate(interval, intervalUnit) {
   const currentDate = new Date();
@@ -956,4 +967,5 @@ export {
   handleTaxShippingEstimate,
   buildIdempotencyKey,
   calculateNextRunDate,
+  generateRandomPassword,
 };

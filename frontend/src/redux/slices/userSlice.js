@@ -19,6 +19,15 @@ export const fetchUserInfo = createAsyncThunk(
       );
       const userInfo = userRes.data[0] || null;
 
+      // If no user exists, return special state indicating profile setup needed
+      if (!userInfo) {
+        return {
+          userInfo: null,
+          needsProfileSetup: true,
+          redirectTo: "/profile",
+        };
+      }
+
       // Fetch Stripe customer info and add it to userInfo
       let stripeCustomerId = null;
       try {
@@ -55,6 +64,8 @@ const initialState = {
   info: null,
   loading: false,
   error: null,
+  needsProfileSetup: false,
+  redirectTo: null,
 };
 
 const userSlice = createSlice({
@@ -65,16 +76,24 @@ const userSlice = createSlice({
       state.info = null;
       state.error = null;
       state.loading = false;
+      state.needsProfileSetup = false;
+      state.redirectTo = null;
     },
     clearUser(state) {
       state.info = null;
       state.error = null;
       state.loading = false;
+      state.needsProfileSetup = false;
+      state.redirectTo = null;
     },
     updateStripeCustomerId(state, action) {
       if (state.info) {
         state.info.stripeCustomerId = action.payload;
       }
+    },
+    clearProfileSetup(state) {
+      state.needsProfileSetup = false;
+      state.redirectTo = null;
     },
   },
   extraReducers: (builder) => {
@@ -85,7 +104,15 @@ const userSlice = createSlice({
       })
       .addCase(fetchUserInfo.fulfilled, (state, action) => {
         state.loading = false;
-        state.info = action.payload.userInfo;
+        if (action.payload.needsProfileSetup) {
+          state.info = null;
+          state.needsProfileSetup = true;
+          state.redirectTo = action.payload.redirectTo;
+        } else {
+          state.info = action.payload.userInfo;
+          state.needsProfileSetup = false;
+          state.redirectTo = null;
+        }
       })
       .addCase(fetchUserInfo.rejected, (state, action) => {
         state.loading = false;
@@ -94,6 +121,10 @@ const userSlice = createSlice({
   },
 });
 
-export const { clearUserInfo, clearUser, updateStripeCustomerId } =
-  userSlice.actions;
+export const {
+  clearUserInfo,
+  clearUser,
+  updateStripeCustomerId,
+  clearProfileSetup,
+} = userSlice.actions;
 export default userSlice.reducer;

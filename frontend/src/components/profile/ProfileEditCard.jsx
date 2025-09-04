@@ -1,5 +1,11 @@
 // src/components/ProfileEditCard.jsx
+import { useAuth0 } from "@auth0/auth0-react";
 import React, { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchUserInfo } from "store/slices/userSlice";
+
+import api from "api/api";
+import endpoint from "api/endpoints";
 import {
   InputField,
   Button,
@@ -9,12 +15,8 @@ import {
   Loading,
   Toast,
 } from "common";
-import { useAuth0 } from "@auth0/auth0-react";
-import api from "api/api";
-import endpoint from "api/endpoints";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchUserInfo } from "store/slices/userSlice";
-import { validatePhone, validatePassword } from "../../config/config";
+
+import { validatePhone, generateRandomPassword } from "../../config/config";
 
 export default function ProfileEditCard({ onClose, error }) {
   const { user, getAccessTokenSilently } = useAuth0();
@@ -26,8 +28,6 @@ export default function ProfileEditCard({ onClose, error }) {
     lastName: customer?.lastname || "",
     homePhone: customer?.homePhone || "",
     mobilePhone: customer?.mobilePhone || "",
-    password: "",
-    rePassword: "",
   });
 
   const [showModal, setShowModal] = useState(false);
@@ -50,15 +50,12 @@ export default function ProfileEditCard({ onClose, error }) {
       newErrors.mobilePhone =
         "Mobile phone must be exactly 10 digits if provided.";
     }
-    if (!validatePassword(formData.password)) {
-      newErrors.password =
-        "Password must be at least 8 characters, include uppercase, lowercase, number, and special character.";
-    }
-    if (formData.password !== formData.rePassword) {
-      newErrors.rePassword = "Passwords do not match.";
-    }
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
+
+    // Generate a random secure password since Auth0 handles authentication
+    const randomPassword = generateRandomPassword();
+
     try {
       setSubmitting(true);
       const token = await getAccessTokenSilently();
@@ -75,8 +72,8 @@ export default function ProfileEditCard({ onClose, error }) {
           category: { id: 15 },
           isPerson: true,
           giveAccess: true,
-          password: formData.password,
-          password2: formData.rePassword,
+          password: randomPassword,
+          password2: randomPassword,
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -129,24 +126,6 @@ export default function ProfileEditCard({ onClose, error }) {
           maxLength={14}
           placeholder="123-456-7890"
           error={errors?.mobilePhone}
-        />
-        <InputField
-          label="Password"
-          name="password"
-          type="password"
-          value={formData.password}
-          onChange={handleChange}
-          required
-          error={errors?.password}
-        />
-        <InputField
-          label="Re-enter Password"
-          name="rePassword"
-          type="password"
-          value={formData.rePassword}
-          onChange={handleChange}
-          required
-          error={errors?.rePassword}
         />
 
         <div className="mt-2 text-sm">

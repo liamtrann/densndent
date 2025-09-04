@@ -9,6 +9,7 @@ import { updateStripeCustomerId } from "store/slices/userSlice";
 import api from "api/api";
 import endpoints from "api/endpoints";
 import { Button } from "common";
+import ToastNotification from "common/toast/Toast";
 
 import StripeWrapper from "../stripe/StripeWrapper";
 
@@ -104,7 +105,9 @@ export default function CheckoutPayment({
 
   const handleCreateStripeCustomer = async () => {
     if (!userInfo?.email) {
-      alert("Please ensure your profile has email and name information.");
+      ToastNotification.error(
+        "Please ensure your profile has email and name information."
+      );
       return;
     }
 
@@ -129,7 +132,9 @@ export default function CheckoutPayment({
         dispatch(updateStripeCustomerId(response.data.customerId));
       }
     } catch (error) {
-      alert("Failed to create payment account. Please try again.");
+      ToastNotification.error(
+        "Failed to create payment account. Please try again."
+      );
     } finally {
       setCustomerLoading(false);
     }
@@ -284,6 +289,27 @@ export default function CheckoutPayment({
           <Button
             className="px-6 py-3"
             onClick={() => {
+              // Validate required fields and show appropriate toast messages
+              if (!selectedId) {
+                ToastNotification.error("Please select a shipping address.");
+                return;
+              }
+
+              if (paymentMethod === "card") {
+                if (!stripeCustomerId) {
+                  ToastNotification.error(
+                    "Please create a payment account first."
+                  );
+                  return;
+                }
+                if (!selectedPaymentMethodId) {
+                  ToastNotification.error(
+                    "Please select or add a payment method."
+                  );
+                  return;
+                }
+              }
+
               // Save selected payment method and payment type to localStorage for the next step
               localStorage.setItem(
                 "selectedPaymentMethodId",
@@ -292,12 +318,6 @@ export default function CheckoutPayment({
               localStorage.setItem("paymentMethod", paymentMethod);
               navigate("/checkout/review");
             }}
-            disabled={
-              !selectedId ||
-              (paymentMethod === "card" &&
-                (!selectedPaymentMethodId || !stripeCustomerId)) ||
-              (paymentMethod === "invoice" && !selectedId)
-            }
           >
             Continue to Review
           </Button>

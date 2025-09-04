@@ -7,11 +7,19 @@ import { TextButton, Breadcrumb } from "common";
 import { RecentPurchases } from "components";
 import { UserInfoCard } from "components";
 
+import { ProfileSetupWelcome } from "@/components/profile";
+
 export default function ProfilePage() {
   const navigate = useNavigate();
   // Get customer info from Redux store
   const customer = useSelector((state) => state.user.info);
 
+  // If no customer profile exists, show the profile creation form
+  if (!customer) {
+    return <ProfileSetupWelcome />;
+  }
+
+  // User has a complete profile, show normal profile page
   return (
     <div className="max-w-4xl mx-auto px-4 py-10">
       <Breadcrumb path={["Home", "Profile"]} />

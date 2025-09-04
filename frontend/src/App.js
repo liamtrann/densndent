@@ -7,6 +7,8 @@ import { fetchUserInfo, clearUserInfo } from "store/slices/userSlice";
 
 import { ProtectedRoute, ToastProvider, Loading } from "./common";
 import { Header, Footer, LayoutWithCart, CenteredContent } from "./components";
+import ProfileSetupGuard from "./components/guards/ProfileSetupGuard";
+import useProfileSetup from "./hooks/useProfileSetup";
 import { LandingPage } from "./pages";
 // Lazy loaded components
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
@@ -54,6 +56,9 @@ const PageLoading = () => (
 export default function App() {
   const { isAuthenticated, user, getAccessTokenSilently } = useAuth0();
   const dispatch = useDispatch();
+
+  // Handle profile setup flow
+  useProfileSetup();
 
   React.useEffect(() => {
     if (isAuthenticated) {
@@ -272,9 +277,11 @@ export default function App() {
                 <Route
                   path="/checkout/*"
                   element={
-                    <CenteredContent>
-                      <CheckoutPage />
-                    </CenteredContent>
+                    <ProfileSetupGuard>
+                      <CenteredContent>
+                        <CheckoutPage />
+                      </CenteredContent>
+                    </ProfileSetupGuard>
                   }
                 />
                 <Route
@@ -298,21 +305,25 @@ export default function App() {
                 <Route
                   path="/purchase-history"
                   element={
-                    <LayoutWithCart>
-                      <CenteredContent>
-                        <PurchaseHistory />
-                      </CenteredContent>
-                    </LayoutWithCart>
+                    <ProfileSetupGuard>
+                      <LayoutWithCart>
+                        <CenteredContent>
+                          <PurchaseHistory />
+                        </CenteredContent>
+                      </LayoutWithCart>
+                    </ProfileSetupGuard>
                   }
                 />
                 <Route
                   path="/profile/history/order/:transactionId"
                   element={
-                    <LayoutWithCart>
-                      <CenteredContent>
-                        <HistoryOrderDetails />
-                      </CenteredContent>
-                    </LayoutWithCart>
+                    <ProfileSetupGuard>
+                      <LayoutWithCart>
+                        <CenteredContent>
+                          <HistoryOrderDetails />
+                        </CenteredContent>
+                      </LayoutWithCart>
+                    </ProfileSetupGuard>
                   }
                 />
               </Route>
