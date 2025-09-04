@@ -281,7 +281,7 @@ async function processOrderLogic(order) {
           confirmation_method: "automatic",
           confirm: true,
           return_url: process.env.FRONTEND_URL || "http://localhost:3000",
-          description: `Sales Order ${salesOrderId} - Recurring order ${order.id} - ${order.displayname || "Subscription item"}`,
+          description: `Sales Order ${salesOrderId} - Recurring order ${order.id} - ${order.itemid || "Subscription item"}`,
           metadata: {
             sales_order_id: salesOrderId,
             external_id: externalId,
