@@ -27,7 +27,7 @@ export default function ListProductPage({ by }) {
         };
       }
       case "class": {
-        // For class, parse nameAndId to extract name and classId
+        
         let parsedName = "";
         let parsedClassId = "";
 
