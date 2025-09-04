@@ -48,7 +48,7 @@ export default function useSubscriptionsList() {
 
       const raw = res.data || [];
 
-      // Normalize + exclude canceled
+     
       const activeOrPaused = raw.filter((r) => parseStatus(r) !== "canceled");
       const subs = activeOrPaused.map(normalizeSubscriptionRecord);
 
@@ -100,18 +100,15 @@ export default function useSubscriptionsList() {
     load();
   }, [load]);
 
-  /* ---------- Handlers ---------- */
-  /** Save form data from React Hook Form */
+  
   const handleSaveSubscription = async (subscription, formData) => {
     const roId = subscription.roId;
 
-    // Check if canceling
     if (formData.status === "canceled") {
       setConfirming(subscription);
       return;
     }
 
-    // Build payload with only changed fields
     const payload = buildRecurringOrderPatch({
       interval:
         formData.interval !== subscription.interval
