@@ -276,19 +276,21 @@ async function processStripeOrderLogic(orderData) {
   );
   console.log(`📧 [STRIPE-QUEUE] Order will be emailed to: ${orderData.email}`);
 
-  // Add memo with Stripe payment information
+  // Use provided memo or create default memo with Stripe payment information
   const today = new Date().toISOString().slice(0, 10);
-  const memo = orderData.stripePaymentIntentId
-    ? `STRIPE Payment - Payment ID: ${orderData.stripePaymentIntentId} - Created: ${today}`
-    : `STRIPE Payment - Created: ${today}`;
+  const memo =
+    orderData.memo ||
+    (orderData.stripePaymentIntentId
+      ? `STRIPE Payment - Payment ID: ${orderData.stripePaymentIntentId} - Created: ${today}`
+      : `STRIPE Payment - Created: ${today}`);
 
-  // Add memo to order data
+  // Add memo to order data (use existing memo if provided)
   const finalOrderData = {
     ...orderData,
     memo: memo,
   };
 
-  console.log(`📝 [STRIPE-QUEUE] Adding memo: ${memo}`);
+  console.log(`📝 [STRIPE-QUEUE] Using memo: ${memo}`);
 
   try {
     console.log(`🚀 [STRIPE-QUEUE] Sending order to NetSuite...`);

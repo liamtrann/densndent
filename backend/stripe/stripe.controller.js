@@ -363,17 +363,51 @@ class StripeController {
         }
       );
 
-      // 2. If payment successful, create order via queue
-      if (paymentIntent.status === "succeeded" && orderData) {
+      // 2. Create order regardless of payment status, but track status in memo
+      if (orderData) {
         console.log(
-          `💳 [STRIPE] Enqueueing sales order for payment: ${paymentIntent.id}`
+          `💳 [STRIPE] Enqueueing sales order for payment: ${paymentIntent.id} (Status: ${paymentIntent.status})`
         );
 
         try {
-          // Add payment intent ID to order data for tracking
+          // Get current date for memo
+          const today = new Date().toISOString().slice(0, 10);
+
+          // Determine memo based on payment status with detailed information
+          let memo = "";
+          const baseInfo = `STRIPE Payment - Payment ID: ${paymentIntent.id} - Created: ${today}`;
+
+          switch (paymentIntent.status) {
+            case "succeeded":
+              memo = `**SUCCESSFUL** - ${baseInfo} - Status: Payment confirmed successfully`;
+              break;
+            case "requires_action":
+              memo = `**LOADING** - ${baseInfo} - Status: Payment requires additional action (3D Secure or similar)`;
+              break;
+            case "requires_payment_method":
+              memo = `**FAILED** - ${baseInfo} - Status: Payment requires valid payment method`;
+              break;
+            case "processing":
+              memo = `**LOADING** - ${baseInfo} - Status: Payment is being processed`;
+              break;
+            case "canceled":
+              memo = `**FAILED** - ${baseInfo} - Status: Payment was canceled`;
+              break;
+            case "payment_failed":
+              memo = `**FAILED** - ${baseInfo} - Status: Payment failed`;
+              break;
+            case "requires_confirmation":
+              memo = `**LOADING** - ${baseInfo} - Status: Payment requires confirmation`;
+              break;
+            default:
+              memo = `**UNKNOWN** - ${baseInfo} - Status: ${paymentIntent.status}`;
+          }
+
+          // Add payment intent ID and memo to order data for tracking
           const orderDataWithPayment = {
             ...orderData,
             stripePaymentIntentId: paymentIntent.id,
+            memo: memo,
           };
 
           // Enqueue order creation and wait for completion
@@ -418,7 +452,7 @@ class StripeController {
           });
 
           console.log(
-            `✅ [STRIPE] Order creation completed successfully for payment: ${paymentIntent.id}`
+            `✅ [STRIPE] Order creation completed for payment: ${paymentIntent.id} with memo: ${memo}`
           );
 
           res.status(200).json({
@@ -434,7 +468,11 @@ class StripeController {
             },
             jobId: job?.id,
             jobResult: jobResult,
-            message: "Payment confirmed and order created successfully",
+            orderMemo: memo,
+            message:
+              paymentIntent.status === "succeeded"
+                ? "Payment confirmed and order created successfully"
+                : `Order created with payment status: ${paymentIntent.status}`,
           });
         } catch (orderError) {
           console.error(
@@ -442,9 +480,9 @@ class StripeController {
             orderError.message
           );
 
-          // Payment succeeded but order creation failed
+          // Order creation failed regardless of payment status
           res.status(200).json({
-            success: true,
+            success: paymentIntent.status === "succeeded",
             paymentIntent: {
               id: paymentIntent.id,
               status: paymentIntent.status,
@@ -456,10 +494,11 @@ class StripeController {
             },
             orderError: orderError.message,
             message:
-              "Payment confirmed but order creation failed. Please contact support.",
+              "Payment processed but order creation failed. Please contact support.",
           });
         }
       } else {
+        // No order data provided
         res.status(200).json({
           success: paymentIntent.status === "succeeded",
           paymentIntent: {
