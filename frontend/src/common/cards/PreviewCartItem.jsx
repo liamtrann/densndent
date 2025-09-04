@@ -25,6 +25,7 @@ export default function PreviewCartItem({
   imageSize = "w-12 h-12",
   textSize = "text-sm",
   compact = false,
+  
 }) {
   const dispatch = useDispatch();
   const unitPrice = item.unitprice || item.price;

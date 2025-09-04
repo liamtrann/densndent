@@ -213,56 +213,65 @@ export default function CartPage() {
             : null;
 
           return (
-            <div key={`${key}-wrapper`} className="mb-6 border-b pb-4">
-              <PreviewCartItem
-                key={key}
-                item={item}
-                onQuantityChange={handleQuantityChange}
-                onItemClick={handleNavigateToProduct}
-                showQuantityControls={true}
-                showTotal={true}
-                compact={false}
-                imageSize="w-24 h-24"
-                textSize="text-base"
-              />
+          <div key={`${key}-wrapper`} className="mb-6 pb-4">
 
-              {inv && inv.quantityavailable <= 0 && (
-                <div className="text-red-600 text-sm mt-2">{OUT_OF_STOCK}</div>
-              )}
+            {/* Two-column layout for each cart row */}
+            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+              {/* LEFT: product info */}
+              <div className="flex-1 min-w-0">
+                <PreviewCartItem
+                  key={key}
+                  item={item}
+                  onQuantityChange={handleQuantityChange}
+                  onItemClick={handleNavigateToProduct}
+                  showQuantityControls={true}
+                  showTotal={true}
+                  compact={false}
+                  imageSize="w-24 h-24"
+                  textSize="text-base"
+                  showBottomBorder={false}  
+                />
 
-              {/* ✅ Reusable Purchase Options */}
-              <PurchaseOptions
-                name={key}
-                isSubscribed={isSubbed}
-                interval={interval}
-                onOneTime={() => chooseOneTime(item)}
-                onSubscribe={() => chooseSubscribe(item)}
-                onIntervalChange={(val) => changeInterval(item, val)}
-              />
+                {inv && inv.quantityavailable <= 0 && (
+                  <div className="text-red-600 text-sm mt-2">{OUT_OF_STOCK}</div>
+                )}
+              </div>
 
-              {/* ✅ Subscription start date preview */}
-              {isSubbed && (
-                <div className="mt-2 text-xs text-gray-600">
-                  <span className="font-medium">Next order:</span>{" "}
-                  <span>{formatLocalDateToronto(firstDeliveryDate)}</span>
-                  <span className="ml-1">
-                    (
-                    {interval === "1"
-                      ? "every 1 month"
-                      : `every ${interval} months`}
-                    )
-                  </span>
-                </div>
-              )}
+              {/* RIGHT: purchase controls */}
+              <div className="w-full lg:w-[320px] xl:w-[360px] shrink-0">
+                {/* Purchase options */}
+                <PurchaseOptions
+                  name={key}
+                  isSubscribed={isSubbed}
+                  interval={interval}
+                  onOneTime={() => chooseOneTime(item)}
+                  onSubscribe={() => chooseSubscribe(item)}
+                  onIntervalChange={(val) => changeInterval(item, val)}
+                />
 
-              <button
-                onClick={() => handleRemoveClick(item)}
-                className="block text-red-600 text-sm underline mt-3 hover:text-red-800"
-              >
-                Remove from cart
-              </button>
+                {/* Subscription start date preview */}
+                {isSubbed && (
+                  <div className="mt-2 text-xs text-gray-600">
+                    <span className="font-medium">Next order:</span>{" "}
+                    <span>{formatLocalDateToronto(firstDeliveryDate)}</span>
+                    <span className="ml-1">
+                      ({interval === "1" ? "every 1 month" : `every ${interval} months`})
+                    </span>
+                  </div>
+                )}
+
+                {/* Remove button */}
+                <button
+                  onClick={() => handleRemoveClick(item)}
+                  className="block text-red-600 text-sm underline mt-3 hover:text-red-800"
+                >
+                  Remove
+                </button>
+              </div>
             </div>
-          );
+          </div>
+        );
+
         })
       ) : (
         <EmptyCart />
