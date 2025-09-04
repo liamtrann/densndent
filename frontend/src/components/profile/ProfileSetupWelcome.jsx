@@ -9,7 +9,7 @@ const ProfileSetupWelcome = ({ onClose }) => {
 
       <div className="bg-primary-blue/10 border border-primary-blue/30 rounded-lg p-6 mb-8">
         <h2 className="text-xl font-semibold text-primary-blue mb-2">
-          Welcome to JDIQ Dental!
+          Welcome to Dens 'N Dente!
         </h2>
         <p className="text-primary-blue/80 mb-4">
           To get started with shopping and managing your orders, please complete

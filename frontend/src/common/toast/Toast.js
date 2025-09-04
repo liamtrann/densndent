@@ -4,7 +4,7 @@ import "./Toast.css"; // Custom toast styles
 
 // Default toast configuration
 const defaultConfig = {
-  position: "top-right",
+  position: "top-center",
   autoClose: 4000,
   hideProgressBar: false,
   closeOnClick: true,
