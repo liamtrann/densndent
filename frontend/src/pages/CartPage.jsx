@@ -1,18 +1,23 @@
 // src/pages/CartPage.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import {
   addToCart,
   removeFromCart,
   updateQuantity,
-  setItemSubscription, // ✅ per-item subscription
+  setItemSubscription,
 } from "store/slices/cartSlice";
 
 import { formatPrice, formatCurrency } from "config/config";
-
 import { delayCall } from "../api/util";
-import { EmptyCart, ErrorMessage, Loading, PreviewCartItem } from "../common";
+import {
+  EmptyCart,
+  ErrorMessage,
+  Loading,
+  PreviewCartItem,
+  Dropdown,
+} from "../common";
 import PurchaseOptions from "../common/ui/PurchaseOptions";
 import { Modal } from "../components";
 import { CartOrderSummary } from "../components";
@@ -21,36 +26,22 @@ import { useInventoryCheck } from "../config";
 import { selectCartSubtotalWithDiscounts } from "@/redux/slices";
 import { OUT_OF_STOCK } from "@/constants/constant";
 
-// ✅ Reuse the shared purchase control
-
 /* =======================
    Date helpers (local-only)
    ======================= */
-
-// Add months safely: if target month has fewer days (e.g., adding 1 month to Jan 31),
-// clamp to the last day of the target month.
 function addMonthsSafe(date, months) {
   const d = new Date(date.getTime());
   const day = d.getDate();
   const targetMonth = d.getMonth() + months;
   const targetYear = d.getFullYear() + Math.floor(targetMonth / 12);
   const normalizedMonth = ((targetMonth % 12) + 12) % 12;
-
-  // move to first day of target month, then clamp day
-  const endDay = daysInMonth(targetYear, normalizedMonth);
+  const endDay = new Date(targetYear, normalizedMonth + 1, 0).getDate();
   const clampedDay = Math.min(day, endDay);
   const res = new Date(d);
   res.setFullYear(targetYear, normalizedMonth, clampedDay);
   return res;
 }
-
-function daysInMonth(year, monthIndex) {
-  // monthIndex: 0-11
-  return new Date(year, monthIndex + 1, 0).getDate();
-}
-
 function formatLocalDateToronto(date) {
-  // Always render in America/Toronto
   return date.toLocaleDateString("en-CA", {
     year: "numeric",
     month: "short",
@@ -58,20 +49,23 @@ function formatLocalDateToronto(date) {
     timeZone: "America/Toronto",
   });
 }
-
 function nextSubscriptionDateFromToday(intervalStr) {
   const interval = parseInt(intervalStr || "1", 10);
-  const todayToronto = new Date(); // We format with TZ; JS Date holds UTC internally
-  const next = addMonthsSafe(todayToronto, isNaN(interval) ? 1 : interval);
-  return next;
+  const todayToronto = new Date();
+  return addMonthsSafe(todayToronto, isNaN(interval) ? 1 : interval);
 }
 
 export default function CartPage() {
   const cart = useSelector((state) => state.cart.items);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  // Page controls
+  const [showFilter, setShowFilter] = useState("all"); // all | sub | one
   const [postalCode, setPostalCode] = useState("");
   const [promoCode, setPromoCode] = useState("");
+
+  // Remove modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
@@ -97,10 +91,17 @@ export default function CartPage() {
   const subtotal = formatPrice(subtotalAmount);
   const totalQuantity = cart.reduce((sum, item) => sum + item.quantity, 0);
 
+  // Filtered list (Show dropdown)
+  const filteredCart = useMemo(() => {
+    if (showFilter === "sub")
+      return cart.filter((i) => !!i.subscriptionEnabled);
+    if (showFilter === "one") return cart.filter((i) => !i.subscriptionEnabled);
+    return cart;
+  }, [cart, showFilter]);
+
   // Quantity change
   const handleQuantityChange = (item, type) => {
     const newQuantity = type === "inc" ? item.quantity + 1 : item.quantity - 1;
-
     if (newQuantity === 0) {
       dispatch(removeFromCart(item.id));
     } else {
@@ -119,7 +120,6 @@ export default function CartPage() {
     setSelectedProduct(item);
     setModalOpen(true);
   };
-
   const handleConfirmRemove = () => {
     if (selectedProduct) {
       delayCall(() => dispatch(removeFromCart(selectedProduct.id)));
@@ -127,7 +127,6 @@ export default function CartPage() {
       setSelectedProduct(null);
     }
   };
-
   const handleCancelRemove = () => {
     setModalOpen(false);
     setSelectedProduct(null);
@@ -148,7 +147,6 @@ export default function CartPage() {
       })
     );
   };
-
   const chooseSubscribe = (item) => {
     dispatch(
       setItemSubscription({
@@ -159,7 +157,6 @@ export default function CartPage() {
       })
     );
   };
-
   const changeInterval = (item, value) => {
     dispatch(
       setItemSubscription({
@@ -175,13 +172,6 @@ export default function CartPage() {
   const handleProceedToCheckout = async () => {
     const result = await checkInventory(cart.map((item) => item.id));
     if (!result) return;
-    // const outOfStock = result.find((r) => !r || r.quantityavailable <= 0);
-    // if (outOfStock) {
-    //   alert(
-    //     "Some items in your cart are out of stock or unavailable. Please review your cart."
-    //   );
-    //   return;
-    // }
     navigate("/checkout");
   };
 
@@ -191,91 +181,138 @@ export default function CartPage() {
   if (inventoryLoading) return <Loading />;
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-10">
+    <div className="mx-auto px-4 lg:px-6 py-8 max-w-7xl">
       {cart.length > 0 && (
-        <h1 className="text-2xl font-bold mb-6 text-center">
+        <h1 className="text-2xl font-bold mb-6 text-center lg:text-left">
           SHOPPING CART ({cart.length} Product{cart.length !== 1 ? "s" : ""},{" "}
           {totalQuantity} Item{totalQuantity !== 1 ? "s" : ""})
         </h1>
       )}
 
-      {/* Cart Items */}
-      {cart.length > 0 ? (
-        cart.map((item) => {
-          const inv = inventoryStatus.find((i) => i.item === item.id);
-          const key = item.id + (item.flavor ? `-${item.flavor}` : "");
-          const isSubbed = !!item.subscriptionEnabled;
-          const interval = item.subscriptionInterval || "1";
-
-          // ⏱️ First subscription delivery date (if subscribed)
-          const firstDeliveryDate = isSubbed
-            ? nextSubscriptionDateFromToday(interval)
-            : null;
-
-          return (
-          <div key={`${key}-wrapper`} className="mb-6 pb-4">
-
-            {/* Two-column layout for each cart row */}
-            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-              {/* LEFT: product info */}
-              <div className="flex-1 min-w-0">
-                <PreviewCartItem
-                  key={key}
-                  item={item}
-                  onQuantityChange={handleQuantityChange}
-                  onItemClick={handleNavigateToProduct}
-                  showQuantityControls={true}
-                  showTotal={true}
-                  compact={false}
-                  imageSize="w-24 h-24"
-                  textSize="text-base"
-                  showBottomBorder={false}  
-                />
-
-                {inv && inv.quantityavailable <= 0 && (
-                  <div className="text-red-600 text-sm mt-2">{OUT_OF_STOCK}</div>
-                )}
-              </div>
-
-              {/* RIGHT: purchase controls */}
-              <div className="w-full lg:w-[320px] xl:w-[360px] shrink-0">
-                {/* Purchase options */}
-                <PurchaseOptions
-                  name={key}
-                  isSubscribed={isSubbed}
-                  interval={interval}
-                  onOneTime={() => chooseOneTime(item)}
-                  onSubscribe={() => chooseSubscribe(item)}
-                  onIntervalChange={(val) => changeInterval(item, val)}
-                />
-
-                {/* Subscription start date preview */}
-                {isSubbed && (
-                  <div className="mt-2 text-xs text-gray-600">
-                    <span className="font-medium">Next order:</span>{" "}
-                    <span>{formatLocalDateToronto(firstDeliveryDate)}</span>
-                    <span className="ml-1">
-                      ({interval === "1" ? "every 1 month" : `every ${interval} months`})
-                    </span>
-                  </div>
-                )}
-
-                {/* Remove button */}
-                <button
-                  onClick={() => handleRemoveClick(item)}
-                  className="block text-red-600 text-sm underline mt-3 hover:text-red-800"
-                >
-                  Remove
-                </button>
-              </div>
-            </div>
+      {/* Cart-only dropdown ABOVE the grid so both columns align at the top */}
+      {cart.length > 0 && (
+        <div className="mb-4 flex items-center gap-3">
+          <span className="text-sm font-medium">Show</span>
+          <div className="w-56">
+            <Dropdown
+              value={showFilter}
+              onChange={(e) => setShowFilter(e.target.value)}
+              options={[
+                { value: "all", label: "All items" },
+                { value: "sub", label: "Subscriptions" },
+                { value: "one", label: "One-time purchases" },
+              ]}
+            />
           </div>
-        );
-
-        })
-      ) : (
-        <EmptyCart />
+        </div>
       )}
+
+      {/* Two-column layout: left list + right summary; items-start aligns tops */}
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_380px] items-start gap-6">
+        {/* LEFT: just the cart list */}
+        <div>
+          {filteredCart.length > 0 ? (
+            filteredCart.map((item) => {
+              const inv = inventoryStatus.find((i) => i.item === item.id);
+              const key = item.id + (item.flavor ? `-${item.flavor}` : "");
+              const isSubbed = !!item.subscriptionEnabled;
+              const interval = item.subscriptionInterval || "1";
+              const firstDeliveryDate = isSubbed
+                ? nextSubscriptionDateFromToday(interval)
+                : null;
+
+              return (
+                <div
+                  key={`${key}-card`}
+                  className="mb-5 rounded-lg border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                    {/* LEFT: Product block */}
+                    <div className="flex-1 min-w-0">
+                      <PreviewCartItem
+                        key={key}
+                        item={item}
+                        onQuantityChange={handleQuantityChange}
+                        onItemClick={handleNavigateToProduct}
+                        showQuantityControls={true}
+                        showTotal={true}
+                        compact={false}
+                        imageSize="w-24 h-24"
+                        textSize="text-base"
+                        showBottomBorder={false}
+                      />
+                      {inv && inv.quantityavailable <= 0 && (
+                        <div className="text-red-600 text-sm mt-2">
+                          {OUT_OF_STOCK}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* RIGHT: Purchase controls inside same card */}
+                    <div className="w-full lg:w-[320px] xl:w-[360px] shrink-0">
+                      <PurchaseOptions
+                        name={key}
+                        isSubscribed={isSubbed}
+                        interval={interval}
+                        onOneTime={() => chooseOneTime(item)}
+                        onSubscribe={() => chooseSubscribe(item)}
+                        onIntervalChange={(val) => changeInterval(item, val)}
+                      />
+
+                      {isSubbed && (
+                        <div className="mt-2 text-xs text-gray-600">
+                          <span className="font-medium">Next order:</span>{" "}
+                          <span>
+                            {formatLocalDateToronto(firstDeliveryDate)}
+                          </span>
+                          <span className="ml-1">
+                            (
+                            {interval === "1"
+                              ? "every 1 month"
+                              : `every ${interval} months`}
+                            )
+                          </span>
+                        </div>
+                      )}
+
+                      <button
+                        onClick={() => handleRemoveClick(item)}
+                        className="text-red-600 text-sm underline mt-3 hover:text-red-800"
+                      >
+                        Remove from cart
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          ) : cart.length > 0 ? (
+            <div className="text-gray-500 py-8 text-center">
+              No items match that filter.
+            </div>
+          ) : (
+            <EmptyCart />
+          )}
+        </div>
+
+        {/* RIGHT: Order Summary */}
+        {cart.length > 0 && (
+          <aside className="lg:pl-6">
+            <div className="lg:sticky lg:top-6">
+              <CartOrderSummary
+                totalQuantity={totalQuantity}
+                subtotal={subtotal}
+                postalCode={postalCode}
+                setPostalCode={setPostalCode}
+                promoCode={promoCode}
+                setPromoCode={setPromoCode}
+                handleProceedToCheckout={handleProceedToCheckout}
+                inventoryLoading={inventoryLoading}
+              />
+            </div>
+          </aside>
+        )}
+      </div>
 
       {/* Remove Confirmation Modal */}
       {modalOpen && selectedProduct && (
@@ -298,20 +335,6 @@ export default function CartPage() {
         >
           <p>Are you sure you want to remove this product from your cart?</p>
         </Modal>
-      )}
-
-      {/* Order Summary */}
-      {cart.length > 0 && (
-        <CartOrderSummary
-          totalQuantity={totalQuantity}
-          subtotal={subtotal}
-          postalCode={postalCode}
-          setPostalCode={setPostalCode}
-          promoCode={promoCode}
-          setPromoCode={setPromoCode}
-          handleProceedToCheckout={handleProceedToCheckout}
-          inventoryLoading={inventoryLoading}
-        />
       )}
     </div>
   );
