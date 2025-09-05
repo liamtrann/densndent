@@ -11,6 +11,8 @@ export default function PurchaseOptions({
   onSubscribe, // () => void
   onIntervalChange, // (value: string) => void
   className = "",
+  // NEW: control how wide the frequency dropdown should be
+  dropdownWidthClass = "w-24 sm:w-40", // ~11–12rem on desktop by default
 }) {
   return (
     <fieldset className={`mt-3 ${className}`}>
@@ -41,21 +43,31 @@ export default function PurchaseOptions({
       </div>
 
       {isSubscribed && (
-        <div className="mt-2">
-          <Dropdown
-            label="Delivery frequency"
-            id={`interval-${name}`}
-            value={interval}
-            onChange={(e) => onIntervalChange(e.target.value)}
-            options={[
-              { value: "1", label: "Every 1 month" },
-              { value: "2", label: "Every 2 months" },
-              { value: "3", label: "Every 3 months" },
-              { value: "6", label: "Every 6 months" },
-            ]}
-            className="text-sm"
-          />
-        </div>
+        <>
+          <label
+            htmlFor={`interval-${name}`}
+            className="block text-sm font-medium mt-3 mb-1"
+          >
+            Delivery frequency
+          </label>
+
+          {/* Constrain width so the select isn't full width */}
+          <div className={dropdownWidthClass}>
+            <Dropdown
+              id={`interval-${name}`}
+              value={interval}
+              onChange={(e) => onIntervalChange(e.target.value)}
+              options={[
+                { value: "1", label: "Every 1 month" },
+                { value: "2", label: "Every 2 months" },
+                { value: "3", label: "Every 3 months" },
+                { value: "6", label: "Every 6 months" },
+              ]}
+              // tailwind utilities defined last override internal w-full
+              className="text-sm"
+            />
+          </div>
+        </>
       )}
     </fieldset>
   );

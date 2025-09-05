@@ -78,7 +78,8 @@ export default function CartPage() {
 
   // Filtered list (Show dropdown)
   const filteredCart = useMemo(() => {
-    if (showFilter === "sub") return cart.filter((i) => !!i.subscriptionEnabled);
+    if (showFilter === "sub")
+      return cart.filter((i) => !!i.subscriptionEnabled);
     if (showFilter === "one") return cart.filter((i) => !i.subscriptionEnabled);
     return cart;
   }, [cart, showFilter]);
@@ -169,14 +170,18 @@ export default function CartPage() {
       <Breadcrumb path={["Home", "Cart"]} className="mb-4" />
 
       {cart.length > 0 && (
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-4">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-start gap-3 lg:gap-6 mb-4">
           <h1 className="text-2xl font-bold">
             SHOPPING CART ({cart.length} Product{cart.length !== 1 ? "s" : ""},{" "}
             {totalQuantity} Item{totalQuantity !== 1 ? "s" : ""})
           </h1>
 
-          {/* Cart-only dropdown aligned with the title */}
-          <CartFilterBar value={showFilter} onChange={setShowFilter} />
+          {/* Filter sits right beside the heading on large screens */}
+          <CartFilterBar
+            value={showFilter}
+            onChange={setShowFilter}
+            className="lg:ml-2"
+          />
         </div>
       )}
 
@@ -199,7 +204,11 @@ export default function CartPage() {
                     <span className="font-medium">Next order:</span>{" "}
                     <span>{formatLocalDateToronto(firstDate)}</span>
                     <span className="ml-1">
-                      ({interval === "1" ? "every 1 month" : `every ${interval} months`})
+                      (
+                      {interval === "1"
+                        ? "every 1 month"
+                        : `every ${interval} months`}
+                      )
                     </span>
                   </>
                 ) : null;
@@ -268,7 +277,9 @@ export default function CartPage() {
             },
           ]}
         >
-          <Paragraph>Are you sure you want to remove this product from your cart?</Paragraph>
+          <Paragraph>
+            Are you sure you want to remove this product from your cart?
+          </Paragraph>
         </Modal>
       )}
     </div>

@@ -50,6 +50,7 @@ export default function CartItemCard({
             onOneTime={onOneTime}
             onSubscribe={onSubscribe}
             onIntervalChange={onIntervalChange}
+            intervalDropdownClass="w-10 sm:w-4"
           />
 
           {isSubbed && (
