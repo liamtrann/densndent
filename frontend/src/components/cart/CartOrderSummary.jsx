@@ -1,5 +1,8 @@
+// src/components/cart/CartOrderSummary.jsx
 import React from "react";
 import { Dropdown, InputField } from "common";
+import Button from "@/common/ui/Button";
+import Paragraph from "@/common/ui/Paragraph";
 import {
   calculateTotalCurrency,
   validatePostalCode,
@@ -70,8 +73,9 @@ export default function CartOrderSummary({
     }
   };
 
+  const estimateDisabled = !!postalCodeError || !postalCode.trim();
+
   return (
-    // Single full-width card — no internal grid
     <div className="w-full bg-white border border-gray-200 rounded-lg shadow-md p-6">
       <h3 className="text-xl font-semibold mb-4">Order Summary</h3>
 
@@ -84,13 +88,15 @@ export default function CartOrderSummary({
         </span>
       </div>
 
-      <p className="text-xs text-gray-500 mb-4">
+      <Paragraph className="text-xs text-gray-500 mb-4">
         Subtotal Does Not Include Shipping Or Tax
-      </p>
+      </Paragraph>
 
       <div className="mb-4">
         <h4 className="text-sm font-medium mb-1">Estimate Tax & Shipping</h4>
-        <p className="text-xs mb-2">Ship available only to Canada or USA</p>
+        <Paragraph className="text-xs mb-2">
+          Ship available only to Canada or USA
+        </Paragraph>
 
         <div className="flex gap-2 mb-2">
           <Dropdown
@@ -112,17 +118,14 @@ export default function CartOrderSummary({
           </div>
         </div>
 
-        <button
-          className={`w-full py-2 rounded transition-colors ${
-            postalCodeError || !postalCode.trim()
-              ? "bg-gray-400 text-gray-200 cursor-not-allowed"
-              : "bg-gray-700 text-white hover:bg-gray-800"
-          }`}
+        <Button
+          className="w-full py-2"
+          variant="secondary"
           onClick={handleEstimate}
-          disabled={postalCodeError || !postalCode.trim()}
+          disabled={estimateDisabled}
         >
           ESTIMATE
-        </button>
+        </Button>
 
         {estimatedTax !== null && (
           <EstimateTotal
@@ -136,13 +139,14 @@ export default function CartOrderSummary({
         )}
       </div>
 
-      <button
-        className="w-full mt-4 bg-smiles-blue text-white py-3 rounded hover:bg-smiles-orange"
+      <Button
+        className="w-full mt-4 py-3"
+        variant="primary"
         onClick={handleProceedToCheckout}
         disabled={inventoryLoading}
       >
         PROCEED TO CHECKOUT
-      </button>
+      </Button>
     </div>
   );
 }
