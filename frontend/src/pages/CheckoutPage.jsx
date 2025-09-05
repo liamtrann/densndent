@@ -16,6 +16,7 @@ import {
   EmptyCart,
   WeekdaySelector,
 } from "@/common";
+import Breadcrumb from "@/common/navigation/Breadcrumb";
 import ToastNotification from "@/common/toast/Toast";
 import { CheckoutPayment, CheckoutReview } from "@/components/checkout";
 import useInitialAddress from "@/hooks/useInitialAddress";
@@ -233,6 +234,9 @@ export default function CheckoutPage() {
           </div>
         </div>
       )}
+
+      {/* Breadcrumbs */}
+      <Breadcrumb path={["Home", "Cart", "Checkout"]} />
 
       <h1 className="text-3xl font-bold mb-4">Checkout</h1>
 

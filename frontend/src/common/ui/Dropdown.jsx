@@ -1,6 +1,6 @@
 // src/common/ui/Dropdown.jsx
-import React from "react";
 import classNames from "classnames";
+import React from "react";
 
 export default function Dropdown({
   label,
@@ -19,7 +19,7 @@ export default function Dropdown({
         value={value}
         onChange={onChange}
         className={classNames(
-          "border rounded px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-smiles-orange transition",
+          "border rounded px-3 py-2 w-auto min-w-fit focus:outline-none focus:ring-2 focus:ring-smiles-orange transition",
           className
         )}
         {...props}

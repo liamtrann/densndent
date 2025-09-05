@@ -10,15 +10,23 @@ import {
 } from "store/slices/cartSlice";
 
 import { formatPrice, formatCurrency } from "config/config";
+
 import { delayCall } from "../api/util";
-import { EmptyCart, ErrorMessage, Loading, PreviewCartItem, Dropdown } from "../common";
+import {
+  EmptyCart,
+  ErrorMessage,
+  Loading,
+  PreviewCartItem,
+  Dropdown,
+} from "../common";
+import Breadcrumb from "../common/navigation/Breadcrumb";
 import PurchaseOptions from "../common/ui/PurchaseOptions";
 import { Modal } from "../components";
 import { CartOrderSummary } from "../components";
 import { useInventoryCheck } from "../config";
 
-import { selectCartSubtotalWithDiscounts } from "@/redux/slices";
 import { OUT_OF_STOCK } from "@/constants/constant";
+import { selectCartSubtotalWithDiscounts } from "@/redux/slices";
 
 /* =======================
    Date helpers (local-only)
@@ -87,7 +95,8 @@ export default function CartPage() {
 
   // Filtered list (Show dropdown)
   const filteredCart = useMemo(() => {
-    if (showFilter === "sub") return cart.filter((i) => !!i.subscriptionEnabled);
+    if (showFilter === "sub")
+      return cart.filter((i) => !!i.subscriptionEnabled);
     if (showFilter === "one") return cart.filter((i) => !i.subscriptionEnabled);
     return cart;
   }, [cart, showFilter]);
@@ -169,11 +178,15 @@ export default function CartPage() {
   };
 
   // Inventory check error/warning
-  if (inventoryError) return <ErrorMessage message={inventoryError} className="mb-4" />;
+  if (inventoryError)
+    return <ErrorMessage message={inventoryError} className="mb-4" />;
   if (inventoryLoading) return <Loading />;
 
   return (
     <div className="mx-auto px-4 lg:px-6 py-8 max-w-7xl">
+      {/* Breadcrumbs */}
+      <Breadcrumb path={["Home", "Cart"]} />
+
       {cart.length > 0 && (
         <h1 className="text-2xl font-bold mb-6 text-center lg:text-left">
           SHOPPING CART ({cart.length} Product{cart.length !== 1 ? "s" : ""},{" "}
@@ -203,7 +216,7 @@ export default function CartPage() {
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_380px] items-start gap-6">
         {/* LEFT: just the cart list (scroll only this on desktop) */}
         <div>
-          <div className="lg:max-h-[calc(100vh-220px)] lg:overflow-y-auto lg:pr-3 lg:pb-2">
+          <div className="lg:max-h-[calc(100vh-220px)] lg:overflow-y-auto lg:pr-3 lg:pb-2 custom-scrollbar">
             {filteredCart.length > 0 ? (
               filteredCart.map((item) => {
                 const inv = inventoryStatus.find((i) => i.item === item.id);
@@ -220,8 +233,8 @@ export default function CartPage() {
                     className="mb-5 rounded-lg border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
                   >
                     <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-                      {/* LEFT: Product block */}
-                      <div className="flex-1 min-w-0">
+                      {/* LEFT: Product block - Given more width */}
+                      <div className="flex-1 min-w-0 lg:flex-[2] lg:min-w-[400px]">
                         <PreviewCartItem
                           key={key}
                           item={item}
@@ -230,17 +243,19 @@ export default function CartPage() {
                           showQuantityControls={true}
                           showTotal={true}
                           compact={false}
-                          imageSize="w-24 h-24"
+                          imageSize="w-28 h-28"
                           textSize="text-base"
                           showBottomBorder={false}
                         />
                         {inv && inv.quantityavailable <= 0 && (
-                          <div className="text-red-600 text-sm mt-2">{OUT_OF_STOCK}</div>
+                          <div className="text-red-600 text-sm mt-2">
+                            {OUT_OF_STOCK}
+                          </div>
                         )}
                       </div>
 
                       {/* RIGHT: Purchase controls inside same card */}
-                      <div className="w-full lg:w-[320px] xl:w-[360px] shrink-0">
+                      <div className="w-full lg:w-[280px] xl:w-[320px] shrink-0">
                         <PurchaseOptions
                           name={key}
                           isSubscribed={isSubbed}
@@ -253,9 +268,15 @@ export default function CartPage() {
                         {isSubbed && (
                           <div className="mt-2 text-xs text-gray-600">
                             <span className="font-medium">Next order:</span>{" "}
-                            <span>{formatLocalDateToronto(firstDeliveryDate)}</span>
+                            <span>
+                              {formatLocalDateToronto(firstDeliveryDate)}
+                            </span>
                             <span className="ml-1">
-                              ({interval === "1" ? "every 1 month" : `every ${interval} months`})
+                              (
+                              {interval === "1"
+                                ? "every 1 month"
+                                : `every ${interval} months`}
+                              )
                             </span>
                           </div>
                         )}
@@ -272,7 +293,9 @@ export default function CartPage() {
                 );
               })
             ) : cart.length > 0 ? (
-              <div className="text-gray-500 py-8 text-center">No items match that filter.</div>
+              <div className="text-gray-500 py-8 text-center">
+                No items match that filter.
+              </div>
             ) : (
               <EmptyCart />
             )}
@@ -310,7 +333,9 @@ export default function CartPage() {
           product={[
             {
               name: selectedProduct.displayname || selectedProduct.itemid,
-              price: formatCurrency(selectedProduct.unitprice || selectedProduct.price),
+              price: formatCurrency(
+                selectedProduct.unitprice || selectedProduct.price
+              ),
               quantity: selectedProduct.quantity,
             },
           ]}
