@@ -147,14 +147,7 @@ export default function App() {
               />
 
               {/* Routes WITHOUT Cart Panel */}
-              <Route
-                path="/cart"
-                element={
-                  <CenteredContent>
-                    <CartPage />
-                  </CenteredContent>
-                }
-              />
+              <Route path="/cart" element={<CartPage />} />
               <Route
                 path="/faq"
                 element={

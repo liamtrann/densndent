@@ -5,11 +5,11 @@ import ListProductComponent from "./ListProductComponent";
 export default function ListProductPage({ by }) {
   const { name, brandName, nameAndId, categoryNameAndId } = useParams();
 
-  // Parse name and ID based on the 'by' prop
+
   const parseNameAndId = () => {
     switch (by) {
       case "name": {
-        // Convert dashes back to spaces for name-based queries
+   
         const textName = name?.replaceAll("-", " ") || "";
         return {
           displayName: textName || "Unknown Product",
@@ -27,7 +27,7 @@ export default function ListProductPage({ by }) {
         };
       }
       case "class": {
-        // For class, parse nameAndId to extract name and classId
+        
         let parsedName = "";
         let parsedClassId = "";
 
@@ -48,12 +48,12 @@ export default function ListProductPage({ by }) {
         };
       }
       case "category": {
-        // For category, get the last segment from the URL path
+        
         const currentPath = window.location.pathname;
         const pathSegments = currentPath.split("/");
         const lastSegment = pathSegments[pathSegments.length - 1] || "";
 
-        // Parse the last segment to extract name and categoryId
+     
         let parsedName = "";
         let parsedCategoryId = "";
 
@@ -74,7 +74,7 @@ export default function ListProductPage({ by }) {
         };
       }
       case "all": {
-        // For all products, no specific ID or name parsing needed
+        
         return {
           displayName: "All Products",
           id: null,
