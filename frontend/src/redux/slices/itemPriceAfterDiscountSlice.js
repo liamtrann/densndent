@@ -37,11 +37,14 @@ export const calculatePriceAfterDiscount = createAsyncThunk(
       for (const promotion of promotions) {
         const { fixedprice, itemquantifier } = promotion;
 
-        // Skip if promotion doesn't have required fields
-        if (!fixedprice || !itemquantifier) continue;
+        // Skip if promotion doesn't have fixedprice
+        if (!fixedprice) continue;
 
         // Check if quantity meets the minimum requirement
-        if (Number(quantity) >= Number(itemquantifier)) {
+        // If no itemquantifier is specified, apply the promotion (no minimum requirement)
+        const minQuantity = itemquantifier ? Number(itemquantifier) : 0;
+
+        if (Number(quantity) >= minQuantity) {
           // Calculate discounted price: fixedprice * quantity
           const discountedTotal = Number(fixedprice) * Number(quantity);
           const discount = originalTotal - discountedTotal;
