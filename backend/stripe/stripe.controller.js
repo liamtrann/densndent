@@ -1,5 +1,12 @@
 const stripeService = require("./stripe.service");
 const restApiService = require("../restapi/restapi.service");
+const crypto = require("crypto");
+
+// In-memory cache for recent Stripe orders (use Redis in production)
+const recentStripeOrders = new Map();
+const STRIPE_WINDOW_MINUTES = Number(
+  process.env.IDEMPOTENCY_WINDOW_MINUTES || 10
+);
 
 function toCents(amount) {
   // Handle null/undefined/invalid values
@@ -15,9 +22,44 @@ function toCents(amount) {
   return Math.max(0, cents);
 }
 
-// Order creation logic (moved from queue)
+function stableCartString(items = []) {
+  return items
+    .map((i) => `${i.item?.id || i.id}x${i.quantity || 1}`)
+    .sort()
+    .join("|");
+}
+
+function makeStripeIdempotencyKey(orderData = {}) {
+  const customerId = orderData.orderPayload?.entity?.id || "anon";
+  const shipMethodId = orderData.orderPayload?.shipMethod?.id || "na";
+  const cartItems = Array.isArray(orderData.orderPayload?.item?.items)
+    ? orderData.orderPayload.item.items
+    : [];
+  const cartStr = stableCartString(cartItems);
+
+  // Use shipping address for uniqueness (optional - only if provided)
+  const shipAddr = orderData.orderPayload?.shipAddress;
+  const addressStr = shipAddr
+    ? `${shipAddr.line1 || ""}|${shipAddr.city || ""}|${shipAddr.state || ""}|${shipAddr.zip || ""}`
+    : "na";
+
+  // DON'T include paymentIntentId - same cart should have same key regardless of payment intent
+  // Use a stable time window (10 minute buckets)
+  const windowBucket = Math.floor(
+    Date.now() / (STRIPE_WINDOW_MINUTES * 60 * 1000)
+  );
+
+  const raw = `${customerId}|${shipMethodId}|${cartStr}|${addressStr}|${windowBucket}`;
+  const hash = crypto
+    .createHash("sha256")
+    .update(raw)
+    .digest("hex")
+    .slice(0, 16);
+  return hash;
+}
+
+// Order creation logic with duplicate prevention (similar to createSalesOrder)
 async function createStripeOrder(orderData) {
-  
   console.log(`💳 [STRIPE] Creating sales order for Stripe payment...`);
 
   if (!orderData.orderPayload?.entity?.id) {
@@ -45,6 +87,52 @@ async function createStripeOrder(orderData) {
     `📧 [STRIPE] Order will be emailed to: ${orderData.orderPayload.email}`
   );
 
+  // Generate idempotency key for duplicate prevention
+  const idemKey = makeStripeIdempotencyKey(orderData);
+  const externalId = `stripe-checkout-${idemKey}`;
+
+  console.log(`🔑 [STRIPE] Debug - Raw order data for key generation:`, {
+    customerId: orderData.orderPayload?.entity?.id,
+    shipMethodId: orderData.orderPayload?.shipMethod?.id,
+    itemCount: orderData.orderPayload?.item?.items?.length,
+    cartItems: orderData.orderPayload?.item?.items?.map(
+      (i) => `${i.item?.id || i.id}x${i.quantity || 1}`
+    ),
+    paymentIntentId: orderData.stripePaymentIntentId,
+  });
+  console.log(`🔑 [STRIPE] Using idempotency key: ${idemKey}`);
+  console.log(`🆔 [STRIPE] Using external ID: ${externalId}`);
+
+  // Fast-path: return cached order if already created in the window
+  const cached = recentStripeOrders.get(idemKey);
+  if (cached) {
+    console.log(
+      `⚠️ [STRIPE] DUPLICATE ORDER DETECTED from cache for payment: ${orderData.stripePaymentIntentId}`
+    );
+    console.log(`⚠️ [STRIPE] Cache hit details:`, {
+      cachedOrderId: cached.id,
+      currentPaymentIntent: orderData.stripePaymentIntentId,
+      idempotencyKey: idemKey,
+    });
+    return {
+      ...cached,
+      isDuplicate: true,
+      message:
+        "Order already placed! To place the same order again, please wait 10 minutes.",
+    };
+  }
+
+  console.log(
+    `✅ [STRIPE] No cached order found, proceeding with new order creation`
+  );
+  console.log(
+    `📋 [STRIPE] Current cache size: ${recentStripeOrders.size} orders`
+  );
+  console.log(
+    `📋 [STRIPE] Cached keys:`,
+    Array.from(recentStripeOrders.keys())
+  );
+
   // Use provided memo or create default memo with Stripe payment information
   const today = new Date().toISOString().slice(0, 10);
   const memo =
@@ -53,15 +141,15 @@ async function createStripeOrder(orderData) {
       ? `STRIPE Payment - Payment ID: ${orderData.stripePaymentIntentId} - Created: ${today}`
       : `STRIPE Payment - Created: ${today}`);
 
-  // Add memo to order data (use existing memo if provided)
+  // Add memo and external ID to order data
   const finalOrderData = {
     ...orderData.orderPayload,
     memo: memo,
     stripePaymentIntentId: orderData.stripePaymentIntentId,
+    externalId: externalId,
   };
 
   console.log(`📝 [STRIPE] Using memo: ${memo}`);
-  
 
   try {
     console.log(`🚀 [STRIPE] Sending order to NetSuite...`);
@@ -72,7 +160,20 @@ async function createStripeOrder(orderData) {
     );
 
     console.log(
-      `💰 [STRIPE] Created sales order ID: ${salesOrder.id} for payment: ${orderData.stripePaymentIntentId}`
+      `💰 [STRIPE] Created sales order for payment: ${orderData.stripePaymentIntentId}`
+    );
+
+    // Cache for the configured window
+    console.log(
+      `💾 [STRIPE] Caching order with key: ${idemKey} for ${STRIPE_WINDOW_MINUTES} minutes`
+    );
+    recentStripeOrders.set(idemKey, salesOrder);
+    setTimeout(
+      () => {
+        console.log(`🗑️ [STRIPE] Removing cached order with key: ${idemKey}`);
+        recentStripeOrders.delete(idemKey);
+      },
+      STRIPE_WINDOW_MINUTES * 60 * 1000
     );
 
     // Create recurring orders if any exist
@@ -103,10 +204,59 @@ async function createStripeOrder(orderData) {
       }
     }
 
-    console.log(`✅ [STRIPE] Sales order creation completed successfully.: ${salesOrder}`);
+    console.log(`✅ [STRIPE] Sales order creation completed successfully`);
 
     return salesOrder;
   } catch (error) {
+    // Handle duplicate external ID from NetSuite by fetching existing order
+    const msg = error?.response?.data?.message || error?.message || "";
+    if (
+      msg.toLowerCase().includes("duplicate") ||
+      msg.toUpperCase().includes("DUPLICATE")
+    ) {
+      console.log(
+        `🔍 [STRIPE] Duplicate external ID detected, searching for existing order...`
+      );
+      try {
+        const found = await restApiService.searchRecords("salesOrder", {
+          externalId,
+        });
+        if (Array.isArray(found) && found.length > 0) {
+          console.log(
+            `✅ [STRIPE] Found existing order for duplicate external ID: ${found[0].id}`
+          );
+
+          // Cache the found order
+          console.log(
+            `💾 [STRIPE] Caching found duplicate order with key: ${idemKey}`
+          );
+          recentStripeOrders.set(idemKey, found[0]);
+          setTimeout(
+            () => {
+              console.log(
+                `🗑️ [STRIPE] Removing cached duplicate order with key: ${idemKey}`
+              );
+              recentStripeOrders.delete(idemKey);
+            },
+            STRIPE_WINDOW_MINUTES * 60 * 1000
+          );
+
+          return {
+            ...found[0],
+            isDuplicate: true,
+            message:
+              "Order already placed! To place the same order again, please wait 10 minutes.",
+          };
+        }
+      } catch (searchError) {
+        console.error(
+          `❌ [STRIPE] Failed to search for existing order:`,
+          searchError.message
+        );
+        // fall through to original error
+      }
+    }
+
     console.error(`❌ [STRIPE] Sales order creation failed:`, {
       error: error.message,
       customerId: orderData.orderPayload?.entity?.id,
@@ -114,6 +264,8 @@ async function createStripeOrder(orderData) {
       paymentIntentId: orderData.stripePaymentIntentId,
       email: orderData.orderPayload?.email,
       memo: memo,
+      externalId: externalId,
+      idempotencyKey: idemKey,
     });
 
     throw new Error(`Sales order creation failed: ${error.message}`);
@@ -467,8 +619,26 @@ class StripeController {
           };
 
           salesOrder = await createStripeOrder(orderDataWithPayment);
+
+          // Check if this is a duplicate order
+          if (salesOrder.isDuplicate) {
+            console.log(
+              `⚠️ [STRIPE] Duplicate order detected for payment: ${paymentIntentId}`
+            );
+
+            return res.status(200).json({
+              success: false,
+              isDuplicate: true,
+              message:
+                salesOrder.message ||
+                "Order already placed! To place the same order again, please wait 10 minutes.",
+              salesOrder: { created: true, isDuplicate: true },
+              paymentIntentId: paymentIntentId,
+            });
+          }
+
           console.log(
-            `✅ [STRIPE] Order created (ID: ${salesOrder.id}) for payment: ${paymentIntentId}`
+            `✅ [STRIPE] Order created for payment: ${paymentIntentId}`
           );
         } catch (orderError) {
           console.error(
