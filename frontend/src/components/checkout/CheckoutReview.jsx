@@ -71,7 +71,7 @@ export default function CheckoutReview({
         ? `INVOICE Payment - Sales Order by Invoice - Created: ${today}`
         : `Payment Method: ${paymentMethod} - Created: ${today}`;
 
-    return {
+    const orderPayload = {
       entity: {
         id: userInfo.id,
         // type: userInfo.searchstage,
@@ -109,6 +109,42 @@ export default function CheckoutReview({
         : null,
       paymentMethod: paymentMethod,
       memo: memo,
+    };
+
+    // Build recurring order payloads for subscription items
+    const subscriptionItems = cartItems.filter(
+      (item) =>
+        item.subscriptionEnabled &&
+        item.subscriptionInterval &&
+        item.subscriptionUnit
+    );
+
+    const recurringOrderPayload = subscriptionItems.map((item) => {
+      const nextRunDate = calculateNextRunDate(
+        item.subscriptionInterval,
+        item.subscriptionUnit
+      );
+
+      return {
+        name: `every ${item.subscriptionInterval} ${item.subscriptionUnit}`,
+        custrecord_ro_customer: { id: userInfo.id },
+        custrecord_ro_item: { id: item.id },
+        custrecord_ro_quantity: Number(item.quantity),
+        custrecord_ro_interval: Number(item.subscriptionInterval),
+        custrecord_ro_interval_unit: { id: "2" },
+        custrecord_ro_next_run: nextRunDate,
+        custrecord_ro_status: { id: "1" },
+        custrecord_prefer_delivery: {
+          items: (item.subscriptionPreferredDeliveryDays || []).map(
+            (dayNum) => ({ id: dayNum })
+          ),
+        },
+      };
+    });
+
+    return {
+      orderPayload,
+      recurringOrderPayload,
     };
   };
 
@@ -219,13 +255,15 @@ export default function CheckoutReview({
     }
 
     // Build order payload using the standardized function
-    const orderPayload = buildOrderPayload();
-    if (!orderPayload) {
+    const payloadResult = buildOrderPayload();
+    if (!payloadResult) {
       ToastNotification.error(
         "Unable to build order. Please check your information and try again."
       );
       return;
     }
+
+    const { orderPayload, recurringOrderPayload } = payloadResult;
 
     try {
       setIsProcessing(true);
@@ -259,46 +297,14 @@ export default function CheckoutReview({
         ToastNotification.success("Order placed successfully!");
 
         // Create recurring orders for subscription items ONLY if sales order was successful (not duplicate)
-        const subscriptionItems = cartItems.filter(
-          (item) =>
-            item.subscriptionEnabled &&
-            item.subscriptionInterval &&
-            item.subscriptionUnit
-        );
-
-        if (subscriptionItems.length > 0) {
-          for (const item of subscriptionItems) {
+        if (recurringOrderPayload.length > 0) {
+          for (const recurringOrder of recurringOrderPayload) {
             try {
-              const nextRunDate = calculateNextRunDate(
-                item.subscriptionInterval,
-                item.subscriptionUnit
-              );
-
-              const recurringOrderPayload = {
-                name: `every ${item.subscriptionInterval} ${item.subscriptionUnit}`,
-                custrecord_ro_customer: { id: userInfo.id },
-                custrecord_ro_item: { id: item.id },
-                custrecord_ro_quantity: Number(item.quantity),
-                custrecord_ro_interval: Number(item.subscriptionInterval),
-                custrecord_ro_interval_unit: { id: "2" },
-                custrecord_ro_next_run: nextRunDate,
-                custrecord_ro_status: { id: "1" },
-                custrecord_prefer_delivery: {
-                  items: (item.subscriptionPreferredDeliveryDays || []).map(
-                    (dayNum) => ({ id: dayNum })
-                  ),
+              await api.post(endpoint.POST_RECURRING_ORDER(), recurringOrder, {
+                headers: {
+                  Authorization: `Bearer ${token}`,
                 },
-              };
-
-              await api.post(
-                endpoint.POST_RECURRING_ORDER(),
-                recurringOrderPayload,
-                {
-                  headers: {
-                    Authorization: `Bearer ${token}`,
-                  },
-                }
-              );
+              });
 
               // Recurring order created successfully
             } catch (recurringError) {
@@ -306,9 +312,9 @@ export default function CheckoutReview({
             }
           }
 
-          if (subscriptionItems.length > 0) {
+          if (recurringOrderPayload.length > 0) {
             ToastNotification.success(
-              `Subscription set up for ${subscriptionItems.length} item(s)!`
+              `Subscription set up for ${recurringOrderPayload.length} item(s)!`
             );
           }
         }

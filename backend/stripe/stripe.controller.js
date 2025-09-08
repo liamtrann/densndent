@@ -1,9 +1,5 @@
 const stripeService = require("./stripe.service");
 const restApiService = require("../restapi/restapi.service");
-const {
-  enqueueStripeOrder,
-  checkJobStatus,
-} = require("../queue/stripeOrderQueue");
 
 function toCents(amount) {
   // Handle null/undefined/invalid values
@@ -17,6 +13,111 @@ function toCents(amount) {
 
   // Ensure it's a positive integer
   return Math.max(0, cents);
+}
+
+// Order creation logic (moved from queue)
+async function createStripeOrder(orderData) {
+  
+  console.log(`💳 [STRIPE] Creating sales order for Stripe payment...`);
+
+  if (!orderData.orderPayload?.entity?.id) {
+    throw new Error(
+      `Invalid customer ID: ${orderData.orderPayload?.entity?.id}`
+    );
+  }
+
+  // Check for items in the NetSuite format (orderData.orderPayload.item.items)
+  if (
+    !orderData.orderPayload?.item?.items ||
+    orderData.orderPayload.item.items.length === 0
+  ) {
+    console.error(
+      "❌ [STRIPE] Order data structure:",
+      JSON.stringify(orderData, null, 2)
+    );
+    throw new Error("No items provided for order");
+  }
+
+  console.log(
+    `📦 [STRIPE] Processing ${orderData.orderPayload.item.items.length} items for customer ${orderData.orderPayload.entity.id}`
+  );
+  console.log(
+    `📧 [STRIPE] Order will be emailed to: ${orderData.orderPayload.email}`
+  );
+
+  // Use provided memo or create default memo with Stripe payment information
+  const today = new Date().toISOString().slice(0, 10);
+  const memo =
+    orderData.orderPayload.memo ||
+    (orderData.stripePaymentIntentId
+      ? `STRIPE Payment - Payment ID: ${orderData.stripePaymentIntentId} - Created: ${today}`
+      : `STRIPE Payment - Created: ${today}`);
+
+  // Add memo to order data (use existing memo if provided)
+  const finalOrderData = {
+    ...orderData.orderPayload,
+    memo: memo,
+    stripePaymentIntentId: orderData.stripePaymentIntentId,
+  };
+
+  console.log(`📝 [STRIPE] Using memo: ${memo}`);
+  
+
+  try {
+    console.log(`🚀 [STRIPE] Sending order to NetSuite...`);
+
+    const salesOrder = await restApiService.postRecord(
+      "salesOrder",
+      finalOrderData
+    );
+
+    console.log(
+      `💰 [STRIPE] Created sales order ID: ${salesOrder.id} for payment: ${orderData.stripePaymentIntentId}`
+    );
+
+    // Create recurring orders if any exist
+    if (
+      orderData.recurringOrderPayload &&
+      orderData.recurringOrderPayload.length > 0
+    ) {
+      console.log(
+        `🔄 [STRIPE] Creating ${orderData.recurringOrderPayload.length} recurring orders...`
+      );
+
+      for (const recurringOrder of orderData.recurringOrderPayload) {
+        try {
+          const recurringOrderResult = await restApiService.postRecord(
+            "customrecord_recurring_order",
+            recurringOrder
+          );
+          console.log(
+            `✅ [STRIPE] Created recurring order ID: ${recurringOrderResult.id}`
+          );
+        } catch (recurringError) {
+          console.error(
+            `❌ [STRIPE] Failed to create recurring order:`,
+            recurringError.message
+          );
+          // Don't throw error for recurring order failures, just log them
+        }
+      }
+    }
+
+    console.log(`✅ [STRIPE] Sales order creation completed successfully.: ${salesOrder}`);
+
+    return salesOrder;
+  } catch (error) {
+    console.error(`❌ [STRIPE] Sales order creation failed:`, {
+      error: error.message,
+      customerId: orderData.orderPayload?.entity?.id,
+      itemCount: orderData.orderPayload?.item?.items?.length || 0,
+      paymentIntentId: orderData.stripePaymentIntentId,
+      email: orderData.orderPayload?.email,
+      memo: memo,
+    });
+
+    throw new Error(`Sales order creation failed: ${error.message}`);
+  }
 }
 
 class StripeController {
@@ -39,13 +140,6 @@ class StripeController {
       });
 
       console.log("Stripe customer created:", customer);
-
-      // TODO: Update existing customer in your database with customer.id
-      // Example:
-      // await Customer.update(
-      //   { stripeCustomerId: customer.id },
-      //   { where: { email: email } }
-      // );
 
       res.status(200).json({
         message: "Stripe customer created successfully",
@@ -353,150 +447,136 @@ class StripeController {
       });
     }
 
-    try {
-      // 1. Confirm payment with Stripe
-      const paymentIntent = await stripeService.confirmPaymentIntent(
-        paymentIntentId,
-        {
-          payment_method: paymentMethodId,
-          return_url: `${process.env.FRONTEND_URL || "http://localhost:3000"}/purchase-history`,
-        }
-      );
+    let salesOrder = null;
+    let paymentIntent = null;
 
-      // 2. Create order regardless of payment status, but track status in memo
+    try {
+      // 1. ALWAYS CREATE ORDER FIRST (regardless of payment outcome)
       if (orderData) {
-        console.log(
-          `💳 [STRIPE] Enqueueing sales order for payment: ${paymentIntent.id} (Status: ${paymentIntent.status})`
-        );
+        const today = new Date().toISOString().slice(0, 10);
 
         try {
-          // Get current date for memo
-          const today = new Date().toISOString().slice(0, 10);
-
-          // Determine memo based on payment status with detailed information
-          let memo = "";
-          const baseInfo = `STRIPE Payment - Payment ID: ${paymentIntent.id} - Created: ${today}`;
-
-          switch (paymentIntent.status) {
-            case "succeeded":
-              memo = `**SUCCESSFUL** - ${baseInfo} - Status: Payment confirmed successfully`;
-              break;
-            case "requires_action":
-              memo = `**LOADING** - ${baseInfo} - Status: Payment requires additional action (3D Secure or similar)`;
-              break;
-            case "requires_payment_method":
-              memo = `**FAILED** - ${baseInfo} - Status: Payment requires valid payment method`;
-              break;
-            case "processing":
-              memo = `**LOADING** - ${baseInfo} - Status: Payment is being processed`;
-              break;
-            case "canceled":
-              memo = `**FAILED** - ${baseInfo} - Status: Payment was canceled`;
-              break;
-            case "payment_failed":
-              memo = `**FAILED** - ${baseInfo} - Status: Payment failed`;
-              break;
-            case "requires_confirmation":
-              memo = `**LOADING** - ${baseInfo} - Status: Payment requires confirmation`;
-              break;
-            default:
-              memo = `**UNKNOWN** - ${baseInfo} - Status: ${paymentIntent.status}`;
-          }
-
-          // Add payment intent ID and memo to order data for tracking
+          // Create order with pending payment status
           const orderDataWithPayment = {
             ...orderData,
-            stripePaymentIntentId: paymentIntent.id,
-            memo: memo,
+            stripePaymentIntentId: paymentIntentId,
+            orderPayload: {
+              ...orderData.orderPayload,
+              memo: `**LOADING** - STRIPE Payment - Payment ID: ${paymentIntentId} - Created: ${today} - Status: Order created, payment pending confirmation`,
+            },
           };
 
-          // Enqueue order creation and wait for completion
-          const job = await enqueueStripeOrder(
-            paymentIntent.id,
-            orderDataWithPayment
-          );
-
-          // Wait for the job to complete
+          salesOrder = await createStripeOrder(orderDataWithPayment);
           console.log(
-            `⏳ [STRIPE] Waiting for order creation job ${job?.id} to complete...`
+            `✅ [STRIPE] Order created (ID: ${salesOrder.id}) for payment: ${paymentIntentId}`
           );
-
-          // Wait for job completion with timeout
-          const jobResult = await new Promise((resolve, reject) => {
-            const timeout = setTimeout(() => {
-              reject(new Error("Order creation timeout after 30 seconds"));
-            }, 30000); // 30 second timeout
-
-            // Check job status every 1 second
-            const checkStatus = async () => {
-              try {
-                const status = await checkJobStatus(job?.id);
-
-                if (status.status === "completed") {
-                  clearTimeout(timeout);
-                  resolve(status);
-                } else if (status.status === "failed") {
-                  clearTimeout(timeout);
-                  reject(new Error(`Order creation failed: ${status.message}`));
-                } else {
-                  // Job still processing, check again in 1 second
-                  setTimeout(checkStatus, 1000);
-                }
-              } catch (error) {
-                clearTimeout(timeout);
-                reject(error);
-              }
-            };
-
-            checkStatus();
-          });
-
-          console.log(
-            `✅ [STRIPE] Order creation completed for payment: ${paymentIntent.id} with memo: ${memo}`
-          );
-
-          res.status(200).json({
-            success: true,
-            paymentIntent: {
-              id: paymentIntent.id,
-              status: paymentIntent.status,
-              amount: paymentIntent.amount,
-              currency: paymentIntent.currency,
-              client_secret: paymentIntent.client_secret,
-              next_action: paymentIntent.next_action,
-              charges: paymentIntent.charges,
-            },
-            jobId: job?.id,
-            jobResult: jobResult,
-            orderMemo: memo,
-            message:
-              paymentIntent.status === "succeeded"
-                ? "Payment confirmed and order created successfully"
-                : `Order created with payment status: ${paymentIntent.status}`,
-          });
         } catch (orderError) {
           console.error(
-            `❌ [STRIPE] Order creation failed for payment ${paymentIntent.id}:`,
+            `❌ [STRIPE] Order creation failed:`,
             orderError.message
           );
 
-          // Order creation failed regardless of payment status
-          res.status(200).json({
-            success: paymentIntent.status === "succeeded",
-            paymentIntent: {
-              id: paymentIntent.id,
-              status: paymentIntent.status,
-              amount: paymentIntent.amount,
-              currency: paymentIntent.currency,
-              client_secret: paymentIntent.client_secret,
-              next_action: paymentIntent.next_action,
-              charges: paymentIntent.charges,
-            },
-            orderError: orderError.message,
-            message:
-              "Payment processed but order creation failed. Please contact support.",
+          // If order creation fails, don't proceed with payment
+          return res.status(400).json({
+            success: false,
+            message: "Order creation failed. Payment not processed.",
+            error: orderError.message,
           });
         }
+      }
+
+      // 2. NOW TRY TO CONFIRM PAYMENT
+      try {
+        paymentIntent = await stripeService.confirmPaymentIntent(
+          paymentIntentId,
+          {
+            payment_method: paymentMethodId,
+            return_url: `${process.env.FRONTEND_URL || "http://localhost:3000"}/purchase-history`,
+          }
+        );
+
+        console.log(
+          `💳 [STRIPE] Payment status: ${paymentIntent.status} for order: ${salesOrder?.id}`
+        );
+      } catch (paymentError) {
+        console.error(
+          `❌ [STRIPE] Payment confirmation failed:`,
+          paymentError.message
+        );
+
+        // Payment failed, but order exists - log the failure
+        if (salesOrder) {
+          const today = new Date().toISOString().slice(0, 10);
+          const failedMemo = `**FAILED** - STRIPE Payment - Payment ID: ${paymentIntentId} - Created: ${today} - Status: Payment confirmation failed - Error: ${paymentError.message}`;
+
+          console.log(
+            `📝 [STRIPE] Order was created with pending status, payment failed with memo: ${failedMemo}`
+          );
+        }
+
+        return res.status(400).json({
+          success: false,
+          message: "Payment confirmation failed",
+          error: paymentError.message,
+          salesOrder: salesOrder ? { created: true } : null, // No ID returned from NetSuite
+          paymentIntentId: paymentIntentId,
+        });
+      }
+
+      // 3. LOG FINAL PAYMENT STATUS (can't update order since no ID returned)
+      if (salesOrder && paymentIntent) {
+        const today = new Date().toISOString().slice(0, 10);
+        const baseInfo = `STRIPE Payment - Payment ID: ${paymentIntent.id} - Created: ${today}`;
+        let finalMemo = "";
+
+        switch (paymentIntent.status) {
+          case "succeeded":
+            finalMemo = `**SUCCESSFUL** - ${baseInfo} - Status: Payment confirmed successfully`;
+            break;
+          case "requires_action":
+            finalMemo = `**LOADING** - ${baseInfo} - Status: Payment requires additional action (3D Secure or similar)`;
+            break;
+          case "requires_payment_method":
+            finalMemo = `**FAILED** - ${baseInfo} - Status: Payment requires valid payment method`;
+            break;
+          case "processing":
+            finalMemo = `**LOADING** - ${baseInfo} - Status: Payment is being processed`;
+            break;
+          case "canceled":
+            finalMemo = `**FAILED** - ${baseInfo} - Status: Payment was canceled`;
+            break;
+          case "payment_failed":
+            finalMemo = `**FAILED** - ${baseInfo} - Status: Payment failed`;
+            break;
+          case "requires_confirmation":
+            finalMemo = `**LOADING** - ${baseInfo} - Status: Payment requires confirmation`;
+            break;
+          default:
+            finalMemo = `**UNKNOWN** - ${baseInfo} - Status: ${paymentIntent.status}`;
+        }
+
+        console.log(`📝 [STRIPE] Final payment status for order: ${finalMemo}`);
+      }
+
+      // 4. RETURN SUCCESS RESPONSE
+      if (orderData && salesOrder) {
+        res.status(200).json({
+          success: paymentIntent.status === "succeeded",
+          paymentIntent: {
+            id: paymentIntent.id,
+            status: paymentIntent.status,
+            amount: paymentIntent.amount,
+            currency: paymentIntent.currency,
+            client_secret: paymentIntent.client_secret,
+            next_action: paymentIntent.next_action,
+            charges: paymentIntent.charges,
+          },
+          salesOrder: { created: true }, // No ID returned from NetSuite
+          message:
+            paymentIntent.status === "succeeded"
+              ? "Order created and payment confirmed successfully"
+              : `Order created, payment status: ${paymentIntent.status}`,
+        });
       } else {
         // No order data provided
         res.status(200).json({
@@ -517,43 +597,12 @@ class StripeController {
         });
       }
     } catch (err) {
-      console.error("Error confirming payment:", err);
+      console.error("Error in payment confirmation process:", err);
       res.status(500).json({
         success: false,
-        message: "Could not confirm payment",
+        message: "Unexpected error in payment process",
         error: process.env.NODE_ENV === "development" ? err.message : undefined,
-      });
-    }
-  }
-
-  /**
-   * Check order creation job status
-   * @param {Object} req - Express request object
-   * @param {Object} res - Express response object
-   */
-  async checkOrderJobStatus(req, res) {
-    try {
-      const { jobId } = req.params;
-
-      if (!jobId) {
-        return res.status(400).json({
-          success: false,
-          message: "Job ID is required",
-        });
-      }
-
-      const status = await checkJobStatus(jobId);
-
-      res.status(200).json({
-        success: true,
-        jobStatus: status,
-      });
-    } catch (err) {
-      console.error("Error checking job status:", err);
-      res.status(500).json({
-        success: false,
-        message: "Could not check job status",
-        error: process.env.NODE_ENV === "development" ? err.message : undefined,
+        salesOrder: salesOrder ? { created: true } : null, // No ID returned from NetSuite
       });
     }
   }
