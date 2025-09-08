@@ -137,7 +137,7 @@ export default function UserInfoCard({ customer }) {
         }
         actionLabel={
           customer?.shipping_address_name || customer?.billing_address_name
-            ? "Update Address"
+            ? "Update "
             : "Create New Address"
         }
         onAction={(e) => {

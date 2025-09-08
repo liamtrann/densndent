@@ -62,7 +62,7 @@ export default function CreateAddressModal({
         {error && <ErrorMessage message={error} />}
         <div className="bg-white w-full max-w-md p-6 rounded shadow-lg relative">
           <CloseButton onClick={onClose} />
-          <h2 className="text-xl font-semibold mb-4">Update Address</h2>
+          <h2 className="text-xl font-semibold mb-4">Update</h2>
           <div className="text-red-600 mb-4">
             You need to create your profile before you can update your address.
           </div>
@@ -165,7 +165,7 @@ export default function CreateAddressModal({
       <div className="bg-white w-full max-w-2xl p-6 rounded shadow-lg relative overflow-y-auto max-h-[90vh]">
         <CloseButton onClick={onClose} />
 
-        <h2 className="text-xl font-semibold mb-4">Update Address</h2>
+        <h2 className="text-xl font-semibold mb-4">Update</h2>
 
         {submitting && <Loading />}
         <FormSubmit onSubmit={handleSubmit} className="space-y-4">
