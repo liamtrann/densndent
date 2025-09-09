@@ -277,9 +277,32 @@ export default function ProductsPage({
 
           <div className="mt-2 mb-4">
             {product.price ? (
-              <div className="text-3xl font-bold text-gray-800">
-                {formatCurrency(product.price)}
-              </div>
+              product.promotioncode_id && product.fixedprice ? (
+                <div className="space-y-2">
+                  {/* Promotion badge */}
+                  <div className="mb-2">
+                    <span className="text-sm text-white font-medium bg-smiles-redOrange px-3 py-1 rounded">
+                      PROMO: {product.promotion_code}
+                    </span>
+                  </div>
+                  {/* Original price - strikethrough */}
+                  <div className="text-gray-500 line-through text-lg">
+                    {formatCurrency(product.price)}
+                  </div>
+                  {/* Promotional price */}
+                  <div className="text-red-600 font-bold text-3xl">
+                    {formatCurrency(product.fixedprice)}
+                  </div>
+                  {/* Savings amount */}
+                  <div className="text-green-600 text-lg font-medium">
+                    Save {formatCurrency(product.price - product.fixedprice)}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-3xl font-bold text-gray-800">
+                  {formatCurrency(product.price)}
+                </div>
+              )
             ) : null}
           </div>
 

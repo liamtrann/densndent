@@ -109,6 +109,14 @@ export default function ProductInListRow({
                 />
               </div>
             )}
+            {/* Promotion badge */}
+            {product.promotioncode_id && product.promotion_code && (
+              <div className="mb-2">
+                <span className="text-xs text-white font-medium bg-red-600 px-2 py-1 rounded">
+                  PROMO: {product.promotion_code}
+                </span>
+              </div>
+            )}
             {product.stockdescription && (
               <div className="mb-2">
                 <span className="text-sm text-blue-600 font-medium bg-blue-50 px-2 py-1 rounded">
@@ -143,11 +151,27 @@ export default function ProductInListRow({
           </div>
         ) : null;
 
-        const Price = (
-          <div className="text-lg md:text-xl font-bold text-gray-900">
-            {product.price != null ? formatCurrency(product.price) : "—"}
-          </div>
-        );
+        const Price =
+          product.promotioncode_id && product.fixedprice ? (
+            <div className="space-y-1">
+              {/* Original price - strikethrough */}
+              <div className="text-gray-500 line-through text-xs">
+                {product.price != null ? formatCurrency(product.price) : "—"}
+              </div>
+              {/* Promotional price */}
+              <div className="text-red-600 font-semibold text-lg md:text-xl">
+                {formatCurrency(product.fixedprice)}
+              </div>
+              {/* Savings amount */}
+              <div className="text-green-600 text-xs">
+                Save {formatCurrency(product.price - product.fixedprice)}
+              </div>
+            </div>
+          ) : (
+            <div className="text-lg md:text-xl font-bold text-gray-900">
+              {product.price != null ? formatCurrency(product.price) : "—"}
+            </div>
+          );
 
         return (
           <>

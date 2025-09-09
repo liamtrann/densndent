@@ -58,13 +58,19 @@ export default function ProductInListGrid({
           {itemid}
         </h3>
 
-        {product.stockdescription && (
-          <div className="mb-2">
+        <div className="mb-2 flex flex-wrap gap-2">
+          {/* Promotion badge */}
+          {product.promotioncode_id && product.promotion_code && (
+            <span className="text-xs text-white font-medium bg-smiles-redOrange px-2 py-1 rounded">
+              PROMO: {product.promotion_code}
+            </span>
+          )}
+          {product.stockdescription && (
             <span className="text-sm text-blue-600 font-medium bg-blue-50 px-2 py-1 rounded">
               {product.stockdescription}
             </span>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Show promotion preview */}
         {actualQuantity > quantity && (
@@ -77,12 +83,32 @@ export default function ProductInListGrid({
         )}
 
         <div className="mb-2">
-          <span className="text-xl font-bold text-gray-800">
-            ${Math.floor(price)}
-          </span>
-          <span className="text-sm font-semibold text-gray-600 align-top">
-            .{(price % 1).toFixed(2).slice(2)}
-          </span>
+          {product.promotioncode_id && product.fixedprice ? (
+            <div className="space-y-1">
+              {/* Original price - strikethrough */}
+              <div className="text-gray-500 line-through text-xs">
+                ${Math.floor(price)}.{(price % 1).toFixed(2).slice(2)}
+              </div>
+              {/* Promotional price */}
+              <div className="text-red-600 font-semibold text-xl">
+                ${Math.floor(product.fixedprice)}.
+                {(product.fixedprice % 1).toFixed(2).slice(2)}
+              </div>
+              {/* Savings amount */}
+              <div className="text-green-600 text-xs">
+                Save ${(price - product.fixedprice).toFixed(2)}
+              </div>
+            </div>
+          ) : (
+            <div>
+              <span className="text-xl font-bold text-gray-800">
+                ${Math.floor(price)}
+              </span>
+              <span className="text-sm font-semibold text-gray-600 align-top">
+                .{(price % 1).toFixed(2).slice(2)}
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="flex-grow">
