@@ -875,12 +875,12 @@ export const DateUtils = {
   },
 };
 
-export const DOW_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]; // Mon index 0..6
+/*export const DOW_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]; // Mon index 0..6
 export const jsIdxFromMonIdx = (monIdx) => (monIdx + 1) % 7; // Mon0..Sun6 -> JS Sun0..Sat6
-export const monIdxFromJsIdx = (jsIdx) => (jsIdx + 6) % 7; // JS Sun0..Sat6 -> Mon0..Sun6
+export const monIdxFromJsIdx = (jsIdx) => (jsIdx + 6) % 7; // JS Sun0..Sat6 -> Mon0..Sun6*/
 
 // Convert day numbers (1-7) to readable text
-export const formatDeliveryDays = (dayNumbers) => {
+/*export const formatDeliveryDays = (dayNumbers) => {
   if (!dayNumbers || dayNumbers.length === 0) return "No preferences set";
 
   const dayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -890,9 +890,9 @@ export const formatDeliveryDays = (dayNumbers) => {
       .filter(Boolean) // Remove undefined values
       .join(", ") || "No preferences set"
   );
-};
+};*/
 
-export const nextDateForWeekdayFrom = (baseDate, monIdx) => {
+/*export const nextDateForWeekdayFrom = (baseDate, monIdx) => {
   const jsTarget = jsIdxFromMonIdx(monIdx);
   const start = new Date(
     baseDate.getFullYear(),
@@ -903,7 +903,7 @@ export const nextDateForWeekdayFrom = (baseDate, monIdx) => {
   const result = new Date(start);
   result.setDate(start.getDate() + diff);
   return result;
-};
+};*/
 
 // config/config.js
 
@@ -944,6 +944,64 @@ export async function resolveProductIdByNameOrId(maybeId) {
   }
   return null;
 }
+
+
+
+
+
+
+
+// ─────────────────────────────────────────────────────────────
+// Preferred Delivery Days — single source of truth
+// ─────────────────────────────────────────────────────────────
+export const DOW_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+// Convert Mon-index (1..7) <-> JS getDay() (0..6)
+export const jsIdxFromMonIdx = (monIdx) => (monIdx + 1) % 7; // Mon1..Sun7 -> JS Sun0..Sat6
+export const monIdxFromJsIdx = (jsIdx) => (jsIdx + 6) % 7;   // JS Sun0..Sat6 -> Mon1..Sun7
+
+// Display helper: [1,2,5] -> "Mon, Tue, Fri"
+export function formatDeliveryDays(dayNumbers) {
+  const nums = Array.isArray(dayNumbers) ? dayNumbers : [];
+  const cleaned = Array.from(
+    new Set(nums.map(Number).filter((n) => Number.isFinite(n) && n >= 1 && n <= 7))
+  ).sort((a, b) => a - b);
+  if (cleaned.length === 0) return "No preferences set";
+  return cleaned.map((n) => DOW_LABELS[n - 1]).join(", ");
+}
+
+// Parse "1, 2, 3" (or "1,2,3"/["1","2","3"]) -> [1,2,3]
+export function parsePreferredDays(value) {
+  if (!value) return [];
+  const parts = Array.isArray(value)
+    ? value
+    : typeof value === "string"
+    ? value.split(/[,\s]+/)
+    : [value];
+  return Array.from(
+    new Set(parts.map((s) => parseInt(s, 10)).filter((n) => Number.isFinite(n) && n >= 1 && n <= 7))
+  ).sort((a, b) => a - b);
+}
+
+// Serialize [1,2,3] -> "1, 2, 3"
+export function serializePreferredDays(arr) {
+  if (!Array.isArray(arr) || arr.length === 0) return "";
+  const cleaned = Array.from(
+    new Set(arr.map((n) => parseInt(n, 10)).filter((n) => Number.isFinite(n) && n >= 1 && n <= 7))
+  ).sort((a, b) => a - b);
+  return cleaned.join(", ");
+}
+
+// Next date (Date) for a given weekday (Mon-index 1..7) from base date
+export const nextDateForWeekdayFrom = (baseDate, monIdx) => {
+  const jsTarget = jsIdxFromMonIdx(monIdx);
+  const start = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate());
+  const diff = (jsTarget - start.getDay() + 7) % 7;
+  const result = new Date(start);
+  result.setDate(start.getDate() + diff);
+  return result;
+};
+
 
 export {
   extractBuyGet,
