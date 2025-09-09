@@ -94,7 +94,7 @@ class ItemsService {
       throw new Error("itemIds must be a non-empty array");
     }
     const idsString = itemIds.map((id) => `'${id}'`).join(",");
-    const sql = `SELECT i.id, i.class, i.manufacturer, i.mpn, i.itemid, i.itemType, i.subsidiary, i.isonline, i.displayname, i.custitemcustitem_dnd_brand AS branditem, i.totalquantityonhand, i.stockdescription, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url, promo.promotioncode_id, promo.promotion_code, promo.promotion_name, promo.startdate, promo.enddate, promo.ispublic, promo.isinactive, promo.fixedprice, promo.itemquantifier FROM item i ${this._getPromotion("i")} WHERE i.id IN (${idsString}) AND i.isinactive='F' AND i.isonline = 'T';`;
+    const sql = `SELECT i.id, i.class, i.manufacturer, i.mpn, i.itemid, i.itemType, i.subsidiary, i.isonline, i.displayname, i.custitemcustitem_dnd_brand AS branditem, i.totalquantityonhand, i.stockdescription, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url, ip.item, ip.price, promo.promotioncode_id, promo.promotion_code, promo.promotion_name, promo.startdate, promo.enddate, promo.ispublic, promo.isinactive, promo.fixedprice, promo.itemquantifier FROM item i LEFT JOIN itemprice ip ON ip.item = i.id AND ip.pricelevel = 1 ${this._getPromotion("i")} WHERE i.id IN (${idsString}) AND i.isinactive='F' AND i.isonline = 'T';`;
     const results = await runQueryWithPagination(sql, itemIds.length, 0);
 
     return results.items || [];

@@ -205,8 +205,10 @@ export default function ProductsPage({
   }, [product]);
 
   useEffect(() => {
-    if (effectiveRawId) addProductToRecentViews(effectiveRawId);
-  }, [effectiveRawId, addProductToRecentViews]);
+    if (effectiveRawId && !isModal) {
+      addProductToRecentViews(effectiveRawId);
+    }
+  }, [effectiveRawId, addProductToRecentViews, isModal]);
 
   const handleAddToCart = () => {
     if (!product) return;

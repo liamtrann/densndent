@@ -16,25 +16,42 @@ export default function FlexibleModal({
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn"
       onClick={handleBackdropClick}
     >
       <div
-        className={`bg-white rounded-lg ${maxWidth} w-full ${maxHeight} overflow-y-auto`}
+        className={`bg-white rounded-2xl shadow-2xl ${maxWidth} w-full ${maxHeight} overflow-hidden transform transition-all duration-300 ease-out animate-slideUp`}
       >
         {/* Header with close button */}
-        <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
-          <h2 className="text-xl font-semibold text-gray-800">{title}</h2>
+        <div className="sticky top-0 bg-gradient-to-r from-white to-gray-50 border-b border-gray-100 px-8 py-6 flex justify-between items-center">
+          <h2 className="text-2xl font-bold text-gray-800 tracking-tight">
+            {title}
+          </h2>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 text-2xl leading-none"
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-700 transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-gray-300"
+            aria-label="Close modal"
           >
-            ×
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6">{children}</div>
+        <div className="p-8 overflow-y-auto bg-gradient-to-b from-white to-gray-50">
+          {children}
+        </div>
       </div>
     </div>
   );

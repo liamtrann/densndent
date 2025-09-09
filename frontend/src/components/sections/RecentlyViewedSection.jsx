@@ -1,13 +1,15 @@
 // src/components/RecentlyViewedSection.jsx
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { BestSellerCard, AnimatedCard, TitleSection } from "common";
-import BlueBanner from "./BlueBanner";
+
+import { TitleSection } from "common";
+
+import { ListProduct } from "..";
 import { fetchRecentProducts } from "../../redux/slices/recentViewsSlice";
 
+import BlueBanner from "./BlueBanner";
+
 export default function RecentlyViewedSection() {
-  const navigate = useNavigate();
   const dispatch = useDispatch();
 
   const { recentProducts, loading, error, viewedProductIds } = useSelector(
@@ -18,11 +20,7 @@ export default function RecentlyViewedSection() {
     if (viewedProductIds.length > 0 && recentProducts.length === 0) {
       dispatch(fetchRecentProducts(viewedProductIds));
     }
-  }, [viewedProductIds, recentProducts, dispatch]);
-
-  const handleClick = (item) => {
-    navigate(`/product/${item.id}`);
-  };
+  }, []); 
 
   const hasItems = recentProducts && recentProducts.length > 0;
 
@@ -62,13 +60,7 @@ export default function RecentlyViewedSection() {
         enableHorizontalScroll={true}
         loading={loading}
         error={error}
-        renderItem={(item) => (
-          <AnimatedCard key={item.id}>
-            <div onClick={() => handleClick(item)} className="cursor-pointer">
-              <BestSellerCard {...item} />
-            </div>
-          </AnimatedCard>
-        )}
+        renderItem={(item) => <ListProduct product={item} listType="grid" />}
         showButton={false}
       />
     </>

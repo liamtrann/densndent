@@ -1,15 +1,17 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { BestSellerCard, AnimatedCard, TitleSection } from "common";
-import BlueBanner from "./BlueBanner";
 import { fetchBestSellers } from "store/slices/bestSellersSlice";
 import { STATUS } from "store/status";
+
 import { delayCall } from "api/util";
+import { TitleSection } from "common";
+
+import { ListProduct } from "..";
+
+import BlueBanner from "./BlueBanner";
 
 export default function BestSellersSection() {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const {
     items: bestSellers,
     status,
@@ -21,10 +23,6 @@ export default function BestSellersSection() {
       return delayCall(() => dispatch(fetchBestSellers()));
     }
   }, [dispatch, bestSellers]);
-
-  const handleClick = (item) => {
-    navigate(`/product/${item.id}`);
-  };
 
   return (
     <>
@@ -48,13 +46,7 @@ export default function BestSellersSection() {
       <BlueBanner
         items={bestSellers}
         enableHorizontalScroll={true}
-        renderItem={(item) => (
-          <AnimatedCard>
-            <div onClick={() => handleClick(item)} className="cursor-pointer">
-              <BestSellerCard {...item} />
-            </div>
-          </AnimatedCard>
-        )}
+        renderItem={(item) => <ListProduct product={item} listType="grid" />}
         showButton={false}
         loading={status === STATUS.LOADING}
         error={status === STATUS.FAILED ? error : null}
