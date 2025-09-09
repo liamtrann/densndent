@@ -3,10 +3,8 @@ import { useAuth0 } from "@auth0/auth0-react";
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchUserInfo } from "store/slices/userSlice";
-
 import api from "api/api";
 import endpoint from "api/endpoints";
-
 import FormSubmit from "../forms/FormSubmit";
 import Toast from "../toast/Toast";
 import Button from "../ui/Button";
@@ -15,7 +13,6 @@ import Dropdown from "../ui/Dropdown";
 import InputField from "../ui/InputField";
 import Loading from "../ui/Loading";
 import ErrorMessage from "../ui/ErrorMessage";
-
 import { useForm, Controller } from "react-hook-form";
 import { WeekdaySelector } from "common";
 import {
@@ -27,93 +24,51 @@ import {
 } from "config/config";
 import { getStateOptions, normalizeStateInput } from "config/states";
 
-/* ------------------------ API helpers (no customFields path) ------------------------ */
-async function tryUpdatePreferredDays({ url, token, value }) {
-  const headers = { Authorization: `Bearer ${token}` };
-
-  // top-level field
+/* Minimal helper: set preferred days with 2 simple shapes */
+async function savePreferredDays(url, headers, value /* string or null */) {
   try {
     await api.patch(url, { custentity_prefer_delivery: value }, { headers });
-    return "top-level";
-  } catch {}
-
-  // JSON-Patch fallback
-  await api.patch(
-    url,
-    [{ op: "replace", path: "/custentity_prefer_delivery", value }],
-    { headers: { ...headers, "Content-Type": "application/json-patch+json" } }
-  );
-  return "json-patch";
-}
-
-/** Prefer a single combined PATCH (address + pref). Fallback to two calls. */
-async function saveAddressAndPref({ url, token, addressPayload, prefString }) {
-  const headers = { Authorization: `Bearer ${token}` };
-
-  if (prefString) {
-    // single request that includes both address + preference
+    return true;
+  } catch {
     try {
       await api.patch(
         url,
-        { ...addressPayload, custentity_prefer_delivery: prefString },
-        { headers }
+        [{ op: "replace", path: "/custentity_prefer_delivery", value }],
+        { headers: { ...headers, "Content-Type": "application/json-patch+json" } }
       );
-      return { addressSaved: true, prefSaved: true, mode: "combined" };
-    } catch {}
-  }
-
-  // Fallback: address first
-  await api.patch(url, addressPayload, { headers });
-
-  // Then preference (if any)
-  if (prefString) {
-    try {
-      await tryUpdatePreferredDays({ url, token, value: prefString });
-      return { addressSaved: true, prefSaved: true, mode: "separate" };
+      return true;
     } catch {
-      return { addressSaved: true, prefSaved: false, mode: "address-only" };
+      return false;
     }
   }
-
-  return { addressSaved: true, prefSaved: false, mode: "address-only" };
 }
-/* ----------------------------------------------------------------------------------- */
 
 export default function CreateAddressModal({
   onClose,
   onAddressCreated,
-  address = null,
+  address = null,      // { address1, city, state, zip, defaultBilling, defaultShipping }
   customerId,
   error,
 }) {
   const { user, getAccessTokenSilently } = useAuth0();
   const dispatch = useDispatch();
 
-  // Default to Canada for now (states.js supports "ca" and "us")
   const COUNTRY_CODE = "ca";
-  const COUNTRY_ID_FOR_NS = "CA"; // what your backend expects
+  const COUNTRY_ID_FOR_NS = "CA";
 
-  // Prefill preferred days: backend first, then localStorage fallback
+  // Prefill preferred days (backend then localStorage)
   const userInfo = useSelector((s) => s.user.info);
   const defaultPreferredDays = parsePreferredDays(
     normalizePrefToString(userInfo?.custentity_prefer_delivery) ||
-      (typeof window !== "undefined"
-        ? window.localStorage.getItem("preferredDeliveryDays") || ""
-        : "")
+      (typeof window !== "undefined" ? localStorage.getItem("preferredDeliveryDays") || "" : "")
   );
 
-  const {
-    control,
-    getValues: getRHFValues,
-    setValue, // keep RHF in sync if modal reopens
-  } = useForm({
+  // RHF for preferred days (kept separate from address fields)
+  const { control, getValues: getRHFValues } = useForm({
     defaultValues: { preferredDays: defaultPreferredDays },
   });
 
-  useEffect(() => {
-    setValue("preferredDays", defaultPreferredDays);
-  }, [defaultPreferredDays, setValue]);
-
+  // Local state for address fields
   const [formData, setFormData] = useState({
     fullName: "",
     address1: "",
@@ -126,7 +81,7 @@ export default function CreateAddressModal({
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
 
-  // Prefill the form when editing an existing address
+  // Prefill address once when editing
   useEffect(() => {
     if (address) {
       setFormData({
@@ -152,9 +107,7 @@ export default function CreateAddressModal({
             You need to create your profile before you can update your address.
           </div>
           <div className="flex justify-end">
-            <Button variant="outline" onClick={onClose}>
-              Close
-            </Button>
+            <Button variant="outline" onClick={onClose}>Close</Button>
           </div>
         </div>
       </div>
@@ -171,27 +124,25 @@ export default function CreateAddressModal({
   const handleAddressSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate postal/zip using shared validator
-    const newErrors = {};
+    // Basic validation
+    const nextErrors = {};
     const postalErr = validatePostalCode(formData.zip, COUNTRY_CODE);
-    if (postalErr) newErrors.zip = postalErr;
+    if (postalErr) nextErrors.zip = postalErr;
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) return;
 
-    setErrors(newErrors);
-    if (Object.keys(newErrors).length > 0) return;
-
-    // Preferred days -> "1, 3, 5"
     const preferredDays = getRHFValues("preferredDays") || [];
     const preferredDaysString = serializePreferredDays(preferredDays);
+    const prefValue = preferredDaysString || null;
 
     setSubmitting(true);
-
     try {
       const token = await getAccessTokenSilently();
       const url = endpoint.PATCH_UPDATE_CUSTOMER(customerId);
-
+      const headers = { Authorization: `Bearer ${token}` };
       const stateAbbr = normalizeStateInput(COUNTRY_CODE, formData.state);
 
-      // Address payload in your backend's shape
+      // Build the address payload
       const addressPayload = {
         addressBook: {
           items: [
@@ -210,35 +161,27 @@ export default function CreateAddressModal({
         },
       };
 
-      const result = await saveAddressAndPref({
-        url,
-        token,
-        addressPayload,
-        prefString: preferredDaysString,
-      });
-
-      // Mirror preference to localStorage for UI fallback
-      if (result.prefSaved && preferredDaysString) {
-        localStorage.setItem("preferredDeliveryDays", preferredDaysString);
-      } else {
-        localStorage.removeItem("preferredDeliveryDays");
+      // 1) Try one combined PATCH
+      try {
+        await api.patch(url, { ...addressPayload, custentity_prefer_delivery: prefValue }, { headers });
+      } catch {
+        // 2) Fallback: address first, then preferred days
+        await api.patch(url, addressPayload, { headers });
+        const prefOk = await savePreferredDays(url, headers, prefValue);
+        if (!prefOk) throw new Error("pref-failed");
       }
 
-      // Refresh profile so My Settings displays updated info
+      // Update UI immediately
+      if (preferredDaysString) localStorage.setItem("preferredDeliveryDays", preferredDaysString);
+      else localStorage.removeItem("preferredDeliveryDays");
+
       await dispatch(fetchUserInfo({ user, getAccessTokenSilently }));
-
-      if (result.addressSaved && result.prefSaved) {
-        Toast.success("Address and preferred delivery days saved!");
-      } else if (result.addressSaved && !result.prefSaved) {
-        Toast.error("Address saved, but preferred delivery days couldn’t be updated.");
-      } else {
-        Toast.error("Failed to save address. Please try again.");
-      }
-
+      Toast.success("Address and preferred delivery days saved!");
       onAddressCreated?.();
       setTimeout(onClose, 0);
-    } catch {
+    } catch (err) {
       Toast.error("Failed to save address. Please try again.");
+      console.error("Save failed:", err?.response?.status, err?.response?.data || err?.message);
     } finally {
       setSubmitting(false);
     }
@@ -286,15 +229,15 @@ export default function CreateAddressModal({
               name="zip"
               value={formData.zip}
               onChange={(e) => {
-                // normalize to uppercase, allow a single space after first 3 chars
                 const raw = e.target.value.toUpperCase().replace(/[^A-Z0-9 ]/g, "");
                 const compact = raw.replace(/\s+/g, "");
-                const formatted =
-                  compact.length > 3 ? `${compact.slice(0, 3)} ${compact.slice(3, 6)}` : compact;
+                const formatted = compact.length > 3
+                  ? `${compact.slice(0, 3)} ${compact.slice(3, 6)}`
+                  : compact;
                 setFormData((prev) => ({ ...prev, zip: formatted }));
               }}
               required
-              maxLength={7} // e.g., "A1A 1A1"
+              maxLength={7}
               inputMode="text"
               placeholder="A1A 1A1"
               error={errors.zip}
@@ -337,12 +280,8 @@ export default function CreateAddressModal({
           </div>
 
           <div className="flex justify-end gap-4">
-            <Button variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit" loading={submitting}>
-              Save Address
-            </Button>
+            <Button variant="outline" onClick={onClose}>Cancel</Button>
+            <Button type="submit" loading={submitting}>Save Address</Button>
           </div>
         </FormSubmit>
       </div>
