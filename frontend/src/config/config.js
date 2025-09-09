@@ -1002,6 +1002,74 @@ export const nextDateForWeekdayFrom = (baseDate, monIdx) => {
   return result;
 };
 
+/** Normalize any backend/custom-field shape into a simple string.
+ * Accepts "1,2,3", ["1","2","3"], [{id:1}, {id:2}], {value:"1,2,3"}, etc.
+ */
+export function normalizePrefToString(any) {
+  if (any == null) return "";
+  if (typeof any === "string" || typeof any === "number") return String(any);
+
+  if (Array.isArray(any)) {
+    const parts = any
+      .map((el) => {
+        if (el == null) return null;
+        if (typeof el === "string" || typeof el === "number") return String(el);
+        if (typeof el === "object") {
+          return (
+            el.id ??
+            el.value ??
+            el.text ??
+            el.name ??
+            (typeof el.label === "string" ? el.label : null)
+          );
+        }
+        return null;
+      })
+      .filter(Boolean);
+    return parts.join(", ");
+  }
+
+  if (typeof any === "object") {
+    const maybeList = any.values ?? any.selected ?? any.ids ?? any.list;
+    if (Array.isArray(maybeList)) return normalizePrefToString(maybeList);
+    return normalizePrefToString(
+      any.value ?? any.id ?? any.text ?? any.data ?? any.name ?? ""
+    );
+  }
+
+  return "";
+}
+
+/** Build the human text for Preferred Delivery Days using:
+ *  1) backend fields on userInfo/customer (various shapes)
+ *  2) localStorage fallback ("preferredDeliveryDays")
+ */
+export function preferredDaysTextFromSources({
+  userInfo,
+  customer,
+  storageKey = "preferredDeliveryDays",
+} = {}) {
+  const rawBackend = normalizePrefToString(
+    userInfo?.custentity_prefer_delivery ??
+      userInfo?.customFields?.custentity_prefer_delivery ??
+      customer?.custentity_prefer_delivery ??
+      customer?.customFields?.custentity_prefer_delivery
+  );
+
+  const rawLocal =
+    typeof window !== "undefined"
+      ? window.localStorage.getItem(storageKey) || ""
+      : "";
+
+  const arrBackend = parsePreferredDays(rawBackend);
+  const arrLocal = parsePreferredDays(rawLocal);
+
+  if (arrBackend.length) return formatDeliveryDays(arrBackend);
+  if (rawBackend) return String(rawBackend);
+  if (arrLocal.length) return formatDeliveryDays(arrLocal);
+  if (rawLocal) return String(rawLocal);
+  return "No preferences set";
+}
 
 export {
   extractBuyGet,

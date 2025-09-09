@@ -14,32 +14,7 @@ import ProfileEditCard from "./ProfileEditCard";
 import SettingsCard from "./SettingsCard";
 
 import { api, ENDPOINTS } from "@/api";
-import { parsePreferredDays, formatDeliveryDays } from "config/config";
-
-/* normalizer */
-function normalizePrefToString(any) {
-  if (any == null) return "";
-  if (typeof any === "string" || typeof any === "number") return String(any);
-  if (Array.isArray(any)) {
-    const parts = any
-      .map((el) => {
-        if (el == null) return null;
-        if (typeof el === "string" || typeof el === "number") return String(el);
-        if (typeof el === "object") {
-          return el.id ?? el.value ?? el.text ?? el.name ?? (typeof el.label === "string" ? el.label : null);
-        }
-        return null;
-      })
-      .filter(Boolean);
-    return parts.join(", ");
-  }
-  if (typeof any === "object") {
-    const maybeList = any.values ?? any.selected ?? any.ids ?? any.list;
-    if (Array.isArray(maybeList)) return normalizePrefToString(maybeList);
-    return normalizePrefToString(any.value ?? any.id ?? any.text ?? any.data ?? any.name ?? "");
-  }
-  return "";
-}
+import { preferredDaysTextFromSources } from "config/config";
 
 export default function UserInfoCard({ customer }) {
   const userInfo = useSelector((state) => state.user.info);
@@ -51,7 +26,8 @@ export default function UserInfoCard({ customer }) {
   const [paymentMethodsKey, setPaymentMethodsKey] = useState(0);
   const dispatch = useDispatch();
 
-  const handleSelectPaymentMethod = (paymentMethodId) => setSelectedPaymentMethodId(paymentMethodId);
+  const handleSelectPaymentMethod = (paymentMethodId) =>
+    setSelectedPaymentMethodId(paymentMethodId);
 
   const handlePaymentMethodAdded = (paymentMethod) => {
     setShowPaymentModal(false);
@@ -82,30 +58,8 @@ export default function UserInfoCard({ customer }) {
     }
   };
 
-  /* ---------- Preferred Delivery Days (with localStorage fallback) ---------- */
-  const rawFromBackend = normalizePrefToString(
-    userInfo?.custentity_prefer_delivery ??
-      userInfo?.customFields?.custentity_prefer_delivery ??
-      customer?.custentity_prefer_delivery ??
-      customer?.customFields?.custentity_prefer_delivery
-  );
-
-  const rawFromLocal =
-    typeof window !== "undefined" ? window.localStorage.getItem("preferredDeliveryDays") || "" : "";
-
-  const arrBackend = parsePreferredDays(rawFromBackend);
-  const arrLocal = parsePreferredDays(rawFromLocal);
-
-  let preferredDaysText = "No preferences set";
-  if (arrBackend.length > 0) {
-    preferredDaysText = formatDeliveryDays(arrBackend);
-  } else if (rawFromBackend) {
-    preferredDaysText = String(rawFromBackend); // already label text
-  } else if (arrLocal.length > 0) {
-    preferredDaysText = formatDeliveryDays(arrLocal);
-  } else if (rawFromLocal) {
-    preferredDaysText = String(rawFromLocal);
-  }
+  // Single line: compute the display text (backend first, then localStorage)
+  const preferredDaysText = preferredDaysTextFromSources({ userInfo, customer });
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -113,7 +67,11 @@ export default function UserInfoCard({ customer }) {
         title="Profile"
         description={
           <>
-            <div>{[customer?.firstname, customer?.lastname].filter(Boolean).join(" ")}</div>
+            <div>
+              {[customer?.firstname, customer?.lastname]
+                .filter(Boolean)
+                .join(" ")}
+            </div>
             <div>{customer?.email}</div>
             {customer?.entityid && <div>Customer #: {customer.entityid}</div>}
           </>
@@ -136,9 +94,11 @@ export default function UserInfoCard({ customer }) {
             {customer?.shipping_address_name && (
               <div className="mb-3">
                 <div className="font-semibold">Shipping Address</div>
-                {customer.shipping_address_name.split("\n").map((line, idx) => (
-                  <div key={idx}>{line}</div>
-                ))}
+                {customer.shipping_address_name
+                  .split("\n")
+                  .map((line, idx) => (
+                    <div key={idx}>{line}</div>
+                  ))}
               </div>
             )}
 
@@ -147,29 +107,44 @@ export default function UserInfoCard({ customer }) {
                 <div className="font-semibold">Billing Address</div>
                 <div>{customer.billing_address_name}</div>
 
-                {customer.billing_city || customer.billing_state || customer.billing_zip ? (
+                {customer.billing_city ||
+                customer.billing_state ||
+                customer.billing_zip ? (
                   <div>
-                    {[customer.billing_city, customer.billing_state, customer.billing_zip].filter(Boolean).join(", ")}
+                    {[
+                      customer.billing_city,
+                      customer.billing_state,
+                      customer.billing_zip,
+                    ]
+                      .filter(Boolean)
+                      .join(", ")}
                   </div>
                 ) : null}
 
-                {customer.billing_country && <div>{customer.billing_country}</div>}
+                {customer.billing_country && (
+                  <div>{customer.billing_country}</div>
+                )}
               </div>
             )}
 
-            {/* Always show */}
+            {/* Preferred days – always visible */}
             <div className="mt-2">
               <div className="font-semibold">Preferred Delivery Days</div>
               <div className="text-sm text-gray-700">{preferredDaysText}</div>
             </div>
 
-            {!customer?.shipping_address_name && !customer?.billing_address_name && (
-              <div>We have no default address on file for this account.</div>
-            )}
+            {!customer?.shipping_address_name &&
+              !customer?.billing_address_name && (
+                <div>
+                  We have no default address on file for this account.
+                </div>
+              )}
           </>
         }
         actionLabel={
-          customer?.shipping_address_name || customer?.billing_address_name ? "Update " : "Create New Address"
+          customer?.shipping_address_name || customer?.billing_address_name
+            ? "Update "
+            : "Create New Address"
         }
         onAction={(e) => {
           e.preventDefault();
@@ -195,7 +170,8 @@ export default function UserInfoCard({ customer }) {
                   <div className="text-center text-gray-500">
                     <div className="text-lg mb-2">No Stripe Account Found</div>
                     <div className="text-sm mb-4">
-                      You need a Stripe customer account to manage payment methods.
+                      You need a Stripe customer account to manage payment
+                      methods.
                     </div>
                   </div>
                 </div>
@@ -203,9 +179,13 @@ export default function UserInfoCard({ customer }) {
             </div>
           </StripeWrapper>
         }
-        actionLabel={userInfo?.stripeCustomerId ? "Add a Card" : "Create a Stripe Account"}
+        actionLabel={
+          userInfo?.stripeCustomerId ? "Add a Card" : "Create a Stripe Account"
+        }
         onAction={() => {
-          userInfo?.stripeCustomerId ? setShowPaymentModal(true) : handleCreateStripeCustomer();
+          userInfo?.stripeCustomerId
+            ? setShowPaymentModal(true)
+            : handleCreateStripeCustomer();
         }}
       />
 
@@ -217,22 +197,28 @@ export default function UserInfoCard({ customer }) {
             customer?.shipping_address_name || customer?.billing_address_name
               ? {
                   address1: customer?.shipping_addr1 || "",
-                  city: customer?.shipping_city || customer?.billing_city || "",
-                  state: customer?.shipping_state || customer?.billing_state || "",
+                  city:
+                    customer?.shipping_city || customer?.billing_city || "",
+                  state:
+                    customer?.shipping_state || customer?.billing_state || "",
                   zip: customer?.shipping_zip || customer?.billing_zip || "",
                   defaultBilling: !!customer?.billing_address_name,
                   defaultShipping: !!customer?.shipping_address_name,
                 }
               : null
           }
-          mode={customer?.shipping_address_name || customer?.billing_address_name ? "update" : "create"}
+          mode={
+            customer?.shipping_address_name || customer?.billing_address_name
+              ? "update"
+              : "create"
+          }
           customerId={customer?.id}
         />
       )}
 
       {showEditProfileModal && !customer && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white rounded p-6 w/full max-w-xl relative">
+          <div className="bg-white rounded p-6 w-full max-w-xl relative">
             <CloseButton onClick={() => setShowEditProfileModal(false)} />
             <ProfileEditCard onClose={() => setShowEditProfileModal(false)} />
           </div>
@@ -242,7 +228,10 @@ export default function UserInfoCard({ customer }) {
       {showPaymentModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto relative m-4">
-            <CloseButton onClick={() => setShowPaymentModal(false)} className="z-10" />
+            <CloseButton
+              onClick={() => setShowPaymentModal(false)}
+              className="z-10"
+            />
             <StripeWrapper>
               <div className="p-6">
                 <h2 className="text-2xl font-bold mb-6">Add Payment Method</h2>
