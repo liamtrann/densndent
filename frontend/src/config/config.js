@@ -951,16 +951,16 @@ export async function resolveProductIdByNameOrId(maybeId) {
 
 
 
+
+
 // ─────────────────────────────────────────────────────────────
 // Preferred Delivery Days — single source of truth
 // ─────────────────────────────────────────────────────────────
 export const DOW_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-// Convert Mon-index (1..7) <-> JS getDay() (0..6)
 export const jsIdxFromMonIdx = (monIdx) => (monIdx + 1) % 7; // Mon1..Sun7 -> JS Sun0..Sat6
 export const monIdxFromJsIdx = (jsIdx) => (jsIdx + 6) % 7;   // JS Sun0..Sat6 -> Mon1..Sun7
 
-// Display helper: [1,2,5] -> "Mon, Tue, Fri"
 export function formatDeliveryDays(dayNumbers) {
   const nums = Array.isArray(dayNumbers) ? dayNumbers : [];
   const cleaned = Array.from(
@@ -970,7 +970,6 @@ export function formatDeliveryDays(dayNumbers) {
   return cleaned.map((n) => DOW_LABELS[n - 1]).join(", ");
 }
 
-// Parse "1, 2, 3" (or "1,2,3"/["1","2","3"]) -> [1,2,3]
 export function parsePreferredDays(value) {
   if (!value) return [];
   const parts = Array.isArray(value)
@@ -983,7 +982,6 @@ export function parsePreferredDays(value) {
   ).sort((a, b) => a - b);
 }
 
-// Serialize [1,2,3] -> "1, 2, 3"
 export function serializePreferredDays(arr) {
   if (!Array.isArray(arr) || arr.length === 0) return "";
   const cleaned = Array.from(
@@ -992,7 +990,6 @@ export function serializePreferredDays(arr) {
   return cleaned.join(", ");
 }
 
-// Next date (Date) for a given weekday (Mon-index 1..7) from base date
 export const nextDateForWeekdayFrom = (baseDate, monIdx) => {
   const jsTarget = jsIdxFromMonIdx(monIdx);
   const start = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate());
@@ -1002,9 +999,7 @@ export const nextDateForWeekdayFrom = (baseDate, monIdx) => {
   return result;
 };
 
-/** Normalize any backend/custom-field shape into a simple string.
- * Accepts "1,2,3", ["1","2","3"], [{id:1}, {id:2}], {value:"1,2,3"}, etc.
- */
+/** Normalize any backend/custom-field shape into a simple string. */
 export function normalizePrefToString(any) {
   if (any == null) return "";
   if (typeof any === "string" || typeof any === "number") return String(any);
@@ -1040,10 +1035,7 @@ export function normalizePrefToString(any) {
   return "";
 }
 
-/** Build the human text for Preferred Delivery Days using:
- *  1) backend fields on userInfo/customer (various shapes)
- *  2) localStorage fallback ("preferredDeliveryDays")
- */
+/** Text for Preferred Delivery Days from backend (top-level only) + localStorage fallback */
 export function preferredDaysTextFromSources({
   userInfo,
   customer,
@@ -1051,9 +1043,7 @@ export function preferredDaysTextFromSources({
 } = {}) {
   const rawBackend = normalizePrefToString(
     userInfo?.custentity_prefer_delivery ??
-      userInfo?.customFields?.custentity_prefer_delivery ??
-      customer?.custentity_prefer_delivery ??
-      customer?.customFields?.custentity_prefer_delivery
+    customer?.custentity_prefer_delivery
   );
 
   const rawLocal =
@@ -1070,6 +1060,12 @@ export function preferredDaysTextFromSources({
   if (rawLocal) return String(rawLocal);
   return "No preferences set";
 }
+
+
+
+
+
+
 
 export {
   extractBuyGet,

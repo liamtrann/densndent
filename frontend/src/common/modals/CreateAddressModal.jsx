@@ -27,24 +27,17 @@ import {
 } from "config/config";
 import { getStateOptions, normalizeStateInput } from "config/states";
 
-/* ------------------------ API helpers (local) ------------------------ */
+/* ------------------------ API helpers (no customFields path) ------------------------ */
 async function tryUpdatePreferredDays({ url, token, value }) {
   const headers = { Authorization: `Bearer ${token}` };
 
+  // top-level field
   try {
     await api.patch(url, { custentity_prefer_delivery: value }, { headers });
     return "top-level";
   } catch {}
 
-  try {
-    await api.patch(
-      url,
-      { customFields: { custentity_prefer_delivery: value } },
-      { headers }
-    );
-    return "customFields";
-  } catch {}
-
+  // JSON-Patch fallback
   await api.patch(
     url,
     [{ op: "replace", path: "/custentity_prefer_delivery", value }],
@@ -58,21 +51,21 @@ async function saveAddressAndPref({ url, token, addressPayload, prefString }) {
   const headers = { Authorization: `Bearer ${token}` };
 
   if (prefString) {
-    const combinedBodies = [
-      { ...addressPayload, custentity_prefer_delivery: prefString },
-      { ...addressPayload, customFields: { custentity_prefer_delivery: prefString } },
-    ];
-    for (const body of combinedBodies) {
-      try {
-        await api.patch(url, body, { headers });
-        return { addressSaved: true, prefSaved: true, mode: "combined" };
-      } catch {}
-    }
+    // single request that includes both address + preference
+    try {
+      await api.patch(
+        url,
+        { ...addressPayload, custentity_prefer_delivery: prefString },
+        { headers }
+      );
+      return { addressSaved: true, prefSaved: true, mode: "combined" };
+    } catch {}
   }
 
-  // Fallback: address, then pref
+  // Fallback: address first
   await api.patch(url, addressPayload, { headers });
 
+  // Then preference (if any)
   if (prefString) {
     try {
       await tryUpdatePreferredDays({ url, token, value: prefString });
@@ -84,7 +77,7 @@ async function saveAddressAndPref({ url, token, addressPayload, prefString }) {
 
   return { addressSaved: true, prefSaved: false, mode: "address-only" };
 }
-/* -------------------------------------------------------------------- */
+/* ----------------------------------------------------------------------------------- */
 
 export default function CreateAddressModal({
   onClose,
@@ -96,22 +89,30 @@ export default function CreateAddressModal({
   const { user, getAccessTokenSilently } = useAuth0();
   const dispatch = useDispatch();
 
-  // You can expose a country selector later; for now default to Canada.
-  const COUNTRY_CODE = "ca"; // "us" also supported by states.js
-  const COUNTRY_ID_FOR_NS = "CA"; // what your backend expects in the payload
+  // Default to Canada for now (states.js supports "ca" and "us")
+  const COUNTRY_CODE = "ca";
+  const COUNTRY_ID_FOR_NS = "CA"; // what your backend expects
 
-  // Prefill preferred days from profile
+  // Prefill preferred days: backend first, then localStorage fallback
   const userInfo = useSelector((s) => s.user.info);
   const defaultPreferredDays = parsePreferredDays(
-    normalizePrefToString(
-      userInfo?.custentity_prefer_delivery ??
-        userInfo?.customFields?.custentity_prefer_delivery
-    )
+    normalizePrefToString(userInfo?.custentity_prefer_delivery) ||
+      (typeof window !== "undefined"
+        ? window.localStorage.getItem("preferredDeliveryDays") || ""
+        : "")
   );
 
-  const { control, getValues: getRHFValues } = useForm({
+  const {
+    control,
+    getValues: getRHFValues,
+    setValue, // keep RHF in sync if modal reopens
+  } = useForm({
     defaultValues: { preferredDays: defaultPreferredDays },
   });
+
+  useEffect(() => {
+    setValue("preferredDays", defaultPreferredDays);
+  }, [defaultPreferredDays, setValue]);
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -125,6 +126,7 @@ export default function CreateAddressModal({
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
 
+  // Prefill the form when editing an existing address
   useEffect(() => {
     if (address) {
       setFormData({
@@ -159,7 +161,6 @@ export default function CreateAddressModal({
     );
   }
 
-  // Build dropdown from centralized mappings
   const stateOptions = getStateOptions(COUNTRY_CODE);
 
   const handleChange = (e) => {
@@ -170,14 +171,15 @@ export default function CreateAddressModal({
   const handleAddressSubmit = async (e) => {
     e.preventDefault();
 
-    // Use shared validator based on country
+    // Validate postal/zip using shared validator
     const newErrors = {};
-    const postalError = validatePostalCode(formData.zip, COUNTRY_CODE);
-    if (postalError) newErrors.zip = postalError;
+    const postalErr = validatePostalCode(formData.zip, COUNTRY_CODE);
+    if (postalErr) newErrors.zip = postalErr;
 
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
 
+    // Preferred days -> "1, 3, 5"
     const preferredDays = getRHFValues("preferredDays") || [];
     const preferredDaysString = serializePreferredDays(preferredDays);
 
@@ -189,6 +191,7 @@ export default function CreateAddressModal({
 
       const stateAbbr = normalizeStateInput(COUNTRY_CODE, formData.state);
 
+      // Address payload in your backend's shape
       const addressPayload = {
         addressBook: {
           items: [
@@ -221,7 +224,7 @@ export default function CreateAddressModal({
         localStorage.removeItem("preferredDeliveryDays");
       }
 
-      // Refresh profile so the cards show the new info
+      // Refresh profile so My Settings displays updated info
       await dispatch(fetchUserInfo({ user, getAccessTokenSilently }));
 
       if (result.addressSaved && result.prefSaved) {
@@ -282,10 +285,17 @@ export default function CreateAddressModal({
               label="Postal/Zip Code"
               name="zip"
               value={formData.zip}
-              onChange={handleChange}
+              onChange={(e) => {
+                // normalize to uppercase, allow a single space after first 3 chars
+                const raw = e.target.value.toUpperCase().replace(/[^A-Z0-9 ]/g, "");
+                const compact = raw.replace(/\s+/g, "");
+                const formatted =
+                  compact.length > 3 ? `${compact.slice(0, 3)} ${compact.slice(3, 6)}` : compact;
+                setFormData((prev) => ({ ...prev, zip: formatted }));
+              }}
               required
-              maxLength={7}
-              pattern="[A-Za-z][0-9][A-Za-z]\s?[0-9][A-Za-z][0-9]"
+              maxLength={7} // e.g., "A1A 1A1"
+              inputMode="text"
               placeholder="A1A 1A1"
               error={errors.zip}
             />
@@ -327,8 +337,12 @@ export default function CreateAddressModal({
           </div>
 
           <div className="flex justify-end gap-4">
-            <Button variant="outline" onClick={onClose}>Cancel</Button>
-            <Button type="submit" loading={submitting}>Save Address</Button>
+            <Button variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit" loading={submitting}>
+              Save Address
+            </Button>
           </div>
         </FormSubmit>
       </div>

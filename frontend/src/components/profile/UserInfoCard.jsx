@@ -189,32 +189,38 @@ export default function UserInfoCard({ customer }) {
         }}
       />
 
-      {showAddressModal && (
-        <CreateAddressModal
-          onClose={() => setShowAddressModal(false)}
-          onAddressCreated={() => setShowAddressModal(false)}
-          address={
-            customer?.shipping_address_name || customer?.billing_address_name
-              ? {
-                  address1: customer?.shipping_addr1 || "",
-                  city:
-                    customer?.shipping_city || customer?.billing_city || "",
-                  state:
-                    customer?.shipping_state || customer?.billing_state || "",
-                  zip: customer?.shipping_zip || customer?.billing_zip || "",
-                  defaultBilling: !!customer?.billing_address_name,
-                  defaultShipping: !!customer?.shipping_address_name,
-                }
-              : null
-          }
-          mode={
-            customer?.shipping_address_name || customer?.billing_address_name
-              ? "update"
-              : "create"
-          }
-          customerId={customer?.id}
-        />
-      )}
+      {/* Address Modal */}
+        {showAddressModal && (
+          <CreateAddressModal
+            onClose={() => setShowAddressModal(false)}
+            onAddressCreated={() => setShowAddressModal(false)}
+            address={
+              customer?.shipping_address_name || customer?.billing_address_name
+                ? {
+                    // 👇 derive address line 1 from known fields or the first line of the formatted address
+                    address1:
+                      customer?.shipping_addr1 ||
+                      customer?.billing_addr1 ||
+                      (customer?.shipping_address_name || "").split("\n")[0] ||
+                      (customer?.billing_address_name || "").split("\n")[0] ||
+                      "",
+                    city: customer?.shipping_city || customer?.billing_city || "",
+                    state: customer?.shipping_state || customer?.billing_state || "",
+                    zip: customer?.shipping_zip || customer?.billing_zip || "",
+                    defaultBilling: !!customer?.billing_address_name,
+                    defaultShipping: !!customer?.shipping_address_name,
+                  }
+                : null
+            }
+            mode={
+              customer?.shipping_address_name || customer?.billing_address_name
+                ? "update"
+                : "create"
+            }
+            customerId={customer?.id}
+          />
+        )}
+
 
       {showEditProfileModal && !customer && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
