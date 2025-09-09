@@ -951,16 +951,16 @@ export async function resolveProductIdByNameOrId(maybeId) {
 
 
 
+
+
 // ─────────────────────────────────────────────────────────────
 // Preferred Delivery Days — single source of truth
 // ─────────────────────────────────────────────────────────────
 export const DOW_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-// Convert Mon-index (1..7) <-> JS getDay() (0..6)
 export const jsIdxFromMonIdx = (monIdx) => (monIdx + 1) % 7; // Mon1..Sun7 -> JS Sun0..Sat6
 export const monIdxFromJsIdx = (jsIdx) => (jsIdx + 6) % 7;   // JS Sun0..Sat6 -> Mon1..Sun7
 
-// Display helper: [1,2,5] -> "Mon, Tue, Fri"
 export function formatDeliveryDays(dayNumbers) {
   const nums = Array.isArray(dayNumbers) ? dayNumbers : [];
   const cleaned = Array.from(
@@ -970,7 +970,6 @@ export function formatDeliveryDays(dayNumbers) {
   return cleaned.map((n) => DOW_LABELS[n - 1]).join(", ");
 }
 
-// Parse "1, 2, 3" (or "1,2,3"/["1","2","3"]) -> [1,2,3]
 export function parsePreferredDays(value) {
   if (!value) return [];
   const parts = Array.isArray(value)
@@ -983,7 +982,6 @@ export function parsePreferredDays(value) {
   ).sort((a, b) => a - b);
 }
 
-// Serialize [1,2,3] -> "1, 2, 3"
 export function serializePreferredDays(arr) {
   if (!Array.isArray(arr) || arr.length === 0) return "";
   const cleaned = Array.from(
@@ -992,7 +990,6 @@ export function serializePreferredDays(arr) {
   return cleaned.join(", ");
 }
 
-// Next date (Date) for a given weekday (Mon-index 1..7) from base date
 export const nextDateForWeekdayFrom = (baseDate, monIdx) => {
   const jsTarget = jsIdxFromMonIdx(monIdx);
   const start = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate());
@@ -1001,6 +998,73 @@ export const nextDateForWeekdayFrom = (baseDate, monIdx) => {
   result.setDate(start.getDate() + diff);
   return result;
 };
+
+/** Normalize any backend/custom-field shape into a simple string. */
+export function normalizePrefToString(any) {
+  if (any == null) return "";
+  if (typeof any === "string" || typeof any === "number") return String(any);
+
+  if (Array.isArray(any)) {
+    const parts = any
+      .map((el) => {
+        if (el == null) return null;
+        if (typeof el === "string" || typeof el === "number") return String(el);
+        if (typeof el === "object") {
+          return (
+            el.id ??
+            el.value ??
+            el.text ??
+            el.name ??
+            (typeof el.label === "string" ? el.label : null)
+          );
+        }
+        return null;
+      })
+      .filter(Boolean);
+    return parts.join(", ");
+  }
+
+  if (typeof any === "object") {
+    const maybeList = any.values ?? any.selected ?? any.ids ?? any.list;
+    if (Array.isArray(maybeList)) return normalizePrefToString(maybeList);
+    return normalizePrefToString(
+      any.value ?? any.id ?? any.text ?? any.data ?? any.name ?? ""
+    );
+  }
+
+  return "";
+}
+
+/** Text for Preferred Delivery Days from backend (top-level only) + localStorage fallback */
+export function preferredDaysTextFromSources({
+  userInfo,
+  customer,
+  storageKey = "preferredDeliveryDays",
+} = {}) {
+  const rawBackend = normalizePrefToString(
+    userInfo?.custentity_prefer_delivery ??
+    customer?.custentity_prefer_delivery
+  );
+
+  const rawLocal =
+    typeof window !== "undefined"
+      ? window.localStorage.getItem(storageKey) || ""
+      : "";
+
+  const arrBackend = parsePreferredDays(rawBackend);
+  const arrLocal = parsePreferredDays(rawLocal);
+
+  if (arrBackend.length) return formatDeliveryDays(arrBackend);
+  if (rawBackend) return String(rawBackend);
+  if (arrLocal.length) return formatDeliveryDays(arrLocal);
+  if (rawLocal) return String(rawLocal);
+  return "No preferences set";
+}
+
+
+
+
+
 
 
 export {
