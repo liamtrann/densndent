@@ -1,20 +1,11 @@
-// src/common/modals/CreateAddressModal.jsx
 import { useAuth0 } from "@auth0/auth0-react";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
+import { useForm, Controller } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchUserInfo } from "store/slices/userSlice";
+
 import api from "api/api";
 import endpoint from "api/endpoints";
-import FormSubmit from "../forms/FormSubmit";
-import Toast from "../toast/Toast";
-import Button from "../ui/Button";
-import CloseButton from "../ui/CloseButton";
-import Dropdown from "../ui/Dropdown";
-import InputField from "../ui/InputField";
-import Loading from "../ui/Loading";
-import ErrorMessage from "../ui/ErrorMessage";
-import { useForm, Controller } from "react-hook-form";
-import { WeekdaySelector } from "common";
 import {
   parsePreferredDays,
   serializePreferredDays,
@@ -24,26 +15,14 @@ import {
 } from "config/config";
 import { getStateOptions, normalizeStateInput } from "config/states";
 
-/* Minimal helper: set preferred days with 2 simple shapes */ //Some NetSuite REST endpoints accept and Some only accept JSON Patch format
-async function savePreferredDays(url, headers, value /* string or null */) {
-  //set preferred days with one tiny function
-  // try {
-  //   await api.patch(url, { custentity_prefer_delivery: value }, { headers }); //It tries top-level PATCH first
-  //   return true;
-  // } catch {
-  //   try {
-  //     await api.patch(
-  //       url,
-  //       [{ op: "replace", path: "/custentity_prefer_delivery", value }],
-  //       { headers: { ...headers, "Content-Type": "application/json-patch+json" } } //If the server rejects that, it tries JSON Patch
-  //     );
-  //     return true; //Returns true if either works,
-  //   } catch {
-  //     return false; //false if both fail.
-  //   }
-  // }
-  await api.patch(url, { custentity_prefer_delivery: value }, { headers });
-}
+import Toast from "../toast/Toast.js";
+import Button from "../ui/Button";
+import CloseButton from "../ui/CloseButton";
+import Dropdown from "../ui/Dropdown";
+import ErrorMessage from "../ui/ErrorMessage";
+import InputField from "../ui/InputField";
+import Loading from "../ui/Loading";
+import WeekdaySelector from "../ui/WeekdaySelector";
 
 export default function CreateAddressModal({
   onClose,
@@ -58,49 +37,51 @@ export default function CreateAddressModal({
   const COUNTRY_CODE = "ca";
   const COUNTRY_ID_FOR_NS = "CA";
 
-  // Prefill preferred days (backend then localStorage)
+  // Get user info for preferred days
   const userInfo = useSelector((s) => s.user.info);
   const defaultPreferredDays = parsePreferredDays(
-    normalizePrefToString(userInfo?.custentity_prefer_delivery) || //your backend might return values as a string, array, or object. This function converts “whatever it is” into a plain string
+    normalizePrefToString(userInfo?.custentity_prefer_delivery) ||
       (typeof window !== "undefined"
         ? localStorage.getItem("preferredDeliveryDays") || ""
         : "")
   );
 
-  // RHF for preferred days (kept separate from address fields)
-  const { control, getValues: getRHFValues } = useForm({
-    //RHF because WeekdaySelector is custom controlled component. Using RHF’s <Controller> makes “selected days” field to integrate as a single form value
-    defaultValues: { preferredDays: defaultPreferredDays },
-  });
-
-  //address fields in plain useState so changing one doesn’t reset the other. (Days and address are independent.)
-  // Local state for address fields
-  const [formData, setFormData] = useState({
-    fullName: "",
-    address1: "",
-    city: "",
-    state: "",
-    zip: "",
-    defaultBilling: false,
-    defaultShipping: false,
-  });
-  const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
 
-  // Prefill address once when editing
+  // Setup react-hook-form with all fields
+  const {
+    control,
+    handleSubmit,
+    formState: { dirtyFields, errors },
+    watch,
+    setError,
+    clearErrors,
+  } = useForm({
+    defaultValues: {
+      address1: address?.address1 || "",
+      city: address?.city || "",
+      state: address?.state || "",
+      zip: address?.zip || "",
+      defaultBilling: !!address?.defaultBilling,
+      defaultShipping: !!address?.defaultShipping,
+      preferredDays: defaultPreferredDays,
+    },
+  });
+
+  const watchedZip = watch("zip");
+  const watchedPreferredDays = watch("preferredDays");
+
+  // Validate postal code on change
   useEffect(() => {
-    if (address) {
-      setFormData({
-        fullName: address.fullName || "",
-        address1: address.address1 || "",
-        city: address.city || "",
-        state: address.state || "",
-        zip: address.zip || "",
-        defaultBilling: !!address.defaultBilling,
-        defaultShipping: !!address.defaultShipping,
-      });
+    if (watchedZip) {
+      const postalErr = validatePostalCode(watchedZip, COUNTRY_CODE);
+      if (postalErr) {
+        setError("zip", { type: "manual", message: postalErr });
+      } else {
+        clearErrors("zip");
+      }
     }
-  }, [address]);
+  }, [watchedZip, setError, clearErrors]);
 
   if (!customerId) {
     return (
@@ -124,86 +105,90 @@ export default function CreateAddressModal({
 
   const stateOptions = getStateOptions(COUNTRY_CODE);
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    })); //Works for text inputs and checkboxes with one function
-  };
+  const onSubmit = async (data) => {
+    // Check if any fields are dirty (changed)
+    const addressFieldsDirty =
+      dirtyFields.address1 ||
+      dirtyFields.city ||
+      dirtyFields.state ||
+      dirtyFields.zip ||
+      dirtyFields.defaultBilling ||
+      dirtyFields.defaultShipping;
 
-  const handleAddressSubmit = async (e) => {
-    e.preventDefault();
+    const preferredDaysDirty = dirtyFields.preferredDays;
 
-    // Basic validation
-    const nextErrors = {};
-    const postalErr = validatePostalCode(formData.zip, COUNTRY_CODE);
-    if (postalErr) nextErrors.zip = postalErr;
-    setErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0) return;
-
-    const preferredDays = getRHFValues("preferredDays") || []; //Read the current preferred days value from react-hook-form.
-    // If nothing is selected, default to an empty array.
-    const preferredDaysString = serializePreferredDays(preferredDays);
-    const prefValue = preferredDaysString || null;
+    // If nothing changed, just close
+    if (!addressFieldsDirty && !preferredDaysDirty) {
+      Toast.info("No changes to save");
+      onClose();
+      return;
+    }
 
     setSubmitting(true);
     try {
       const token = await getAccessTokenSilently();
-      const url = endpoint.PATCH_UPDATE_CUSTOMER(customerId); // Build the endpoint URL for updating this specific customer.
+      const url = endpoint.PATCH_UPDATE_CUSTOMER(customerId);
       const headers = { Authorization: `Bearer ${token}` };
-      const stateAbbr = normalizeStateInput(COUNTRY_CODE, formData.state);
 
-      //Build the address payload in the shape your backend expects
-      const addressPayload = {
-        addressBook: {
+      const updatePayload = {};
+
+      // Add address if dirty
+      if (addressFieldsDirty) {
+        const stateAbbr = normalizeStateInput(COUNTRY_CODE, data.state);
+        updatePayload.addressBook = {
           items: [
             {
               addressBookAddress: {
-                addr1: formData.address1,
-                city: formData.city,
+                addr1: data.address1,
+                city: data.city,
                 state: stateAbbr,
-                zip: formData.zip,
+                zip: data.zip,
                 country: { id: COUNTRY_ID_FOR_NS },
               },
-              defaultBilling: !!formData.defaultBilling,
-              defaultShipping: !!formData.defaultShipping,
+              defaultBilling: !!data.defaultBilling,
+              defaultShipping: !!data.defaultShipping,
             },
           ],
-        },
-      };
-
-      // 1) Try one combined PATCH as some NetSuite records/endpoints reject “mixed” updates (nested address ) in the same PATCH.
-      try {
-        await api.patch(
-          url,
-          { ...addressPayload, custentity_prefer_delivery: prefValue },
-          { headers }
-        ); //First, save address alone
-      } catch {
-        // 2) Fallback: address first, then preferred days
-        //await api.patch(url, addressPayload, { headers }); //the second api.patch—used only when the first attempt fails.
-        //const prefOk = await savePreferredDays(url, headers, prefValue); //It tries top-level PATCH and, if needed, JSON Patch.
-
-       // if (!prefOk) throw new Error("pref-failed");
+        };
       }
 
-      // Update UI immediately
-      if (preferredDaysString)
-        localStorage.setItem("preferredDeliveryDays", preferredDaysString); //so the UI has a fallback value instantly (and on the next modal open) even before/if the backend reflects it.
-      else localStorage.removeItem("preferredDeliveryDays");
+      // Add preferred days if dirty
+      if (preferredDaysDirty) {
+        const preferredDaysItems = (data.preferredDays || []).map((day) => ({
+          id: day,
+        }));
+        updatePayload.custentity_prefer_delivery = {
+          items: preferredDaysItems,
+        };
+      }
 
-      await dispatch(fetchUserInfo({ user, getAccessTokenSilently })); //refreshes Redux with the latest profile from the backend so the “My Settings → Addresses” card shows the new info right away.
+      // Send PATCH request
+      await api.patch(url, updatePayload, { headers });
+
+      // Update localStorage for preferred days if changed
+      if (preferredDaysDirty) {
+        const preferredDaysString = serializePreferredDays(
+          data.preferredDays || []
+        );
+        if (preferredDaysString) {
+          localStorage.setItem("preferredDeliveryDays", preferredDaysString);
+        } else {
+          localStorage.removeItem("preferredDeliveryDays");
+        }
+      }
+
+      // Refresh user info
+      await dispatch(fetchUserInfo({ user, getAccessTokenSilently }));
+
       Toast.success("Address and preferred delivery days saved!");
       onAddressCreated?.();
       setTimeout(onClose, 0);
     } catch (err) {
-      Toast.error("Failed to save address. Please try again."); //If both fail, we throw an error and show a toast.
-      console.error(
-        "Save failed:",
-        err?.response?.status,
-        err?.response?.data || err?.message
-      );
+      const errorMessage =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to save address";
+      Toast.error(`Failed to save address: ${errorMessage}`);
     } finally {
       setSubmitting(false);
     }
@@ -217,55 +202,80 @@ export default function CreateAddressModal({
 
         {submitting && <Loading />}
 
-        <FormSubmit onSubmit={handleAddressSubmit} className="space-y-4">
-          <InputField
-            label="Address"
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <Controller
             name="address1"
-            value={formData.address1}
-            onChange={handleChange}
-            required
+            control={control}
+            rules={{ required: "Address is required" }}
+            render={({ field, fieldState }) => (
+              <InputField
+                label="Address"
+                {...field}
+                value={field.value || ""}
+                required
+                error={fieldState.error?.message}
+              />
+            )}
           />
           <p className="text-xs text-gray-500">Example: 1234 Main Street</p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <InputField
-              label="City"
+            <Controller
               name="city"
-              value={formData.city}
-              onChange={handleChange}
-              required
+              control={control}
+              rules={{ required: "City is required" }}
+              render={({ field, fieldState }) => (
+                <InputField
+                  label="City"
+                  {...field}
+                  required
+                  error={fieldState.error?.message}
+                />
+              )}
             />
-            <Dropdown
-              label="State/Province"
+            <Controller
               name="state"
-              value={formData.state}
-              onChange={handleChange}
-              options={stateOptions}
-              required
+              control={control}
+              rules={{ required: "State/Province is required" }}
+              render={({ field, fieldState }) => (
+                <Dropdown
+                  label="State/Province"
+                  {...field}
+                  options={stateOptions}
+                  required
+                  error={fieldState.error?.message}
+                />
+              )}
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <InputField
-              label="Postal/Zip Code"
+            <Controller
               name="zip"
-              value={formData.zip}
-              onChange={(e) => {
-                const raw = e.target.value
-                  .toUpperCase()
-                  .replace(/[^A-Z0-9 ]/g, "");
-                const compact = raw.replace(/\s+/g, "");
-                const formatted =
-                  compact.length > 3
-                    ? `${compact.slice(0, 3)} ${compact.slice(3, 6)}`
-                    : compact;
-                setFormData((prev) => ({ ...prev, zip: formatted }));
-              }}
-              required
-              maxLength={7}
-              inputMode="text"
-              placeholder="A1A 1A1"
-              error={errors.zip}
+              control={control}
+              rules={{ required: "Postal/Zip Code is required" }}
+              render={({ field, fieldState }) => (
+                <InputField
+                  label="Postal/Zip Code"
+                  {...field}
+                  onChange={(e) => {
+                    const raw = e.target.value
+                      .toUpperCase()
+                      .replace(/[^A-Z0-9 ]/g, "");
+                    const compact = raw.replace(/\s+/g, "");
+                    const formatted =
+                      compact.length > 3
+                        ? `${compact.slice(0, 3)} ${compact.slice(3, 6)}`
+                        : compact;
+                    field.onChange(formatted);
+                  }}
+                  required
+                  maxLength={7}
+                  inputMode="text"
+                  placeholder="A1A 1A1"
+                  error={fieldState.error?.message || errors.zip?.message}
+                />
+              )}
             />
           </div>
 
@@ -285,28 +295,37 @@ export default function CreateAddressModal({
               )}
             />
             <div className="text-xs text-gray-500 mt-2">
-              Selected:{" "}
-              {formatDeliveryDays(getRHFValues("preferredDays") || [])}
+              Selected: {formatDeliveryDays(watchedPreferredDays || [])}
             </div>
           </div>
 
           <div className="flex items-center mb-4">
-            <InputField
-              type="checkbox"
-              label="Set as default billing address"
+            <Controller
               name="defaultBilling"
-              checked={formData.defaultBilling}
-              onChange={handleChange}
+              control={control}
+              render={({ field }) => (
+                <InputField
+                  type="checkbox"
+                  label="Set as default billing address"
+                  checked={field.value}
+                  onChange={(e) => field.onChange(e.target.checked)}
+                />
+              )}
             />
           </div>
 
           <div className="flex items-center mb-4">
-            <InputField
-              type="checkbox"
-              label="Set as default shipping address"
+            <Controller
               name="defaultShipping"
-              checked={formData.defaultShipping}
-              onChange={handleChange}
+              control={control}
+              render={({ field }) => (
+                <InputField
+                  type="checkbox"
+                  label="Set as default shipping address"
+                  checked={field.value}
+                  onChange={(e) => field.onChange(e.target.checked)}
+                />
+              )}
             />
           </div>
 
@@ -318,7 +337,7 @@ export default function CreateAddressModal({
               Save Address
             </Button>
           </div>
-        </FormSubmit>
+        </form>
       </div>
     </div>
   );

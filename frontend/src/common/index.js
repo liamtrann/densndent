@@ -1,6 +1,7 @@
 // Modal components
 export { default as AddressModal } from "./modals/AddressModal";
 export { default as CreateAddressModal } from "./modals/CreateAddressModal";
+export { default as ConfirmCancelSubscription } from "./modals/ConfirmCancelSubscription";
 
 // UI components
 export { default as Button } from "./ui/Button";
