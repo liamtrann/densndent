@@ -3,10 +3,8 @@ import { useAuth0 } from "@auth0/auth0-react";
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchUserInfo } from "store/slices/userSlice";
-
 import api from "api/api";
 import endpoint from "api/endpoints";
-
 import FormSubmit from "../forms/FormSubmit";
 import Toast from "../toast/Toast";
 import Button from "../ui/Button";
@@ -15,7 +13,6 @@ import Dropdown from "../ui/Dropdown";
 import InputField from "../ui/InputField";
 import Loading from "../ui/Loading";
 import ErrorMessage from "../ui/ErrorMessage";
-
 import { useForm, Controller } from "react-hook-form";
 import { WeekdaySelector } from "common";
 import {
@@ -27,93 +24,57 @@ import {
 } from "config/config";
 import { getStateOptions, normalizeStateInput } from "config/states";
 
-/* ------------------------ API helpers (no customFields path) ------------------------ */
-async function tryUpdatePreferredDays({ url, token, value }) {
-  const headers = { Authorization: `Bearer ${token}` };
-
-  // top-level field
-  try {
-    await api.patch(url, { custentity_prefer_delivery: value }, { headers });
-    return "top-level";
-  } catch {}
-
-  // JSON-Patch fallback
-  await api.patch(
-    url,
-    [{ op: "replace", path: "/custentity_prefer_delivery", value }],
-    { headers: { ...headers, "Content-Type": "application/json-patch+json" } }
-  );
-  return "json-patch";
+/* Minimal helper: set preferred days with 2 simple shapes */ //Some NetSuite REST endpoints accept and Some only accept JSON Patch format
+async function savePreferredDays(url, headers, value /* string or null */) {
+  //set preferred days with one tiny function
+  // try {
+  //   await api.patch(url, { custentity_prefer_delivery: value }, { headers }); //It tries top-level PATCH first
+  //   return true;
+  // } catch {
+  //   try {
+  //     await api.patch(
+  //       url,
+  //       [{ op: "replace", path: "/custentity_prefer_delivery", value }],
+  //       { headers: { ...headers, "Content-Type": "application/json-patch+json" } } //If the server rejects that, it tries JSON Patch
+  //     );
+  //     return true; //Returns true if either works,
+  //   } catch {
+  //     return false; //false if both fail.
+  //   }
+  // }
+  await api.patch(url, { custentity_prefer_delivery: value }, { headers });
 }
-
-/** Prefer a single combined PATCH (address + pref). Fallback to two calls. */
-async function saveAddressAndPref({ url, token, addressPayload, prefString }) {
-  const headers = { Authorization: `Bearer ${token}` };
-
-  if (prefString) {
-    // single request that includes both address + preference
-    try {
-      await api.patch(
-        url,
-        { ...addressPayload, custentity_prefer_delivery: prefString },
-        { headers }
-      );
-      return { addressSaved: true, prefSaved: true, mode: "combined" };
-    } catch {}
-  }
-
-  // Fallback: address first
-  await api.patch(url, addressPayload, { headers });
-
-  // Then preference (if any)
-  if (prefString) {
-    try {
-      await tryUpdatePreferredDays({ url, token, value: prefString });
-      return { addressSaved: true, prefSaved: true, mode: "separate" };
-    } catch {
-      return { addressSaved: true, prefSaved: false, mode: "address-only" };
-    }
-  }
-
-  return { addressSaved: true, prefSaved: false, mode: "address-only" };
-}
-/* ----------------------------------------------------------------------------------- */
 
 export default function CreateAddressModal({
   onClose,
   onAddressCreated,
-  address = null,
+  address = null, // { address1, city, state, zip, defaultBilling, defaultShipping }
   customerId,
   error,
 }) {
   const { user, getAccessTokenSilently } = useAuth0();
   const dispatch = useDispatch();
 
-  // Default to Canada for now (states.js supports "ca" and "us")
   const COUNTRY_CODE = "ca";
-  const COUNTRY_ID_FOR_NS = "CA"; // what your backend expects
+  const COUNTRY_ID_FOR_NS = "CA";
 
-  // Prefill preferred days: backend first, then localStorage fallback
+  // Prefill preferred days (backend then localStorage)
   const userInfo = useSelector((s) => s.user.info);
   const defaultPreferredDays = parsePreferredDays(
-    normalizePrefToString(userInfo?.custentity_prefer_delivery) ||
+    normalizePrefToString(userInfo?.custentity_prefer_delivery) || //your backend might return values as a string, array, or object. This function converts “whatever it is” into a plain string
       (typeof window !== "undefined"
-        ? window.localStorage.getItem("preferredDeliveryDays") || ""
+        ? localStorage.getItem("preferredDeliveryDays") || ""
         : "")
   );
 
-  const {
-    control,
-    getValues: getRHFValues,
-    setValue, // keep RHF in sync if modal reopens
-  } = useForm({
+  // RHF for preferred days (kept separate from address fields)
+  const { control, getValues: getRHFValues } = useForm({
+    //RHF because WeekdaySelector is custom controlled component. Using RHF’s <Controller> makes “selected days” field to integrate as a single form value
     defaultValues: { preferredDays: defaultPreferredDays },
   });
 
-  useEffect(() => {
-    setValue("preferredDays", defaultPreferredDays);
-  }, [defaultPreferredDays, setValue]);
-
+  //address fields in plain useState so changing one doesn’t reset the other. (Days and address are independent.)
+  // Local state for address fields
   const [formData, setFormData] = useState({
     fullName: "",
     address1: "",
@@ -126,7 +87,7 @@ export default function CreateAddressModal({
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
 
-  // Prefill the form when editing an existing address
+  // Prefill address once when editing
   useEffect(() => {
     if (address) {
       setFormData({
@@ -165,33 +126,35 @@ export default function CreateAddressModal({
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    })); //Works for text inputs and checkboxes with one function
   };
 
   const handleAddressSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate postal/zip using shared validator
-    const newErrors = {};
+    // Basic validation
+    const nextErrors = {};
     const postalErr = validatePostalCode(formData.zip, COUNTRY_CODE);
-    if (postalErr) newErrors.zip = postalErr;
+    if (postalErr) nextErrors.zip = postalErr;
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) return;
 
-    setErrors(newErrors);
-    if (Object.keys(newErrors).length > 0) return;
-
-    // Preferred days -> "1, 3, 5"
-    const preferredDays = getRHFValues("preferredDays") || [];
+    const preferredDays = getRHFValues("preferredDays") || []; //Read the current preferred days value from react-hook-form.
+    // If nothing is selected, default to an empty array.
     const preferredDaysString = serializePreferredDays(preferredDays);
+    const prefValue = preferredDaysString || null;
 
     setSubmitting(true);
-
     try {
       const token = await getAccessTokenSilently();
-      const url = endpoint.PATCH_UPDATE_CUSTOMER(customerId);
-
+      const url = endpoint.PATCH_UPDATE_CUSTOMER(customerId); // Build the endpoint URL for updating this specific customer.
+      const headers = { Authorization: `Bearer ${token}` };
       const stateAbbr = normalizeStateInput(COUNTRY_CODE, formData.state);
 
-      // Address payload in your backend's shape
+      //Build the address payload in the shape your backend expects
       const addressPayload = {
         addressBook: {
           items: [
@@ -210,35 +173,37 @@ export default function CreateAddressModal({
         },
       };
 
-      const result = await saveAddressAndPref({
-        url,
-        token,
-        addressPayload,
-        prefString: preferredDaysString,
-      });
+      // 1) Try one combined PATCH as some NetSuite records/endpoints reject “mixed” updates (nested address ) in the same PATCH.
+      try {
+        await api.patch(
+          url,
+          { ...addressPayload, custentity_prefer_delivery: prefValue },
+          { headers }
+        ); //First, save address alone
+      } catch {
+        // 2) Fallback: address first, then preferred days
+        //await api.patch(url, addressPayload, { headers }); //the second api.patch—used only when the first attempt fails.
+        //const prefOk = await savePreferredDays(url, headers, prefValue); //It tries top-level PATCH and, if needed, JSON Patch.
 
-      // Mirror preference to localStorage for UI fallback
-      if (result.prefSaved && preferredDaysString) {
-        localStorage.setItem("preferredDeliveryDays", preferredDaysString);
-      } else {
-        localStorage.removeItem("preferredDeliveryDays");
+       // if (!prefOk) throw new Error("pref-failed");
       }
 
-      // Refresh profile so My Settings displays updated info
-      await dispatch(fetchUserInfo({ user, getAccessTokenSilently }));
+      // Update UI immediately
+      if (preferredDaysString)
+        localStorage.setItem("preferredDeliveryDays", preferredDaysString); //so the UI has a fallback value instantly (and on the next modal open) even before/if the backend reflects it.
+      else localStorage.removeItem("preferredDeliveryDays");
 
-      if (result.addressSaved && result.prefSaved) {
-        Toast.success("Address and preferred delivery days saved!");
-      } else if (result.addressSaved && !result.prefSaved) {
-        Toast.error("Address saved, but preferred delivery days couldn’t be updated.");
-      } else {
-        Toast.error("Failed to save address. Please try again.");
-      }
-
+      await dispatch(fetchUserInfo({ user, getAccessTokenSilently })); //refreshes Redux with the latest profile from the backend so the “My Settings → Addresses” card shows the new info right away.
+      Toast.success("Address and preferred delivery days saved!");
       onAddressCreated?.();
       setTimeout(onClose, 0);
-    } catch {
-      Toast.error("Failed to save address. Please try again.");
+    } catch (err) {
+      Toast.error("Failed to save address. Please try again."); //If both fail, we throw an error and show a toast.
+      console.error(
+        "Save failed:",
+        err?.response?.status,
+        err?.response?.data || err?.message
+      );
     } finally {
       setSubmitting(false);
     }
@@ -286,15 +251,18 @@ export default function CreateAddressModal({
               name="zip"
               value={formData.zip}
               onChange={(e) => {
-                // normalize to uppercase, allow a single space after first 3 chars
-                const raw = e.target.value.toUpperCase().replace(/[^A-Z0-9 ]/g, "");
+                const raw = e.target.value
+                  .toUpperCase()
+                  .replace(/[^A-Z0-9 ]/g, "");
                 const compact = raw.replace(/\s+/g, "");
                 const formatted =
-                  compact.length > 3 ? `${compact.slice(0, 3)} ${compact.slice(3, 6)}` : compact;
+                  compact.length > 3
+                    ? `${compact.slice(0, 3)} ${compact.slice(3, 6)}`
+                    : compact;
                 setFormData((prev) => ({ ...prev, zip: formatted }));
               }}
               required
-              maxLength={7} // e.g., "A1A 1A1"
+              maxLength={7}
               inputMode="text"
               placeholder="A1A 1A1"
               error={errors.zip}
@@ -303,16 +271,22 @@ export default function CreateAddressModal({
 
           {/* Preferred Delivery Days */}
           <div className="mt-2">
-            <div className="text-sm font-medium mb-2">Preferred delivery days</div>
+            <div className="text-sm font-medium mb-2">
+              Preferred delivery days
+            </div>
             <Controller
               name="preferredDays"
               control={control}
               render={({ field }) => (
-                <WeekdaySelector selectedDays={field.value || []} onChange={field.onChange} />
+                <WeekdaySelector
+                  selectedDays={field.value || []}
+                  onChange={field.onChange}
+                />
               )}
             />
             <div className="text-xs text-gray-500 mt-2">
-              Selected: {formatDeliveryDays(getRHFValues("preferredDays") || [])}
+              Selected:{" "}
+              {formatDeliveryDays(getRHFValues("preferredDays") || [])}
             </div>
           </div>
 
