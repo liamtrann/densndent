@@ -49,6 +49,26 @@ export default function ListProduct({ product, listType = "grid" }) {
     setQuickLookProductId(null);
   };
 
+
+  // NEW: favorites (persisted in localStorage)
+const [favoriteIds, setFavoriteIds] = useState(() => {
+  try {
+    return new Set(JSON.parse(localStorage.getItem("favorites") || "[]"));
+  } catch {
+    return new Set();
+  }
+});
+const toggleFavorite = (pid) => {
+  setFavoriteIds((prev) => {
+    const next = new Set(prev);
+    if (next.has(pid)) next.delete(pid);
+    else next.add(pid);
+    localStorage.setItem("favorites", JSON.stringify([...next]));
+    return next;
+  });
+};
+const isFavorite = favoriteIds.has(id);
+
   // If listType is "grid", render the grid layout
   if (listType === "grid") {
     return (
@@ -63,6 +83,8 @@ export default function ListProduct({ product, listType = "grid" }) {
         handleNavigate={handleNavigate}
         showQuickLook={showQuickLook}
         setShowQuickLook={setShowQuickLook}
+        isFavorite={isFavorite}
+        onToggleFavorite={() => toggleFavorite(id)}
       />
     );
   }
@@ -82,6 +104,8 @@ export default function ListProduct({ product, listType = "grid" }) {
       quickLookProductId={quickLookProductId}
       handleQuickLook={handleQuickLook}
       handleCloseQuickLook={handleCloseQuickLook}
+      isFavorite={isFavorite}
+      onToggleFavorite={() => toggleFavorite(id)}
     />
   );
 }

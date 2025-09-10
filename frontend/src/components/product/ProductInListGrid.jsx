@@ -1,4 +1,5 @@
-import { FiShoppingCart, FiEye } from "react-icons/fi";
+import { FiShoppingCart, FiEye, FiHeart } from "react-icons/fi";
+import { AiFillHeart } from "react-icons/ai";
 
 import {
   ProductImage,
@@ -24,6 +25,8 @@ export default function ProductInListGrid({
   handleNavigate,
   showQuickLook,
   setShowQuickLook,
+  isFavorite,
+  onToggleFavorite,
 }) {
   const { id, itemid, file_url, price, totalquantityonhand } = product;
 
@@ -35,6 +38,23 @@ export default function ProductInListGrid({
         className="border p-4 rounded shadow hover:shadow-md transition flex flex-col h-full group relative cursor-pointer"
         onClick={handleNavigate}
       >
+
+      {/* NEW: Favorite (heart) button */}
+      <button
+        aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggleFavorite();
+        }}
+        className="absolute top-2 right-2 z-20 p-1.5 rounded-full bg-white/90 hover:bg-white shadow"
+      >
+        {isFavorite ? (
+          <AiFillHeart size={18} className="text-red-500" />
+        ) : (
+          <FiHeart size={18} className="text-gray-600" />
+        )}
+      </button>
+
         {/* Light grey hover overlay */}
         <div className="absolute inset-0 bg-gray-200 opacity-0 group-hover:opacity-20 transition-opacity duration-200 rounded pointer-events-none"></div>
         <div className="relative group/image">
