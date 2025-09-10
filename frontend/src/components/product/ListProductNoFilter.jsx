@@ -1,14 +1,18 @@
+import { useAuth0 } from "@auth0/auth0-react";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useAuth0 } from "@auth0/auth0-react";
-import { delayCall } from "api/util";
 import { fetchProductsBy } from "store/slices/productsSlice";
-import { ErrorMessage, Loading, Pagination } from "common";
-import ProductListGrid from "../product/ListGrids";
 
-export default function ListProductHistory({ userId }) {
+import { delayCall } from "api/util";
+import { ErrorMessage, Loading, Pagination, ProductToolbar } from "common";
+
+import ProductListGrid from "./ListGrids";
+import ProductListRows from "./ListRows";
+
+export default function ListProductNoFilter({ searchIds, by = "orderHistory" }) {
   const [perPage, setPerPage] = useState(12);
   const [page, setPage] = useState(1);
+  const [view, setView] = useState("grid");
 
   const dispatch = useDispatch();
   const { getAccessTokenSilently } = useAuth0();
@@ -18,7 +22,7 @@ export default function ListProductHistory({ userId }) {
   const minPrice = "";
   const maxPrice = "";
   const priceKey = `${minPrice}_${maxPrice}`;
-  const key = `${userId}_${perPage}_${sort}_${priceKey}_${page}`;
+  const key = `${searchIds}_${perPage}_${sort}_${priceKey}_${page}`;
 
   const products = useSelector(
     (state) => state.products.productsByPage[key] || []
@@ -27,29 +31,39 @@ export default function ListProductHistory({ userId }) {
   const error = useSelector((state) => state.products.error);
 
   useEffect(() => {
-    if (userId && products.length === 0 && !isLoading) {
+    if (searchIds && products.length === 0 && !isLoading) {
       return delayCall(() => {
+        const fetchConfig = {
+          id: searchIds,
+          page,
+          limit: perPage,
+          sort: "",
+          minPrice: "",
+          maxPrice: "",
+        };
+
+        // Add auth token for orderHistory
+        if (by === "orderHistory") {
+          fetchConfig.getAccessTokenSilently = getAccessTokenSilently;
+        }
+
         dispatch(
           fetchProductsBy({
-            type: "orderHistory",
-            id: userId,
-            page,
-            limit: perPage,
-            sort: "",
-            minPrice: "",
-            maxPrice: "",
-            getAccessTokenSilently,
+            type: by,
+            ...fetchConfig,
           })
         );
       });
     }
   }, [
     dispatch,
-    userId,
+    searchIds,
     perPage,
     page,
     getAccessTokenSilently,
     products.length,
+    by,
+    isLoading,
   ]);
 
   // Calculate total pages - assuming we get total from API response
@@ -84,18 +98,51 @@ export default function ListProductHistory({ userId }) {
         </div>
 
         {/* Products display */}
-        {isLoading && <Loading message="Loading your order history..." />}
+        {isLoading && (
+          <Loading
+            message={`Loading your ${by.replace(/([A-Z])/g, " $1").toLowerCase()}...`}
+          />
+        )}
         {error && (
-          <ErrorMessage message="Failed to load order history. Please try again later." />
+          <ErrorMessage
+            message={`Failed to load ${by.replace(/([A-Z])/g, " $1").toLowerCase()}. Please try again later.`}
+          />
         )}
         {!isLoading && !error && products.length === 0 && (
           <div className="text-gray-500 py-8 text-center">
-            No products found in your order history.
+            No products found in your{" "}
+            {by.replace(/([A-Z])/g, " $1").toLowerCase()}.
           </div>
         )}
+
+        {/* Toolbar with Grid/List toggle */}
         {!isLoading && !error && products.length > 0 && (
-          <ProductListGrid products={products} />
+          <ProductToolbar
+            perPageOptions={[12, 24, 48]}
+            onPerPageChange={(e) => {
+              setPerPage(Number(e.target.value));
+              setPage(1);
+            }}
+            perPage={perPage}
+            sort=""
+            onSortChange={() => {}} // No sorting for order history
+            total={products.length}
+            view={view}
+            onViewChange={setView}
+            showSort={false}
+            showPerPage={false}
+          />
         )}
+
+        {/* Products display with view toggle */}
+        {!isLoading &&
+          !error &&
+          products.length > 0 &&
+          (view === "grid" ? (
+            <ProductListGrid products={products} />
+          ) : (
+            <ProductListRows products={products} />
+          ))}
 
         {/* Bottom pagination */}
         {!isLoading && !error && products.length > 0 && (

@@ -76,6 +76,11 @@ const buildProductUrl = ({
         method: "get",
         requiresAuth: true,
       };
+    case "ids":
+      return {
+        url: endpoint.POST_GET_ITEM_BY_IDS(),
+        method: "post",
+      };
     default:
       throw new Error("Unknown product type");
   }
@@ -148,10 +153,24 @@ export const fetchProductsBy = createAsyncThunk(
         }
       }
 
-      if (method === "post") {
-        res = await api.post(url, { name: id }, { headers });
-      } else {
-        res = await api.get(url, { headers });
+      switch (method) {
+        case "post":
+          switch (type) {
+            case "ids":
+              res = await api.post(url, { ids: id }, { headers });
+              break;
+            case "name":
+              res = await api.post(url, { name: id }, { headers });
+              break;
+            default:
+              res = await api.post(url, { name: id }, { headers });
+              break;
+          }
+          break;
+        case "get":
+        default:
+          res = await api.get(url, { headers });
+          break;
       }
       return {
         id,

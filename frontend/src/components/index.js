@@ -57,7 +57,7 @@ export { default as ProductListGrid } from "./product/ListGrids";
 
 // Profile components
 export { default as ListOrdersHistory } from "./profile/ListOrdersHistory";
-export { default as ListProductHistory } from "./profile/ListProductHistory";
+export { default as ListProductHistory } from "./product/ListProductNoFilter";
 export { default as ProfileEditCard } from "./profile/ProfileEditCard";
 export { default as RecentPurchases } from "./profile/RecentPurchases";
 export { default as SettingsCard } from "./profile/SettingsCard";

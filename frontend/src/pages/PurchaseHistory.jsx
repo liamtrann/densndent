@@ -19,8 +19,9 @@ import {
   Paragraph,
   TextButton,
 } from "common";
-import { ListOrdersHistory, ListProductHistory } from "components";
+import { ListOrdersHistory } from "components";
 import { createStatusOptions } from "constants/constant";
+import { ListProductNoFilter } from "@/components/product";
 
 /* small date helpers for summary */
 function daysInMonth(y, m) {
@@ -250,7 +251,7 @@ export default function PurchaseHistory() {
       ) : activeTab === "buyAgain" ? (
         <div>
           {userInfo?.id ? (
-            <ListProductHistory userId={userInfo.id} />
+            <ListProductNoFilter searchIds={userInfo.id} by="orderHistory" />
           ) : (
             <div className="text-center py-12">
               <h3 className="text-lg font-medium text-gray-900 mb-2">
