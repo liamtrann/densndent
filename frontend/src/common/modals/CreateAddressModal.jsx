@@ -106,7 +106,7 @@ export default function CreateAddressModal({
   const stateOptions = getStateOptions(COUNTRY_CODE);
 
   const onSubmit = async (data) => {
-    // Check if any fields are dirty (changed)
+    // Check if any fields are dirty (changed)-  dirtyFields lets you send only what changed.
     const addressFieldsDirty =
       dirtyFields.address1 ||
       dirtyFields.city ||
@@ -203,7 +203,7 @@ export default function CreateAddressModal({
         {submitting && <Loading />}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <Controller
+          <Controller //bridges RHF ↔ custom inputs.
             name="address1"
             control={control}
             rules={{ required: "Address is required" }}
