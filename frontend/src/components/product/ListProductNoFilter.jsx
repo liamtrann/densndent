@@ -9,7 +9,7 @@ import { ErrorMessage, Loading, Pagination, ProductToolbar } from "common";
 import ProductListGrid from "./ListGrids";
 import ProductListRows from "./ListRows";
 
-export default function ListProductNoFilter({ searchIds, by = "orderHistory" }) {
+export default function ListProductNoFilter({ searchIds, by }) {
   const [perPage, setPerPage] = useState(12);
   const [page, setPage] = useState(1);
   const [view, setView] = useState("grid");
@@ -17,12 +17,25 @@ export default function ListProductNoFilter({ searchIds, by = "orderHistory" }) 
   const dispatch = useDispatch();
   const { getAccessTokenSilently } = useAuth0();
 
+  // Convert searchIds string to array for favouriteItems
+  const processedSearchIds =
+    by === "favouriteItems" && searchIds
+      ? searchIds
+          .split(",")
+          .map((id) => id.trim())
+          .filter((id) => id !== "")
+          .map((id) => Number(id))
+          .filter((id) => !isNaN(id))
+      : searchIds;
+
+  console.log(processedSearchIds);
+
   // Key structure must match what productsSlice expects
   const sort = ""; // No sorting for order history
   const minPrice = "";
   const maxPrice = "";
   const priceKey = `${minPrice}_${maxPrice}`;
-  const key = `${searchIds}_${perPage}_${sort}_${priceKey}_${page}`;
+  const key = `${processedSearchIds}_${perPage}_${sort}_${priceKey}_${page}`;
 
   const products = useSelector(
     (state) => state.products.productsByPage[key] || []
@@ -31,10 +44,15 @@ export default function ListProductNoFilter({ searchIds, by = "orderHistory" }) 
   const error = useSelector((state) => state.products.error);
 
   useEffect(() => {
+    // Return early if no 'by' prop provided
+    if (!by) {
+      return;
+    }
+
     if (searchIds && products.length === 0 && !isLoading) {
       return delayCall(() => {
         const fetchConfig = {
-          id: searchIds,
+          id: processedSearchIds,
           page,
           limit: perPage,
           sort: "",
@@ -42,8 +60,8 @@ export default function ListProductNoFilter({ searchIds, by = "orderHistory" }) 
           maxPrice: "",
         };
 
-        // Add auth token for orderHistory
-        if (by === "orderHistory") {
+        // Add auth token for user-specific data
+        if (by === "orderHistory" || by === "favouriteItems") {
           fetchConfig.getAccessTokenSilently = getAccessTokenSilently;
         }
 
@@ -57,6 +75,7 @@ export default function ListProductNoFilter({ searchIds, by = "orderHistory" }) 
     }
   }, [
     dispatch,
+    processedSearchIds,
     searchIds,
     perPage,
     page,

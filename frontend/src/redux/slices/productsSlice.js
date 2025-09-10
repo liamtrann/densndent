@@ -76,10 +76,11 @@ const buildProductUrl = ({
         method: "get",
         requiresAuth: true,
       };
-    case "ids":
+    case "favouriteItems":
       return {
         url: endpoint.POST_GET_ITEM_BY_IDS(),
         method: "post",
+        requiresAuth: true,
       };
     default:
       throw new Error("Unknown product type");
@@ -156,7 +157,7 @@ export const fetchProductsBy = createAsyncThunk(
       switch (method) {
         case "post":
           switch (type) {
-            case "ids":
+            case "favouriteItems":
               res = await api.post(url, { ids: id }, { headers });
               break;
             case "name":
