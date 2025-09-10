@@ -24,29 +24,31 @@ import {
 } from "config/config";
 import { getStateOptions, normalizeStateInput } from "config/states";
 
-/* Minimal helper: set preferred days with 2 simple shapes */
+/* Minimal helper: set preferred days with 2 simple shapes */ //Some NetSuite REST endpoints accept and Some only accept JSON Patch format
 async function savePreferredDays(url, headers, value /* string or null */) {
-  try {
-    await api.patch(url, { custentity_prefer_delivery: value }, { headers });
-    return true;
-  } catch {
-    try {
-      await api.patch(
-        url,
-        [{ op: "replace", path: "/custentity_prefer_delivery", value }],
-        { headers: { ...headers, "Content-Type": "application/json-patch+json" } }
-      );
-      return true;
-    } catch {
-      return false;
-    }
-  }
+  //set preferred days with one tiny function
+  // try {
+  //   await api.patch(url, { custentity_prefer_delivery: value }, { headers }); //It tries top-level PATCH first
+  //   return true;
+  // } catch {
+  //   try {
+  //     await api.patch(
+  //       url,
+  //       [{ op: "replace", path: "/custentity_prefer_delivery", value }],
+  //       { headers: { ...headers, "Content-Type": "application/json-patch+json" } } //If the server rejects that, it tries JSON Patch
+  //     );
+  //     return true; //Returns true if either works,
+  //   } catch {
+  //     return false; //false if both fail.
+  //   }
+  // }
+  await api.patch(url, { custentity_prefer_delivery: value }, { headers });
 }
 
 export default function CreateAddressModal({
   onClose,
   onAddressCreated,
-  address = null,      // { address1, city, state, zip, defaultBilling, defaultShipping }
+  address = null, // { address1, city, state, zip, defaultBilling, defaultShipping }
   customerId,
   error,
 }) {
@@ -59,15 +61,19 @@ export default function CreateAddressModal({
   // Prefill preferred days (backend then localStorage)
   const userInfo = useSelector((s) => s.user.info);
   const defaultPreferredDays = parsePreferredDays(
-    normalizePrefToString(userInfo?.custentity_prefer_delivery) ||
-      (typeof window !== "undefined" ? localStorage.getItem("preferredDeliveryDays") || "" : "")
+    normalizePrefToString(userInfo?.custentity_prefer_delivery) || //your backend might return values as a string, array, or object. This function converts “whatever it is” into a plain string
+      (typeof window !== "undefined"
+        ? localStorage.getItem("preferredDeliveryDays") || ""
+        : "")
   );
 
   // RHF for preferred days (kept separate from address fields)
   const { control, getValues: getRHFValues } = useForm({
+    //RHF because WeekdaySelector is custom controlled component. Using RHF’s <Controller> makes “selected days” field to integrate as a single form value
     defaultValues: { preferredDays: defaultPreferredDays },
   });
 
+  //address fields in plain useState so changing one doesn’t reset the other. (Days and address are independent.)
   // Local state for address fields
   const [formData, setFormData] = useState({
     fullName: "",
@@ -107,7 +113,9 @@ export default function CreateAddressModal({
             You need to create your profile before you can update your address.
           </div>
           <div className="flex justify-end">
-            <Button variant="outline" onClick={onClose}>Close</Button>
+            <Button variant="outline" onClick={onClose}>
+              Close
+            </Button>
           </div>
         </div>
       </div>
@@ -118,7 +126,10 @@ export default function CreateAddressModal({
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    })); //Works for text inputs and checkboxes with one function
   };
 
   const handleAddressSubmit = async (e) => {
@@ -131,18 +142,19 @@ export default function CreateAddressModal({
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
-    const preferredDays = getRHFValues("preferredDays") || [];
+    const preferredDays = getRHFValues("preferredDays") || []; //Read the current preferred days value from react-hook-form.
+    // If nothing is selected, default to an empty array.
     const preferredDaysString = serializePreferredDays(preferredDays);
     const prefValue = preferredDaysString || null;
 
     setSubmitting(true);
     try {
       const token = await getAccessTokenSilently();
-      const url = endpoint.PATCH_UPDATE_CUSTOMER(customerId);
+      const url = endpoint.PATCH_UPDATE_CUSTOMER(customerId); // Build the endpoint URL for updating this specific customer.
       const headers = { Authorization: `Bearer ${token}` };
       const stateAbbr = normalizeStateInput(COUNTRY_CODE, formData.state);
 
-      // Build the address payload
+      //Build the address payload in the shape your backend expects
       const addressPayload = {
         addressBook: {
           items: [
@@ -161,27 +173,37 @@ export default function CreateAddressModal({
         },
       };
 
-      // 1) Try one combined PATCH
+      // 1) Try one combined PATCH as some NetSuite records/endpoints reject “mixed” updates (nested address ) in the same PATCH.
       try {
-        await api.patch(url, { ...addressPayload, custentity_prefer_delivery: prefValue }, { headers });
+        await api.patch(
+          url,
+          { ...addressPayload, custentity_prefer_delivery: prefValue },
+          { headers }
+        ); //First, save address alone
       } catch {
         // 2) Fallback: address first, then preferred days
-        await api.patch(url, addressPayload, { headers });
-        const prefOk = await savePreferredDays(url, headers, prefValue);
-        if (!prefOk) throw new Error("pref-failed");
+        //await api.patch(url, addressPayload, { headers }); //the second api.patch—used only when the first attempt fails.
+        //const prefOk = await savePreferredDays(url, headers, prefValue); //It tries top-level PATCH and, if needed, JSON Patch.
+
+       // if (!prefOk) throw new Error("pref-failed");
       }
 
       // Update UI immediately
-      if (preferredDaysString) localStorage.setItem("preferredDeliveryDays", preferredDaysString);
+      if (preferredDaysString)
+        localStorage.setItem("preferredDeliveryDays", preferredDaysString); //so the UI has a fallback value instantly (and on the next modal open) even before/if the backend reflects it.
       else localStorage.removeItem("preferredDeliveryDays");
 
-      await dispatch(fetchUserInfo({ user, getAccessTokenSilently }));
+      await dispatch(fetchUserInfo({ user, getAccessTokenSilently })); //refreshes Redux with the latest profile from the backend so the “My Settings → Addresses” card shows the new info right away.
       Toast.success("Address and preferred delivery days saved!");
       onAddressCreated?.();
       setTimeout(onClose, 0);
     } catch (err) {
-      Toast.error("Failed to save address. Please try again.");
-      console.error("Save failed:", err?.response?.status, err?.response?.data || err?.message);
+      Toast.error("Failed to save address. Please try again."); //If both fail, we throw an error and show a toast.
+      console.error(
+        "Save failed:",
+        err?.response?.status,
+        err?.response?.data || err?.message
+      );
     } finally {
       setSubmitting(false);
     }
@@ -229,11 +251,14 @@ export default function CreateAddressModal({
               name="zip"
               value={formData.zip}
               onChange={(e) => {
-                const raw = e.target.value.toUpperCase().replace(/[^A-Z0-9 ]/g, "");
+                const raw = e.target.value
+                  .toUpperCase()
+                  .replace(/[^A-Z0-9 ]/g, "");
                 const compact = raw.replace(/\s+/g, "");
-                const formatted = compact.length > 3
-                  ? `${compact.slice(0, 3)} ${compact.slice(3, 6)}`
-                  : compact;
+                const formatted =
+                  compact.length > 3
+                    ? `${compact.slice(0, 3)} ${compact.slice(3, 6)}`
+                    : compact;
                 setFormData((prev) => ({ ...prev, zip: formatted }));
               }}
               required
@@ -246,16 +271,22 @@ export default function CreateAddressModal({
 
           {/* Preferred Delivery Days */}
           <div className="mt-2">
-            <div className="text-sm font-medium mb-2">Preferred delivery days</div>
+            <div className="text-sm font-medium mb-2">
+              Preferred delivery days
+            </div>
             <Controller
               name="preferredDays"
               control={control}
               render={({ field }) => (
-                <WeekdaySelector selectedDays={field.value || []} onChange={field.onChange} />
+                <WeekdaySelector
+                  selectedDays={field.value || []}
+                  onChange={field.onChange}
+                />
               )}
             />
             <div className="text-xs text-gray-500 mt-2">
-              Selected: {formatDeliveryDays(getRHFValues("preferredDays") || [])}
+              Selected:{" "}
+              {formatDeliveryDays(getRHFValues("preferredDays") || [])}
             </div>
           </div>
 
@@ -280,8 +311,12 @@ export default function CreateAddressModal({
           </div>
 
           <div className="flex justify-end gap-4">
-            <Button variant="outline" onClick={onClose}>Cancel</Button>
-            <Button type="submit" loading={submitting}>Save Address</Button>
+            <Button variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit" loading={submitting}>
+              Save Address
+            </Button>
           </div>
         </FormSubmit>
       </div>
