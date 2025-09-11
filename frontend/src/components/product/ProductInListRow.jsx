@@ -1,7 +1,13 @@
 import { FiEye, FiShoppingCart } from "react-icons/fi";
 import { Link } from "react-router-dom";
 
-import { Button, ProductImage, InputField, DeliveryEstimate } from "common";
+import {
+  Button,
+  ProductImage,
+  InputField,
+  DeliveryEstimate,
+  FavoriteButton,
+} from "common";
 import { FlexibleModal } from "components/layout";
 import { formatCurrency, extractBuyGet } from "config/config";
 
@@ -180,6 +186,11 @@ export default function ProductInListRow({
               className="md:hidden cursor-pointer relative group/mobile"
               onClick={() => handleNavigate()}
             >
+              {/* Favorite Button - Mobile */}
+              <div className="absolute top-2 right-2 z-10">
+                <FavoriteButton itemId={product.id} size={16} />
+              </div>
+
               {/* Light grey hover overlay for mobile */}
               <div className="absolute inset-0 bg-gray-200 opacity-0 group-hover/mobile:opacity-20 transition-opacity duration-200 rounded pointer-events-none"></div>
               <div className="grid grid-cols-[5rem,1fr] gap-3">
@@ -280,6 +291,9 @@ export default function ProductInListRow({
 
               {/* buttons */}
               <div className="md:w-32 flex justify-end items-center gap-2">
+                {/* Favorite Button - Desktop */}
+                <FavoriteButton itemId={product.id} size={18} />
+
                 {/* Quick Look button - appears on hover */}
                 <Button
                   onClick={(e) => {

@@ -1,8 +1,9 @@
 // src/App.js
 import { useAuth0 } from "@auth0/auth0-react";
 import React, { Suspense, lazy } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Routes, Route } from "react-router-dom";
+import { loadFavorites } from "store/slices/favoritesSlice";
 import { fetchUserInfo, clearUserInfo } from "store/slices/userSlice";
 
 import { ProtectedRoute, ToastProvider, Loading } from "./common";
@@ -45,6 +46,7 @@ const CataloguesPage = lazy(() =>
 );
 const ClearancePage = lazy(() => import("./pages/ClearancePage"));
 const BlogDetailPage = lazy(() => import("./pages/BlogDetailPage"));
+const FavoritesPage = lazy(() => import("./pages/FavoritesPage"));
 
 // Loading fallback component
 const PageLoading = () => (
@@ -56,6 +58,7 @@ const PageLoading = () => (
 export default function App() {
   const { isAuthenticated, user, getAccessTokenSilently } = useAuth0();
   const dispatch = useDispatch();
+  const userInfo = useSelector((state) => state.user.info);
 
   // Handle profile setup flow
   useProfileSetup();
@@ -67,6 +70,13 @@ export default function App() {
       dispatch(clearUserInfo());
     }
   }, [isAuthenticated, user, getAccessTokenSilently, dispatch]);
+
+  // Load favorites when user info is available
+  React.useEffect(() => {
+    if (userInfo?.id && getAccessTokenSilently) {
+      dispatch(loadFavorites({ userId: userInfo.id, getAccessTokenSilently }));
+    }
+  }, [userInfo?.id, getAccessTokenSilently, dispatch]);
   return (
     <ToastProvider>
       <div className="min-h-screen flex flex-col">
@@ -267,6 +277,16 @@ export default function App() {
               />
 
               <Route element={<ProtectedRoute />}>
+                <Route
+                  path="/favorites"
+                  element={
+                    <LayoutWithCart>
+                      <CenteredContent>
+                        <FavoritesPage />
+                      </CenteredContent>
+                    </LayoutWithCart>
+                  }
+                />
                 <Route
                   path="/checkout/*"
                   element={

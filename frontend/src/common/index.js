@@ -18,6 +18,7 @@ export { default as StatusBadge } from "./ui/StatusBadge";
 export { default as CloseButton } from "./ui/CloseButton";
 export { default as DeliveryEstimate } from "./ui/DeliveryEstimate";
 export { default as WeekdaySelector } from "./ui/WeekdaySelector";
+export { default as FavoriteButton } from "../components/common/FavoriteButton";
 
 // Product components
 export { default as ProductImage } from "./product/ProductImage";

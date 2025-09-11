@@ -6,6 +6,7 @@ import {
   InputField,
   DeliveryEstimate,
   Button,
+  FavoriteButton,
 } from "common";
 import { FlexibleModal } from "components/layout";
 
@@ -35,6 +36,11 @@ export default function ProductInListGrid({
         className="border p-4 rounded shadow hover:shadow-md transition flex flex-col h-full group relative cursor-pointer"
         onClick={handleNavigate}
       >
+        {/* Favorite Button - Top right corner */}
+        <div className="absolute top-2 right-2 z-10">
+          <FavoriteButton itemId={id} />
+        </div>
+
         {/* Light grey hover overlay */}
         <div className="absolute inset-0 bg-gray-200 opacity-0 group-hover:opacity-20 transition-opacity duration-200 rounded pointer-events-none"></div>
         <div className="relative group/image">
