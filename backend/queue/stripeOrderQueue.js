@@ -1,5 +1,6 @@
 const Queue = require("bull");
 const restApiService = require("../restapi/restapi.service");
+const transactionService = require("../suiteQL/transaction/transaction.service");
 const {
   redisConfig,
   defaultJobOptions,
@@ -254,8 +255,8 @@ async function checkJobStatus(jobId) {
   }
 }
 
-// Process Stripe order logic
-async function processStripeOrderLogic(orderData) {
+// Process Stripe order logic with payment status update capability
+async function processStripeOrderLogic(orderData, paymentStatus = null) {
   console.log(`💳 [STRIPE-QUEUE] Creating sales order for Stripe payment...`);
 
   if (!orderData.entity?.id) {
@@ -278,11 +279,24 @@ async function processStripeOrderLogic(orderData) {
 
   // Use provided memo or create default memo with Stripe payment information
   const today = new Date().toISOString().slice(0, 10);
-  const memo =
-    orderData.memo ||
-    (orderData.stripePaymentIntentId
-      ? `STRIPE Payment - Payment ID: ${orderData.stripePaymentIntentId} - Created: ${today}`
-      : `STRIPE Payment - Created: ${today}`);
+  let memo = orderData.memo;
+
+  if (!memo) {
+    if (orderData.stripePaymentIntentId) {
+      memo = `STRIPE Payment - Payment ID: ${orderData.stripePaymentIntentId} - Created: ${today}`;
+    } else {
+      memo = `STRIPE Payment - Created: ${today}`;
+    }
+  }
+
+  // Add payment status to memo if provided
+  if (paymentStatus) {
+    const statusText =
+      paymentStatus === "succeeded"
+        ? "**SUCCESSFUL**"
+        : `**${paymentStatus.toUpperCase()}**`;
+    memo = `${statusText} - ${memo} - Status: ${paymentStatus}`;
+  }
 
   // Add memo to order data (use existing memo if provided)
   const finalOrderData = {
@@ -301,7 +315,7 @@ async function processStripeOrderLogic(orderData) {
     );
 
     console.log(
-      `💰 [STRIPE-QUEUE] Created sales order ID: ${salesOrder.id} for payment: ${orderData.stripePaymentIntentId}`
+      `💰 [STRIPE-QUEUE] Created sales order for payment: ${orderData.stripePaymentIntentId}`
     );
 
     return salesOrder;
@@ -319,6 +333,87 @@ async function processStripeOrderLogic(orderData) {
   }
 }
 
+// Function to update sales order with payment status
+async function updateSalesOrderPaymentStatus(
+  externalId,
+  paymentIntentId,
+  paymentStatus
+) {
+  try {
+    console.log(
+      `🔍 [STRIPE-QUEUE] Searching for sales order to update payment status...`
+    );
+
+    // Search for the order using externalId via transaction service
+    const transactionResults = await transactionService.findByExternalId(
+      externalId,
+      1, // limit
+      0 // offset
+    );
+
+    if (Array.isArray(transactionResults) && transactionResults.length > 0) {
+      const foundOrder = transactionResults[0];
+      console.log(
+        `✅ [STRIPE-QUEUE] Found sales order ID: ${foundOrder.id} for payment update`
+      );
+
+      // Create updated memo with payment status
+      const today = new Date().toISOString().slice(0, 10);
+      const baseInfo = `STRIPE Payment - Payment ID: ${paymentIntentId} - Created: ${today}`;
+      let finalMemo = "";
+
+      switch (paymentStatus) {
+        case "succeeded":
+          finalMemo = `**SUCCESSFUL** - ${baseInfo} - Status: Payment confirmed successfully`;
+          break;
+        case "requires_action":
+          finalMemo = `**PENDING** - ${baseInfo} - Status: Payment requires additional action (3D Secure)`;
+          break;
+        case "requires_payment_method":
+          finalMemo = `**FAILED** - ${baseInfo} - Status: Payment requires valid payment method`;
+          break;
+        case "processing":
+          finalMemo = `**PROCESSING** - ${baseInfo} - Status: Payment is being processed`;
+          break;
+        case "canceled":
+          finalMemo = `**CANCELED** - ${baseInfo} - Status: Payment was canceled`;
+          break;
+        case "payment_failed":
+          finalMemo = `**FAILED** - ${baseInfo} - Status: Payment failed`;
+          break;
+        case "requires_confirmation":
+          finalMemo = `**PENDING** - ${baseInfo} - Status: Payment requires confirmation`;
+          break;
+        default:
+          finalMemo = `**UNKNOWN** - ${baseInfo} - Status: ${paymentStatus}`;
+      }
+
+      // Update the sales order with payment status
+      await restApiService.putRecord("salesOrder", foundOrder.id, {
+        memo: finalMemo,
+      });
+
+      console.log(
+        `💾 [STRIPE-QUEUE] Updated sales order ${foundOrder.id} with payment status: ${paymentStatus}`
+      );
+      console.log(`📝 [STRIPE-QUEUE] Updated memo: ${finalMemo}`);
+
+      return { id: foundOrder.id, memo: finalMemo };
+    } else {
+      console.warn(
+        `⚠️ [STRIPE-QUEUE] Could not find sales order with externalId: ${externalId}`
+      );
+      return null;
+    }
+  } catch (updateError) {
+    console.error(
+      `❌ [STRIPE-QUEUE] Failed to update sales order with payment status:`,
+      updateError.message
+    );
+    throw updateError;
+  }
+}
+
 // Graceful shutdown for Heroku
 process.on("SIGTERM", async () => {
   console.log(
@@ -333,4 +428,5 @@ module.exports = {
   stripeOrderQueue,
   enqueueStripeOrder,
   checkJobStatus,
+  updateSalesOrderPaymentStatus,
 };

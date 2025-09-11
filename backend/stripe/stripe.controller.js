@@ -1,5 +1,6 @@
 const stripeService = require("./stripe.service");
 const restApiService = require("../restapi/restapi.service");
+const transactionService = require("../suiteQL/transaction/transaction.service");
 const crypto = require("crypto");
 
 // In-memory cache for recent Stripe orders (use Redis in production)
@@ -116,6 +117,7 @@ async function createStripeOrder(orderData) {
     });
     return {
       ...cached,
+      externalId: externalId, // Include externalId in response
       isDuplicate: true,
       message:
         "Order already placed! To place the same order again, please wait 10 minutes.",
@@ -206,7 +208,10 @@ async function createStripeOrder(orderData) {
 
     console.log(`✅ [STRIPE] Sales order creation completed successfully`);
 
-    return salesOrder;
+    return {
+      ...salesOrder,
+      externalId: externalId // Include externalId in response
+    };
   } catch (error) {
     // Handle duplicate external ID from NetSuite by fetching existing order
     const msg = error?.response?.data?.message || error?.message || "";
@@ -243,6 +248,7 @@ async function createStripeOrder(orderData) {
 
           return {
             ...found[0],
+            externalId: externalId, // Include externalId in response
             isDuplicate: true,
             message:
               "Order already placed! To place the same order again, please wait 10 minutes.",
@@ -693,39 +699,77 @@ class StripeController {
         });
       }
 
-      // 3. LOG FINAL PAYMENT STATUS (can't update order since no ID returned)
-      if (salesOrder && paymentIntent) {
-        const today = new Date().toISOString().slice(0, 10);
-        const baseInfo = `STRIPE Payment - Payment ID: ${paymentIntent.id} - Created: ${today}`;
-        let finalMemo = "";
+      // 3. UPDATE SALES ORDER WITH PAYMENT STATUS (use externalId from creation response)
+      if (salesOrder && paymentIntent && salesOrder.externalId) {
+        try {
+          console.log(`🔍 [STRIPE] Searching for sales order to update payment status using externalId: ${salesOrder.externalId}`);
+          
+          // Search for the order using externalId via transaction service
+          const transactionResults = await transactionService.findByExternalId(
+            salesOrder.externalId,
+            1, // limit
+            0  // offset
+          );
+          
+          if (Array.isArray(transactionResults) && transactionResults.length > 0) {
+            const foundOrder = transactionResults[0];
+            console.log(`✅ [STRIPE] Found sales order ID: ${foundOrder.id} for payment update`);
+            
+            // Create updated memo with payment status
+            const today = new Date().toISOString().slice(0, 10);
+            const baseInfo = `STRIPE Payment - Payment ID: ${paymentIntent.id} - Created: ${today}`;
+            let finalMemo = "";
 
-        switch (paymentIntent.status) {
-          case "succeeded":
-            finalMemo = `**SUCCESSFUL** - ${baseInfo} - Status: Payment confirmed successfully`;
-            break;
-          case "requires_action":
-            finalMemo = `**LOADING** - ${baseInfo} - Status: Payment requires additional action (3D Secure or similar)`;
-            break;
-          case "requires_payment_method":
-            finalMemo = `**FAILED** - ${baseInfo} - Status: Payment requires valid payment method`;
-            break;
-          case "processing":
-            finalMemo = `**LOADING** - ${baseInfo} - Status: Payment is being processed`;
-            break;
-          case "canceled":
-            finalMemo = `**FAILED** - ${baseInfo} - Status: Payment was canceled`;
-            break;
-          case "payment_failed":
-            finalMemo = `**FAILED** - ${baseInfo} - Status: Payment failed`;
-            break;
-          case "requires_confirmation":
-            finalMemo = `**LOADING** - ${baseInfo} - Status: Payment requires confirmation`;
-            break;
-          default:
-            finalMemo = `**UNKNOWN** - ${baseInfo} - Status: ${paymentIntent.status}`;
+            switch (paymentIntent.status) {
+              case "succeeded":
+                finalMemo = `**SUCCESSFUL** - ${baseInfo} - Status: Payment confirmed successfully`;
+                break;
+              case "requires_action":
+                finalMemo = `**PENDING** - ${baseInfo} - Status: Payment requires additional action (3D Secure)`;
+                break;
+              case "requires_payment_method":
+                finalMemo = `**FAILED** - ${baseInfo} - Status: Payment requires valid payment method`;
+                break;
+              case "processing":
+                finalMemo = `**PROCESSING** - ${baseInfo} - Status: Payment is being processed`;
+                break;
+              case "canceled":
+                finalMemo = `**CANCELED** - ${baseInfo} - Status: Payment was canceled`;
+                break;
+              case "payment_failed":
+                finalMemo = `**FAILED** - ${baseInfo} - Status: Payment failed`;
+                break;
+              case "requires_confirmation":
+                finalMemo = `**PENDING** - ${baseInfo} - Status: Payment requires confirmation`;
+                break;
+              default:
+                finalMemo = `**UNKNOWN** - ${baseInfo} - Status: ${paymentIntent.status}`;
+            }
+            
+            // Update the sales order with payment status
+            await restApiService.patchRecord("salesOrder", foundOrder.id, {
+              memo: finalMemo
+            });
+            
+            console.log(`� [STRIPE] Updated sales order ${foundOrder.id} with payment status: ${paymentIntent.status}`);
+            console.log(`📝 [STRIPE] Updated memo: ${finalMemo}`);
+            
+            // Update our local salesOrder object for response
+            salesOrder = {
+              ...salesOrder,
+              id: foundOrder.id,
+              memo: finalMemo
+            };
+          } else {
+            console.warn(`⚠️ [STRIPE] Could not find sales order with externalId: ${salesOrder.externalId}`);
+            console.log(`🔍 [STRIPE] Transaction search results:`, transactionResults);
+          }
+        } catch (updateError) {
+          console.error(`❌ [STRIPE] Failed to update sales order with payment status:`, updateError.message);
+          // Don't throw error - order was created successfully, update is nice-to-have
         }
-
-        console.log(`📝 [STRIPE] Final payment status for order: ${finalMemo}`);
+      } else if (salesOrder && paymentIntent && !salesOrder.externalId) {
+        console.warn(`⚠️ [STRIPE] Sales order was created but no externalId available for payment status update`);
       }
 
       // 4. RETURN SUCCESS RESPONSE
@@ -741,7 +785,12 @@ class StripeController {
             next_action: paymentIntent.next_action,
             charges: paymentIntent.charges,
           },
-          salesOrder: { created: true }, // No ID returned from NetSuite
+          salesOrder: { 
+            created: true,
+            id: salesOrder.id || null, // Include ID if we found it
+            memo: salesOrder.memo || null, // Include updated memo
+            externalId: salesOrder.externalId || null // Include externalId for tracking
+          },
           message:
             paymentIntent.status === "succeeded"
               ? "Order created and payment confirmed successfully"
