@@ -46,7 +46,6 @@ const CataloguesPage = lazy(() =>
 );
 const ClearancePage = lazy(() => import("./pages/ClearancePage"));
 const BlogDetailPage = lazy(() => import("./pages/BlogDetailPage"));
-const FavoritesPage = lazy(() => import("./pages/FavoritesPage"));
 
 // Loading fallback component
 const PageLoading = () => (
@@ -277,16 +276,6 @@ export default function App() {
               />
 
               <Route element={<ProtectedRoute />}>
-                <Route
-                  path="/favorites"
-                  element={
-                    <LayoutWithCart>
-                      <CenteredContent>
-                        <FavoritesPage />
-                      </CenteredContent>
-                    </LayoutWithCart>
-                  }
-                />
                 <Route
                   path="/checkout/*"
                   element={
