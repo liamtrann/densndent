@@ -6,7 +6,7 @@ import endpoint from "api/endpoints";
 // Initialize favorites from user data (no API call needed)
 export const initializeFavorites = (favoriteString) => {
   if (!favoriteString) return [];
-  
+
   return favoriteString
     .split(",")
     .map((id) => id.trim())
@@ -132,21 +132,10 @@ const favoritesSlice = createSlice({
 
     // Rollback on failure
     syncFavoriteFailure: (state, action) => {
-      const { itemId, wasAdding } = action.payload;
-
-      if (wasAdding) {
-        // Rollback add - remove from favorites
-        state.items = state.items.filter((id) => id !== itemId);
-      } else {
-        // Rollback remove - add back to favorites
-        if (!state.items.includes(itemId)) {
-          state.items.push(itemId);
-        }
-      }
-
-      state.pendingUpdates = state.pendingUpdates.filter((id) => id !== itemId);
-      state.error = `Failed to ${wasAdding ? "add" : "remove"} favorite`;
-    },
+  const { itemId } = action.payload;
+  state.pendingUpdates = state.pendingUpdates.filter((id) => id !== itemId);
+  state.error = "Failed to sync favorites. We'll retry later.";
+},
 
     clearFavoritesError: (state) => {
       state.error = null;

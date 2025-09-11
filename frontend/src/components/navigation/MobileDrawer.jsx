@@ -145,6 +145,11 @@ function MobileDrawer({
           Our Partners
         </Link>
 
+        <Link to="/favorites" onClick={onClose}>
+          Favorites
+        </Link>
+
+
         {/* About Us Dropdown */}
         <div>
           <Button
