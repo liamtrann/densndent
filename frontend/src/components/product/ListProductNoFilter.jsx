@@ -17,9 +17,9 @@ export default function ListProductNoFilter({ searchIds, by }) {
   const dispatch = useDispatch();
   const { getAccessTokenSilently } = useAuth0();
 
-  // Convert searchIds string to array for favouriteItems
+  // Convert searchIds string to array for favoriteItems
   const processedSearchIds =
-    by === "favouriteItems" && searchIds
+    by === "favoriteItems" && searchIds
       ? searchIds
           .split(",")
           .map((id) => id.trim())
@@ -61,7 +61,7 @@ export default function ListProductNoFilter({ searchIds, by }) {
         };
 
         // Add auth token for user-specific data
-        if (by === "orderHistory" || by === "favouriteItems") {
+        if (by === "orderHistory" || by === "favoriteItems") {
           fetchConfig.getAccessTokenSilently = getAccessTokenSilently;
         }
 
