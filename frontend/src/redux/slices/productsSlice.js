@@ -76,7 +76,7 @@ const buildProductUrl = ({
         method: "get",
         requiresAuth: true,
       };
-    case "favouriteItems":
+    case "favoriteItems":
       return {
         url: endpoint.POST_GET_ITEM_BY_IDS(),
         method: "post",
@@ -157,7 +157,7 @@ export const fetchProductsBy = createAsyncThunk(
       switch (method) {
         case "post":
           switch (type) {
-            case "favouriteItems":
+            case "favoriteItems":
               res = await api.post(url, { ids: id }, { headers });
               break;
             case "name":

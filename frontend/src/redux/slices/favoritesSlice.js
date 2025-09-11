@@ -3,31 +3,17 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import api from "api/api";
 import endpoint from "api/endpoints";
 
-// Load favorites from user data
-export const loadFavorites = createAsyncThunk(
-  "favorites/load",
-  async ({ userId, getAccessTokenSilently }, { rejectWithValue }) => {
-    try {
-      const token = await getAccessTokenSilently();
-      const url = endpoint.GET_CUSTOMER(userId);
-      const response = await api.get(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const favoriteString = response.data.custentity_favourite_item || "";
-      if (!favoriteString) return [];
-
-      return favoriteString
-        .split(",")
-        .map((id) => id.trim())
-        .filter((id) => id !== "")
-        .map((id) => Number(id))
-        .filter((id) => !isNaN(id));
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.message || error.message);
-    }
-  }
-);
+// Initialize favorites from user data (no API call needed)
+export const initializeFavorites = (favoriteString) => {
+  if (!favoriteString) return [];
+  
+  return favoriteString
+    .split(",")
+    .map((id) => id.trim())
+    .filter((id) => id !== "")
+    .map((id) => Number(id))
+    .filter((id) => !isNaN(id));
+};
 
 // Add favorite with optimistic update
 export const addToFavorites = createAsyncThunk(
@@ -50,7 +36,7 @@ export const addToFavorites = createAsyncThunk(
       await api.patch(
         url,
         {
-          custentity_favourite_item: favoriteString,
+          custentity_favorite_item: favoriteString,
         },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -87,7 +73,7 @@ export const removeFromFavorites = createAsyncThunk(
       await api.patch(
         url,
         {
-          custentity_favourite_item: favoriteString,
+          custentity_favorite_item: favoriteString,
         },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -112,6 +98,13 @@ const favoritesSlice = createSlice({
     error: null,
   },
   reducers: {
+    // Initialize favorites from user data
+    setFavorites: (state, action) => {
+      state.items = action.payload || [];
+      state.isLoading = false;
+      state.error = null;
+    },
+
     // Optimistic updates (immediate UI changes)
     addFavoriteOptimistic: (state, action) => {
       const itemId = action.payload;
@@ -159,24 +152,10 @@ const favoritesSlice = createSlice({
       state.error = null;
     },
   },
-  extraReducers: (builder) => {
-    builder
-      .addCase(loadFavorites.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(loadFavorites.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.items = action.payload;
-      })
-      .addCase(loadFavorites.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload;
-      });
-  },
 });
 
 export const {
+  setFavorites,
   addFavoriteOptimistic,
   removeFavoriteOptimistic,
   syncFavoriteSuccess,
