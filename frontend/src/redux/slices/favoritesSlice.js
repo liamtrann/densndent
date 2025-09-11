@@ -6,7 +6,7 @@ import endpoint from "api/endpoints";
 // Initialize favorites from user data (no API call needed)
 export const initializeFavorites = (favoriteString) => {
   if (!favoriteString) return [];
-  
+
   return favoriteString
     .split(",")
     .map((id) => id.trim())
