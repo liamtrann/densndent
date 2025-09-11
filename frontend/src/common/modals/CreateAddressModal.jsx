@@ -27,7 +27,7 @@ import WeekdaySelector from "../ui/WeekdaySelector";
 export default function CreateAddressModal({
   onClose,
   onAddressCreated,
-  address = null, // { address1, city, state, zip, defaultBilling, defaultShipping }
+  address = null,
   customerId,
   error,
 }) {

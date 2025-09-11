@@ -7,6 +7,7 @@ import {
   InputField,
   DeliveryEstimate,
   Button,
+  FavoriteButton,
 } from "common";
 import { FlexibleModal } from "components/layout";
 
@@ -38,22 +39,29 @@ export default function ProductInListGrid({
         className="border p-4 rounded shadow hover:shadow-md transition flex flex-col h-full group relative cursor-pointer"
         onClick={handleNavigate}
       >
+        {/* keep friend's component imported but HIDDEN so it doesn't show or intercept clicks */}
+        <div className="absolute top-2 right-2 hidden">
+          <FavoriteButton itemId={id} />
+        </div>
 
-      {/* NEW: Favorite (heart) button */}
-      <button
-        aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
-        onClick={(e) => {
-          e.stopPropagation();
-          onToggleFavorite();
-        }}
-        className="absolute top-2 right-2 z-20 p-1.5 rounded-full bg-white/90 hover:bg-white shadow"
-      >
-        {isFavorite ? (
-          <AiFillHeart size={18} className="text-red-500" />
-        ) : (
-          <FiHeart size={18} className="text-gray-600" />
-        )}
-      </button>
+        {/* the ONLY visible/interactive heart — uses YOUR state/handler */}
+        <button
+          type="button"
+          aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleFavorite(); // your logic: toggles and turns red immediately
+          }}
+          className="absolute top-2 right-2 z-20 p-1.5 rounded-full bg-white/90 hover:bg-white shadow"
+          title={isFavorite ? "Remove from favorites" : "Add to favorites"}
+        >
+          {isFavorite ? (
+            <AiFillHeart size={18} className="text-red-500" />
+          ) : (
+            <FiHeart size={18} className="text-gray-700" />
+          )}
+        </button>
+
 
         {/* Light grey hover overlay */}
         <div className="absolute inset-0 bg-gray-200 opacity-0 group-hover:opacity-20 transition-opacity duration-200 rounded pointer-events-none"></div>
