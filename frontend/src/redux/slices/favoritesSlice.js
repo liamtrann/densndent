@@ -1,95 +1,126 @@
-//favoriteSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-
 import api from "api/api";
 import endpoint from "api/endpoints";
 
-// Initialize favorites from user data (backend still sends string format)
-export const initializeFavorites = (favoriteString) => {
-  if (!favoriteString) return [];
+/**
+ * Initialize favorites from whatever the backend gives us.
+ * Supports:
+ *  - "1,2,3" (CSV string)
+ *  - { items: [{id:1}, {id:2}] } (object)
+ *  - [1,2,3] (array)
+ */
+export const initializeFavorites = (raw) => {
+  if (!raw) return [];
 
-  return favoriteString
-    .split(",")
-    .map((id) => id.trim())
-    .filter((id) => id !== "")
-    .map((id) => Number(id))
-    .filter((id) => !isNaN(id));
+  if (typeof raw === "string") {
+    return raw
+      .split(",")
+      .map((x) => Number(String(x).trim()))
+      .filter((n) => !isNaN(n));
+  }
+
+  if (Array.isArray(raw)) {
+    return raw.map((x) => Number(x)).filter((n) => !isNaN(n));
+  }
+
+  if (typeof raw === "object" && Array.isArray(raw.items)) {
+    return raw.items
+      .map((x) => Number(x?.id ?? x))
+      .filter((n) => !isNaN(n));
+  }
+
+  return [];
 };
 
-// Add favorite with optimistic update
+/**
+ * Add favorite (optimistic). We try to PATCH using the newer object shape.
+ * If that fails (e.g. server still expects CSV), we automatically retry with CSV.
+ */
 export const addToFavorites = createAsyncThunk(
   "favorites/add",
   async (
     { itemId, userId, getAccessTokenSilently },
     { dispatch, getState, rejectWithValue }
   ) => {
-    // Optimistic update first
+    // optimistic UI
     dispatch(addFavoriteOptimistic(itemId));
 
-    try {
-      // Get current favorites and format as required object structure
-      const currentFavorites = getState().favorites.items;
-      const favoriteData = {
-        items: currentFavorites.map((id) => ({ id })),
-      };
+    const stateAfter = getState().favorites.items;
+    const asObject = { items: stateAfter.map((id) => ({ id })) };
+    const asCsv = stateAfter.join(",");
 
+    try {
       const token = await getAccessTokenSilently();
       const url = endpoint.PATCH_UPDATE_CUSTOMER(userId);
 
-      await api.patch(
-        url,
-        {
-          custentity_favorite_item: favoriteData,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      // 1) try object shape
+      try {
+        await api.patch(
+          url,
+          { custentity_favorite_item: asObject },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      } catch {
+        // 2) fallback to CSV
+        await api.patch(
+          url,
+          { custentity_favorite_item: asCsv },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      }
 
       dispatch(syncFavoriteSuccess(itemId));
       return itemId;
     } catch (error) {
+      // rollback
       dispatch(syncFavoriteFailure({ itemId, wasAdding: true }));
-      return rejectWithValue(error.response?.data?.message || error.message);
+      return rejectWithValue(error?.response?.data || error.message);
     }
   }
 );
 
-// Remove favorite with optimistic update
+/**
+ * Remove favorite (optimistic) with the same dual-format PATCH strategy.
+ */
 export const removeFromFavorites = createAsyncThunk(
   "favorites/remove",
   async (
     { itemId, userId, getAccessTokenSilently },
     { dispatch, getState, rejectWithValue }
   ) => {
-    // Optimistic update first
+    // optimistic UI
     dispatch(removeFavoriteOptimistic(itemId));
 
-    try {
-      // Get current favorites and format as required object structure
-      const currentFavorites = getState().favorites.items;
-      const favoriteData = {
-        items: currentFavorites.map((id) => ({ id })),
-      };
+    const stateAfter = getState().favorites.items;
+    const asObject = { items: stateAfter.map((id) => ({ id })) };
+    const asCsv = stateAfter.join(",");
 
+    try {
       const token = await getAccessTokenSilently();
       const url = endpoint.PATCH_UPDATE_CUSTOMER(userId);
 
-      await api.patch(
-        url,
-        {
-          custentity_favorite_item: favoriteData,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      // 1) try object shape
+      try {
+        await api.patch(
+          url,
+          { custentity_favorite_item: asObject },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      } catch {
+        // 2) fallback to CSV
+        await api.patch(
+          url,
+          { custentity_favorite_item: asCsv },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      }
 
       dispatch(syncFavoriteSuccess(itemId));
       return itemId;
     } catch (error) {
+      // rollback
       dispatch(syncFavoriteFailure({ itemId, wasAdding: false }));
-      return rejectWithValue(error.response?.data?.message || error.message);
+      return rejectWithValue(error?.response?.data || error.message);
     }
   }
 );
@@ -97,51 +128,46 @@ export const removeFromFavorites = createAsyncThunk(
 const favoritesSlice = createSlice({
   name: "favorites",
   initialState: {
-    items: [], // Array of favorite item IDs
-    pendingUpdates: [], // Track items being synced
+    items: [],            // number[]
+    pendingUpdates: [],   // number[] (ids being synced)
     isLoading: false,
     error: null,
   },
   reducers: {
-    // Initialize favorites from user data
     setFavorites: (state, action) => {
       state.items = action.payload || [];
       state.isLoading = false;
       state.error = null;
     },
-
-    // Optimistic updates (immediate UI changes)
     addFavoriteOptimistic: (state, action) => {
-      const itemId = action.payload;
-      if (!state.items.includes(itemId)) {
-        state.items.push(itemId);
-      }
-      if (!state.pendingUpdates.includes(itemId)) {
-        state.pendingUpdates.push(itemId);
-      }
+      const id = Number(action.payload);
+      if (!state.items.includes(id)) state.items.push(id);
+      if (!state.pendingUpdates.includes(id)) state.pendingUpdates.push(id);
     },
-
     removeFavoriteOptimistic: (state, action) => {
-      const itemId = action.payload;
-      state.items = state.items.filter((id) => id !== itemId);
-      if (!state.pendingUpdates.includes(itemId)) {
-        state.pendingUpdates.push(itemId);
-      }
+      const id = Number(action.payload);
+      state.items = state.items.filter((x) => x !== id);
+      if (!state.pendingUpdates.includes(id)) state.pendingUpdates.push(id);
     },
-
-    // Sync completion
     syncFavoriteSuccess: (state, action) => {
-      const itemId = action.payload;
-      state.pendingUpdates = state.pendingUpdates.filter((id) => id !== itemId);
+      const id = Number(action.payload);
+      state.pendingUpdates = state.pendingUpdates.filter((x) => x !== id);
     },
-
-    // Rollback on failure
     syncFavoriteFailure: (state, action) => {
-      const { itemId } = action.payload;
-      state.pendingUpdates = state.pendingUpdates.filter((id) => id !== itemId);
-      state.error = "Failed to sync favorites. We'll retry later.";
-    },
+      const { itemId, wasAdding } = action.payload || {};
+      const id = Number(itemId);
 
+      // rollback
+      if (wasAdding) {
+        // undo add
+        state.items = state.items.filter((x) => x !== id);
+      } else {
+        // undo remove
+        if (!state.items.includes(id)) state.items.push(id);
+      }
+      state.pendingUpdates = state.pendingUpdates.filter((x) => x !== id);
+      state.error = "Failed to sync favorites.";
+    },
     clearFavoritesError: (state) => {
       state.error = null;
     },
