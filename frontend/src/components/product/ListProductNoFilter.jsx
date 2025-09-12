@@ -28,8 +28,6 @@ export default function ListProductNoFilter({ searchIds, by }) {
           .filter((id) => !isNaN(id))
       : searchIds;
 
-  console.log(processedSearchIds);
-
   // Key structure must match what productsSlice expects
   const sort = ""; // No sorting for order history
   const minPrice = "";
