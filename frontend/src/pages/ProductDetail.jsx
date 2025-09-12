@@ -19,6 +19,7 @@ import {
   Dropdown,
   DeliveryEstimate,
   WeekdaySelector,
+  FavoriteButton,
 } from "common";
 import { Modal } from "components";
 import {
@@ -243,7 +244,12 @@ export default function ProductsPage({
     : null;
 
   return (
-    <div className={isModal ? "" : "max-w-6xl mx-auto px-6 py-10"}>
+    <div className={isModal ? "relative" : "max-w-6xl mx-auto px-6 py-10"}>
+      {isModal && (
+        <div className="absolute top-9 right-4 z-10">
+          <FavoriteButton itemId={product.id} size={22} />
+        </div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
         <div className="overflow-hidden">
           <ProductImage
