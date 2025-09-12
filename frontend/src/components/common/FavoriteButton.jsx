@@ -1,4 +1,4 @@
-//FavoriteButoon.jsx
+//FavoriteButton.jsx
 import { useAuth0 } from "@auth0/auth0-react";
 import { FiHeart } from "react-icons/fi";
 import { useSelector, useDispatch } from "react-redux";
