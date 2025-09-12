@@ -140,7 +140,7 @@ export default function DesktopNav({ classification }) {
         to="/favorites"
         className="text-sm text-gray-800 hover:text-orange-600 font-medium"
       >
-        Favorites
+        MyPage
       </Link>
 
 
@@ -159,6 +159,8 @@ export default function DesktopNav({ classification }) {
         >
           About Us
         </span>
+
+        
 
         {aboutOpen && (
           <div className="absolute top-full left-0 mt-2 bg-white shadow-lg border rounded w-56 z-50 transition duration-200">

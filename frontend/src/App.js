@@ -88,8 +88,8 @@ export default function App() {
     typeof userInfo?.custentity_favorite_item === "string"
       ? userInfo.custentity_favorite_item
       : Array.isArray(userInfo?.custentity_favorite_item?.items)
-      ? userInfo.custentity_favorite_item.items.map((x) => x.id).join(",")
-      : "";
+        ? userInfo.custentity_favorite_item.items.map((x) => x.id).join(",")
+        : "";
 
   // Prefer the *live Redux* list (reflects hearts you just clicked); fallback to userInfo
   const favoritesCsv =
@@ -296,7 +296,6 @@ export default function App() {
 
               {/* ---------- Protected routes ---------- */}
               <Route element={<ProtectedRoute />}>
-                {/* Favorites (uses favoritesCsv) */}
                 <Route
                   path="/favorites"
                   element={
@@ -305,8 +304,6 @@ export default function App() {
                         <ListProductNoFilter
                           searchIds={favoritesCsv}
                           by="favoriteItems"
-                          // ok if the component ignores this; useful if it forwards to thunks
-                          getAccessTokenSilently={getAccessTokenSilently}
                         />
                       </CenteredContent>
                     </LayoutWithCart>
