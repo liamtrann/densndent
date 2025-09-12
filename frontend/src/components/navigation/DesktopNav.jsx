@@ -136,12 +136,6 @@ export default function DesktopNav({ classification }) {
         Our Partners
       </Link>
 
-      <Link
-        to="/favorites"
-        className="text-sm text-gray-800 hover:text-orange-600 font-medium"
-      >
-        MyPage
-      </Link>
 
 
       {/* ABOUT US */}
@@ -176,6 +170,11 @@ export default function DesktopNav({ classification }) {
           </div>
         )}
       </div>
+
+      {/* moved MyPage after About Us */}
+      <Link to="/favorites" className="text-sm text-gray-800 hover:text-orange-600 font-medium">
+        MyPage
+      </Link>
     </nav>
   );
 }
