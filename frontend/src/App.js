@@ -11,6 +11,7 @@ import { Header, Footer, LayoutWithCart, CenteredContent } from "./components";
 import ProfileSetupGuard from "./components/guards/ProfileSetupGuard";
 import useProfileSetup from "./hooks/useProfileSetup";
 import { LandingPage } from "./pages";
+import { ListProductNoFilter } from "./components/product";
 // Lazy loaded components
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
 const ListProductPage = lazy(
@@ -141,6 +142,16 @@ export default function App() {
                   <LayoutWithCart>
                     <CenteredContent>
                       <ListProductPage by="category" />
+                    </CenteredContent>
+                  </LayoutWithCart>
+                }
+              />
+              <Route
+                path="/favorites"
+                element={
+                  <LayoutWithCart>
+                    <CenteredContent>
+                      <ListProductNoFilter searchIds={userInfo?.custentity_favorite_item} by="favoriteItems" />
                     </CenteredContent>
                   </LayoutWithCart>
                 }
