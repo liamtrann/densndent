@@ -146,7 +146,7 @@ function MobileDrawer({
         </Link>
 
         <Link to="/favorites" onClick={onClose}>
-          Favorites
+          MyPage
         </Link>
 
 
