@@ -72,11 +72,11 @@ export default function App() {
 
   // Initialize favorites when user info is available
   React.useEffect(() => {
-    if (userInfo?.favorite_items !== undefined) {
-      const favorites = initializeFavorites(userInfo.favorite_items);
+    if (userInfo?.custentity_favorite_item !== undefined) {
+      const favorites = initializeFavorites(userInfo.custentity_favorite_item);
       dispatch(setFavorites(favorites));
     }
-  }, [userInfo?.favorite_items, dispatch]);
+  }, [userInfo?.custentity_favorite_item, dispatch]);
   return (
     <ToastProvider>
       <div className="min-h-screen flex flex-col">

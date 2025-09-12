@@ -1,5 +1,4 @@
-import { FiShoppingCart, FiEye, FiHeart } from "react-icons/fi";
-import { AiFillHeart } from "react-icons/ai";
+import { FiShoppingCart, FiEye } from "react-icons/fi";
 
 import {
   ProductImage,
@@ -39,30 +38,10 @@ export default function ProductInListGrid({
         className="border p-4 rounded shadow hover:shadow-md transition flex flex-col h-full group relative cursor-pointer"
         onClick={handleNavigate}
       >
-        {/* keep friend's component imported but HIDDEN so it doesn't show or intercept clicks */}
-        <div className="absolute top-2 right-2 hidden">
-          <FavoriteButton itemId={id} />
+        {/* Redux-powered heart */}+{" "}
+        <div className="absolute top-2 right-2 z-20">
+          + <FavoriteButton itemId={id} size={18} />+{" "}
         </div>
-
-        {/* the ONLY visible/interactive heart — uses YOUR state/handler */}
-        <button
-          type="button"
-          aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggleFavorite(); // your logic: toggles and turns red immediately
-          }}
-          className="absolute top-2 right-2 z-20 p-1.5 rounded-full bg-white/90 hover:bg-white shadow"
-          title={isFavorite ? "Remove from favorites" : "Add to favorites"}
-        >
-          {isFavorite ? (
-            <AiFillHeart size={18} className="text-red-500" />
-          ) : (
-            <FiHeart size={18} className="text-gray-700" />
-          )}
-        </button>
-
-
         {/* Light grey hover overlay */}
         <div className="absolute inset-0 bg-gray-200 opacity-0 group-hover:opacity-20 transition-opacity duration-200 rounded pointer-events-none"></div>
         <div className="relative group/image">
@@ -81,11 +60,9 @@ export default function ProductInListGrid({
             </Button>
           </div>
         </div>
-
         <h3 className="text-sm font-medium text-gray-900 mb-1 hover:underline line-clamp-2 min-h-[2.5rem]">
           {itemid}
         </h3>
-
         <div className="mb-2 flex flex-wrap gap-2">
           {/* Promotion badge */}
           {product.promotioncode_id && product.promotion_code && (
@@ -99,7 +76,6 @@ export default function ProductInListGrid({
             </span>
           )}
         </div>
-
         {/* Show promotion preview */}
         {actualQuantity > quantity && (
           <div className="mb-2 text-xs">
@@ -109,7 +85,6 @@ export default function ProductInListGrid({
             </span>
           </div>
         )}
-
         <div className="mb-2">
           {product.promotioncode_id && product.fixedprice ? (
             <div className="space-y-1">
@@ -138,7 +113,6 @@ export default function ProductInListGrid({
             </div>
           )}
         </div>
-
         <div className="flex-grow">
           {inStock ? (
             <div className="mb-2">
@@ -156,7 +130,6 @@ export default function ProductInListGrid({
             </div>
           )}
         </div>
-
         <div className="flex justify-between items-center mt-auto gap-2">
           {/* Quantity selector with decrease/increase buttons */}
           <div

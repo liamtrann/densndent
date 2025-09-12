@@ -136,6 +136,14 @@ export default function DesktopNav({ classification }) {
         Our Partners
       </Link>
 
+      <Link
+        to="/favorites"
+        className="text-sm text-gray-800 hover:text-orange-600 font-medium"
+      >
+        Favorites
+      </Link>
+
+
       {/* ABOUT US */}
       <div
         className="relative"

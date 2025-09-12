@@ -3,7 +3,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import api from "api/api";
 import endpoint from "api/endpoints";
 
-// Initialize favorites from user data (no API call needed)
+// Initialize favorites from user data (backend still sends string format)
 export const initializeFavorites = (favoriteString) => {
   if (!favoriteString) return [];
 
@@ -26,9 +26,11 @@ export const addToFavorites = createAsyncThunk(
     dispatch(addFavoriteOptimistic(itemId));
 
     try {
-      // Get current favorites and add new one
+      // Get current favorites and format as required object structure
       const currentFavorites = getState().favorites.items;
-      const favoriteString = currentFavorites.join(",");
+      const favoriteData = {
+        items: currentFavorites.map((id) => ({ id })),
+      };
 
       const token = await getAccessTokenSilently();
       const url = endpoint.PATCH_UPDATE_CUSTOMER(userId);
@@ -36,7 +38,7 @@ export const addToFavorites = createAsyncThunk(
       await api.patch(
         url,
         {
-          custentity_favorite_item: favoriteString,
+          custentity_favorite_item: favoriteData,
         },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -63,9 +65,11 @@ export const removeFromFavorites = createAsyncThunk(
     dispatch(removeFavoriteOptimistic(itemId));
 
     try {
-      // Get current favorites and remove the item
+      // Get current favorites and format as required object structure
       const currentFavorites = getState().favorites.items;
-      const favoriteString = currentFavorites.join(",");
+      const favoriteData = {
+        items: currentFavorites.map((id) => ({ id })),
+      };
 
       const token = await getAccessTokenSilently();
       const url = endpoint.PATCH_UPDATE_CUSTOMER(userId);
@@ -73,7 +77,7 @@ export const removeFromFavorites = createAsyncThunk(
       await api.patch(
         url,
         {
-          custentity_favorite_item: favoriteString,
+          custentity_favorite_item: favoriteData,
         },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -132,20 +136,9 @@ const favoritesSlice = createSlice({
 
     // Rollback on failure
     syncFavoriteFailure: (state, action) => {
-      const { itemId, wasAdding } = action.payload;
-
-      if (wasAdding) {
-        // Rollback add - remove from favorites
-        state.items = state.items.filter((id) => id !== itemId);
-      } else {
-        // Rollback remove - add back to favorites
-        if (!state.items.includes(itemId)) {
-          state.items.push(itemId);
-        }
-      }
-
+      const { itemId } = action.payload;
       state.pendingUpdates = state.pendingUpdates.filter((id) => id !== itemId);
-      state.error = `Failed to ${wasAdding ? "add" : "remove"} favorite`;
+      state.error = "Failed to sync favorites. We'll retry later.";
     },
 
     clearFavoritesError: (state) => {

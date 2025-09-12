@@ -23,7 +23,7 @@ router.use('/item', itemsRoute);
 router.use('/file', fileRoute);
 router.use('/pricing', pricingRoute);
 router.use('/saleInvoiced', saleInvoicedRoute);
-router.use('/customer', checkJwt, customerRoute);
+router.use('/customer', customerRoute);
 router.use('/brands', brandsRoute);
 router.use('/transaction', transactionRoute);
 router.use('/promotion', promotionRoute);

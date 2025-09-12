@@ -1,7 +1,5 @@
-import { FiEye, FiShoppingCart, FiHeart } from "react-icons/fi";
-import { AiFillHeart } from "react-icons/ai";
-import { Link } from "react-router-dom";
-
+// src/components/product/ProductInListRow.jsx
+import { FiEye, FiShoppingCart } from "react-icons/fi";
 import {
   Button,
   ProductImage,
@@ -10,10 +8,8 @@ import {
   FavoriteButton,
 } from "common";
 import { FlexibleModal } from "components/layout";
-import { formatCurrency, extractBuyGet } from "config/config";
-
+import { formatCurrency } from "config/config";
 import ProductDetail from "../../pages/ProductDetail";
-
 import { CURRENT_IN_STOCK, OUT_OF_STOCK } from "@/constants/constant";
 
 /** One product per row with responsive (mobile vs desktop) layouts */
@@ -30,8 +26,6 @@ export default function ProductInListRow({
   quickLookProductId,
   handleQuickLook,
   handleCloseQuickLook,
-  isFavorite,
-  onToggleFavorite,
 }) {
   // Early return if no product
   if (!product) return null;
@@ -189,8 +183,8 @@ export default function ProductInListRow({
               className="md:hidden cursor-pointer relative group/mobile"
               onClick={() => handleNavigate()}
             >
-              {/* Favorite Button - Mobile */}
-              <div className="absolute top-2 right-2 z-10">
+              {/* Favorite Button - Mobile (Redux) */}
+              <div className="absolute top-2 right-2 z-20">
                 <FavoriteButton itemId={product.id} size={16} />
               </div>
 
@@ -227,43 +221,6 @@ export default function ProductInListRow({
                 </div>
 
                 {/* buttons */}
-
-                {/* NEW: Favorite (mobile) */}
-                <button
-                  aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onToggleFavorite();
-                  }}
-                  className="h-8 w-8 flex items-center justify-center rounded bg-white/90 hover:bg-white border border-gray-200 shadow-sm"
-                  title={isFavorite ? "Remove from favorites" : "Add to favorites"}
-                >
-                  {isFavorite ? (
-                    <AiFillHeart size={16} className="text-red-500" />
-                  ) : (
-                    <FiHeart size={16} className="text-gray-700" />
-                  )}
-                </button>
-
-
-                  {/* NEW: Favorite (desktop) */}
-                <button
-                  aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onToggleFavorite();
-                  }}
-                  className="h-8 w-8 flex items-center justify-center rounded bg-white/90 hover:bg-white border border-gray-200 shadow-sm"
-                  title={isFavorite ? "Remove from favorites" : "Add to favorites"}
-                >
-                  {isFavorite ? (
-                    <AiFillHeart size={16} className="text-red-500" />
-                  ) : (
-                    <FiHeart size={16} className="text-gray-700" />
-                  )}
-                </button>
-
-
                 <div className="col-span-2 flex justify-end items-center gap-2">
                   {/* Quick Look button - appears on hover */}
                   <Button
@@ -331,7 +288,7 @@ export default function ProductInListRow({
 
               {/* buttons */}
               <div className="md:w-32 flex justify-end items-center gap-2">
-                {/* Favorite Button - Desktop */}
+                {/* Favorite Button - Desktop (Redux) */}
                 <FavoriteButton itemId={product.id} size={18} />
 
                 {/* Quick Look button - appears on hover */}
