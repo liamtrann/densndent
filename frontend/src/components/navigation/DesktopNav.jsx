@@ -33,6 +33,7 @@ export default function DesktopNav({ classification }) {
   ];
 
   const promoMenuItems = [
+    { label: "Promotions", path: "/promotions/jdiq" },
     { label: "JDIQ Raffle Winners", path: "/promotions/jdiq" },
     { label: "Monthly Specials", path: "/promotions/monthly-special" },
     // { label: "Q3 D2 Specials (House Brand)", path: "/promotions/q3-d2" },
@@ -136,8 +137,6 @@ export default function DesktopNav({ classification }) {
         Our Partners
       </Link>
 
-
-
       {/* ABOUT US */}
       <div
         className="relative"
@@ -153,8 +152,6 @@ export default function DesktopNav({ classification }) {
         >
           About Us
         </span>
-
-        
 
         {aboutOpen && (
           <div className="absolute top-full left-0 mt-2 bg-white shadow-lg border rounded w-56 z-50 transition duration-200">
@@ -172,8 +169,11 @@ export default function DesktopNav({ classification }) {
       </div>
 
       {/* moved MyPage after About Us */}
-      <Link to="/favorites" className="text-sm text-gray-800 hover:text-orange-600 font-medium">
-        MyPage
+      <Link
+        to="/favorites"
+        className="text-sm text-gray-800 hover:text-orange-600 font-medium"
+      >
+        My Page
       </Link>
     </nav>
   );
