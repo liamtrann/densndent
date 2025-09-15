@@ -175,7 +175,10 @@ export default function ProductInListGrid({
       </div>
 
       {showQuickLook && (
-        <FlexibleModal title="Quick Look" onClose={() => setShowQuickLook(false)}>
+        <FlexibleModal
+          title="Quick Look"
+          onClose={() => setShowQuickLook(false)}
+        >
           <ProductDetail productId={id} isModal={true} />
         </FlexibleModal>
       )}

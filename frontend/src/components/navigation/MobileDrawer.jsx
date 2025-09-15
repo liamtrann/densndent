@@ -6,6 +6,7 @@ import { useAuth0 } from "@auth0/auth0-react";
 import { Paragraph, Button } from "common";
 
 const promotionsLinks = [
+  { label: "Promotions", path: "/promotions" },
   { label: "JDIQ Raffle Winners", path: "/promotions/jdiq" },
   { label: "Monthly Specials", path: "/promotions/monthly-special" },
   // { label: "Q3 D2 Specials (House Brand)", path: "/promotions/q3-d2" },

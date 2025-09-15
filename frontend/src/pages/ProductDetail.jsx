@@ -2,7 +2,10 @@
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
+import { useAuth0 } from "@auth0/auth0-react";
+
 import { addToCart } from "store/slices/cartSlice";
+import { addToFavorites, removeFromFavorites } from "store/slices/favoritesSlice";
 
 import api from "api/api";
 import endpoint from "api/endpoints";
@@ -33,8 +36,6 @@ import PurchaseOptions from "../common/ui/PurchaseOptions";
 import RecentlyViewedSection from "../components/sections/RecentlyViewedSection";
 import { useRecentViews } from "../hooks/useRecentViews";
 import { addToRecentViews } from "../redux/slices/recentViewsSlice";
-
-// ✅ Reusable purchase control
 
 import { CURRENT_IN_STOCK, OUT_OF_STOCK } from "@/constants/constant";
 
@@ -72,20 +73,23 @@ export default function ProductsPage({
   isModal = false,
 }) {
   const { id: rawId } = useParams();
-  // Use prop productId if provided (for modal), otherwise use URL param
   const effectiveRawId = propProductId || rawId;
+
+  const { getAccessTokenSilently } = useAuth0();
+
+  const userInfo = useSelector((s) => s.user.info);
+  const favorites = useSelector((s) => s.favorites.items);
+
   const [product, setProduct] = useState(null);
-  const [alertModal, setAlertModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const userInfo = useSelector((state) => state.user.info);
 
   const [matrixOptions, setMatrixOptions] = useState([]);
   const [selectedMatrixOption, setSelectedMatrixOption] = useState("");
 
-  // ✅ local state for purchase options on PDP
+  // PDP purchase options
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [subInterval, setSubInterval] = useState("1");
 
@@ -99,64 +103,44 @@ export default function ProductsPage({
     decrement,
   } = useQuantityHandlers(1, product?.stockdescription);
 
-  /**
-   * Resolve any non-numeric :id to a numeric internal id
-   * - If it's already numeric, return as-is.
-   * - Otherwise, search by name/SKU and return the first hit's id.
-   */
   async function resolveProductId(maybeId) {
     const s = String(maybeId || "").trim();
-
-    // If numeric (typical internalid), use directly
     if (/^\d+$/.test(s)) return s;
 
     const query = decodeURIComponent(s);
-
-    // Try a few forgiving variations to improve hit rate
     const candidates = [
       query,
-      query.replace(/\s*-\s*.*/, ""), // drop trailing " - ABC"
-      query
-        .replace(/[^\w\s]/g, " ")
-        .replace(/\s+/g, " ")
-        .trim(), // strip punctuation
+      query.replace(/\s*-\s*.*/, ""),
+      query.replace(/[^\w\s]/g, " ").replace(/\s+/g, " ").trim(),
     ];
 
     for (const q of candidates) {
       try {
-        // Your backend expects { name: "<search string>" }
         const res = await api.post(
           endpoint.POST_GET_ITEMS_BY_NAME({ limit: 1 }),
           { name: q }
         );
-        const arr = Array.isArray(res.data)
-          ? res.data
-          : res.data?.items || res.data;
+        const arr = Array.isArray(res.data) ? res.data : res.data?.items || res.data;
         const first = Array.isArray(arr) ? arr[0] : undefined;
         if (first?.id) return String(first.id);
       } catch {
-        // keep trying next candidate
+        // ignore and try next
       }
     }
-
     return null;
   }
 
-  // fetch product (with resolving step)
+  // fetch product
   useEffect(() => {
     let abort = false;
-
     async function fetchProduct() {
       try {
         setLoading(true);
         setError(null);
 
-        // Resolve non-numeric to numeric id if needed
         const pid = await resolveProductId(effectiveRawId);
         if (!pid) throw new Error("Product not found");
 
-        // Normalize URL to the numeric id for a cleaner/consistent PDP link
-        // Only navigate if we're not in modal mode and the ID changed
         if (pid !== effectiveRawId && !isModal) {
           navigate(`/product/${pid}`, { replace: true });
         }
@@ -165,29 +149,23 @@ export default function ProductsPage({
         if (abort) return;
 
         setProduct(res.data);
-        if (!isModal) {
-          dispatch(addToRecentViews(res.data.id));
-        }
-        // reset PDP subscription UI on product change
+        if (!isModal) dispatch(addToRecentViews(res.data.id));
+
         setIsSubscribed(false);
         setSubInterval("1");
       } catch (err) {
-        if (abort) return;
-        setError(err?.response?.data?.error || "Failed to load product.");
+        if (!abort) setError(err?.response?.data?.error || "Failed to load product.");
       } finally {
         if (!abort) setLoading(false);
       }
     }
-
     fetchProduct();
-    return () => {
-      abort = true;
-    };
+    return () => { abort = true; };
   }, [effectiveRawId, navigate, dispatch, isModal]);
 
-  // fetch matrix/variants
+  // variants
   useEffect(() => {
-    if (!product || !product.custitem39) return;
+    if (!product?.custitem39) return;
     async function fetchMatrixOptions() {
       try {
         const res = await api.post(endpoint.POST_GET_PRODUCT_BY_PARENT(), {
@@ -216,41 +194,49 @@ export default function ProductsPage({
     const cartItem = {
       ...product,
       quantity: Number(actualQuantity),
-      // ✅ carry PDP subscription choice into cart
       subscriptionEnabled: isSubscribed,
       subscriptionInterval: isSubscribed ? subInterval : null,
       subscriptionPreferredDeliveryDays: isSubscribed
         ? preferredDaysTextFromSources({ userInfo })
         : null,
     };
-
     delayCall(() => {
       dispatch(addToCart(cartItem));
       Toast.success(`Added ${actualQuantity} ${product.itemid} to cart!`);
-      // Call the callback if provided (for modal close)
     });
   };
 
-  const { matrixType, options: matrixOptionsList } =
-    getMatrixInfo(matrixOptions);
+  // ===== Favorites helpers (for the text button) =====
+  const isFavorite = product ? favorites.includes(Number(product.id)) : false;
+
+  const toggleFavorite = async () => {
+    if (!product || !userInfo?.id) return;
+    const payload = {
+      itemId: Number(product.id),
+      userId: userInfo.id,
+      getAccessTokenSilently,
+    };
+    if (isFavorite) {
+      dispatch(removeFromFavorites(payload));
+    } else {
+      dispatch(addToFavorites(payload));
+    }
+  };
+
+  const { matrixType, options: matrixOptionsList } = getMatrixInfo(matrixOptions);
 
   if (loading) return <Loading text="Loading product..." />;
   if (error) return <ErrorMessage message={error} />;
   if (!product) return null;
 
-  // compute first delivery date preview
   const firstDeliveryDate = isSubscribed
     ? nextSubscriptionDateFromToday(subInterval)
     : null;
 
   return (
-    <div className={isModal ? "relative" : "max-w-6xl mx-auto px-6 py-10"}>
-      {isModal && (
-        <div className="absolute top-9 right-4 z-10">
-          <FavoriteButton itemId={product.id} size={22} />
-        </div>
-      )}
+    <div className={isModal ? "" : "max-w-6xl mx-auto px-6 py-10"}>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+        {/* Left: Image */}
         <div className="overflow-hidden">
           <ProductImage
             src={product.file_url}
@@ -260,18 +246,15 @@ export default function ProductsPage({
           />
         </div>
 
+        {/* Right: Content */}
         <div>
-          {/* Title + Favorite (non-modal PDP) */}
-          <div className="flex items-start justify-between gap-3 mb-2">
-            <h2
-              className={`${isModal ? "text-xl" : "text-2xl"} font-bold text-gray-800`}
-            >
-              {product.itemid}
-            </h2>
-            {!isModal && <FavoriteButton itemId={product.id} size={24} />}
-          </div>
+          {/* Title (removed hearts here; we’re putting them near Quantity as requested) */}
+          <h2 className={`${isModal ? "text-xl" : "text-2xl"} font-bold text-gray-800 mb-2`}>
+            {product.itemid}
+          </h2>
 
-          {product.totalquantityonhand && product.totalquantityonhand > 0 ? (
+          {/* Stock status */}
+          {Number(product.totalquantityonhand) > 0 ? (
             <div className="mb-2">
               <Paragraph className="text-smiles-blue font-semibold">
                 {CURRENT_IN_STOCK}: {product.totalquantityonhand}
@@ -287,25 +270,22 @@ export default function ProductsPage({
             </div>
           )}
 
+          {/* Price */}
           <div className="mt-2 mb-4">
             {product.price ? (
               product.promotioncode_id && product.fixedprice ? (
                 <div className="space-y-2">
-                  {/* Promotion badge */}
                   <div className="mb-2">
                     <span className="text-sm text-white font-medium bg-smiles-redOrange px-3 py-1 rounded">
                       PROMO: {product.promotion_code}
                     </span>
                   </div>
-                  {/* Original price - strikethrough */}
                   <div className="text-gray-500 line-through text-lg">
                     {formatCurrency(product.price)}
                   </div>
-                  {/* Promotional price */}
                   <div className="text-red-600 font-bold text-3xl">
                     {formatCurrency(product.fixedprice)}
                   </div>
-                  {/* Savings amount */}
                   <div className="text-green-600 text-lg font-medium">
                     Save {formatCurrency(product.price - product.fixedprice)}
                   </div>
@@ -318,15 +298,13 @@ export default function ProductsPage({
             ) : null}
           </div>
 
+          {/* Description */}
           {product.storedetaileddescription && (
-            <ShowMoreHtml
-              html={product.storedetaileddescription}
-              maxLength={400}
-            />
+            <ShowMoreHtml html={product.storedetaileddescription} maxLength={400} />
           )}
-
           <div className="text-sm text-gray-500 mt-4">MPN: {product.mpn}</div>
 
+          {/* Variants */}
           {matrixOptions.length > 0 && (
             <Dropdown
               label={matrixType}
@@ -343,10 +321,12 @@ export default function ProductsPage({
             />
           )}
 
-          {/* Quantity */}
+          {/* ===== Quantity + Favorites row ===== */}
           <div className="mt-4">
             <label className="block mb-1 font-medium">Quantity:</label>
-            <div className="flex items-center gap-4">
+
+            <div className="flex items-center gap-4 flex-wrap">
+              {/* Qty control */}
               <div className="flex items-center border rounded overflow-hidden h-9 w-32">
                 <button
                   onClick={decrement}
@@ -370,18 +350,30 @@ export default function ProductsPage({
                 </button>
               </div>
 
+              {/* Any stockdescription badge */}
               {product.stockdescription && (
                 <span className="text-sm text-blue-600 font-medium bg-blue-50 px-2 py-1 rounded">
                   {product.stockdescription}
                 </span>
               )}
+
+              {/* ➜ Favorites controls live here */}
+              {userInfo?.id && (
+                <div className="flex items-center gap-2 ml-auto">
+                  <FavoriteButton itemId={product.id} size={20} />
+                  <div
+                    onClick={toggleFavorite}
+                    className={`h-9 px-3 border border-gray-300 bg-gray-100 text-gray-800 hover:bg-smiles-blue hover:text-white flex items-center justify-center cursor-pointer select-none text-sm`}
+                  >
+                    {isFavorite ? "Remove from Favorites" : "Add to Favorites"}
+                  </div>
+                </div>
+              )}
             </div>
 
             {actualQuantity > quantity && (
               <div className="mt-2 text-sm">
-                <span className="text-gray-600">
-                  Selected: {quantity} items
-                </span>
+                <span className="text-gray-600">Selected: {quantity} items</span>
                 <span className="text-green-600 font-medium ml-2">
                   → Total with bonus: {actualQuantity} items
                 </span>
@@ -389,7 +381,7 @@ export default function ProductsPage({
             )}
           </div>
 
-          {/* ✅ Purchase options (PDP) */}
+          {/* Purchase options */}
           <div className="mt-5">
             <PurchaseOptions
               name={`pdp-${product.id}`}
@@ -407,42 +399,24 @@ export default function ProductsPage({
             {/* Preferred delivery days when subscribed */}
             {isSubscribed && <PreferDeliveryDaySelector />}
 
-            {/* date preview when subscribed */}
             {isSubscribed && (
               <div className="mt-3 text-xs text-gray-600">
                 <span className="font-medium">Next order:</span>{" "}
                 <span>{formatLocalDateToronto(firstDeliveryDate)}</span>
                 <span className="ml-1">
-                  (
-                  {subInterval === "1"
-                    ? "every 1 month"
-                    : `every ${subInterval} months`}
-                  )
+                  ({subInterval === "1" ? "every 1 month" : `every ${subInterval} months`})
                 </span>
               </div>
             )}
           </div>
 
           {/* Add to Cart */}
-          <Button className={`mt-6 w-full`} onClick={handleAddToCart}>
+          <Button className="mt-6 w-full" onClick={handleAddToCart}>
             Add to Shopping Cart
           </Button>
         </div>
       </div>
-      {/* Alert Modal for stock limit */}
-      {alertModal && (
-        <Modal
-          title="Stock Limit Exceeded"
-          onClose={() => setAlertModal(false)}
-          onCloseText="OK"
-        >
-          <p>
-            Sorry, only {product.totalquantityonhand} in stock. Please adjust
-            your quantity.
-          </p>
-        </Modal>
-      )}
-      {/* ✅ Recently Viewed Products Carousel - Only show on full page, not in modal */}
+      {/* Recently Viewed (only full page) */}
       {!isModal && (
         <div className="mt-20">
           <RecentlyViewedSection />
