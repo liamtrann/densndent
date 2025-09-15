@@ -160,6 +160,14 @@ const endpoint = {
     if (offset) params.append("offset", offset);
     return `/suiteql/promotion/by-product?${params.toString()}`;
   },
+  GET_PRODUCTS_WITH_ACTIVE_PROMOTIONS: ({ limit, offset }) => {
+    const params = new URLSearchParams();
+    if (limit) params.append("limit", limit);
+    if (offset) params.append("offset", offset);
+    return `/suiteql/promotion/products-with-promotions?${params.toString()}`;
+  },
+  GET_COUNT_PRODUCTS_WITH_ACTIVE_PROMOTIONS: () =>
+    "/suiteql/promotion/products-with-promotions/count",
 
   // Tax Endpoints
   GET_TAX_RATES: ({ country, province, city }) => {

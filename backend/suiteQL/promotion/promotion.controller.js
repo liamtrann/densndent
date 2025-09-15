@@ -1,31 +1,67 @@
-const promotionService = require('./promotion.service');
+const promotionService = require("./promotion.service");
 
 async function getActivePublic(req, res) {
-    try {
-        const promotions = await promotionService.getAllActivePublicPromotions();
-        res.json(promotions);
-    } catch (err) {
-        res.status(500).json({ error: 'Failed to fetch promotions.' });
-    }
+  try {
+    const promotions = await promotionService.getAllActivePublicPromotions();
+    res.json(promotions);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch promotions." });
+  }
 }
 
 async function getPromotionsByProductId(req, res) {
-    try {
-        const { productId, limit, offset } = req.query;
+  try {
+    const { productId, limit, offset } = req.query;
 
-        if (!productId) {
-            return res.status(400).json({ error: 'Product ID is required.' });
-        }
-
-        const promotions = await promotionService.getPromotionsByProductId(productId, limit, offset);
-        res.json(promotions);
-    } catch (err) {
-        console.error('Error fetching promotions by product ID:', err);
-        res.status(500).json({ error: 'Failed to fetch promotions for this product.' });
+    if (!productId) {
+      return res.status(400).json({ error: "Product ID is required." });
     }
+
+    const promotions = await promotionService.getPromotionsByProductId(
+      productId,
+      limit,
+      offset
+    );
+    res.json(promotions);
+  } catch (err) {
+    console.error("Error fetching promotions by product ID:", err);
+    res
+      .status(500)
+      .json({ error: "Failed to fetch promotions for this product." });
+  }
+}
+
+async function getAllProductsWithActivePromotions(req, res) {
+  try {
+    const { limit, offset } = req.query;
+    const products = await promotionService.getAllProductsWithActivePromotions(
+      limit,
+      offset
+    );
+    res.json({ products });
+  } catch (err) {
+    console.error("Error fetching products with active promotions:", err);
+    res
+      .status(500)
+      .json({ error: "Failed to fetch products with active promotions." });
+  }
+}
+
+async function countProductsWithActivePromotions(req, res) {
+  try {
+    const count = await promotionService.countProductsWithActivePromotions();
+    res.json({ count });
+  } catch (err) {
+    console.error("Error counting products with active promotions:", err);
+    res
+      .status(500)
+      .json({ error: "Failed to count products with active promotions." });
+  }
 }
 
 module.exports = {
-    getActivePublic,
-    getPromotionsByProductId,
+  getActivePublic,
+  getPromotionsByProductId,
+  getAllProductsWithActivePromotions,
+  countProductsWithActivePromotions,
 };
