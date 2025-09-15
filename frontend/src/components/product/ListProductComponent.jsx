@@ -12,9 +12,8 @@ import {
   ProductToolbar,
 } from "common";
 
+import { ListProduct } from "..";
 import FilterOption from "../filters/FilterOption";
-import ListRows from "./ListRows";
-import ListGrids from "./ListGrids";
 
 export default function ListProductComponent({
   type,
@@ -249,9 +248,27 @@ export default function ListProductComponent({
             !error &&
             products.length > 0 &&
             (view === "grid" ? (
-              <ListGrids products={products} />
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+                {products.map((product) => (
+                  <ListProduct
+                    key={product.id}
+                    product={product}
+                    listType="grid"
+                  />
+                ))}
+              </div>
             ) : (
-              <ListRows products={products} />
+              <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                <div className="divide-y divide-gray-200 md:divide-y-0">
+                  {products.map((product) => (
+                    <ListProduct
+                      key={product.id}
+                      product={product}
+                      listType="list"
+                    />
+                  ))}
+                </div>
+              </div>
             ))}
 
           {/* Bottom pagination */}
