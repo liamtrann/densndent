@@ -218,22 +218,19 @@ export default function App() {
                   </CenteredContent>
                 }
               />
+              
               <Route
                 path="/promotions"
                 element={
-                  <CenteredContent>
-                    <PromotionsPage />
-                  </CenteredContent>
+                  <LayoutWithCart>
+                    <CenteredContent>
+                      <ListProductPage by="promotion" />
+                    </CenteredContent>
+                  </LayoutWithCart>
                 }
               />
-              <Route
-                path="/promotions"
-                element={
-                  <CenteredContent>
-                    <PromotionsPage />
-                  </CenteredContent>
-                }
-              />
+
+
               <Route
                 path="/promotions/monthly-special"
                 element={

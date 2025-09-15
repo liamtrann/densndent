@@ -1,3 +1,4 @@
+// src/components/product/ListProductPage.jsx
 import React from "react";
 import { useParams } from "react-router-dom";
 import ListProductComponent from "./ListProductComponent";
@@ -5,11 +6,10 @@ import ListProductComponent from "./ListProductComponent";
 export default function ListProductPage({ by }) {
   const { name, brandName, nameAndId, categoryNameAndId } = useParams();
 
-
   const parseNameAndId = () => {
     switch (by) {
+      
       case "name": {
-   
         const textName = name?.replaceAll("-", " ") || "";
         return {
           displayName: textName || "Unknown Product",
@@ -18,7 +18,6 @@ export default function ListProductPage({ by }) {
         };
       }
       case "brand": {
-        // For brand, use brandName parameter
         const brand = brandName || "";
         return {
           displayName: brand || "Unknown Brand",
@@ -27,7 +26,6 @@ export default function ListProductPage({ by }) {
         };
       }
       case "class": {
-        
         let parsedName = "";
         let parsedClassId = "";
 
@@ -48,12 +46,10 @@ export default function ListProductPage({ by }) {
         };
       }
       case "category": {
-        
         const currentPath = window.location.pathname;
         const pathSegments = currentPath.split("/");
         const lastSegment = pathSegments[pathSegments.length - 1] || "";
 
-     
         let parsedName = "";
         let parsedCategoryId = "";
 
@@ -73,8 +69,16 @@ export default function ListProductPage({ by }) {
           headerTitle: (parsedName || "UNKNOWN CATEGORY").toUpperCase(),
         };
       }
+
+      case "promotion": {
+        return {
+          displayName: "Promotions",
+          id: "promotion",
+          headerTitle: "PROMOTIONS",
+        };
+      }
+
       case "all": {
-        
         return {
           displayName: "All Products",
           id: null,
@@ -82,7 +86,6 @@ export default function ListProductPage({ by }) {
         };
       }
       default: {
-        // Fallback for any other cases
         return {
           displayName: name || "",
           id: name || "",
@@ -94,7 +97,7 @@ export default function ListProductPage({ by }) {
 
   const { displayName, id, headerTitle } = parseNameAndId();
 
-  // Map 'by' prop to the expected type for ListProductComponent
+  // Map 'by' to the slice "type"
   const getComponentType = () => {
     switch (by) {
       case "class":
@@ -107,16 +110,24 @@ export default function ListProductPage({ by }) {
         return "name";
       case "all":
         return "all";
+      case "promotion":
+        return "promotion";
       default:
         return by;
     }
   };
 
+  // ✅ Use Promotions breadcrumbs for this page
+  const breadcrumbs =
+    by === "promotion"
+      ? ["Home", "Promotions & Catalogues", "Promotions"]
+      : ["Home", "Products", displayName || "Unknown"];
+
   return (
     <ListProductComponent
       type={getComponentType()}
       id={id}
-      breadcrumbPath={["Home", "Products", displayName || "Unknown"]}
+      breadcrumbPath={breadcrumbs}
       headerTitle={headerTitle}
     />
   );
