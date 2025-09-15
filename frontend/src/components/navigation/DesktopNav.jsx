@@ -33,7 +33,7 @@ export default function DesktopNav({ classification }) {
   ];
 
   const promoMenuItems = [
-    { label: "Promotions", path: "/promotions/jdiq" },
+    { label: "Promotions", path: "/promotions" },
     { label: "JDIQ Raffle Winners", path: "/promotions/jdiq" },
     { label: "Monthly Specials", path: "/promotions/monthly-special" },
     // { label: "Q3 D2 Specials (House Brand)", path: "/promotions/q3-d2" },
@@ -77,7 +77,9 @@ export default function DesktopNav({ classification }) {
         onMouseEnter={handlePromoEnter}
         onMouseLeave={handlePromoLeave}
       >
-        <span
+        {/* ⬇️ Make the parent label a link to /promotions */}
+        <Link
+          to="/promotions"
           className={`text-sm font-medium cursor-pointer ${
             promoOpen
               ? "text-orange-600"
@@ -85,7 +87,7 @@ export default function DesktopNav({ classification }) {
           }`}
         >
           Promotions & Catalogues
-        </span>
+        </Link>
 
         {promoOpen && (
           <div className="absolute top-full left-0 mt-2 bg-white shadow-lg border rounded w-72 z-50 transition duration-200">
