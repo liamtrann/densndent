@@ -8,7 +8,13 @@ export default function ListProductPage({ by }) {
 
   const parseNameAndId = () => {
     switch (by) {
-      
+      case "promotion": {
+        return {
+          displayName: "Promotions",
+          id: "promotion",
+          headerTitle: "PROMOTIONS",
+        };
+      }
       case "name": {
         const textName = name?.replaceAll("-", " ") || "";
         return {
@@ -70,11 +76,12 @@ export default function ListProductPage({ by }) {
         };
       }
 
+      // ✅ NEW: promotions page (no id needed)
       case "promotion": {
         return {
           displayName: "Promotions",
-          id: "promotion",
-          headerTitle: "PROMOTIONS",
+          id: "promotion", // productSlice handles this just fine
+          headerTitle: " PROMOTIONS", // page H1
         };
       }
 
