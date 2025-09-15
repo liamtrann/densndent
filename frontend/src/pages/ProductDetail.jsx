@@ -261,11 +261,15 @@ export default function ProductsPage({
         </div>
 
         <div>
-          <h2
-            className={`${isModal ? "text-xl" : "text-2xl"} font-bold text-gray-800 mb-2`}
-          >
-            {product.itemid}
-          </h2>
+          {/* Title + Favorite (non-modal PDP) */}
+          <div className="flex items-start justify-between gap-3 mb-2">
+            <h2
+              className={`${isModal ? "text-xl" : "text-2xl"} font-bold text-gray-800`}
+            >
+              {product.itemid}
+            </h2>
+            {!isModal && <FavoriteButton itemId={product.id} size={24} />}
+          </div>
 
           {product.totalquantityonhand && product.totalquantityonhand > 0 ? (
             <div className="mb-2">
@@ -443,7 +447,6 @@ export default function ProductsPage({
           </Button>
         </div>
       </div>
-
       {/* Alert Modal for stock limit */}
       {alertModal && (
         <Modal
@@ -457,7 +460,6 @@ export default function ProductsPage({
           </p>
         </Modal>
       )}
-
       {/* ✅ Recently Viewed Products Carousel - Only show on full page, not in modal */}
       {!isModal && (
         <div className="mt-20">
