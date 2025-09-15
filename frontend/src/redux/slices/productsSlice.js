@@ -71,8 +71,6 @@ const buildProductUrl = ({
       return {
         url: endpoint.GET_ITEMS_ORDER_HISTORY_BY_USER({
           userId: id,
-          limit,
-          offset,
         }),
         method: "get",
         requiresAuth: true,
@@ -82,6 +80,14 @@ const buildProductUrl = ({
         url: endpoint.POST_GET_ITEM_BY_IDS(),
         method: "post",
         requiresAuth: true,
+      };
+    case "promotion":
+      return {
+        url: endpoint.GET_PRODUCTS_WITH_ACTIVE_PROMOTIONS({
+          limit,
+          offset,
+        }),
+        method: "get",
       };
     default:
       throw new Error("Unknown product type");
@@ -119,6 +125,11 @@ const buildCountUrl = ({ type, id, minPrice, maxPrice }) => {
         url: endpoint.GET_COUNT_ALL_PRODUCTS({ minPrice, maxPrice }),
         method: "get",
       };
+    case "promotion":
+      return {
+        url: endpoint.GET_COUNT_PRODUCTS_WITH_ACTIVE_PROMOTIONS(),
+        method: "get",
+      };
     default:
       throw new Error("Unknown type");
   }
@@ -128,16 +139,29 @@ const buildCountUrl = ({ type, id, minPrice, maxPrice }) => {
 export const fetchProductsBy = createAsyncThunk(
   "products/fetchPage",
   async (
-    { type, id, page, limit, sort, minPrice, maxPrice, getAccessTokenSilently },
+    {
+      type,
+      id,
+      page = 1,
+      limit = 12,
+      sort,
+      minPrice,
+      maxPrice,
+      getAccessTokenSilently,
+    },
     { rejectWithValue }
   ) => {
     try {
-      const offset = (page - 1) * limit;
+      // For non-paginated requests, don't calculate offset or pass limit/offset to API
+      const isNonPaginated =
+        type === "favoriteItems" || type === "orderHistory";
+      const offset = isNonPaginated ? undefined : (page - 1) * limit;
+
       const { url, method, requiresAuth } = buildProductUrl({
         type,
         id,
-        limit,
-        offset,
+        limit: isNonPaginated ? undefined : limit,
+        offset: isNonPaginated ? undefined : offset,
         sort,
         minPrice,
         maxPrice,
@@ -183,6 +207,7 @@ export const fetchProductsBy = createAsyncThunk(
         sort,
         minPrice,
         maxPrice,
+        type, // Add type to payload for key generation
       };
     } catch (err) {
       return rejectWithValue(err?.response?.data || err.message);
@@ -226,11 +251,26 @@ const productsSlice = createSlice({
       })
       .addCase(fetchProductsBy.fulfilled, (state, action) => {
         state.isLoading = false;
-        const { id, page, products, total, limit, sort, minPrice, maxPrice } =
-          action.payload;
+        const {
+          id,
+          page,
+          products,
+          total,
+          limit,
+          sort,
+          minPrice,
+          maxPrice,
+          type,
+        } = action.payload;
         const priceKey = `${minPrice || ""}_${maxPrice || ""}`;
         const effectiveId = id || "all";
-        const key = `${effectiveId}_${limit || 12}_${sort}_${priceKey}_${page}`;
+
+        // For non-paginated requests (favoriteItems, orderHistory), use simpler key
+        const isNonPaginated =
+          type === "favoriteItems" || type === "orderHistory";
+        const key = isNonPaginated
+          ? `${effectiveId}_${sort}_${priceKey}`
+          : `${effectiveId}_${limit || 12}_${sort}_${priceKey}_${page}`;
         const countKey = `${effectiveId}_${priceKey}`;
 
         state.productsByPage[key] = products;
