@@ -11,6 +11,8 @@ import { Header, Footer, LayoutWithCart, CenteredContent } from "./components";
 import ProfileSetupGuard from "./components/guards/ProfileSetupGuard";
 import useProfileSetup from "./hooks/useProfileSetup";
 import { LandingPage } from "./pages";
+import { ListProductNoFilter } from "./components/product";
+
 // Lazy loaded components
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
 const ListProductPage = lazy(
@@ -57,7 +59,9 @@ const PageLoading = () => (
 export default function App() {
   const { isAuthenticated, user, getAccessTokenSilently } = useAuth0();
   const dispatch = useDispatch();
+
   const userInfo = useSelector((state) => state.user.info);
+  const favoriteIds = useSelector((s) => s.favorites.items); // ← live Redux favorites
 
   // Handle profile setup flow
   useProfileSetup();
@@ -77,6 +81,21 @@ export default function App() {
       dispatch(setFavorites(favorites));
     }
   }, [userInfo?.custentity_favorite_item, dispatch]);
+
+  // ---------- FAVORITES CSV (put this inside App, after selectors) ----------
+  // Normalize whatever the backend returned on the user object
+  const userInfoFavCsv =
+    typeof userInfo?.custentity_favorite_item === "string"
+      ? userInfo.custentity_favorite_item
+      : Array.isArray(userInfo?.custentity_favorite_item?.items)
+        ? userInfo.custentity_favorite_item.items.map((x) => x.id).join(",")
+        : "";
+
+  // Prefer the *live Redux* list (reflects hearts you just clicked); fallback to userInfo
+  const favoritesCsv =
+    favoriteIds && favoriteIds.length ? favoriteIds.join(",") : userInfoFavCsv;
+  // -------------------------------------------------------------------------
+
   return (
     <ToastProvider>
       <div className="min-h-screen flex flex-col">
@@ -94,6 +113,7 @@ export default function App() {
                   </LayoutWithCart>
                 }
               />
+
               {/* Routes WITH Cart Panel */}
               <Route
                 path="/product/:id"
@@ -249,7 +269,6 @@ export default function App() {
                 }
               />
               <Route path="/clearance" element={<ClearancePage />} />
-
               <Route
                 path="/blog/:slug"
                 element={
@@ -258,7 +277,6 @@ export default function App() {
                   </CenteredContent>
                 }
               />
-
               <Route
                 path="/partners"
                 element={
@@ -276,7 +294,22 @@ export default function App() {
                 }
               />
 
+              {/* ---------- Protected routes ---------- */}
               <Route element={<ProtectedRoute />}>
+                <Route
+                  path="/favorites"
+                  element={
+                    <LayoutWithCart>
+                      <CenteredContent>
+                        <ListProductNoFilter
+                          searchIds={favoritesCsv}
+                          by="favoriteItems"
+                        />
+                      </CenteredContent>
+                    </LayoutWithCart>
+                  }
+                />
+
                 <Route
                   path="/checkout/*"
                   element={

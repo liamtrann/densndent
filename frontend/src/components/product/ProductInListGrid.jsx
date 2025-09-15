@@ -1,5 +1,4 @@
 import { FiShoppingCart, FiEye } from "react-icons/fi";
-
 import {
   ProductImage,
   Paragraph,
@@ -9,9 +8,7 @@ import {
   FavoriteButton,
 } from "common";
 import { FlexibleModal } from "components/layout";
-
 import ProductDetail from "../../pages/ProductDetail";
-
 import { CURRENT_IN_STOCK, OUT_OF_STOCK } from "@/constants/constant";
 
 export default function ProductInListGrid({
@@ -25,32 +22,30 @@ export default function ProductInListGrid({
   handleNavigate,
   showQuickLook,
   setShowQuickLook,
-  isFavorite,
-  onToggleFavorite,
 }) {
   const { id, itemid, file_url, price, totalquantityonhand } = product;
-
   const inStock = totalquantityonhand && totalquantityonhand > 0;
 
   return (
     <>
       <div
-        className="border p-4 rounded shadow hover:shadow-md transition flex flex-col h-full group relative cursor-pointer"
+        className="product-card border p-4 rounded shadow hover:shadow-md transition flex flex-col h-full group relative cursor-pointer"
         onClick={handleNavigate}
       >
-        {/* Redux-powered heart */}+{" "}
+        {/* single Redux-powered heart */}
         <div className="absolute top-2 right-2 z-20">
-          + <FavoriteButton itemId={id} size={18} />+{" "}
+          <FavoriteButton itemId={id} />
         </div>
+
         {/* Light grey hover overlay */}
-        <div className="absolute inset-0 bg-gray-200 opacity-0 group-hover:opacity-20 transition-opacity duration-200 rounded pointer-events-none"></div>
+        <div className="absolute inset-0 bg-gray-200 opacity-0 group-hover:opacity-20 transition-opacity duration-200 rounded pointer-events-none" />
         <div className="relative group/image">
           <ProductImage src={file_url} />
           {/* Quick Look Button - Centered overlay on image hover */}
           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded">
             <Button
               onClick={(e) => {
-                e.stopPropagation(); // Prevent navigation when clicking quick look
+                e.stopPropagation();
                 setShowQuickLook(true);
               }}
               className="py-2 px-4 text-sm text-white bg-primary-blue border border-primary-blue rounded hover:bg-smiles-blue transition-all duration-200 flex items-center justify-center gap-2 shadow-lg"
@@ -60,11 +55,12 @@ export default function ProductInListGrid({
             </Button>
           </div>
         </div>
+
         <h3 className="text-sm font-medium text-gray-900 mb-1 hover:underline line-clamp-2 min-h-[2.5rem]">
           {itemid}
         </h3>
+
         <div className="mb-2 flex flex-wrap gap-2">
-          {/* Promotion badge */}
           {product.promotioncode_id && product.promotion_code && (
             <span className="text-xs text-white font-medium bg-smiles-redOrange px-2 py-1 rounded">
               PROMO: {product.promotion_code}
@@ -76,7 +72,7 @@ export default function ProductInListGrid({
             </span>
           )}
         </div>
-        {/* Show promotion preview */}
+
         {actualQuantity > quantity && (
           <div className="mb-2 text-xs">
             <span className="text-gray-600">Selected: {quantity}</span>
@@ -85,19 +81,17 @@ export default function ProductInListGrid({
             </span>
           </div>
         )}
+
         <div className="mb-2">
           {product.promotioncode_id && product.fixedprice ? (
             <div className="space-y-1">
-              {/* Original price - strikethrough */}
               <div className="text-gray-500 line-through text-xs">
                 ${Math.floor(price)}.{(price % 1).toFixed(2).slice(2)}
               </div>
-              {/* Promotional price */}
               <div className="text-red-600 font-semibold text-xl">
                 ${Math.floor(product.fixedprice)}.
                 {(product.fixedprice % 1).toFixed(2).slice(2)}
               </div>
-              {/* Savings amount */}
               <div className="text-green-600 text-xs">
                 Save ${(price - product.fixedprice).toFixed(2)}
               </div>
@@ -113,6 +107,7 @@ export default function ProductInListGrid({
             </div>
           )}
         </div>
+
         <div className="flex-grow">
           {inStock ? (
             <div className="mb-2">
@@ -130,8 +125,8 @@ export default function ProductInListGrid({
             </div>
           )}
         </div>
+
         <div className="flex justify-between items-center mt-auto gap-2">
-          {/* Quantity selector with decrease/increase buttons */}
           <div
             className="flex items-center border rounded overflow-hidden h-9"
             onClick={(e) => e.stopPropagation()}
@@ -178,12 +173,8 @@ export default function ProductInListGrid({
         </div>
       </div>
 
-      {/* Quick Look Modal */}
       {showQuickLook && (
-        <FlexibleModal
-          title="Quick Look"
-          onClose={() => setShowQuickLook(false)}
-        >
+        <FlexibleModal title="Quick Look" onClose={() => setShowQuickLook(false)}>
           <ProductDetail productId={id} isModal={true} />
         </FlexibleModal>
       )}

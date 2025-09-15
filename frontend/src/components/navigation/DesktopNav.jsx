@@ -136,12 +136,6 @@ export default function DesktopNav({ classification }) {
         Our Partners
       </Link>
 
-      <Link
-        to="/favorites"
-        className="text-sm text-gray-800 hover:text-orange-600 font-medium"
-      >
-        Favorites
-      </Link>
 
 
       {/* ABOUT US */}
@@ -160,6 +154,8 @@ export default function DesktopNav({ classification }) {
           About Us
         </span>
 
+        
+
         {aboutOpen && (
           <div className="absolute top-full left-0 mt-2 bg-white shadow-lg border rounded w-56 z-50 transition duration-200">
             {aboutMenuItems.map((item) => (
@@ -174,6 +170,11 @@ export default function DesktopNav({ classification }) {
           </div>
         )}
       </div>
+
+      {/* moved MyPage after About Us */}
+      <Link to="/favorites" className="text-sm text-gray-800 hover:text-orange-600 font-medium">
+        MyPage
+      </Link>
     </nav>
   );
 }

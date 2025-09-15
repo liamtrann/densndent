@@ -80,6 +80,14 @@ const buildProductUrl = ({
         method: "post",
         requiresAuth: true,
       };
+    case "promotion":
+      return {
+        url: endpoint.GET_PRODUCTS_WITH_ACTIVE_PROMOTIONS({
+          limit,
+          offset,
+        }),
+        method: "get",
+      };
     default:
       throw new Error("Unknown product type");
   }
@@ -114,6 +122,11 @@ const buildCountUrl = ({ type, id, minPrice, maxPrice }) => {
     case "all":
       return {
         url: endpoint.GET_COUNT_ALL_PRODUCTS({ minPrice, maxPrice }),
+        method: "get",
+      };
+    case "promotion":
+      return {
+        url: endpoint.GET_COUNT_PRODUCTS_WITH_ACTIVE_PROMOTIONS(),
         method: "get",
       };
     default:
