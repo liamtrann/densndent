@@ -40,7 +40,7 @@ export default function CreateAddressModal({
   // Get user info for preferred days
   const userInfo = useSelector((s) => s.user.info);
   const defaultPreferredDays = parsePreferredDays(
-    normalizePrefToString(userInfo?.custentity_prefer_delivery) ||
+    normalizePrefToString(userInfo?.prefer_delivery) ||
       (typeof window !== "undefined"
         ? localStorage.getItem("preferredDeliveryDays") || ""
         : "")

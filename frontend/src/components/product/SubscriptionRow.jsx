@@ -3,17 +3,10 @@ import React from "react";
 import { useForm, Controller } from "react-hook-form";
 import { Link } from "react-router-dom";
 
-import {
-  Button,
-  Dropdown,
-  Paragraph,
-  ProductImage,
-  WeekdaySelector,
-} from "common";
+import { Button, Dropdown, Paragraph, ProductImage } from "common";
 import {
   SUBSCRIPTION_INTERVAL_OPTIONS as INTERVAL_OPTIONS,
   formatLocalDateToronto,
-  formatDeliveryDays,
   DateUtils,
 } from "config/config";
 import {
@@ -38,14 +31,12 @@ export default function SubscriptionRow({ s, initialData, onSave, isSaving }) {
       interval: initialData?.interval || s.interval || "1",
       date: initialData?.date || "",
       status: initialData?.status || "active",
-      deliveryDays: initialData?.deliveryDays || [],
     },
   });
 
   // Watch values for display
   const watchedInterval = watch("interval");
   const watchedDate = watch("date");
-  const watchedDeliveryDays = watch("deliveryDays");
 
   const onSubmit = async (formData) => {
     await onSave(s, formData);
@@ -130,28 +121,6 @@ export default function SubscriptionRow({ s, initialData, onSave, isSaving }) {
           <Paragraph className="text-xs text-gray-500 mt-1">
             Estimated Delivery: <span className="font-medium">5 Days</span>
           </Paragraph>
-
-          {/* Preferred Delivery Days */}
-          <div className="mt-2">
-            <span className="text-xs text-gray-500 block mb-2">
-              Preferred Delivery Days:
-            </span>
-            <div className="text-xs text-gray-600 mb-2">
-              {watchedDeliveryDays && watchedDeliveryDays.length > 0
-                ? formatDeliveryDays(watchedDeliveryDays)
-                : "No preference set"}
-            </div>
-            <Controller
-              name="deliveryDays"
-              control={control}
-              render={({ field }) => (
-                <WeekdaySelector
-                  selectedDays={field.value || []}
-                  onChange={field.onChange}
-                />
-              )}
-            />
-          </div>
 
           {/* Controls: Change interval + Subscription */}
           <div className="mt-3 flex flex-wrap items-end gap-3">

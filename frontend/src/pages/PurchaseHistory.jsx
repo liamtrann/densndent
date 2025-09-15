@@ -18,9 +18,11 @@ import {
   ErrorMessage,
   Paragraph,
   TextButton,
+  PreferDeliveryDaySelector,
 } from "common";
 import { ListOrdersHistory } from "components";
 import { createStatusOptions } from "constants/constant";
+
 import { ListProductNoFilter } from "@/components/product";
 
 /* small date helpers for summary */
@@ -276,15 +278,19 @@ export default function PurchaseHistory() {
             <ListSubscriptions />
           </div>
 
-          <div className="py-2 border-t border-gray-200 text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-700">Earliest next order</span>
-              <span className="text-gray-900">
-                {earliestNextDate
-                  ? formatLocalDateToronto(earliestNextDate)
-                  : "—"}
-              </span>
+          <div className="space-y-4">
+            <div className="py-2 border-t border-gray-200 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-700">Earliest next order</span>
+                <span className="text-gray-900">
+                  {earliestNextDate
+                    ? formatLocalDateToronto(earliestNextDate)
+                    : "—"}
+                </span>
+              </div>
             </div>
+
+            <PreferDeliveryDaySelector className="py-2 border-t border-gray-200" />
           </div>
         </div>
       )}

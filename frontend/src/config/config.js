@@ -1042,8 +1042,8 @@ export function preferredDaysTextFromSources({
   storageKey = "preferredDeliveryDays",
 } = {}) {
   const rawBackend = normalizePrefToString(
-    userInfo?.custentity_prefer_delivery ??
-    customer?.custentity_prefer_delivery
+    userInfo?.prefer_delivery ??
+    customer?.prefer_delivery
   );
 
   const rawLocal =

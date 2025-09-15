@@ -1,6 +1,6 @@
 // src/pages/ProductDetail.jsx
-import React, { useState, useEffect } from "react";
-import { useDispatch } from "react-redux";
+import { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
 import { addToCart } from "store/slices/cartSlice";
 
@@ -18,14 +18,15 @@ import {
   ShowMoreHtml,
   Dropdown,
   DeliveryEstimate,
-  WeekdaySelector,
   FavoriteButton,
+  PreferDeliveryDaySelector,
 } from "common";
 import { Modal } from "components";
 import {
   getMatrixInfo,
   formatCurrency,
   useQuantityHandlers,
+  preferredDaysTextFromSources,
 } from "config/config";
 
 import PurchaseOptions from "../common/ui/PurchaseOptions";
@@ -79,6 +80,7 @@ export default function ProductsPage({
   const [error, setError] = useState(null);
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const userInfo = useSelector((state) => state.user.info);
 
   const [matrixOptions, setMatrixOptions] = useState([]);
   const [selectedMatrixOption, setSelectedMatrixOption] = useState("");
@@ -86,7 +88,6 @@ export default function ProductsPage({
   // ✅ local state for purchase options on PDP
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [subInterval, setSubInterval] = useState("1");
-  const [preferredDeliveryDays, setPreferredDeliveryDays] = useState([]);
 
   const { addProductToRecentViews } = useRecentViews();
 
@@ -170,7 +171,6 @@ export default function ProductsPage({
         // reset PDP subscription UI on product change
         setIsSubscribed(false);
         setSubInterval("1");
-        setPreferredDeliveryDays([]);
       } catch (err) {
         if (abort) return;
         setError(err?.response?.data?.error || "Failed to load product.");
@@ -220,7 +220,7 @@ export default function ProductsPage({
       subscriptionEnabled: isSubscribed,
       subscriptionInterval: isSubscribed ? subInterval : null,
       subscriptionPreferredDeliveryDays: isSubscribed
-        ? preferredDeliveryDays
+        ? preferredDaysTextFromSources({ userInfo })
         : null,
     };
 
@@ -397,33 +397,15 @@ export default function ProductsPage({
               interval={subInterval}
               onOneTime={() => {
                 setIsSubscribed(false);
-                setPreferredDeliveryDays([]);
               }}
               onSubscribe={() => {
                 setIsSubscribed(true);
-                // Set default preferred delivery days to weekdays only (Mon-Fri)
-                if (preferredDeliveryDays.length === 0) {
-                  setPreferredDeliveryDays([1, 2, 3, 4, 5]);
-                }
               }}
               onIntervalChange={(val) => setSubInterval(val)}
             />
 
             {/* Preferred delivery days when subscribed */}
-            {isSubscribed && (
-              <div className="mt-4">
-                <WeekdaySelector
-                  label="Preferred delivery days"
-                  selectedDays={preferredDeliveryDays}
-                  onChange={setPreferredDeliveryDays}
-                  className="w-full"
-                />
-                <div className="text-xs text-gray-500 mt-2">
-                  Select the days you prefer to receive your subscription
-                  deliveries
-                </div>
-              </div>
-            )}
+            {isSubscribed && <PreferDeliveryDaySelector />}
 
             {/* date preview when subscribed */}
             {isSubscribed && (
