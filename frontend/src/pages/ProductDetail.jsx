@@ -19,6 +19,7 @@ import {
   Dropdown,
   DeliveryEstimate,
   WeekdaySelector,
+  FavoriteButton,
 } from "common";
 import { Modal } from "components";
 import {
@@ -243,7 +244,12 @@ export default function ProductsPage({
     : null;
 
   return (
-    <div className={isModal ? "" : "max-w-6xl mx-auto px-6 py-10"}>
+    <div className={isModal ? "relative" : "max-w-6xl mx-auto px-6 py-10"}>
+      {isModal && (
+        <div className="absolute top-9 right-4 z-10">
+          <FavoriteButton itemId={product.id} size={22} />
+        </div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
         <div className="overflow-hidden">
           <ProductImage
@@ -255,11 +261,15 @@ export default function ProductsPage({
         </div>
 
         <div>
-          <h2
-            className={`${isModal ? "text-xl" : "text-2xl"} font-bold text-gray-800 mb-2`}
-          >
-            {product.itemid}
-          </h2>
+          {/* Title + Favorite (non-modal PDP) */}
+          <div className="flex items-start justify-between gap-3 mb-2">
+            <h2
+              className={`${isModal ? "text-xl" : "text-2xl"} font-bold text-gray-800`}
+            >
+              {product.itemid}
+            </h2>
+            {!isModal && <FavoriteButton itemId={product.id} size={24} />}
+          </div>
 
           {product.totalquantityonhand && product.totalquantityonhand > 0 ? (
             <div className="mb-2">
@@ -437,7 +447,6 @@ export default function ProductsPage({
           </Button>
         </div>
       </div>
-
       {/* Alert Modal for stock limit */}
       {alertModal && (
         <Modal
@@ -451,7 +460,6 @@ export default function ProductsPage({
           </p>
         </Modal>
       )}
-
       {/* ✅ Recently Viewed Products Carousel - Only show on full page, not in modal */}
       {!isModal && (
         <div className="mt-20">
