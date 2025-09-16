@@ -45,9 +45,16 @@ export default function ListProductComponent({
   const key = `${effectiveId}_${perPage}_${sort}_${priceKey}_${page}`;
   const countKey = `${effectiveId}_${priceKey}`;
 
-  const products = useSelector(
-    (state) => state.products.productsByPage[key] || []
+ const rawProducts = useSelector(
+    (state) => state.products.productsByPage[key]
   );
+  const products = Array.isArray(rawProducts)
+    ? rawProducts
+    : Array.isArray(rawProducts?.items)
+      ? rawProducts.items
+      : Array.isArray(rawProducts?.rows)
+        ? rawProducts.rows
+        : [];
   const isLoading = useSelector((state) => state.products.isLoading);
   const error = useSelector((state) => state.products.error);
   const total = useSelector((state) => {

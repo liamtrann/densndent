@@ -198,16 +198,35 @@ export const fetchProductsBy = createAsyncThunk(
           res = await api.get(url, { headers });
           break;
       }
+      const d = res?.data;
+      const products = Array.isArray(d)
+        ? d
+        : Array.isArray(d?.items)
+          ? d.items
+          : Array.isArray(d?.rows)
+            ? d.rows
+            : Array.isArray(d?.result)
+              ? d.result
+              : Array.isArray(d?.products)
+                ? d.products
+                : [];
+      const total =
+        typeof d?.total === "number"
+          ? d.total
+          : typeof d?.count === "number"
+            ? d.count
+            : 0;
+
       return {
         id,
         page,
-        products: res.data.items || res.data,
-        total: res.data.total || 0,
+        products,
+        total,
         limit,
         sort,
         minPrice,
         maxPrice,
-        type, // Add type to payload for key generation
+        type,
       };
     } catch (err) {
       return rejectWithValue(err?.response?.data || err.message);

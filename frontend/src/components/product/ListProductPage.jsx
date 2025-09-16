@@ -8,13 +8,6 @@ export default function ListProductPage({ by }) {
 
   const parseNameAndId = () => {
     switch (by) {
-      case "promotion": {
-        return {
-          displayName: "Promotions",
-          id: "promotion",
-          headerTitle: "PROMOTIONS",
-        };
-      }
       case "name": {
         const textName = name?.replaceAll("-", " ") || "";
         return {
