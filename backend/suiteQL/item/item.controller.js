@@ -36,11 +36,11 @@ exports.getItemsByBrand = async (req, res) => {
 
 exports.getItemsByClassAndBrand = async (req, res) => {
   try {
-    const { classId, brand, limit, offset, sort } = req.query;
+    const { classId, brand, limit, offset, sort, minPrice, maxPrice } = req.query;
     if (!classId || !brand) {
       return res.status(400).json({ error: 'classId and brand are required' });
     }
-    const items = await itemsService.findByClassAndBrand(classId, brand, limit, offset, sort);
+    const items = await itemsService.findByClassAndBrand(classId, brand, limit, offset, sort, minPrice, maxPrice);
     if (!items) {
       return res.status(404).json({ error: 'Items not found' });
     }
@@ -68,11 +68,12 @@ exports.getItemById = async (req, res) => {
 
 exports.postGetItemsByParent = async (req, res) => {
   try {
+    const { limit, offset, sort, minPrice, maxPrice } = req.query;
     let { parent } = req.body;
     if (!parent) {
       return res.status(400).json({ error: 'parent is required in body' });
     }
-    const items = await itemsService.findByParent(parent);
+    const items = await itemsService.findByParent(parent, limit, offset, sort, minPrice, maxPrice);
     if (!items) {
       return res.status(404).json({ error: 'Items not found' });
     }
@@ -84,6 +85,7 @@ exports.postGetItemsByParent = async (req, res) => {
 
 exports.getItemsByIds = async (req, res) => {
   try {
+    const { limit, offset, sort, minPrice, maxPrice } = req.query;
     let { ids } = req.query;
     if (!ids) {
       return res.status(400).json({ error: 'ids is required' });
@@ -95,7 +97,7 @@ exports.getItemsByIds = async (req, res) => {
     if (!Array.isArray(ids) || ids.length === 0) {
       return res.status(400).json({ error: 'ids must be a non-empty array' });
     }
-    const items = await itemsService.findByIds(ids);
+    const items = await itemsService.findByIds(ids, limit, offset, sort, minPrice, maxPrice);
     if (!items) {
       return res.status(404).json({ error: 'Items not found' });
     }
@@ -107,6 +109,7 @@ exports.getItemsByIds = async (req, res) => {
 
 exports.postItemsByIds = async (req, res) => {
   try {
+    const { limit, offset, sort, minPrice, maxPrice } = req.query;
     let { ids } = req.body;
     if (!ids) {
       return res.status(400).json({ error: 'ids is required in body' });
@@ -114,7 +117,7 @@ exports.postItemsByIds = async (req, res) => {
     if (!Array.isArray(ids) || ids.length === 0) {
       return res.status(400).json({ error: 'ids must be a non-empty array' });
     }
-    const items = await itemsService.findByIds(ids);
+    const items = await itemsService.findByIds(ids, limit, offset, sort, minPrice, maxPrice);
     if (!items) {
       return res.status(404).json({ error: 'Items not found' });
     }
@@ -225,8 +228,8 @@ exports.getCountByCategory = async (req, res) => {
 
 exports.getAllProducts = async (req, res) => {
   try {
-    const { limit, offset, sort } = req.query;
-    const items = await itemsService.findAllProducts(limit, offset, sort);
+    const { limit, offset, sort, minPrice, maxPrice } = req.query;
+    const items = await itemsService.findAllProducts(limit, offset, sort, minPrice, maxPrice);
     if (!items) {
       return res.status(404).json({ error: 'Items not found' });
     }
