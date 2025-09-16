@@ -1,4 +1,4 @@
-import { PreviewCartItem, PurchaseOptions } from "../../common";
+import { PreviewCartItem, PurchaseOption } from "../../common";
 
 import { OUT_OF_STOCK } from "@/constants/constant";
 
@@ -12,6 +12,7 @@ const ListProductInCart = ({
   onIntervalChange,
   onRemoveClick,
   formatLocalDateToronto,
+  listType = "table",
 }) => {
   const inv = inventoryStatus.find((i) => i.item === item.id);
   const key = item.id + (item.flavor ? `-${item.flavor}` : "");
@@ -47,59 +48,83 @@ const ListProductInCart = ({
       key={`${key}-card`}
       className="mb-5 rounded-lg border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
     >
-      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-        {/* LEFT: Product block - Given more width */}
-        <div className="flex-1 min-w-0 lg:flex-[2] lg:min-w-[400px]">
-          <PreviewCartItem
-            key={key}
-            item={item}
-            onQuantityChange={onQuantityChange}
-            onItemClick={onItemClick}
-            showQuantityControls={true}
-            showTotal={true}
-            compact={false}
-            imageSize="w-28 h-28"
-            textSize="text-base"
-            showBottomBorder={false}
-          />
-          {inv && inv.quantityavailable <= 0 && (
-            <div className="text-red-600 text-sm mt-2">{OUT_OF_STOCK}</div>
-          )}
-        </div>
+      {listType === "card" ? (
+        // Card layout - flex left-right
+        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+          {/* LEFT: Product block */}
+          <div className="flex-1 min-w-0 lg:flex-[2] lg:min-w-[400px]">
+            <PreviewCartItem
+              key={key}
+              item={item}
+              onQuantityChange={onQuantityChange}
+              onItemClick={onItemClick}
+              showQuantityControls={true}
+              showTotal={true}
+              compact={false}
+              imageSize="w-28 h-28"
+              textSize="text-base"
+              showBottomBorder={false}
+              listType="card"
+            />
+            {inv && inv.quantityavailable <= 0 && (
+              <div className="text-red-600 text-sm mt-2">{OUT_OF_STOCK}</div>
+            )}
+          </div>
 
-        {/* RIGHT: Purchase controls inside same card */}
-        <div className="w-full lg:w-[280px] xl:w-[320px] shrink-0">
-          <PurchaseOptions
+          {/* RIGHT: Purchase controls */}
+          <PurchaseOption
             name={key}
             isSubscribed={isSubbed}
             interval={interval}
             onOneTime={() => onOneTime(item)}
             onSubscribe={() => onSubscribe(item)}
             onIntervalChange={(val) => onIntervalChange(item, val)}
+            onRemoveClick={() => onRemoveClick(item)}
+            formatLocalDateToronto={formatLocalDateToronto}
+            firstDeliveryDate={firstDeliveryDate}
+            listType="column"
           />
-
-          {isSubbed && (
-            <div className="mt-2 text-xs text-gray-600">
-              <span className="font-medium">Next order:</span>{" "}
-              <span>{formatLocalDateToronto(firstDeliveryDate)}</span>
-              <span className="ml-1">
-                (
-                {interval === "1"
-                  ? "every 1 month"
-                  : `every ${interval} months`}
-                )
-              </span>
-            </div>
-          )}
-
-          <button
-            onClick={() => onRemoveClick(item)}
-            className="text-red-600 text-sm underline mt-3 hover:text-red-800"
-          >
-            Remove from cart
-          </button>
         </div>
-      </div>
+      ) : (
+        // Table layout - stacked (product on top, purchase controls below)
+        <>
+          {/* Product block - Full width */}
+          <div className="w-full">
+            <PreviewCartItem
+              key={key}
+              item={item}
+              onQuantityChange={onQuantityChange}
+              onItemClick={onItemClick}
+              showQuantityControls={true}
+              showTotal={true}
+              compact={false}
+              imageSize="w-28 h-28"
+              textSize="text-base"
+              showBottomBorder={false}
+              listType="table"
+            />
+            {inv && inv.quantityavailable <= 0 && (
+              <div className="text-red-600 text-sm mt-2">{OUT_OF_STOCK}</div>
+            )}
+          </div>
+
+          {/* Purchase controls - Next line */}
+          <div className="w-full mt-4">
+            <PurchaseOption
+              name={key}
+              isSubscribed={isSubbed}
+              interval={interval}
+              onOneTime={() => onOneTime(item)}
+              onSubscribe={() => onSubscribe(item)}
+              onIntervalChange={(val) => onIntervalChange(item, val)}
+              onRemoveClick={() => onRemoveClick(item)}
+              formatLocalDateToronto={formatLocalDateToronto}
+              firstDeliveryDate={firstDeliveryDate}
+              listType="row"
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 };
