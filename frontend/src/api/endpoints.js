@@ -1,18 +1,28 @@
 const endpoint = {
   // SuiteQL Endpoints
   GET_ALL_CLASSIFICATIONS: "/suiteql/classification",
-  GET_ALL_PRODUCTS: ({ limit, offset, sort }) => {
+  GET_ALL_PRODUCTS: ({ limit, offset, sort, minPrice, maxPrice }) => {
     const params = new URLSearchParams();
     if (limit) params.append("limit", limit);
     if (offset) params.append("offset", offset);
     if (sort) params.append("sort", sort);
+    if (minPrice) params.append("minPrice", minPrice);
+    if (maxPrice) params.append("maxPrice", maxPrice);
     return `/suiteql/item/all-products?${params.toString()}`;
   },
   GET_SUB_CATEGORIES_BY_PARENT: (id) =>
     `/suiteql/commerceCategory/sub-category-by-parent/${id}`,
   GET_PRODUCT_BY_ID: (id) => `/suiteql/item/by-id?id=${id}`,
   POST_GET_PRODUCT_BY_PARENT: () => `/suiteql/item/by-parent`,
-  POST_GET_ITEM_BY_IDS: () => `/suiteql/item/by-ids`,
+  POST_GET_ITEM_BY_IDS: ({ limit, offset, sort, minPrice, maxPrice } = {}) => {
+    const params = new URLSearchParams();
+    if (limit) params.append("limit", limit);
+    if (offset) params.append("offset", offset);
+    if (sort) params.append("sort", sort);
+    if (minPrice) params.append("minPrice", minPrice);
+    if (maxPrice) params.append("maxPrice", maxPrice);
+    return `/suiteql/item/by-ids?${params.toString()}`;
+  },
   GET_ITEMS_BY_CLASS: ({
     classId,
     limit,
@@ -40,13 +50,23 @@ const endpoint = {
     if (maxPrice) params.append("maxPrice", maxPrice);
     return `/suiteql/item/by-brand?${params.toString()}`;
   },
-  GET_ITEMS_BY_CLASS_AND_BRAND: ({ classId, brand, limit, offset, sort }) => {
+  GET_ITEMS_BY_CLASS_AND_BRAND: ({
+    classId,
+    brand,
+    limit,
+    offset,
+    sort,
+    minPrice,
+    maxPrice,
+  }) => {
     const params = new URLSearchParams();
     if (classId) params.append("classId", classId);
     if (brand) params.append("brand", brand);
     if (limit) params.append("limit", limit);
     if (offset) params.append("offset", offset);
     if (sort) params.append("sort", sort);
+    if (minPrice) params.append("minPrice", minPrice);
+    if (maxPrice) params.append("maxPrice", maxPrice);
     return `/suiteql/item/by-class-and-brand?${params.toString()}`;
   },
   GET_ITEMS_BY_CATEGORY: ({
@@ -160,14 +180,27 @@ const endpoint = {
     if (offset) params.append("offset", offset);
     return `/suiteql/promotion/by-product?${params.toString()}`;
   },
-  GET_PRODUCTS_WITH_ACTIVE_PROMOTIONS: ({ limit, offset }) => {
+  GET_PRODUCTS_WITH_ACTIVE_PROMOTIONS: ({
+    limit,
+    offset,
+    sort,
+    minPrice,
+    maxPrice,
+  }) => {
     const params = new URLSearchParams();
     if (limit) params.append("limit", limit);
     if (offset) params.append("offset", offset);
+    if (sort) params.append("sort", sort);
+    if (minPrice) params.append("minPrice", minPrice);
+    if (maxPrice) params.append("maxPrice", maxPrice);
     return `/suiteql/promotion/products-with-promotions?${params.toString()}`;
   },
-  GET_COUNT_PRODUCTS_WITH_ACTIVE_PROMOTIONS: () =>
-    "/suiteql/promotion/products-with-promotions/count",
+  GET_COUNT_PRODUCTS_WITH_ACTIVE_PROMOTIONS: ({ minPrice, maxPrice } = {}) => {
+    const params = new URLSearchParams();
+    if (minPrice) params.append("minPrice", minPrice);
+    if (maxPrice) params.append("maxPrice", maxPrice);
+    return `/suiteql/promotion/products-with-promotions/count?${params.toString()}`;
+  },
 
   // Tax Endpoints
   GET_TAX_RATES: ({ country, province, city }) => {

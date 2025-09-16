@@ -45,7 +45,8 @@ export default function ListProductComponent({
   const key = `${effectiveId}_${perPage}_${sort}_${priceKey}_${page}`;
   const countKey = `${effectiveId}_${priceKey}`;
 
- const rawProducts = useSelector( //Pull the raw value from Redux (could be an array or an object)
+  const rawProducts = useSelector(
+    //Pull the raw value from Redux (could be an array or an object)
     (state) => state.products.productsByPage[key]
   );
   const products = Array.isArray(rawProducts) //Normalize it right here too, as a second line of defense.Same idea as in the thunk: prefer an array, try common keys, else empty array.
