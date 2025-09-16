@@ -53,7 +53,10 @@ async function getAllProductsWithActivePromotions(req, res) {
 async function countProductsWithActivePromotions(req, res) {
   try {
     const { minPrice, maxPrice } = req.query;
-    const count = await promotionService.countProductsWithActivePromotions(minPrice, maxPrice);
+    const count = await promotionService.countProductsWithActivePromotions(
+      minPrice,
+      maxPrice
+    );
     res.json({ count });
   } catch (err) {
     console.error("Error counting products with active promotions:", err);
