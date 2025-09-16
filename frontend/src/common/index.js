@@ -19,6 +19,7 @@ export { default as CloseButton } from "./ui/CloseButton";
 export { default as DeliveryEstimate } from "./ui/DeliveryEstimate";
 export { default as WeekdaySelector } from "./ui/WeekdaySelector";
 export { default as PreferDeliveryDaySelector } from "./ui/PreferDeliveryDaySelector";
+export { default as PurchaseOption } from "./ui/PurchaseOption";
 export { default as FavoriteButton } from "../components/common/FavoriteButton";
 
 // Product components
