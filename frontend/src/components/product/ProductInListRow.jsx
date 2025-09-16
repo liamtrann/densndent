@@ -1,5 +1,6 @@
 // src/components/product/ProductInListRow.jsx
 import { FiEye, FiShoppingCart } from "react-icons/fi";
+import { useSelector } from "react-redux";
 import {
   Button,
   ProductImage,
@@ -8,8 +9,11 @@ import {
   FavoriteButton,
 } from "common";
 import { FlexibleModal } from "components/layout";
+
 import { formatCurrency } from "config/config";
+
 import ProductDetail from "../../pages/ProductDetail";
+
 import { CURRENT_IN_STOCK, OUT_OF_STOCK } from "@/constants/constant";
 
 /** One product per row with responsive (mobile vs desktop) layouts */
@@ -27,8 +31,14 @@ export default function ProductInListRow({
   handleQuickLook,
   handleCloseQuickLook,
 }) {
+  // Get cart items from Redux store (must be before early return)
+  const cartItems = useSelector((state) => state.cart.items || []);
+  
   // Early return if no product
   if (!product) return null;
+
+  // Calculate quantity of this item in the cart
+  const cartQuantity = cartItems.find(item => item.id === product.id)?.quantity || 0;
 
   // Small aligned qty control (shared by both views)
   const QtyControl = () => (
@@ -232,20 +242,27 @@ export default function ProductInListRow({
                   >
                     <FiEye size={12} />
                   </Button>
-                  <FiShoppingCart
-                    size={30}
-                    className="text-primary-blue hover:text-smiles-blue hover:scale-150 cursor-pointer transition-all duration-200"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleAddToCart();
-                    }}
-                    aria-label={`Add ${actualQuantity} to cart`}
-                    title={
-                      actualQuantity > quantity
-                        ? `Add ${actualQuantity} items (includes bonus!)`
-                        : `Add ${quantity} to cart`
-                    }
-                  />
+                  <div className="relative">
+                    <FiShoppingCart
+                      size={30}
+                      className="text-primary-blue hover:text-smiles-blue hover:scale-150 cursor-pointer transition-all duration-200"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAddToCart();
+                      }}
+                      aria-label={`Add ${actualQuantity} to cart`}
+                      title={
+                        actualQuantity > quantity
+                          ? `Add ${actualQuantity} items (includes bonus!)`
+                          : `Add ${quantity} to cart`
+                      }
+                    />
+                    {cartQuantity > 0 && (
+                      <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center min-w-[1.25rem]">
+                        {cartQuantity > 99 ? '99+' : cartQuantity}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -301,20 +318,27 @@ export default function ProductInListRow({
                 >
                   <FiEye size={12} />
                 </Button>
-                <FiShoppingCart
-                  size={24}
-                  className="text-primary-blue hover:text-smiles-blue hover:scale-150 cursor-pointer transition-all duration-200"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleAddToCart();
-                  }}
-                  aria-label={`Add ${actualQuantity} to cart`}
-                  title={
-                    actualQuantity > quantity
-                      ? `Add ${actualQuantity} items (includes bonus!)`
-                      : `Add ${quantity} to cart`
-                  }
-                />
+                <div className="relative">
+                  <FiShoppingCart
+                    size={24}
+                    className="text-primary-blue hover:text-smiles-blue hover:scale-150 cursor-pointer transition-all duration-200"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAddToCart();
+                    }}
+                    aria-label={`Add ${actualQuantity} to cart`}
+                    title={
+                      actualQuantity > quantity
+                        ? `Add ${actualQuantity} items (includes bonus!)`
+                        : `Add ${quantity} to cart`
+                    }
+                  />
+                  {cartQuantity > 0 && (
+                    <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center min-w-[1.25rem]">
+                      {cartQuantity > 99 ? '99+' : cartQuantity}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </>
