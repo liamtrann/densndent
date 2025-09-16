@@ -19,109 +19,223 @@ export default function TableLayout({
   formatCurrency,
 }) {
   return (
-    <div className="grid grid-cols-12 gap-4 p-3 border-b hover:bg-gray-50 items-center">
-      {/* Image Column - 1 unit */}
-      <div className="col-span-1">
-        <ProductImage
-          src={item.file_url || item.img1 || item.imageurl}
-          alt={item.itemid || item.displayname}
-          className={`w-12 h-12 object-cover border rounded ${
-            onItemClick ? "cursor-pointer" : ""
-          }`}
-          onClick={onItemClick ? () => onItemClick(item.id) : undefined}
-        />
+    <>
+      {/* Mobile Layout - Stack vertically */}
+      <div className="block md:hidden p-3 border-b hover:bg-gray-50">
+        <div className="flex items-start gap-3">
+          <div className="flex-shrink-0">
+            <ProductImage
+              src={item.file_url || item.img1 || item.imageurl}
+              alt={item.itemid || item.displayname}
+              className={`w-20 h-20 object-cover border rounded ${
+                onItemClick ? "cursor-pointer" : ""
+              }`}
+              onClick={onItemClick ? () => onItemClick(item.id) : undefined}
+            />
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <div
+              className={`font-medium text-sm mb-2 line-clamp-2 ${
+                onItemClick
+                  ? "text-blue-700 hover:underline cursor-pointer"
+                  : ""
+              }`}
+              onClick={onItemClick ? () => onItemClick(item.id) : undefined}
+            >
+              {item.itemid || item.displayname}
+            </div>
+
+            {/* Product badges/tags */}
+            <div className="flex flex-wrap gap-1 mb-2">
+              {item.stockdescription && (
+                <span className="text-xs text-blue-600 font-medium bg-blue-50 px-1.5 py-0.5 rounded">
+                  {item.stockdescription}
+                </span>
+              )}
+
+              {item.subscriptionEnabled && (
+                <span className="text-xs text-white font-medium bg-smiles-gentleBlue px-1.5 py-0.5 rounded">
+                  Every {item.subscriptionInterval} {item.subscriptionUnit}
+                </span>
+              )}
+
+              {item.subscriptionEnabled &&
+                item.subscriptionPreferredDeliveryDays && (
+                  <span className="text-xs text-orange-700 font-medium bg-orange-50 px-1.5 py-0.5 rounded">
+                    Prefer:{" "}
+                    {formatDeliveryDays(item.subscriptionPreferredDeliveryDays)}
+                  </span>
+                )}
+            </div>
+
+            {/* Mobile Price and Quantity Row */}
+            <div className="flex items-center justify-between">
+              <div className="flex flex-col">
+                <div className="text-xs text-gray-500 mb-1">
+                  ${Number(item.unitprice || item.price || 0).toFixed(2)} each
+                </div>
+                {showTotal && (
+                  <div>
+                    {hasDiscount ? (
+                      <div>
+                        <div className="text-gray-500 line-through text-xs">
+                          {calculateTotalCurrency(unitPrice, item.quantity)}
+                        </div>
+                        <div className="text-red-600 font-semibold text-sm">
+                          {formatCurrency(finalPrice)}
+                        </div>
+                        <div className="text-green-600 text-xs">
+                          Save {formatCurrency(priceData?.discount || 0)}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-gray-800 font-semibold text-sm">
+                        {formatCurrency(finalPrice)}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Mobile Quantity Controls */}
+              <div className="flex items-center">
+                {showQuantityControls && onQuantityChange ? (
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleDecrease}
+                      className="w-8 h-8 flex items-center justify-center border rounded hover:bg-gray-100 text-sm"
+                    >
+                      -
+                    </button>
+                    <span className="w-8 text-center text-sm font-medium">
+                      {item.quantity}
+                    </span>
+                    <button
+                      onClick={handleIncrease}
+                      className="w-8 h-8 flex items-center justify-center border rounded hover:bg-gray-100 text-sm"
+                    >
+                      +
+                    </button>
+                  </div>
+                ) : (
+                  <span className="text-sm font-medium">
+                    Qty: {item.quantity}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Product Name & Details Column - 5 units */}
-      <div className="col-span-5">
-        <div
-          className={`font-medium text-sm mb-1 ${
-            onItemClick ? "text-blue-700 hover:underline cursor-pointer" : ""
-          }`}
-          onClick={onItemClick ? () => onItemClick(item.id) : undefined}
-        >
-          {item.itemid || item.displayname}
+      {/* Desktop Layout - Table grid */}
+      <div className="hidden md:grid grid-cols-12 gap-2 lg:gap-4 p-3 border-b hover:bg-gray-50 items-center min-w-[800px] overflow-x-auto">
+        {/* Image Column - 1 unit */}
+        <div className="col-span-1">
+          <ProductImage
+            src={item.file_url || item.img1 || item.imageurl}
+            alt={item.itemid || item.displayname}
+            className={`w-16 h-16 lg:w-20 lg:h-20 object-cover border rounded ${
+              onItemClick ? "cursor-pointer" : ""
+            }`}
+            onClick={onItemClick ? () => onItemClick(item.id) : undefined}
+          />
         </div>
 
-        {/* Product badges/tags */}
-        <div className="flex flex-wrap gap-1">
-          {item.stockdescription && (
-            <span className="text-xs text-blue-600 font-medium bg-blue-50 px-1.5 py-0.5 rounded">
-              {item.stockdescription}
-            </span>
-          )}
+        {/* Product Name & Details Column - 6 units (increased from 5) */}
+        <div className="col-span-6">
+          <div
+            className={`font-medium text-sm lg:text-base mb-1 ${
+              onItemClick ? "text-blue-700 hover:underline cursor-pointer" : ""
+            }`}
+            onClick={onItemClick ? () => onItemClick(item.id) : undefined}
+          >
+            {item.itemid || item.displayname}
+          </div>
 
-          {item.subscriptionEnabled && (
-            <span className="text-xs text-white font-medium bg-smiles-gentleBlue px-1.5 py-0.5 rounded">
-              Every {item.subscriptionInterval} {item.subscriptionUnit}
-            </span>
-          )}
-
-          {item.subscriptionEnabled &&
-            item.subscriptionPreferredDeliveryDays && (
-              <span className="text-xs text-orange-700 font-medium bg-orange-50 px-1.5 py-0.5 rounded">
-                Prefer:{" "}
-                {formatDeliveryDays(item.subscriptionPreferredDeliveryDays)}
+          {/* Product badges/tags */}
+          <div className="flex flex-wrap gap-1">
+            {item.stockdescription && (
+              <span className="text-xs text-blue-600 font-medium bg-blue-50 px-1.5 py-0.5 rounded">
+                {item.stockdescription}
               </span>
             )}
-        </div>
-      </div>
 
-      {/* Unit Price Column - 2 units */}
-      <div className="col-span-2 text-center">
-        <div className="text-sm font-medium">
-          ${Number(item.unitprice || item.price || 0).toFixed(2)}
-        </div>
-        <div className="text-xs text-gray-500">per unit</div>
-      </div>
+            {item.subscriptionEnabled && (
+              <span className="text-xs text-white font-medium bg-smiles-gentleBlue px-1.5 py-0.5 rounded">
+                Every {item.subscriptionInterval} {item.subscriptionUnit}
+              </span>
+            )}
 
-      {/* Quantity Column - 2 units */}
-      <div className="col-span-2 text-center">
-        {showQuantityControls && onQuantityChange ? (
-          <div className="flex items-center justify-center gap-1">
-            <button
-              onClick={handleDecrease}
-              className="w-7 h-7 flex items-center justify-center border rounded hover:bg-gray-100 text-sm"
-            >
-              -
-            </button>
-            <span className="w-8 text-center text-sm font-medium">
-              {item.quantity}
-            </span>
-            <button
-              onClick={handleIncrease}
-              className="w-7 h-7 flex items-center justify-center border rounded hover:bg-gray-100 text-sm"
-            >
-              +
-            </button>
+            {item.subscriptionEnabled &&
+              item.subscriptionPreferredDeliveryDays && (
+                <span className="text-xs text-orange-700 font-medium bg-orange-50 px-1.5 py-0.5 rounded">
+                  Prefer:{" "}
+                  {formatDeliveryDays(item.subscriptionPreferredDeliveryDays)}
+                </span>
+              )}
           </div>
-        ) : (
-          <span className="text-sm font-medium">{item.quantity}</span>
-        )}
-      </div>
+        </div>
 
-      {/* Total Price Column - 2 units */}
-      {showTotal && (
-        <div className="col-span-2 text-right">
-          {hasDiscount ? (
-            <div>
-              <div className="text-gray-500 line-through text-xs">
-                {calculateTotalCurrency(unitPrice, item.quantity)}
-              </div>
-              <div className="text-red-600 font-semibold text-sm">
-                {formatCurrency(finalPrice)}
-              </div>
-              <div className="text-green-600 text-xs">
-                Save {formatCurrency(priceData?.discount || 0)}
-              </div>
+        {/* Unit Price Column - 2 units */}
+        <div className="col-span-2 text-center">
+          <div className="text-sm lg:text-base font-medium">
+            ${Number(item.unitprice || item.price || 0).toFixed(2)}
+          </div>
+          <div className="text-xs text-gray-500">per unit</div>
+        </div>
+
+        {/* Quantity Column - 2 units */}
+        <div className="col-span-2 text-center">
+          {showQuantityControls && onQuantityChange ? (
+            <div className="flex items-center justify-center gap-1">
+              <button
+                onClick={handleDecrease}
+                className="w-7 h-7 lg:w-8 lg:h-8 flex items-center justify-center border rounded hover:bg-gray-100 text-sm"
+              >
+                -
+              </button>
+              <span className="w-8 lg:w-10 text-center text-sm lg:text-base font-medium">
+                {item.quantity}
+              </span>
+              <button
+                onClick={handleIncrease}
+                className="w-7 h-7 lg:w-8 lg:h-8 flex items-center justify-center border rounded hover:bg-gray-100 text-sm"
+              >
+                +
+              </button>
             </div>
           ) : (
-            <div className="text-gray-800 font-semibold text-sm">
-              {formatCurrency(finalPrice)}
-            </div>
+            <span className="text-sm lg:text-base font-medium">
+              {item.quantity}
+            </span>
           )}
         </div>
-      )}
-    </div>
+
+        {/* Total Price Column - 1 unit (decreased from 2) */}
+        {showTotal && (
+          <div className="col-span-1 text-right">
+            {hasDiscount ? (
+              <div>
+                <div className="text-gray-500 line-through text-xs">
+                  {calculateTotalCurrency(unitPrice, item.quantity)}
+                </div>
+                <div className="text-red-600 font-semibold text-sm lg:text-base">
+                  {formatCurrency(finalPrice)}
+                </div>
+                <div className="text-green-600 text-xs">
+                  Save {formatCurrency(priceData?.discount || 0)}
+                </div>
+              </div>
+            ) : (
+              <div className="text-gray-800 font-semibold text-sm lg:text-base">
+                {formatCurrency(finalPrice)}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </>
   );
 }

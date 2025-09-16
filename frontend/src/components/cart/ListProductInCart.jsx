@@ -61,6 +61,7 @@ const ListProductInCart = ({
             imageSize="w-28 h-28"
             textSize="text-base"
             showBottomBorder={false}
+            listType="card"
           />
           {inv && inv.quantityavailable <= 0 && (
             <div className="text-red-600 text-sm mt-2">{OUT_OF_STOCK}</div>
