@@ -1,4 +1,3 @@
-// src/pages/CartPage.jsx
 import React, { useState, useEffect, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -9,8 +8,8 @@ import {
   setItemSubscription,
 } from "store/slices/cartSlice";
 
+import { FiGrid, FiList } from "react-icons/fi";
 import { formatPrice, formatCurrency } from "config/config";
-
 import { delayCall } from "../api/util";
 import { EmptyCart, ErrorMessage, Loading, Dropdown } from "../common";
 import Breadcrumb from "../common/navigation/Breadcrumb";
@@ -37,6 +36,9 @@ export default function CartPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
+  // NEW: view toggle (grid | list)
+  const [view, setView] = useState("grid");
+
   // Page controls
   const [showFilter, setShowFilter] = useState("all"); // all | sub | one
   const [postalCode, setPostalCode] = useState("");
@@ -54,14 +56,12 @@ export default function CartPage() {
     checkInventory,
   } = useInventoryCheck();
 
-  // Check inventory on cart load/change
   useEffect(() => {
     if (cart.length > 0) {
       checkInventory(cart.map((item) => item.id));
     }
   }, [cart]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Subtotal with discounts
   const subtotalAmount = useSelector((state) =>
     selectCartSubtotalWithDiscounts(state, cart)
   );
@@ -145,21 +145,18 @@ export default function CartPage() {
     );
   };
 
-  // Proceed to checkout w/ inventory guard
   const handleProceedToCheckout = async () => {
     const result = await checkInventory(cart.map((item) => item.id));
     if (!result) return;
     navigate("/checkout");
   };
 
-  // Inventory check error/warning
   if (inventoryError)
     return <ErrorMessage message={inventoryError} className="mb-4" />;
   if (inventoryLoading) return <Loading />;
 
   return (
     <div className="mx-auto px-4 lg:px-6 py-8 max-w-7xl">
-      {/* Breadcrumbs */}
       <Breadcrumb path={["Home", "Cart"]} />
 
       {cart.length > 0 && (
@@ -169,10 +166,45 @@ export default function CartPage() {
         </h1>
       )}
 
-      {/* Cart-only dropdown ABOVE the grid so both columns align at the top */}
+      {/* Toolbar row (style matches your list pages) */}
       {cart.length > 0 && (
-        <div className="mb-4 flex items-center gap-3">
-          <span className="text-sm font-medium">Show</span>
+        <div className="mb-4 flex flex-wrap items-center gap-4">
+          {/* Segmented Grid | List */}
+          <div
+            role="group"
+            aria-label="View switcher"
+            className="inline-flex border rounded-md overflow-hidden"
+          >
+            <button
+              type="button"
+              onClick={() => setView("grid")}
+              aria-pressed={view === "grid"}
+              className={`px-3 py-2 text-sm inline-flex items-center gap-2 ${
+                view === "grid"
+                  ? "bg-gray-100 text-gray-900"
+                  : "bg-white text-gray-700 hover:bg-gray-50"
+              }`}
+            >
+              <FiGrid size={14} />
+              Grid
+            </button>
+            <button
+              type="button"
+              onClick={() => setView("list")}
+              aria-pressed={view === "list"}
+              className={`px-3 py-2 text-sm inline-flex items-center gap-2 border-l ${
+                view === "list"
+                  ? "bg-gray-100 text-gray-900"
+                  : "bg-white text-gray-700 hover:bg-gray-50"
+              }`}
+            >
+              <FiList size={14} />
+              List
+            </button>
+          </div>
+
+          {/* Existing “Show” filter (unchanged) */}
+          <span className="text-sm font-medium ml-1">Show:</span>
           <div className="w-56">
             <Dropdown
               value={showFilter}
@@ -187,30 +219,38 @@ export default function CartPage() {
         </div>
       )}
 
-      {/* Two-column layout: left list (scrollable on desktop) + right summary */}
+      {/* Two-column layout */}
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_380px] items-start gap-6">
-        {/* LEFT: just the cart list (scroll only this on desktop) */}
+        {/* LEFT: list */}
         <div>
-          <div className="lg:max-h-[calc(100vh-220px)] lg:overflow-y-auto lg:pr-3 lg:pb-2 custom-scrollbar">
+          <div className="lg:max-h[calc(100vh-220px)] lg:overflow-y-auto lg:pr-3 lg:pb-2 custom-scrollbar">
             {filteredCart.length > 0 ? (
-              filteredCart.map((item) => {
-                const key = item.id + (item.flavor ? `-${item.flavor}` : "");
-
-                return (
-                  <ListProductInCart
-                    key={`${key}-card`}
-                    item={item}
-                    inventoryStatus={inventoryStatus}
-                    onQuantityChange={handleQuantityChange}
-                    onItemClick={handleNavigateToProduct}
-                    onOneTime={chooseOneTime}
-                    onSubscribe={chooseSubscribe}
-                    onIntervalChange={changeInterval}
-                    onRemoveClick={handleRemoveClick}
-                    formatLocalDateToronto={formatLocalDateToronto}
-                  />
-                );
-              })
+              <div
+                className={
+                  view === "grid"
+                    ? "grid grid-cols-1 md:grid-cols-2 gap-4"
+                    : "flex flex-col"
+                }
+              >
+                {filteredCart.map((item) => {
+                  const key = item.id + (item.flavor ? `-${item.flavor}` : "");
+                  return (
+                    <ListProductInCart
+                      key={`${key}-card`}
+                      item={item}
+                      inventoryStatus={inventoryStatus}
+                      onQuantityChange={handleQuantityChange}
+                      onItemClick={handleNavigateToProduct}
+                      onOneTime={chooseOneTime}
+                      onSubscribe={chooseSubscribe}
+                      onIntervalChange={changeInterval}
+                      onRemoveClick={handleRemoveClick}
+                      formatLocalDateToronto={formatLocalDateToronto}
+                      listType={view === "grid" ? "card" : "table"}
+                    />
+                  );
+                })}
+              </div>
             ) : cart.length > 0 ? (
               <div className="text-gray-500 py-8 text-center">
                 No items match that filter.
