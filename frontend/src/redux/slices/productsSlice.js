@@ -86,6 +86,9 @@ const buildProductUrl = ({
         url: endpoint.GET_PRODUCTS_WITH_ACTIVE_PROMOTIONS({
           limit,
           offset,
+          sort,
+          minPrice,
+          maxPrice,
         }),
         method: "get",
       };
@@ -127,7 +130,7 @@ const buildCountUrl = ({ type, id, minPrice, maxPrice }) => {
       };
     case "promotion":
       return {
-        url: endpoint.GET_COUNT_PRODUCTS_WITH_ACTIVE_PROMOTIONS(),
+        url: endpoint.GET_COUNT_PRODUCTS_WITH_ACTIVE_PROMOTIONS({ minPrice, maxPrice }),
         method: "get",
       };
     default:
