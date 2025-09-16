@@ -62,7 +62,7 @@ export default function BlueBanner({
             {/* Left scroll button */}
             <button
               onClick={scrollLeft}
-              className="absolute left-0 top-1/2 transform -translate-y-1/2 z-10 bg-[#005687] shadow-lg rounded-full p-2 hover:bg-[#004D79] transition-colors duration-200 md:block hidden"
+              className="absolute -left-8 top-1/2 transform -translate-y-1/2 z-10 bg-[#005687] shadow-lg rounded-full p-2 hover:bg-[#004D79] transition-colors duration-200 md:block hidden"
               aria-label="Scroll left"
             >
               <svg
@@ -101,7 +101,7 @@ export default function BlueBanner({
             {/* Right scroll button */}
             <button
               onClick={scrollRight}
-              className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-[#005687] shadow-lg rounded-full p-2 hover:bg-[#004D79] transition-colors duration-200 md:block hidden"
+              className="absolute -right-9 top-1/2 transform -translate-y-1/2 z-10 bg-[#005687] shadow-lg rounded-full p-2 hover:bg-[#004D79] transition-colors duration-200 md:block hidden"
               aria-label="Scroll right"
             >
               <svg
