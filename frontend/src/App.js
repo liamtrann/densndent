@@ -218,7 +218,17 @@ export default function App() {
                   </CenteredContent>
                 }
               />
-              
+
+              {/* ---------- Promotions & Catalogues (with breadcrumb fallbacks) ---------- */}
+
+              {/* Redirect any breadcrumb slug that points to a non-existent page */}
+              <Route path="/promotions-and-catalogues" element={<Navigate to="/promotions" replace />} />
+              <Route path="/promotions-&-catalogues" element={<Navigate to="/promotions" replace />} />
+              <Route path="/promotions-%26-catalogues" element={<Navigate to="/promotions" replace />} />
+              <Route path="/promotions%20&%20catalogues" element={<Navigate to="/promotions" replace />} />
+              <Route path="/Promotions%20&%20Catalogues" element={<Navigate to="/promotions" replace />} />
+              <Route path="/Promotions-and-Catalogues" element={<Navigate to="/promotions" replace />} />
+
               <Route
                 path="/promotions"
                 element={
@@ -230,7 +240,6 @@ export default function App() {
                 }
               />
 
-
               <Route
                 path="/promotions/monthly-special"
                 element={
@@ -241,6 +250,7 @@ export default function App() {
                   </LayoutWithCart>
                 }
               />
+
               <Route
                 path="/promotions/jdiq"
                 element={
@@ -249,6 +259,7 @@ export default function App() {
                   </CenteredContent>
                 }
               />
+
               <Route
                 path="/promotions/gift-card"
                 element={
@@ -257,6 +268,7 @@ export default function App() {
                   </CenteredContent>
                 }
               />
+
               <Route
                 path="/catalogues"
                 element={

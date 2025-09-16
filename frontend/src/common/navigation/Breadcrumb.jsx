@@ -1,3 +1,4 @@
+// Breadcrumb.jsx
 import { useNavigate } from "react-router-dom";
 
 export default function Breadcrumb({ path, className = "" }) {
