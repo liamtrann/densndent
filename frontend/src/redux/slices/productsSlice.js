@@ -64,7 +64,13 @@ const buildProductUrl = ({
       };
     case "all":
       return {
-        url: endpoint.GET_ALL_PRODUCTS({ limit, offset, sort }),
+        url: endpoint.GET_ALL_PRODUCTS({
+          limit,
+          offset,
+          sort,
+          minPrice,
+          maxPrice,
+        }),
         method: "get",
       };
     case "orderHistory":
@@ -201,6 +207,7 @@ export const fetchProductsBy = createAsyncThunk(
           res = await api.get(url, { headers });
           break;
       }
+
       return {
         id,
         page,
@@ -210,7 +217,7 @@ export const fetchProductsBy = createAsyncThunk(
         sort,
         minPrice,
         maxPrice,
-        type, // Add type to payload for key generation
+        type,
       };
     } catch (err) {
       return rejectWithValue(err?.response?.data || err.message);

@@ -41,7 +41,7 @@ async function getAllProductsWithActivePromotions(req, res) {
       minPrice,
       maxPrice
     );
-    res.json({ products });
+    res.json(products);
   } catch (err) {
     console.error("Error fetching products with active promotions:", err);
     res
