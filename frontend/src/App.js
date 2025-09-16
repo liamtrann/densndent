@@ -221,13 +221,7 @@ export default function App() {
 
               {/* ---------- Promotions & Catalogues (with breadcrumb fallbacks) ---------- */}
 
-              {/* Redirect any breadcrumb slug that points to a non-existent page */}
-              <Route path="/promotions-and-catalogues" element={<Navigate to="/promotions" replace />} />
-              <Route path="/promotions-&-catalogues" element={<Navigate to="/promotions" replace />} />
-              <Route path="/promotions-%26-catalogues" element={<Navigate to="/promotions" replace />} />
-              <Route path="/promotions%20&%20catalogues" element={<Navigate to="/promotions" replace />} />
-              <Route path="/Promotions%20&%20Catalogues" element={<Navigate to="/promotions" replace />} />
-              <Route path="/Promotions-and-Catalogues" element={<Navigate to="/promotions" replace />} />
+
 
               <Route
                 path="/promotions"

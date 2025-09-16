@@ -12,7 +12,7 @@ const ListProductInCart = ({
   onIntervalChange,
   onRemoveClick,
   formatLocalDateToronto,
-  listType = "cart",
+  listType = "card",
 }) => {
   const inv = inventoryStatus.find((i) => i.item === item.id);
   const key = item.id + (item.flavor ? `-${item.flavor}` : "");
