@@ -115,7 +115,7 @@ export default function ProductInListRow({
             {/* Promotion badge */}
             {product.promotioncode_id && product.promotion_code && (
               <div className="mb-2">
-                <span className="text-xs text-white font-medium bg-red-600 px-2 py-1 rounded">
+                <span className="text-xs text-white font-medium bg-smiles-redOrange px-2 py-1 rounded">
                   PROMO: {product.promotion_code}
                 </span>
               </div>

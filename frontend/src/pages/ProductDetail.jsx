@@ -1,5 +1,5 @@
 // src/pages/ProductDetail.jsx
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
@@ -21,14 +21,15 @@ import {
   ShowMoreHtml,
   Dropdown,
   DeliveryEstimate,
-  WeekdaySelector,
-  FavoriteButton, // ✅ we’ll show this near Quantity
+  FavoriteButton,
+  PreferDeliveryDaySelector,
 } from "common";
 import { Modal } from "components";
 import {
   getMatrixInfo,
   formatCurrency,
   useQuantityHandlers,
+  preferredDaysTextFromSources,
 } from "config/config";
 
 import PurchaseOptions from "../common/ui/PurchaseOptions";
@@ -74,17 +75,16 @@ export default function ProductsPage({
   const { id: rawId } = useParams();
   const effectiveRawId = propProductId || rawId;
 
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
   const { getAccessTokenSilently } = useAuth0();
 
   const userInfo = useSelector((s) => s.user.info);
   const favorites = useSelector((s) => s.favorites.items);
 
   const [product, setProduct] = useState(null);
-  const [alertModal, setAlertModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const [matrixOptions, setMatrixOptions] = useState([]);
   const [selectedMatrixOption, setSelectedMatrixOption] = useState("");
@@ -92,7 +92,6 @@ export default function ProductsPage({
   // PDP purchase options
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [subInterval, setSubInterval] = useState("1");
-  const [preferredDeliveryDays, setPreferredDeliveryDays] = useState([]);
 
   const { addProductToRecentViews } = useRecentViews();
 
@@ -154,7 +153,6 @@ export default function ProductsPage({
 
         setIsSubscribed(false);
         setSubInterval("1");
-        setPreferredDeliveryDays([]);
       } catch (err) {
         if (!abort) setError(err?.response?.data?.error || "Failed to load product.");
       } finally {
@@ -198,7 +196,9 @@ export default function ProductsPage({
       quantity: Number(actualQuantity),
       subscriptionEnabled: isSubscribed,
       subscriptionInterval: isSubscribed ? subInterval : null,
-      subscriptionPreferredDeliveryDays: isSubscribed ? preferredDeliveryDays : null,
+      subscriptionPreferredDeliveryDays: isSubscribed
+        ? preferredDaysTextFromSources({ userInfo })
+        : null,
     };
     delayCall(() => {
       dispatch(addToCart(cartItem));
@@ -361,12 +361,12 @@ export default function ProductsPage({
               {userInfo?.id && (
                 <div className="flex items-center gap-2 ml-auto">
                   <FavoriteButton itemId={product.id} size={20} />
-                  <Button
+                  <div
                     onClick={toggleFavorite}
-                    className={`h-9 px-3 border border-gray-300 bg-gray-100 text-gray-800 hover:bg-smiles-blue hover:text-white`}
+                    className={`h-9 px-3 border border-gray-300 bg-gray-100 text-gray-800 hover:bg-smiles-blue hover:text-white flex items-center justify-center cursor-pointer select-none text-sm`}
                   >
                     {isFavorite ? "Remove from Favorites" : "Add to Favorites"}
-                  </Button>
+                  </div>
                 </div>
               )}
             </div>
@@ -389,30 +389,15 @@ export default function ProductsPage({
               interval={subInterval}
               onOneTime={() => {
                 setIsSubscribed(false);
-                setPreferredDeliveryDays([]);
               }}
               onSubscribe={() => {
                 setIsSubscribed(true);
-                if (preferredDeliveryDays.length === 0) {
-                  setPreferredDeliveryDays([1, 2, 3, 4, 5]);
-                }
               }}
               onIntervalChange={(val) => setSubInterval(val)}
             />
 
-            {isSubscribed && (
-              <div className="mt-4">
-                <WeekdaySelector
-                  label="Preferred delivery days"
-                  selectedDays={preferredDeliveryDays}
-                  onChange={setPreferredDeliveryDays}
-                  className="w-full"
-                />
-                <div className="text-xs text-gray-500 mt-2">
-                  Select the days you prefer to receive your subscription deliveries
-                </div>
-              </div>
-            )}
+            {/* Preferred delivery days when subscribed */}
+            {isSubscribed && <PreferDeliveryDaySelector />}
 
             {isSubscribed && (
               <div className="mt-3 text-xs text-gray-600">
@@ -431,20 +416,6 @@ export default function ProductsPage({
           </Button>
         </div>
       </div>
-
-      {/* Alert Modal for stock limit */}
-      {alertModal && (
-        <Modal
-          title="Stock Limit Exceeded"
-          onClose={() => setAlertModal(false)}
-          onCloseText="OK"
-        >
-          <p>
-            Sorry, only {product.totalquantityonhand} in stock. Please adjust your quantity.
-          </p>
-        </Modal>
-      )}
-
       {/* Recently Viewed (only full page) */}
       {!isModal && (
         <div className="mt-20">
