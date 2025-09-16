@@ -1,3 +1,4 @@
+//PromotionGrid.jsx
 import React from "react";
 import { PromotionCard } from "common";
 
