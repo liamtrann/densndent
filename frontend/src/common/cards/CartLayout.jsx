@@ -2,6 +2,7 @@ import React from "react";
 
 import { ProductImage } from "common";
 import { formatDeliveryDays } from "config/config";
+
 import { OUT_OF_STOCK } from "@/constants/constant";
 
 export default function CartLayout({
@@ -24,7 +25,9 @@ export default function CartLayout({
   inventoryStatus = null,
 }) {
   // Check if item is out of stock
-  const inv = inventoryStatus?.find ? inventoryStatus.find((i) => i.item === item.id) : null;
+  const inv = inventoryStatus?.find
+    ? inventoryStatus.find((i) => i.item === item.id)
+    : null;
   const isOutOfStock = inv && inv.quantityavailable <= 0;
   return (
     <div
