@@ -103,24 +103,16 @@ export default function HeroCarousel() {
         className="block md:hidden w-full h-full object-contain object-center"
       />
 
-      {/* CTA Button */}
-      {/* <Link
-        to={button.link}
-        className="absolute left-6 bottom-6 bg-white text-blue-700 px-5 py-2 font-semibold rounded shadow hover:bg-gray-100 z-10"
-      >
-        {button.text}
-      </Link> */}
-
       {/* Navigation Arrows */}
       <button
         onClick={prev}
-        className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white bg-black/30 p-2 rounded-full z-10"
+        className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white bg-[#005687] hover:bg-[#004D79] p-2 rounded-full z-10"
       >
         <FaChevronLeft />
       </button>
       <button
         onClick={next}
-        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white bg-black/30 p-2 rounded-full z-10"
+        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white bg-[#005687] hover:bg-[#004D79] p-2 rounded-full z-10"
       >
         <FaChevronRight />
       </button>
