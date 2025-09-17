@@ -64,7 +64,13 @@ const buildProductUrl = ({
       };
     case "all":
       return {
-        url: endpoint.GET_ALL_PRODUCTS({ limit, offset, sort }),
+        url: endpoint.GET_ALL_PRODUCTS({
+          limit,
+          offset,
+          sort,
+          minPrice,
+          maxPrice,
+        }),
         method: "get",
       };
     case "orderHistory":
@@ -86,6 +92,9 @@ const buildProductUrl = ({
         url: endpoint.GET_PRODUCTS_WITH_ACTIVE_PROMOTIONS({
           limit,
           offset,
+          sort,
+          minPrice,
+          maxPrice,
         }),
         method: "get",
       };
@@ -127,7 +136,7 @@ const buildCountUrl = ({ type, id, minPrice, maxPrice }) => {
       };
     case "promotion":
       return {
-        url: endpoint.GET_COUNT_PRODUCTS_WITH_ACTIVE_PROMOTIONS(),
+        url: endpoint.GET_COUNT_PRODUCTS_WITH_ACTIVE_PROMOTIONS({ minPrice, maxPrice }),
         method: "get",
       };
     default:
@@ -198,6 +207,7 @@ export const fetchProductsBy = createAsyncThunk(
           res = await api.get(url, { headers });
           break;
       }
+
       return {
         id,
         page,
@@ -207,7 +217,7 @@ export const fetchProductsBy = createAsyncThunk(
         sort,
         minPrice,
         maxPrice,
-        type, // Add type to payload for key generation
+        type,
       };
     } catch (err) {
       return rejectWithValue(err?.response?.data || err.message);

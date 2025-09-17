@@ -153,15 +153,18 @@ function getMatrixInfo(matrixOptions) {
   };
 }
 
-// Format price with proper rounding to 2 decimal places
+// Format price with proper rounding to 2 decimal places and comma separators
 function formatPrice(price) {
   // Handle null, undefined, or invalid values
   if (price === null || price === undefined || isNaN(price)) {
     return "0.00";
   }
 
-  // Convert to number and format to 2 decimal places
-  return Number(price).toFixed(2);
+  // Convert to number, format to 2 decimal places, and add comma separators
+  return Number(price).toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
 }
 
 // Format price with currency symbol
@@ -1042,8 +1045,8 @@ export function preferredDaysTextFromSources({
   storageKey = "preferredDeliveryDays",
 } = {}) {
   const rawBackend = normalizePrefToString(
-    userInfo?.custentity_prefer_delivery ??
-    customer?.custentity_prefer_delivery
+    userInfo?.prefer_delivery ??
+    customer?.prefer_delivery
   );
 
   const rawLocal =

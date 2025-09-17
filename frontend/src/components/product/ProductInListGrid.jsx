@@ -1,4 +1,7 @@
+//ProductInListGrid.jsx
 import { FiShoppingCart, FiEye } from "react-icons/fi";
+import { useSelector } from "react-redux";
+
 import {
   ProductImage,
   Paragraph,
@@ -7,8 +10,13 @@ import {
   Button,
   FavoriteButton,
 } from "common";
+
 import { FlexibleModal } from "components/layout";
+
+import { formatCurrency } from "config/config";
+
 import ProductDetail from "../../pages/ProductDetail";
+
 import { CURRENT_IN_STOCK, OUT_OF_STOCK } from "@/constants/constant";
 
 export default function ProductInListGrid({
@@ -25,6 +33,10 @@ export default function ProductInListGrid({
 }) {
   const { id, itemid, file_url, price, totalquantityonhand } = product;
   const inStock = totalquantityonhand && totalquantityonhand > 0;
+
+  // Get cart quantity for this item
+  const cartItems = useSelector((state) => state.cart.items);
+  const cartQuantity = cartItems.find(item => item.id === id)?.quantity || 0;
 
   return (
     <>
@@ -86,23 +98,19 @@ export default function ProductInListGrid({
           {product.promotioncode_id && product.fixedprice ? (
             <div className="space-y-1">
               <div className="text-gray-500 line-through text-xs">
-                ${Math.floor(price)}.{(price % 1).toFixed(2).slice(2)}
+                {formatCurrency(price)}
               </div>
               <div className="text-red-600 font-semibold text-xl">
-                ${Math.floor(product.fixedprice)}.
-                {(product.fixedprice % 1).toFixed(2).slice(2)}
+                {formatCurrency(product.fixedprice)}
               </div>
               <div className="text-green-600 text-xs">
-                Save ${(price - product.fixedprice).toFixed(2)}
+                Save {formatCurrency(price - product.fixedprice)}
               </div>
             </div>
           ) : (
             <div>
               <span className="text-xl font-bold text-gray-800">
-                ${Math.floor(price)}
-              </span>
-              <span className="text-sm font-semibold text-gray-600 align-top">
-                .{(price % 1).toFixed(2).slice(2)}
+                {formatCurrency(price)}
               </span>
             </div>
           )}
@@ -161,20 +169,30 @@ export default function ProductInListGrid({
             </button>
           </div>
 
-          <FiShoppingCart
-            size={30}
-            className="text-primary-blue hover:text-smiles-blue hover:scale-150 cursor-pointer transition-all duration-200"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleAddToCart();
-            }}
-            aria-label="Add to cart"
-          />
+          <div className="relative">
+            <FiShoppingCart
+              size={30}
+              className="text-primary-blue hover:text-smiles-blue hover:scale-150 cursor-pointer transition-all duration-200"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleAddToCart();
+              }}
+              aria-label="Add to cart"
+            />
+            {cartQuantity > 0 && (
+              <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center min-w-[1.25rem]">
+                {cartQuantity > 99 ? '99+' : cartQuantity}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {showQuickLook && (
-        <FlexibleModal title="Quick Look" onClose={() => setShowQuickLook(false)}>
+        <FlexibleModal
+          title="Quick Look"
+          onClose={() => setShowQuickLook(false)}
+        >
           <ProductDetail productId={id} isModal={true} />
         </FlexibleModal>
       )}

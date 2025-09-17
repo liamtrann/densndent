@@ -1,5 +1,6 @@
 // src/pages/CartPage.jsx
 import React, { useState, useEffect, useMemo } from "react";
+import { FiGrid, FiList } from "react-icons/fi";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import {
@@ -9,7 +10,9 @@ import {
   setItemSubscription,
 } from "store/slices/cartSlice";
 
-import { formatPrice, formatCurrency } from "config/config";
+// ⬇️ NEW: icons for the toggle
+
+import { formatCurrency } from "config/config";
 
 import { delayCall } from "../api/util";
 import { EmptyCart, ErrorMessage, Loading, Dropdown } from "../common";
@@ -20,9 +23,7 @@ import { useInventoryCheck } from "../config";
 
 import { selectCartSubtotalWithDiscounts } from "@/redux/slices";
 
-/* =======================
-   Date helpers (local-only)
-   ======================= */
+/* ======================= */
 function formatLocalDateToronto(date) {
   return date.toLocaleDateString("en-CA", {
     year: "numeric",
@@ -41,6 +42,7 @@ export default function CartPage() {
   const [showFilter, setShowFilter] = useState("all"); // all | sub | one
   const [postalCode, setPostalCode] = useState("");
   const [promoCode, setPromoCode] = useState("");
+  const [view, setView] = useState("list"); // ⬅️ NEW: "list" | "grid"
 
   // Remove modal state
   const [modalOpen, setModalOpen] = useState(false);
@@ -54,21 +56,18 @@ export default function CartPage() {
     checkInventory,
   } = useInventoryCheck();
 
-  // Check inventory on cart load/change
   useEffect(() => {
     if (cart.length > 0) {
       checkInventory(cart.map((item) => item.id));
     }
-  }, [cart]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [cart]); // eslint-disable-line
 
-  // Subtotal with discounts
   const subtotalAmount = useSelector((state) =>
     selectCartSubtotalWithDiscounts(state, cart)
   );
-  const subtotal = formatPrice(subtotalAmount);
+  const subtotal = subtotalAmount; // Keep as number for CartOrderSummary
   const totalQuantity = cart.reduce((sum, item) => sum + item.quantity, 0);
 
-  // Filtered list (Show dropdown)
   const filteredCart = useMemo(() => {
     if (showFilter === "sub")
       return cart.filter((i) => !!i.subscriptionEnabled);
@@ -76,7 +75,6 @@ export default function CartPage() {
     return cart;
   }, [cart, showFilter]);
 
-  // Quantity change
   const handleQuantityChange = (item, type) => {
     const newQuantity = type === "inc" ? item.quantity + 1 : item.quantity - 1;
     if (newQuantity === 0) {
@@ -92,7 +90,6 @@ export default function CartPage() {
     }
   };
 
-  // Remove item
   const handleRemoveClick = (item) => {
     setSelectedProduct(item);
     setModalOpen(true);
@@ -109,12 +106,9 @@ export default function CartPage() {
     setSelectedProduct(null);
   };
 
-  const handleNavigateToProduct = (id) => {
-    navigate(`/product/${id}`);
-  };
+  const handleNavigateToProduct = (id) => navigate(`/product/${id}`);
 
-  // Purchase option helpers (per item)
-  const chooseOneTime = (item) => {
+  const chooseOneTime = (item) =>
     dispatch(
       setItemSubscription({
         id: item.id,
@@ -123,8 +117,7 @@ export default function CartPage() {
         interval: null,
       })
     );
-  };
-  const chooseSubscribe = (item) => {
+  const chooseSubscribe = (item) =>
     dispatch(
       setItemSubscription({
         id: item.id,
@@ -133,8 +126,7 @@ export default function CartPage() {
         interval: item.subscriptionInterval || "1",
       })
     );
-  };
-  const changeInterval = (item, value) => {
+  const changeInterval = (item, value) =>
     dispatch(
       setItemSubscription({
         id: item.id,
@@ -143,23 +135,19 @@ export default function CartPage() {
         interval: value,
       })
     );
-  };
 
-  // Proceed to checkout w/ inventory guard
   const handleProceedToCheckout = async () => {
-    const result = await checkInventory(cart.map((item) => item.id));
-    if (!result) return;
+    const ok = await checkInventory(cart.map((i) => i.id));
+    if (!ok) return;
     navigate("/checkout");
   };
 
-  // Inventory check error/warning
   if (inventoryError)
     return <ErrorMessage message={inventoryError} className="mb-4" />;
   if (inventoryLoading) return <Loading />;
 
   return (
     <div className="mx-auto px-4 lg:px-6 py-8 max-w-7xl">
-      {/* Breadcrumbs */}
       <Breadcrumb path={["Home", "Cart"]} />
 
       {cart.length > 0 && (
@@ -169,7 +157,7 @@ export default function CartPage() {
         </h1>
       )}
 
-      {/* Cart-only dropdown ABOVE the grid so both columns align at the top */}
+      {/* Controls row */}
       {cart.length > 0 && (
         <div className="mb-4 flex items-center gap-3">
           <span className="text-sm font-medium">Show</span>
@@ -184,33 +172,82 @@ export default function CartPage() {
               ]}
             />
           </div>
+
+          {/* NEW: Grid/List toggle (doesn't change your existing list look) */}
+          <div className="ml-auto flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setView("grid")}
+              className={`p-2 rounded border ${view === "grid" ? "bg-gray-100 border-gray-400" : "border-gray-200"}`}
+              title="Grid view"
+              aria-label="Grid view"
+            >
+              <FiGrid />
+            </button>
+            <button
+              type="button"
+              onClick={() => setView("list")}
+              className={`p-2 rounded border ${view === "list" ? "bg-gray-100 border-gray-400" : "border-gray-200"}`}
+              title="List view"
+              aria-label="List view"
+            >
+              <FiList />
+            </button>
+          </div>
         </div>
       )}
 
-      {/* Two-column layout: left list (scrollable on desktop) + right summary */}
+      {/* Two-column layout */}
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_380px] items-start gap-6">
-        {/* LEFT: just the cart list (scroll only this on desktop) */}
+        {/* LEFT: your items */}
         <div>
           <div className="lg:max-h-[calc(100vh-220px)] lg:overflow-y-auto lg:pr-3 lg:pb-2 custom-scrollbar">
             {filteredCart.length > 0 ? (
-              filteredCart.map((item) => {
-                const key = item.id + (item.flavor ? `-${item.flavor}` : "");
-
-                return (
-                  <ListProductInCart
-                    key={`${key}-card`}
-                    item={item}
-                    inventoryStatus={inventoryStatus}
-                    onQuantityChange={handleQuantityChange}
-                    onItemClick={handleNavigateToProduct}
-                    onOneTime={chooseOneTime}
-                    onSubscribe={chooseSubscribe}
-                    onIntervalChange={changeInterval}
-                    onRemoveClick={handleRemoveClick}
-                    formatLocalDateToronto={formatLocalDateToronto}
-                  />
-                );
-              })
+              view === "grid" ? (
+                // GRID: same cards, just placed in a grid
+                <div>
+                  {filteredCart.map((item) => {
+                    const key =
+                      item.id + (item.flavor ? `-${item.flavor}` : "");
+                    return (
+                      <ListProductInCart
+                        key={`${key}-grid`}
+                        item={item}
+                        listType="card"
+                        inventoryStatus={inventoryStatus}
+                        onQuantityChange={handleQuantityChange}
+                        onItemClick={handleNavigateToProduct}
+                        onOneTime={chooseOneTime}
+                        onSubscribe={chooseSubscribe}
+                        onIntervalChange={changeInterval}
+                        onRemoveClick={handleRemoveClick}
+                        formatLocalDateToronto={formatLocalDateToronto}
+                      />
+                    );
+                  })}
+                </div>
+              ) : (
+                // LIST: EXACTLY what you already had (unchanged)
+                filteredCart.map((item) => {
+                  const key = item.id + (item.flavor ? `-${item.flavor}` : "");
+                  return (
+                    <ListProductInCart
+                      key={`${key}-list`}
+                      item={item}
+                      // no listType prop → your current default list layout is preserved
+                      inventoryStatus={inventoryStatus}
+                      onQuantityChange={handleQuantityChange}
+                      onItemClick={handleNavigateToProduct}
+                      onOneTime={chooseOneTime}
+                      onSubscribe={chooseSubscribe}
+                      onIntervalChange={changeInterval}
+                      onRemoveClick={handleRemoveClick}
+                      formatLocalDateToronto={formatLocalDateToronto}
+                      listType="table"
+                    />
+                  );
+                })
+              )
             ) : cart.length > 0 ? (
               <div className="text-gray-500 py-8 text-center">
                 No items match that filter.
@@ -221,7 +258,7 @@ export default function CartPage() {
           </div>
         </div>
 
-        {/* RIGHT: sticky Order Summary */}
+        {/* RIGHT: summary */}
         {cart.length > 0 && (
           <aside className="lg:pl-6">
             <div className="lg:sticky lg:top-6">

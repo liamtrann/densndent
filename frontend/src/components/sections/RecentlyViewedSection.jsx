@@ -20,7 +20,7 @@ export default function RecentlyViewedSection() {
     if (viewedProductIds.length > 0 && recentProducts.length === 0) {
       dispatch(fetchRecentProducts(viewedProductIds));
     }
-  }, []); 
+  }, []);
 
   const hasItems = recentProducts && recentProducts.length > 0;
 
@@ -57,6 +57,7 @@ export default function RecentlyViewedSection() {
       <BlueBanner
         title="Recently Viewed"
         items={recentProducts}
+        showScrollBar={true}
         enableHorizontalScroll={true}
         loading={loading}
         error={error}

@@ -6,8 +6,7 @@ import { fetchProductsBy } from "store/slices/productsSlice";
 import { delayCall } from "api/util";
 import { ErrorMessage, Loading, ProductToolbar } from "common";
 
-import ProductListGrid from "./ListGrids";
-import ProductListRows from "./ListRows";
+import { ListProduct } from "..";
 
 export default function ListProductNoFilter({ searchIds, by }) {
   const [view, setView] = useState("grid");
@@ -119,9 +118,27 @@ export default function ListProductNoFilter({ searchIds, by }) {
           !error &&
           products.length > 0 &&
           (view === "grid" ? (
-            <ProductListGrid products={products} />
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+              {products.map((product) => (
+                <ListProduct
+                  key={product.id}
+                  product={product}
+                  listType="grid"
+                />
+              ))}
+            </div>
           ) : (
-            <ProductListRows products={products} />
+            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+              <div className="divide-y divide-gray-200 md:divide-y-0">
+                {products.map((product) => (
+                  <ListProduct
+                    key={product.id}
+                    product={product}
+                    listType="list"
+                  />
+                ))}
+              </div>
+            </div>
           ))}
       </main>
     </div>

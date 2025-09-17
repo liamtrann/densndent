@@ -33,12 +33,15 @@ async function getPromotionsByProductId(req, res) {
 
 async function getAllProductsWithActivePromotions(req, res) {
   try {
-    const { limit, offset } = req.query;
+    const { limit, offset, sort, minPrice, maxPrice } = req.query;
     const products = await promotionService.getAllProductsWithActivePromotions(
       limit,
-      offset
+      offset,
+      sort,
+      minPrice,
+      maxPrice
     );
-    res.json({ products });
+    res.json(products);
   } catch (err) {
     console.error("Error fetching products with active promotions:", err);
     res
@@ -49,7 +52,11 @@ async function getAllProductsWithActivePromotions(req, res) {
 
 async function countProductsWithActivePromotions(req, res) {
   try {
-    const count = await promotionService.countProductsWithActivePromotions();
+    const { minPrice, maxPrice } = req.query;
+    const count = await promotionService.countProductsWithActivePromotions(
+      minPrice,
+      maxPrice
+    );
     res.json({ count });
   } catch (err) {
     console.error("Error counting products with active promotions:", err);

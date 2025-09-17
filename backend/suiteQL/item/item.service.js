@@ -11,13 +11,74 @@ class ItemsService {
   }
 
   // Helper method for generating sort clause
-  _getSortBy(sort) {
+  _getSortBy(sort, customSort = null) {
+    if (customSort) return customSort;
+    
     const allowedOrders = ["asc", "desc"];
     if (sort && allowedOrders.includes(sort.toLowerCase())) {
       return ` ORDER BY ip.price ${sort.toLowerCase()}`;
     } else {
       return ` ORDER BY i.itemid ASC`;
     }
+  }
+
+  // Helper method for building base item conditions
+  _getBaseConditions() {
+    return [`i.isonline = 'T'`, `i.isinactive = 'F'`];
+  }
+
+  // Helper method for adding price filter conditions
+  _addPriceConditions(conditions, minPrice, maxPrice) {
+    if (minPrice !== undefined && minPrice !== null && minPrice !== "") {
+      conditions.push(`ip.price >= ${parseFloat(minPrice)}`);
+    }
+    if (maxPrice !== undefined && maxPrice !== null && maxPrice !== "") {
+      conditions.push(`ip.price <= ${parseFloat(maxPrice)}`);
+    }
+  }
+
+  // Helper method to check if price filtering is needed
+  _hasPriceFilter(minPrice, maxPrice) {
+    return (minPrice !== undefined && minPrice !== null && minPrice !== "") ||
+           (maxPrice !== undefined && maxPrice !== null && maxPrice !== "");
+  }
+
+  // Standard item fields for most queries
+  _getStandardFields() {
+    return `i.id, i.itemid, i.totalquantityonhand, i.stockdescription, ip.price, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url, promo.promotioncode_id, promo.promotion_code, promo.promotion_name, promo.startdate, promo.enddate, promo.ispublic, promo.isinactive, promo.fixedprice, promo.itemquantifier`;
+  }
+
+  // Extended item fields for detailed queries
+  _getExtendedFields() {
+    return `i.id, i.class, i.manufacturer, i.mpn, i.itemid, i.itemType, i.subsidiary, i.isonline, i.displayname, i.custitemcustitem_dnd_brand AS branditem, i.totalquantityonhand, i.stockdescription, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url, ip.item, ip.price, promo.promotioncode_id, promo.promotion_code, promo.promotion_name, promo.startdate, promo.enddate, promo.ispublic, promo.isinactive, promo.fixedprice, promo.itemquantifier`;
+  }
+
+  // Basic item fields for simple queries
+  _getBasicFields() {
+    return `i.id, i.itemid, i.stockdescription, ip.price, promo.promotioncode_id, promo.promotion_code, promo.promotion_name, promo.startdate, promo.enddate, promo.ispublic, promo.isinactive, promo.fixedprice, promo.itemquantifier`;
+  }
+
+  // Standard table joins for most queries
+  _getStandardJoins(joinType = "JOIN") {
+    return `${joinType} itemprice ip ON i.id = ip.item AND ip.pricelevel = 1 ${this._getPromotion("i")}`;
+  }
+
+  // Generic query builder for items
+  async _buildAndExecuteQuery(fields, joins, baseConditions, additionalConditions, sortBy, limit, offset) {
+    const conditions = [...baseConditions, ...additionalConditions];
+    const sql = `SELECT ${fields} FROM item i ${joins} WHERE ${conditions.join(" AND ")} ${sortBy}`;
+    const results = await runQueryWithPagination(sql, limit, offset);
+    return results.items || [];
+  }
+
+  // Generic count query builder
+  async _buildAndExecuteCountQuery(baseConditions, additionalConditions, needsPriceJoin = false) {
+    const conditions = [...baseConditions, ...additionalConditions];
+    const baseQuery = `SELECT COUNT(*) AS count FROM item i`;
+    const priceJoin = needsPriceJoin ? ` JOIN itemprice ip ON i.id = ip.item AND ip.pricelevel = 1` : '';
+    const sql = `${baseQuery}${priceJoin} WHERE ${conditions.join(" AND ")}`;
+    const results = await runQueryWithPagination(sql, 1, 0);
+    return results.items?.[0]?.count || 0;
   }
 
   // Generalized method for filtering by a field and price range, with pagination and sorting
@@ -36,14 +97,38 @@ class ItemsService {
     }
 
     // Build filter conditions
-    let conditions = [`i.isonline = 'T'`, `i.isinactive = 'F'`];
+    const baseConditions = this._getBaseConditions();
+    const additionalConditions = [];
 
     // Field-based filter
     if (field === "name") {
-      conditions.push(`LOWER(${column}) LIKE '%' || LOWER('${value}') || '%'`);
+      additionalConditions.push(`LOWER(${column}) LIKE '%' || LOWER('${value}') || '%'`);
     } else {
-      conditions.push(`LOWER(${column}) = LOWER('${value}')`);
+      additionalConditions.push(`LOWER(${column}) = LOWER('${value}')`);
     }
+
+    // Price range filter
+    this._addPriceConditions(additionalConditions, minPrice, maxPrice);
+
+    // Execute query
+    const fields = `${this._getStandardFields()}, i.custitemcustitem_dnd_brand AS branditem`;
+    const joins = this._getStandardJoins();
+    const sortBy = this._getSortBy(sort);
+
+    return await this._buildAndExecuteQuery(fields, joins, baseConditions, additionalConditions, sortBy, limit, offset);
+  }
+
+  // Find items by both class and brand
+  async findByClassAndBrand(classId, brand, limit, offset, sort, minPrice, maxPrice) {
+    const sortBy = this._getSortBy(sort);
+    
+    // Build filter conditions
+    let conditions = [
+      `i.isonline = 'T'`,
+      `i.isinactive='F'`,
+      `i.class='${classId}'`,
+      `i.custitemcustitem_dnd_brand='${brand}'`
+    ];
 
     // Price range filter
     if (minPrice !== undefined && minPrice !== null && minPrice !== "") {
@@ -53,22 +138,7 @@ class ItemsService {
       conditions.push(`ip.price <= ${parseFloat(maxPrice)}`);
     }
 
-    // Sorting
-    const sortBy = this._getSortBy(sort);
-
-    // SQL Query
-    const sql = `SELECT i.id, i.itemid, i.totalquantityonhand, i.stockdescription, ip.price, i.custitemcustitem_dnd_brand AS branditem, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url, promo.promotioncode_id, promo.promotion_code, promo.promotion_name, promo.startdate, promo.enddate, promo.ispublic, promo.isinactive, promo.fixedprice, promo.itemquantifier FROM item i JOIN itemprice ip ON i.id = ip.item AND ip.pricelevel = 1 ${this._getPromotion("i")} WHERE ${conditions.join(" AND ")} ${sortBy}`;
-
-    // Run with standard function signature
-    const results = await runQueryWithPagination(sql, limit, offset);
-
-    return results.items || [];
-  }
-
-  // Find items by both class and brand
-  async findByClassAndBrand(classId, brand, limit, offset, sort) {
-    const sortBy = this._getSortBy(sort);
-    const sql = `SELECT i.id, i.itemid, i.totalquantityonhand, i.stockdescription, ip.price, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url, promo.promotioncode_id, promo.promotion_code, promo.promotion_name, promo.startdate, promo.enddate, promo.ispublic, promo.isinactive, promo.fixedprice, promo.itemquantifier FROM item i JOIN itemprice ip ON i.id = ip.item AND ip.pricelevel = 1 ${this._getPromotion("i")} WHERE i.isonline = 'T' AND i.isinactive='F' AND i.class='${classId}' AND i.custitemcustitem_dnd_brand='${brand}' ${sortBy}`;
+    const sql = `SELECT i.id, i.itemid, i.totalquantityonhand, i.stockdescription, ip.price, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url, promo.promotioncode_id, promo.promotion_code, promo.promotion_name, promo.startdate, promo.enddate, promo.ispublic, promo.isinactive, promo.fixedprice, promo.itemquantifier FROM item i JOIN itemprice ip ON i.id = ip.item AND ip.pricelevel = 1 ${this._getPromotion("i")} WHERE ${conditions.join(" AND ")} ${sortBy}`;
     const results = await runQueryWithPagination(sql, limit, offset);
 
     return results.items || [];
@@ -82,27 +152,87 @@ class ItemsService {
 
     return item;
   }
-  async findByParent(parent) {
-    const sql = `SELECT i.id, i.itemid FROM item i WHERE i.custitem39 = '${parent}' AND i.isinactive = 'F' AND i.isonline = 'T' ORDER BY i.custitem40`; //i.custitem38, custitem39 if need  `SELECT i.id, i.itemid, i.custitem38 FROM item i WHERE i.custitem39 = '${parent}' AND i.isinactive = 'F' AND i.isonline = 'T' ORDER BY i.custitem40`;
+  async findByParent(parent, limit, offset, sort, minPrice, maxPrice) {
+    // Custom sort logic for findByParent - primary sort by custitem40, secondary by provided sort
+    let orderBy = ` ORDER BY i.custitem40`;
+    
+    if (sort && ["asc", "desc"].includes(sort.toLowerCase())) {
+      // Add secondary sorting by price if specified
+      orderBy += `, ip.price ${sort.toLowerCase()}`;
+    } else {
+      // Default secondary sort by itemid
+      orderBy += `, i.itemid ASC`;
+    }
 
-    const result = await runQueryWithPagination(sql);
+    // Build filter conditions
+    let conditions = [
+      `i.custitem39 = '${parent}'`,
+      `i.isinactive = 'F'`,
+      `i.isonline = 'T'`
+    ];
+
+    // Price range filter
+    if (minPrice !== undefined && minPrice !== null && minPrice !== "") {
+      conditions.push(`ip.price >= ${parseFloat(minPrice)}`);
+    }
+    if (maxPrice !== undefined && maxPrice !== null && maxPrice !== "") {
+      conditions.push(`ip.price <= ${parseFloat(maxPrice)}`);
+    }
+
+    const sql = `SELECT i.id, i.itemid FROM item i LEFT JOIN itemprice ip ON ip.item = i.id AND ip.pricelevel = 1 WHERE ${conditions.join(" AND ")}${orderBy}`; //i.custitem38, custitem39 if need  `SELECT i.id, i.itemid, i.custitem38 FROM item i WHERE i.custitem39 = '${parent}' AND i.isinactive = 'F' AND i.isonline = 'T' ORDER BY i.custitem40`;
+
+    const result = await runQueryWithPagination(sql, limit, offset);
     return result.items || [];
   }
   // Get items by multiple ids
-  async findByIds(itemIds = []) {
+  async findByIds(itemIds = [], limit, offset, sort, minPrice, maxPrice) {
     if (!Array.isArray(itemIds) || itemIds.length === 0) {
       throw new Error("itemIds must be a non-empty array");
     }
     const idsString = itemIds.map((id) => `'${id}'`).join(",");
-    const sql = `SELECT i.id, i.class, i.manufacturer, i.mpn, i.itemid, i.itemType, i.subsidiary, i.isonline, i.displayname, i.custitemcustitem_dnd_brand AS branditem, i.totalquantityonhand, i.stockdescription, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url, ip.item, ip.price, promo.promotioncode_id, promo.promotion_code, promo.promotion_name, promo.startdate, promo.enddate, promo.ispublic, promo.isinactive, promo.fixedprice, promo.itemquantifier FROM item i LEFT JOIN itemprice ip ON ip.item = i.id AND ip.pricelevel = 1 ${this._getPromotion("i")} WHERE i.id IN (${idsString}) AND i.isinactive='F' AND i.isonline = 'T';`;
-    const results = await runQueryWithPagination(sql, itemIds.length, 0);
+    const sortBy = this._getSortBy(sort);
+    
+    // Build filter conditions
+    let conditions = [
+      `i.id IN (${idsString})`,
+      `i.isinactive='F'`,
+      `i.isonline = 'T'`
+    ];
+
+    // Price range filter
+    if (minPrice !== undefined && minPrice !== null && minPrice !== "") {
+      conditions.push(`ip.price >= ${parseFloat(minPrice)}`);
+    }
+    if (maxPrice !== undefined && maxPrice !== null && maxPrice !== "") {
+      conditions.push(`ip.price <= ${parseFloat(maxPrice)}`);
+    }
+
+    const sql = `SELECT i.id, i.class, i.manufacturer, i.mpn, i.itemid, i.itemType, i.subsidiary, i.isonline, i.displayname, i.custitemcustitem_dnd_brand AS branditem, i.totalquantityonhand, i.stockdescription, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url, ip.item, ip.price, promo.promotioncode_id, promo.promotion_code, promo.promotion_name, promo.startdate, promo.enddate, promo.ispublic, promo.isinactive, promo.fixedprice, promo.itemquantifier FROM item i LEFT JOIN itemprice ip ON ip.item = i.id AND ip.pricelevel = 1 ${this._getPromotion("i")} WHERE ${conditions.join(" AND ")} ${sortBy}`;
+    const results = await runQueryWithPagination(sql, limit || itemIds.length, offset || 0);
 
     return results.items || [];
   }
 
-  async findByNameLike(name, limit, offset) {
-    // Use the same fields as other item queries
-    const sql = `SELECT i.id, i.itemid, i.stockdescription, promo.promotioncode_id, promo.promotion_code, promo.promotion_name, promo.startdate, promo.enddate, promo.ispublic, promo.isinactive, promo.fixedprice, promo.itemquantifier FROM item i ${this._getPromotion("i")} WHERE LOWER(i.itemid) LIKE '%' || LOWER('${name}') || '%' AND i.isinactive='F' AND i.isonline = 'T' ORDER BY i.itemid ASC`;
+  async findByNameLike(name, limit, offset, sort, minPrice, maxPrice) {
+    const sortBy = this._getSortBy(sort);
+    
+    // Build filter conditions
+    let conditions = [
+      `LOWER(i.itemid) LIKE '%' || LOWER('${name}') || '%'`,
+      `i.isinactive='F'`,
+      `i.isonline = 'T'`
+    ];
+
+    // Price range filter
+    if (minPrice !== undefined && minPrice !== null && minPrice !== "") {
+      conditions.push(`ip.price >= ${parseFloat(minPrice)}`);
+    }
+    if (maxPrice !== undefined && maxPrice !== null && maxPrice !== "") {
+      conditions.push(`ip.price <= ${parseFloat(maxPrice)}`);
+    }
+
+    // Use the same fields as other item queries and include price for sorting
+    const sql = `SELECT i.id, i.itemid, i.stockdescription, ip.price, promo.promotioncode_id, promo.promotion_code, promo.promotion_name, promo.startdate, promo.enddate, promo.ispublic, promo.isinactive, promo.fixedprice, promo.itemquantifier FROM item i LEFT JOIN itemprice ip ON ip.item = i.id AND ip.pricelevel = 1 ${this._getPromotion("i")} WHERE ${conditions.join(" AND ")} ${sortBy}`;
     const results = await runQueryWithPagination(sql, limit, offset);
 
     return results;
@@ -203,8 +333,16 @@ class ItemsService {
   }
 
   // Method for getting all products with pagination and sorting
-  async findAllProducts(limit, offset, sort) {
+  async findAllProducts(limit, offset, sort, minPrice, maxPrice) {
     let conditions = [`i.isonline = 'T'`, `i.isinactive = 'F'`];
+
+    // Price range filter
+    if (minPrice !== undefined && minPrice !== null && minPrice !== "") {
+      conditions.push(`ip.price >= ${parseFloat(minPrice)}`);
+    }
+    if (maxPrice !== undefined && maxPrice !== null && maxPrice !== "") {
+      conditions.push(`ip.price <= ${parseFloat(maxPrice)}`);
+    }
 
     // Custom sorting logic for findAllProducts
     let sortBy;

@@ -2,7 +2,7 @@
 import { useAuth0 } from "@auth0/auth0-react";
 import React, { Suspense, lazy } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { setFavorites, initializeFavorites } from "store/slices/favoritesSlice";
 import { fetchUserInfo, clearUserInfo } from "store/slices/userSlice";
 
@@ -218,22 +218,19 @@ export default function App() {
                   </CenteredContent>
                 }
               />
+              
               <Route
                 path="/promotions"
                 element={
-                  <CenteredContent>
-                    <PromotionsPage />
-                  </CenteredContent>
+                  <LayoutWithCart>
+                    <CenteredContent>
+                      <ListProductPage by="promotion" />
+                    </CenteredContent>
+                  </LayoutWithCart>
                 }
               />
-              <Route
-                path="/promotions"
-                element={
-                  <CenteredContent>
-                    <PromotionsPage />
-                  </CenteredContent>
-                }
-              />
+
+
               <Route
                 path="/promotions/monthly-special"
                 element={
