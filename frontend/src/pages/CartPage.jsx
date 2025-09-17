@@ -205,7 +205,7 @@ export default function CartPage() {
             {filteredCart.length > 0 ? (
               view === "grid" ? (
                 // GRID: same cards, just placed in a grid
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
                   {filteredCart.map((item) => {
                     const key =
                       item.id + (item.flavor ? `-${item.flavor}` : "");
@@ -213,7 +213,7 @@ export default function CartPage() {
                       <ListProductInCart
                         key={`${key}-grid`}
                         item={item}
-                        listType="card" // card layout inside grid
+                        listType="card"
                         inventoryStatus={inventoryStatus}
                         onQuantityChange={handleQuantityChange}
                         onItemClick={handleNavigateToProduct}
@@ -243,6 +243,7 @@ export default function CartPage() {
                       onIntervalChange={changeInterval}
                       onRemoveClick={handleRemoveClick}
                       formatLocalDateToronto={formatLocalDateToronto}
+                      listType="table"
                     />
                   );
                 })

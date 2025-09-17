@@ -49,20 +49,20 @@ export default function TableLayout({
             {/* Product badges/tags */}
             <div className="flex flex-wrap gap-1 mb-2">
               {item.stockdescription && (
-                <span className="text-xs text-blue-600 font-medium bg-blue-50 px-1.5 py-0.5 rounded">
+                <span className="text-xs text-blue-600 font-medium bg-blue-50 px-1 py-0.5 rounded">
                   {item.stockdescription}
                 </span>
               )}
 
               {item.subscriptionEnabled && (
-                <span className="text-xs text-white font-medium bg-smiles-gentleBlue px-1.5 py-0.5 rounded">
+                <span className="text-xs text-white font-medium bg-smiles-gentleBlue px-1 py-0.5 rounded">
                   Every {item.subscriptionInterval} {item.subscriptionUnit}
                 </span>
               )}
 
               {item.subscriptionEnabled &&
                 item.subscriptionPreferredDeliveryDays && (
-                  <span className="text-xs text-orange-700 font-medium bg-orange-50 px-1.5 py-0.5 rounded">
+                  <span className="text-xs text-orange-700 font-medium bg-orange-50 px-1 py-0.5 rounded">
                     Prefer:{" "}
                     {formatDeliveryDays(item.subscriptionPreferredDeliveryDays)}
                   </span>
@@ -82,7 +82,7 @@ export default function TableLayout({
                         <div className="text-gray-500 line-through text-xs">
                           {calculateTotalCurrency(unitPrice, item.quantity)}
                         </div>
-                        <div className="text-red-600 font-semibold text-sm">
+                        <div className="text-red-600 font-semibold text-xs">
                           {formatCurrency(finalPrice)}
                         </div>
                         <div className="text-green-600 text-xs">
@@ -90,7 +90,7 @@ export default function TableLayout({
                         </div>
                       </div>
                     ) : (
-                      <div className="text-gray-800 font-semibold text-sm">
+                      <div className="text-gray-800 font-semibold text-xs">
                         {formatCurrency(finalPrice)}
                       </div>
                     )}
@@ -101,25 +101,25 @@ export default function TableLayout({
               {/* Mobile Quantity Controls */}
               <div className="flex items-center">
                 {showQuantityControls && onQuantityChange ? (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-0.5">
                     <button
                       onClick={handleDecrease}
-                      className="w-8 h-8 flex items-center justify-center border rounded hover:bg-gray-100 text-sm"
+                      className="w-5 h-5 flex items-center justify-center border rounded hover:bg-gray-100 text-xs"
                     >
                       -
                     </button>
-                    <span className="w-8 text-center text-sm font-medium">
+                    <span className="w-5 text-center text-xs font-medium">
                       {item.quantity}
                     </span>
                     <button
                       onClick={handleIncrease}
-                      className="w-8 h-8 flex items-center justify-center border rounded hover:bg-gray-100 text-sm"
+                      className="w-5 h-5 flex items-center justify-center border rounded hover:bg-gray-100 text-xs"
                     >
                       +
                     </button>
                   </div>
                 ) : (
-                  <span className="text-sm font-medium">
+                  <span className="text-xs font-medium">
                     Qty: {item.quantity}
                   </span>
                 )}
@@ -157,20 +157,20 @@ export default function TableLayout({
           {/* Product badges/tags */}
           <div className="flex flex-wrap gap-1">
             {item.stockdescription && (
-              <span className="text-xs text-blue-600 font-medium bg-blue-50 px-1.5 py-0.5 rounded">
+              <span className="text-xs text-blue-600 font-medium bg-blue-50 px-1 py-0.5 rounded">
                 {item.stockdescription}
               </span>
             )}
 
             {item.subscriptionEnabled && (
-              <span className="text-xs text-white font-medium bg-smiles-gentleBlue px-1.5 py-0.5 rounded">
+              <span className="text-xs text-white font-medium bg-smiles-gentleBlue px-1 py-0.5 rounded">
                 Every {item.subscriptionInterval} {item.subscriptionUnit}
               </span>
             )}
 
             {item.subscriptionEnabled &&
               item.subscriptionPreferredDeliveryDays && (
-                <span className="text-xs text-orange-700 font-medium bg-orange-50 px-1.5 py-0.5 rounded">
+                <span className="text-xs text-orange-700 font-medium bg-orange-50 px-1 py-0.5 rounded">
                   Prefer:{" "}
                   {formatDeliveryDays(item.subscriptionPreferredDeliveryDays)}
                 </span>
@@ -180,7 +180,7 @@ export default function TableLayout({
 
         {/* Unit Price Column - 2 units */}
         <div className="col-span-2 text-center">
-          <div className="text-sm lg:text-base font-medium">
+          <div className="text-xs font-medium">
             ${Number(item.unitprice || item.price || 0).toFixed(2)}
           </div>
           <div className="text-xs text-gray-500">per unit</div>
@@ -189,25 +189,25 @@ export default function TableLayout({
         {/* Quantity Column - 2 units */}
         <div className="col-span-2 text-center">
           {showQuantityControls && onQuantityChange ? (
-            <div className="flex items-center justify-center gap-1">
+            <div className="flex items-center justify-center gap-0.5">
               <button
                 onClick={handleDecrease}
-                className="w-7 h-7 lg:w-8 lg:h-8 flex items-center justify-center border rounded hover:bg-gray-100 text-sm"
+                className="w-5 h-5 flex items-center justify-center border rounded hover:bg-gray-100 text-xs"
               >
                 -
               </button>
-              <span className="w-8 lg:w-10 text-center text-sm lg:text-base font-medium">
+              <span className="w-5 text-center text-xs font-medium">
                 {item.quantity}
               </span>
               <button
                 onClick={handleIncrease}
-                className="w-7 h-7 lg:w-8 lg:h-8 flex items-center justify-center border rounded hover:bg-gray-100 text-sm"
+                className="w-5 h-5 flex items-center justify-center border rounded hover:bg-gray-100 text-xs"
               >
                 +
               </button>
             </div>
           ) : (
-            <span className="text-sm lg:text-base font-medium">
+            <span className="text-xs font-medium">
               {item.quantity}
             </span>
           )}
@@ -221,7 +221,7 @@ export default function TableLayout({
                 <div className="text-gray-500 line-through text-xs">
                   {calculateTotalCurrency(unitPrice, item.quantity)}
                 </div>
-                <div className="text-red-600 font-semibold text-sm lg:text-base">
+                <div className="text-red-600 font-semibold text-xs">
                   {formatCurrency(finalPrice)}
                 </div>
                 <div className="text-green-600 text-xs">
@@ -229,7 +229,7 @@ export default function TableLayout({
                 </div>
               </div>
             ) : (
-              <div className="text-gray-800 font-semibold text-sm lg:text-base">
+              <div className="text-gray-800 font-semibold text-xs">
                 {formatCurrency(finalPrice)}
               </div>
             )}
