@@ -17,7 +17,6 @@ const ListProductInCart = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const inv = inventoryStatus.find((i) => i.item === item.id);
   const key = item.id + (item.flavor ? `-${item.flavor}` : "");
   const isSubbed = !!item.subscriptionEnabled;
   const interval = item.subscriptionInterval || "1";
