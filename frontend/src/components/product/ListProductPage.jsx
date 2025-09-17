@@ -117,10 +117,10 @@ export default function ListProductPage({ by }) {
     }
   };
 
-  // ✅ Use Promotions breadcrumbs for this page
+  // Promotions page breadcrumbs (no "Promotions & Catalogues")
   const breadcrumbs =
     by === "promotion"
-      ? ["Home", "Promotions & Catalogues", "Promotions"]
+      ? ["Home", "Promotions"]
       : ["Home", "Products", displayName || "Unknown"];
 
   return (
