@@ -22,6 +22,7 @@ export default function PreviewCartItem({
   textSize = "text-sm",
   compact = false,
   listType = "card",
+  inventoryStatus = null,
 }) {
   const dispatch = useDispatch();
   const unitPrice = item.unitprice || item.price;
@@ -79,6 +80,7 @@ export default function PreviewCartItem({
     unitPrice,
     calculateTotalCurrency,
     formatCurrency,
+    inventoryStatus,
   };
 
   return listType === "table" ? (

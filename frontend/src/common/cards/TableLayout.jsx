@@ -2,6 +2,7 @@ import React from "react";
 
 import { ProductImage } from "common";
 import { formatDeliveryDays } from "config/config";
+import { OUT_OF_STOCK } from "@/constants/constant";
 
 export default function TableLayout({
   item,
@@ -17,7 +18,11 @@ export default function TableLayout({
   unitPrice,
   calculateTotalCurrency,
   formatCurrency,
+  inventoryStatus = null,
 }) {
+  // Check if item is out of stock
+  const inv = inventoryStatus?.find ? inventoryStatus.find((i) => i.item === item.id) : null;
+  const isOutOfStock = inv && inv.quantityavailable <= 0;
   return (
     <>
       {/* Mobile Layout - Stack vertically */}
@@ -68,6 +73,11 @@ export default function TableLayout({
                   </span>
                 )}
             </div>
+
+            {/* Out of stock message */}
+            {isOutOfStock && (
+              <div className="text-red-600 text-xs mb-2">{OUT_OF_STOCK}</div>
+            )}
 
             {/* Mobile Price and Quantity Row */}
             <div className="flex items-center justify-between">
@@ -176,6 +186,11 @@ export default function TableLayout({
                 </span>
               )}
           </div>
+
+          {/* Out of stock message */}
+          {isOutOfStock && (
+            <div className="text-red-600 text-xs mt-1">{OUT_OF_STOCK}</div>
+          )}
         </div>
 
         {/* Unit Price Column - 2 units */}

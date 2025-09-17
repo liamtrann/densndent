@@ -1,6 +1,7 @@
-import { PreviewCartItem, PurchaseOption } from "../../common";
+import { useState } from "react";
+import { FiChevronDown, FiChevronUp } from "react-icons/fi";
 
-import { OUT_OF_STOCK } from "@/constants/constant";
+import { PreviewCartItem, PurchaseOption } from "../../common";
 
 const ListProductInCart = ({
   item,
@@ -14,6 +15,8 @@ const ListProductInCart = ({
   formatLocalDateToronto,
   listType = "card",
 }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   const inv = inventoryStatus.find((i) => i.item === item.id);
   const key = item.id + (item.flavor ? `-${item.flavor}` : "");
   const isSubbed = !!item.subscriptionEnabled;
@@ -65,10 +68,8 @@ const ListProductInCart = ({
               textSize="text-base"
               showBottomBorder={false}
               listType="card"
+              inventoryStatus={inventoryStatus}
             />
-            {inv && inv.quantityavailable <= 0 && (
-              <div className="text-red-600 text-sm mt-2">{OUT_OF_STOCK}</div>
-            )}
           </div>
 
           {/* RIGHT: Purchase controls */}
@@ -102,26 +103,42 @@ const ListProductInCart = ({
               textSize="text-base"
               showBottomBorder={false}
               listType="table"
+              inventoryStatus={inventoryStatus}
             />
-            {inv && inv.quantityavailable <= 0 && (
-              <div className="text-red-600 text-sm mt-2">{OUT_OF_STOCK}</div>
-            )}
           </div>
 
-          {/* Purchase controls - Next line */}
+          {/* Purchase controls - Expandable More section */}
           <div className="w-full mt-4">
-            <PurchaseOption
-              name={key}
-              isSubscribed={isSubbed}
-              interval={interval}
-              onOneTime={() => onOneTime(item)}
-              onSubscribe={() => onSubscribe(item)}
-              onIntervalChange={(val) => onIntervalChange(item, val)}
-              onRemoveClick={() => onRemoveClick(item)}
-              formatLocalDateToronto={formatLocalDateToronto}
-              firstDeliveryDate={firstDeliveryDate}
-              listType="row"
-            />
+            <div className="flex justify-end">
+              <button
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="flex items-center gap-2 text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors"
+              >
+                More
+                {isExpanded ? (
+                  <FiChevronUp className="w-4 h-4" />
+                ) : (
+                  <FiChevronDown className="w-4 h-4" />
+                )}
+              </button>
+            </div>
+
+            {isExpanded && (
+              <div className="mt-3 pt-3 border-t border-gray-200 animate-in slide-in-from-top-2 duration-200">
+                <PurchaseOption
+                  name={key}
+                  isSubscribed={isSubbed}
+                  interval={interval}
+                  onOneTime={() => onOneTime(item)}
+                  onSubscribe={() => onSubscribe(item)}
+                  onIntervalChange={(val) => onIntervalChange(item, val)}
+                  onRemoveClick={() => onRemoveClick(item)}
+                  formatLocalDateToronto={formatLocalDateToronto}
+                  firstDeliveryDate={firstDeliveryDate}
+                  listType="row"
+                />
+              </div>
+            )}
           </div>
         </>
       )}
