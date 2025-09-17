@@ -207,9 +207,7 @@ export default function TableLayout({
               </button>
             </div>
           ) : (
-            <span className="text-xs font-medium">
-              {item.quantity}
-            </span>
+            <span className="text-xs font-medium">{item.quantity}</span>
           )}
         </div>
 
