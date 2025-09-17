@@ -47,6 +47,7 @@ export default function BestSellersSection() {
       <BlueBanner
         items={bestSellers}
         enableHorizontalScroll={true}
+        showScrollBar={true}
         renderItem={(item) => <ListProduct product={item} listType="grid" />}
         showButton={false}
         loading={status === STATUS.LOADING}
