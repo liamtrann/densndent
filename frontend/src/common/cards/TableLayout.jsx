@@ -1,6 +1,6 @@
 import React from "react";
 
-import { ProductImage } from "common";
+import { ProductImage, QuantityControls } from "common";
 import { formatDeliveryDays } from "config/config";
 
 import { OUT_OF_STOCK } from "@/constants/constant";
@@ -114,23 +114,13 @@ export default function TableLayout({
               {/* Mobile Quantity Controls */}
               <div className="flex items-center">
                 {showQuantityControls && onQuantityChange ? (
-                  <div className="flex items-center gap-0.5">
-                    <button
-                      onClick={handleDecrease}
-                      className="w-5 h-5 flex items-center justify-center border rounded hover:bg-gray-100 text-xs"
-                    >
-                      -
-                    </button>
-                    <span className="w-5 text-center text-xs font-medium">
-                      {item.quantity}
-                    </span>
-                    <button
-                      onClick={handleIncrease}
-                      className="w-5 h-5 flex items-center justify-center border rounded hover:bg-gray-100 text-xs"
-                    >
-                      +
-                    </button>
-                  </div>
+                  <QuantityControls
+                    quantity={item.quantity}
+                    onDecrement={handleDecrease}
+                    onIncrement={handleIncrease}
+                    min={1}
+                    max={999}
+                  />
                 ) : (
                   <span className="text-xs font-medium">
                     Qty: {item.quantity}
@@ -207,22 +197,14 @@ export default function TableLayout({
         {/* Quantity Column - 2 units */}
         <div className="col-span-2 text-center">
           {showQuantityControls && onQuantityChange ? (
-            <div className="flex items-center justify-center gap-0.5">
-              <button
-                onClick={handleDecrease}
-                className="w-5 h-5 flex items-center justify-center border rounded hover:bg-gray-100 text-xs"
-              >
-                -
-              </button>
-              <span className="w-5 text-center text-xs font-medium">
-                {item.quantity}
-              </span>
-              <button
-                onClick={handleIncrease}
-                className="w-5 h-5 flex items-center justify-center border rounded hover:bg-gray-100 text-xs"
-              >
-                +
-              </button>
+            <div className="flex items-center justify-center">
+              <QuantityControls
+                quantity={item.quantity}
+                onDecrement={handleDecrease}
+                onIncrement={handleIncrease}
+                min={1}
+                max={999}
+              />
             </div>
           ) : (
             <span className="text-xs font-medium">{item.quantity}</span>
