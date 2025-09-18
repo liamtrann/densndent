@@ -5,14 +5,12 @@ import { useSelector } from "react-redux";
 import {
   ProductImage,
   Paragraph,
-  InputField,
   DeliveryEstimate,
   Button,
   FavoriteButton,
+  QuantityControls,
 } from "common";
-
 import { FlexibleModal } from "components/layout";
-
 import { formatCurrency } from "config/config";
 
 import ProductDetail from "../../pages/ProductDetail";
@@ -36,7 +34,7 @@ export default function ProductInListGrid({
 
   // Get cart quantity for this item
   const cartItems = useSelector((state) => state.cart.items);
-  const cartQuantity = cartItems.find(item => item.id === id)?.quantity || 0;
+  const cartQuantity = cartItems.find((item) => item.id === id)?.quantity || 0;
 
   return (
     <>
@@ -135,38 +133,14 @@ export default function ProductInListGrid({
         </div>
 
         <div className="flex justify-between items-center mt-auto gap-2">
-          <div
-            className="flex items-center border rounded overflow-hidden h-9"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                decrement();
-              }}
-              className="px-2 h-9 text-sm hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-              disabled={Number(quantity) <= 1}
-            >
-              –
-            </button>
-            <InputField
-              type="number"
-              min="1"
+          <div onClick={(e) => e.stopPropagation()}>
+            <QuantityControls
+              quantity={quantity}
+              onDecrement={decrement}
+              onIncrement={increment}
+              min={1}
               max={999}
-              value={quantity}
-              onChange={handleQuantityChange}
-              onClick={(e) => e.stopPropagation()}
-              className="w-12 h-9 text-center text-sm border-0 focus:ring-1 focus:ring-blue-500"
             />
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                increment();
-              }}
-              className="px-2 h-9 text-sm hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-            >
-              +
-            </button>
           </div>
 
           <div className="relative">
@@ -181,7 +155,7 @@ export default function ProductInListGrid({
             />
             {cartQuantity > 0 && (
               <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center min-w-[1.25rem]">
-                {cartQuantity > 99 ? '99+' : cartQuantity}
+                {cartQuantity > 99 ? "99+" : cartQuantity}
               </div>
             )}
           </div>

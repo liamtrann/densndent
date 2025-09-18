@@ -1,15 +1,15 @@
 // src/components/product/ProductInListRow.jsx
 import { FiEye, FiShoppingCart } from "react-icons/fi";
 import { useSelector } from "react-redux";
+
 import {
   Button,
   ProductImage,
-  InputField,
   DeliveryEstimate,
   FavoriteButton,
+  QuantityControls,
 } from "common";
 import { FlexibleModal } from "components/layout";
-
 import { formatCurrency } from "config/config";
 
 import ProductDetail from "../../pages/ProductDetail";
@@ -33,54 +33,24 @@ export default function ProductInListRow({
 }) {
   // Get cart items from Redux store (must be before early return)
   const cartItems = useSelector((state) => state.cart.items || []);
-  
+
   // Early return if no product
   if (!product) return null;
 
   // Calculate quantity of this item in the cart
-  const cartQuantity = cartItems.find(item => item.id === product.id)?.quantity || 0;
+  const cartQuantity =
+    cartItems.find((item) => item.id === product.id)?.quantity || 0;
 
   // Small aligned qty control (shared by both views)
   const QtyControl = () => (
-    <div
-      className="inline-flex items-stretch h-8 rounded border overflow-hidden"
-      onClick={(e) => e.stopPropagation()}
-    >
-      <button
-        className="inline-flex items-center justify-center w-8 h-8 text-sm hover:bg-gray-50 disabled:opacity-50"
-        onClick={(e) => {
-          e.stopPropagation();
-          decrement();
-        }}
-        disabled={quantity <= 1}
-        aria-label="Decrease quantity"
-      >
-        –
-      </button>
-
-      <InputField
-        type="number"
-        min="1"
-        value={quantity}
-        onChange={(e) => handleQuantityChange(e.target.value)}
-        onClick={(e) => e.stopPropagation()}
-        wrapperClassName="mb-0"
-        variant="unstyled"
-        size="sm"
-        align="center"
-        className="h-8 w-14 px-2 appearance-none leading-none border-0 focus:ring-0 focus:outline-none text-sm"
+    <div onClick={(e) => e.stopPropagation()}>
+      <QuantityControls
+        quantity={quantity}
+        onDecrement={decrement}
+        onIncrement={increment}
+        min={1}
+        max={999}
       />
-
-      <button
-        className="inline-flex items-center justify-center w-8 h-8 text-sm hover:bg-gray-50"
-        onClick={(e) => {
-          e.stopPropagation();
-          increment();
-        }}
-        aria-label="Increase quantity"
-      >
-        +
-      </button>
     </div>
   );
 
@@ -150,19 +120,19 @@ export default function ProductInListRow({
           </div>
         );
 
-        const ShortDesc = product.storedetaileddescription ? (
-          <div
-            className="mt-1 text-sm text-gray-600 line-clamp-2"
-            title={product.storedetaileddescription.replace(/<[^>]*>/g, "")}
-            dangerouslySetInnerHTML={{
-              __html: product.storedetaileddescription,
-            }}
-          />
-        ) : product.displayname ? (
-          <div className="mt-1 text-sm text-gray-600 line-clamp-2">
-            {product.displayname}
-          </div>
-        ) : null;
+        // const ShortDesc = product.storedetaileddescription ? (
+        //   <div
+        //     className="mt-1 text-sm text-gray-600 line-clamp-2"
+        //     title={product.storedetaileddescription.replace(/<[^>]*>/g, "")}
+        //     dangerouslySetInnerHTML={{
+        //       __html: product.storedetaileddescription,
+        //     }}
+        //   />
+        // ) : product.displayname ? (
+        //   <div className="mt-1 text-sm text-gray-600 line-clamp-2">
+        //     {product.displayname}
+        //   </div>
+        // ) : null;
 
         const Price =
           product.promotioncode_id && product.fixedprice ? (
@@ -214,7 +184,7 @@ export default function ProductInListRow({
                 <div className="col-span-1">
                   {Name}
                   {Badges}
-                  {ShortDesc}
+                  {/* {ShortDesc} */}
                 </div>
 
                 {/* price + qty */}
@@ -259,7 +229,7 @@ export default function ProductInListRow({
                     />
                     {cartQuantity > 0 && (
                       <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center min-w-[1.25rem]">
-                        {cartQuantity > 99 ? '99+' : cartQuantity}
+                        {cartQuantity > 99 ? "99+" : cartQuantity}
                       </div>
                     )}
                   </div>
@@ -287,7 +257,7 @@ export default function ProductInListRow({
               <div className="flex-1 min-w-0">
                 {Name}
                 {Badges}
-                {ShortDesc}
+                {/* {ShortDesc} */}
               </div>
 
               {/* price */}
@@ -335,7 +305,7 @@ export default function ProductInListRow({
                   />
                   {cartQuantity > 0 && (
                     <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center min-w-[1.25rem]">
-                      {cartQuantity > 99 ? '99+' : cartQuantity}
+                      {cartQuantity > 99 ? "99+" : cartQuantity}
                     </div>
                   )}
                 </div>

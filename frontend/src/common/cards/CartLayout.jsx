@@ -1,6 +1,6 @@
 import React from "react";
 
-import { ProductImage } from "common";
+import { ProductImage, QuantityControls } from "common";
 import { formatDeliveryDays } from "config/config";
 
 import { OUT_OF_STOCK } from "@/constants/constant";
@@ -85,19 +85,13 @@ export default function CartLayout({
         {showQuantityControls && onQuantityChange ? (
           <div className="flex items-center gap-2 mt-1">
             <span>Quantity</span>
-            <button
-              onClick={handleDecrease}
-              className="px-2 py-1 border rounded hover:bg-gray-100"
-            >
-              -
-            </button>
-            <span>{item.quantity}</span>
-            <button
-              onClick={handleIncrease}
-              className="px-2 py-1 border rounded hover:bg-gray-100"
-            >
-              +
-            </button>
+            <QuantityControls
+              quantity={item.quantity}
+              onDecrement={handleDecrease}
+              onIncrement={handleIncrease}
+              min={1}
+              max={999}
+            />
           </div>
         ) : (
           <div className="mt-1">Quantity: {item.quantity}</div>
