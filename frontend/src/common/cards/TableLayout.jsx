@@ -231,7 +231,7 @@ export default function TableLayout({
 
         {/* Total Price Column - 1 unit (decreased from 2) */}
         {showTotal && (
-          <div className="col-span-1 text-right">
+          <div className="col-span-1 text-right pr-4">
             {hasDiscount ? (
               <div>
                 <div className="text-gray-500 line-through text-xs">
