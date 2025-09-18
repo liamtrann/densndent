@@ -1,8 +1,7 @@
-// src/App.js
 import { useAuth0 } from "@auth0/auth0-react";
 import React, { Suspense, lazy } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import { setFavorites, initializeFavorites } from "store/slices/favoritesSlice";
 import { fetchUserInfo, clearUserInfo } from "store/slices/userSlice";
 
@@ -15,15 +14,11 @@ import { ListProductNoFilter } from "./components/product";
 
 // Lazy loaded components
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
-const ListProductPage = lazy(
-  () => import("./components/product/ListProductPage")
-);
+const ListProductPage = lazy(() => import("./components/product/ListProductPage"));
 const CartPage = lazy(() => import("./pages/CartPage"));
 const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
-const ProfileEditCard = lazy(
-  () => import("./components/profile/ProfileEditCard")
-);
+const ProfileEditCard = lazy(() => import("./components/profile/ProfileEditCard"));
 const PurchaseHistory = lazy(() => import("./pages/PurchaseHistory"));
 const FAQPage = lazy(() => import("./pages/FAQPage"));
 const AboutUs = lazy(() => import("./pages/AboutUs"));
@@ -34,20 +29,18 @@ const GiftCardProgramPage = lazy(() => import("./pages/GiftCardProgramPage"));
 const OurPartners = lazy(() => import("./pages/OurPartners"));
 const Q3CataloguePage = lazy(() => import("./pages/Q3CataloguePage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
-// at the top with other lazy imports
 const HistoryOrderDetails = lazy(() => import("./pages/HistoryOrderDetails"));
-
-// Simple placeholder components
 const BlogPage = lazy(() => import("./pages/BlogPage"));
-
-const PromotionsPage = lazy(() =>
-  Promise.resolve({ default: () => <div>Promotions Page</div> })
-);
-const CataloguesPage = lazy(() =>
-  Promise.resolve({ default: () => <div>Catalogues Page</div> })
-);
+const PromotionsPage = lazy(() => Promise.resolve({ default: () => <div>Promotions Page</div> }));
+const CataloguesPage = lazy(() => Promise.resolve({ default: () => <div>Catalogues Page</div> }));
 const ClearancePage = lazy(() => import("./pages/ClearancePage"));
 const BlogDetailPage = lazy(() => import("./pages/BlogDetailPage"));
+
+// ⬇️ NEW: legal pages
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const TermsRefund = lazy(() => import("./pages/TermsRefund"));
+const ReturnProcess = lazy(() => import("./pages/ReturnProcess"));
+const PickupProcess = lazy(() => import("./pages/PickupProcess"));
 
 // Loading fallback component
 const PageLoading = () => (
@@ -61,9 +54,8 @@ export default function App() {
   const dispatch = useDispatch();
 
   const userInfo = useSelector((state) => state.user.info);
-  const favoriteIds = useSelector((s) => s.favorites.items); // ← live Redux favorites
+  const favoriteIds = useSelector((s) => s.favorites.items);
 
-  // Handle profile setup flow
   useProfileSetup();
 
   React.useEffect(() => {
@@ -74,7 +66,6 @@ export default function App() {
     }
   }, [isAuthenticated, user, getAccessTokenSilently, dispatch]);
 
-  // Initialize favorites when user info is available
   React.useEffect(() => {
     if (userInfo?.custentity_favorite_item !== undefined) {
       const favorites = initializeFavorites(userInfo.custentity_favorite_item);
@@ -82,8 +73,6 @@ export default function App() {
     }
   }, [userInfo?.custentity_favorite_item, dispatch]);
 
-  // ---------- FAVORITES CSV (put this inside App, after selectors) ----------
-  // Normalize whatever the backend returned on the user object
   const userInfoFavCsv =
     typeof userInfo?.custentity_favorite_item === "string"
       ? userInfo.custentity_favorite_item
@@ -91,10 +80,8 @@ export default function App() {
         ? userInfo.custentity_favorite_item.items.map((x) => x.id).join(",")
         : "";
 
-  // Prefer the *live Redux* list (reflects hearts you just clicked); fallback to userInfo
   const favoritesCsv =
     favoriteIds && favoriteIds.length ? favoriteIds.join(",") : userInfoFavCsv;
-  // -------------------------------------------------------------------------
 
   return (
     <ToastProvider>
@@ -219,10 +206,7 @@ export default function App() {
                 }
               />
 
-              {/* ---------- Promotions & Catalogues (with breadcrumb fallbacks) ---------- */}
-
-
-
+              {/* ---------- Promotions & Catalogues ---------- */}
               <Route
                 path="/promotions"
                 element={
@@ -233,7 +217,6 @@ export default function App() {
                   </LayoutWithCart>
                 }
               />
-
               <Route
                 path="/promotions/monthly-special"
                 element={
@@ -244,7 +227,6 @@ export default function App() {
                   </LayoutWithCart>
                 }
               />
-
               <Route
                 path="/promotions/jdiq"
                 element={
@@ -253,7 +235,6 @@ export default function App() {
                   </CenteredContent>
                 }
               />
-
               <Route
                 path="/promotions/gift-card"
                 element={
@@ -262,7 +243,6 @@ export default function App() {
                   </CenteredContent>
                 }
               />
-
               <Route
                 path="/catalogues"
                 element={
@@ -297,6 +277,40 @@ export default function App() {
                 }
               />
 
+              {/* ⬇️ NEW: Legal pages (no cart panel) */}
+              <Route
+                path="/privacy-policy"
+                element={
+                  <CenteredContent>
+                    <PrivacyPolicy />
+                  </CenteredContent>
+                }
+              />
+              <Route
+                path="/terms"
+                element={
+                  <CenteredContent>
+                    <TermsRefund />
+                  </CenteredContent>
+                }
+              />
+              <Route
+                path="/returns"
+                element={
+                  <CenteredContent>
+                    <ReturnProcess />
+                  </CenteredContent>
+                }
+              />
+              <Route
+                path="/pickup"
+                element={
+                  <CenteredContent>
+                    <PickupProcess />
+                  </CenteredContent>
+                }
+              />
+
               {/* ---------- Protected routes ---------- */}
               <Route element={<ProtectedRoute />}>
                 <Route
@@ -312,7 +326,6 @@ export default function App() {
                     </LayoutWithCart>
                   }
                 />
-
                 <Route
                   path="/checkout/*"
                   element={
