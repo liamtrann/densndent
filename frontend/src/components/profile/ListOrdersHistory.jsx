@@ -1,7 +1,11 @@
 import { useNavigate } from "react-router-dom";
 
 import { Paragraph, StatusBadge } from "common";
-import { formatCurrency } from "config/config";
+import {
+  formatCurrency,
+  parsePaymentStatus,
+  truncateText,
+} from "config/config";
 
 export default function ListOrdersHistory({ orders = [] }) {
   const navigate = useNavigate();
@@ -80,30 +84,145 @@ export default function ListOrdersHistory({ orders = [] }) {
                     });
                   }
                 }}
-                className="p-4 border-b last:border-b-0 flex flex-col sm:flex-row justify-between items-start sm:items-center cursor-pointer
-                           hover:bg-gray-50 focus:bg-gray-50 focus:outline-none gap-3 sm:gap-0"
+                className="p-3 border-b last:border-b-0 cursor-pointer hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors duration-200"
                 aria-label={`Open ${order.trandisplayname}`}
                 title="View order details"
               >
-                <div>
-                  <Paragraph className="font-medium">
-                    {order.trandisplayname}
-                  </Paragraph>
-                  {order.shipcarrier && (
-                    <Paragraph className="text-sm text-gray-600">
-                      Carrier:{" "}
-                      <span className="font-medium">{order.shipcarrier}</span>
-                    </Paragraph>
+                {/* Order Header */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+                  <div className="flex items-center gap-2 mb-1 sm:mb-0">
+                    <div className="bg-blue-100 rounded p-1">
+                      <svg
+                        className="w-3 h-3 text-blue-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900 text-sm">
+                        {order.trandisplayname}
+                      </h3>
+                      <p className="text-xs text-gray-500">Sales Order</p>
+                    </div>
+                  </div>
+
+                  {/* Total Price */}
+                  {order.foreigntotal && (
+                    <div className="text-right">
+                      <div className="text-lg font-bold text-gray-900">
+                        {formatCurrency(order.foreigntotal)}
+                      </div>
+                    </div>
                   )}
                 </div>
 
-                <div className="text-right sm:text-right w-full sm:w-auto flex flex-row sm:flex-col justify-between sm:justify-end items-center sm:items-end gap-2 sm:gap-1">
-                  <StatusBadge status={order.status || "Pending Fulfillment"} />
-                  {order.foreigntotal && (
-                    <Paragraph className="text-base font-semibold text-gray-800">
-                      {formatCurrency(order.foreigntotal)}
-                    </Paragraph>
+                {/* Order Details - Horizontal Layout */}
+                <div className="flex flex-wrap gap-2 text-xs">
+                  {/* Payment Status */}
+                  {order.memo && (
+                    <div className="flex items-center gap-1">
+                      <svg
+                        className="w-3 h-3 text-gray-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                        />
+                      </svg>
+                      <span className="text-gray-600 font-medium">
+                        Payment:
+                      </span>
+                      {(() => {
+                        const paymentStatus = parsePaymentStatus(order.memo);
+                        if (paymentStatus) {
+                          return (
+                            <span
+                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${paymentStatus.color} ${paymentStatus.bgColor}`}
+                            >
+                              <span className="text-xs">
+                                {paymentStatus.icon}
+                              </span>
+                              <span>{paymentStatus.displayText}</span>
+                            </span>
+                          );
+                        }
+                        return (
+                          <span className="text-gray-600">
+                            {truncateText(order.memo, 20)}
+                          </span>
+                        );
+                      })()}
+                    </div>
                   )}
+
+                  {/* Separator */}
+                  {order.memo && (order.shipcarrier || order.status) && (
+                    <span className="text-gray-300">•</span>
+                  )}
+
+                  {/* Shipping Carrier */}
+                  {order.shipcarrier && (
+                    <div className="flex items-center gap-1">
+                      <svg
+                        className="w-3 h-3 text-gray-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+                        />
+                      </svg>
+                      <span className="text-gray-600 font-medium">
+                        Carrier:
+                      </span>
+                      <span className="text-gray-700 font-medium">
+                        {order.shipcarrier}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Separator */}
+                  {order.shipcarrier && order.status && (
+                    <span className="text-gray-300">•</span>
+                  )}
+
+                  {/* Order Status */}
+                  <div className="flex items-center gap-1">
+                    <svg
+                      className="w-3 h-3 text-gray-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <span className="text-gray-600 font-medium">Status:</span>
+                    <StatusBadge
+                      status={order.status || "Pending Fulfillment"}
+                    />
+                  </div>
                 </div>
               </div>
             ))}

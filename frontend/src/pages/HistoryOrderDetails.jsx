@@ -15,6 +15,8 @@ import {
 import {
   computeLinesSubtotal,
   computeOrderTotalFromSummary,
+  parsePaymentStatus,
+  truncateText,
 } from "config/config";
 
 import OrderItemsTable from "../common/order/OrderItemsTable";
@@ -54,6 +56,29 @@ export default function OrderDetails() {
       ),
     },
     { label: "Carrier", value: summary.shipcarrier || "—" },
+    {
+      label: "Payment",
+      value: summary.memo
+        ? (() => {
+            const paymentStatus = parsePaymentStatus(summary.memo);
+            if (paymentStatus) {
+              return (
+                <span
+                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${paymentStatus.color} ${paymentStatus.bgColor} border`}
+                >
+                  <span className="text-base">{paymentStatus.icon}</span>
+                  <span>{paymentStatus.displayText}</span>
+                </span>
+              );
+            }
+            return (
+              <span className="text-gray-800">
+                {truncateText(summary.memo, 30)}
+              </span>
+            );
+          })()
+        : "—",
+    },
   ];
 
   return (

@@ -161,10 +161,79 @@ function formatPrice(price) {
   }
 
   // Convert to number, format to 2 decimal places, and add comma separators
-  return Number(price).toLocaleString('en-US', {
+  return Number(price).toLocaleString("en-US", {
     minimumFractionDigits: 2,
-    maximumFractionDigits: 2
+    maximumFractionDigits: 2,
   });
+}
+
+// Truncate text to specified length and add ellipsis
+function truncateText(text, maxLength = 30) {
+  if (!text) return "";
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength) + "...";
+}
+
+// Parse payment status from memo text and return formatted status
+function parsePaymentStatus(memo) {
+  if (!memo) return null;
+
+  const upperMemo = memo.toUpperCase();
+
+  // Define payment status patterns with their display info
+  const statusPatterns = [
+    {
+      keywords: ["SUCCESSFUL", "SUCCESS", "COMPLETED", "PAID"],
+      status: "SUCCESSFUL",
+      color: "text-green-600",
+      bgColor: "bg-green-50",
+      icon: "✓",
+    },
+    {
+      keywords: ["PENDING", "PROCESSING", "IN PROGRESS"],
+      status: "PENDING",
+      color: "text-yellow-600",
+      bgColor: "bg-yellow-50",
+      icon: "⏳",
+    },
+    {
+      keywords: ["FAILED", "FAILURE", "ERROR", "DECLINED"],
+      status: "FAILED",
+      color: "text-red-600",
+      bgColor: "bg-red-50",
+      icon: "✗",
+    },
+    {
+      keywords: ["CANCELED", "CANCELLED", "REFUNDED"],
+      status: "CANCELED",
+      color: "text-gray-600",
+      bgColor: "bg-gray-50",
+      icon: "⊘",
+    },
+    {
+      keywords: ["UNKNOWN", "UNCLEAR", "UNDEFINED"],
+      status: "UNKNOWN",
+      color: "text-gray-500",
+      bgColor: "bg-gray-50",
+      icon: "?",
+    },
+  ];
+
+  // Find matching status
+  for (const pattern of statusPatterns) {
+    if (pattern.keywords.some((keyword) => upperMemo.includes(keyword))) {
+      return {
+        status: pattern.status,
+        color: pattern.color,
+        bgColor: pattern.bgColor,
+        icon: pattern.icon,
+        displayText: pattern.status,
+      };
+    }
+  }
+
+  // If no pattern matches, return null to show original text
+  return null;
 }
 
 // Format price with currency symbol
@@ -948,26 +1017,20 @@ export async function resolveProductIdByNameOrId(maybeId) {
   return null;
 }
 
-
-
-
-
-
-
-
-
 // ─────────────────────────────────────────────────────────────
 // Preferred Delivery Days — single source of truth
 // ─────────────────────────────────────────────────────────────
 export const DOW_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 export const jsIdxFromMonIdx = (monIdx) => (monIdx + 1) % 7; // Mon1..Sun7 -> JS Sun0..Sat6
-export const monIdxFromJsIdx = (jsIdx) => (jsIdx + 6) % 7;   // JS Sun0..Sat6 -> Mon1..Sun7
+export const monIdxFromJsIdx = (jsIdx) => (jsIdx + 6) % 7; // JS Sun0..Sat6 -> Mon1..Sun7
 
 export function formatDeliveryDays(dayNumbers) {
   const nums = Array.isArray(dayNumbers) ? dayNumbers : [];
   const cleaned = Array.from(
-    new Set(nums.map(Number).filter((n) => Number.isFinite(n) && n >= 1 && n <= 7))
+    new Set(
+      nums.map(Number).filter((n) => Number.isFinite(n) && n >= 1 && n <= 7)
+    )
   ).sort((a, b) => a - b);
   if (cleaned.length === 0) return "No preferences set";
   return cleaned.map((n) => DOW_LABELS[n - 1]).join(", ");
@@ -978,24 +1041,36 @@ export function parsePreferredDays(value) {
   const parts = Array.isArray(value)
     ? value
     : typeof value === "string"
-    ? value.split(/[,\s]+/)
-    : [value];
+      ? value.split(/[,\s]+/)
+      : [value];
   return Array.from(
-    new Set(parts.map((s) => parseInt(s, 10)).filter((n) => Number.isFinite(n) && n >= 1 && n <= 7))
+    new Set(
+      parts
+        .map((s) => parseInt(s, 10))
+        .filter((n) => Number.isFinite(n) && n >= 1 && n <= 7)
+    )
   ).sort((a, b) => a - b);
 }
 
 export function serializePreferredDays(arr) {
   if (!Array.isArray(arr) || arr.length === 0) return "";
   const cleaned = Array.from(
-    new Set(arr.map((n) => parseInt(n, 10)).filter((n) => Number.isFinite(n) && n >= 1 && n <= 7))
+    new Set(
+      arr
+        .map((n) => parseInt(n, 10))
+        .filter((n) => Number.isFinite(n) && n >= 1 && n <= 7)
+    )
   ).sort((a, b) => a - b);
   return cleaned.join(", ");
 }
 
 export const nextDateForWeekdayFrom = (baseDate, monIdx) => {
   const jsTarget = jsIdxFromMonIdx(monIdx);
-  const start = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate());
+  const start = new Date(
+    baseDate.getFullYear(),
+    baseDate.getMonth(),
+    baseDate.getDate()
+  );
   const diff = (jsTarget - start.getDay() + 7) % 7;
   const result = new Date(start);
   result.setDate(start.getDate() + diff);
@@ -1045,8 +1120,7 @@ export function preferredDaysTextFromSources({
   storageKey = "preferredDeliveryDays",
 } = {}) {
   const rawBackend = normalizePrefToString(
-    userInfo?.prefer_delivery ??
-    customer?.prefer_delivery
+    userInfo?.prefer_delivery ?? customer?.prefer_delivery
   );
 
   const rawLocal =
@@ -1064,17 +1138,13 @@ export function preferredDaysTextFromSources({
   return "No preferences set";
 }
 
-
-
-
-
-
-
 export {
   extractBuyGet,
   getMatrixInfo,
   formatPrice,
   formatCurrency,
+  truncateText,
+  parsePaymentStatus,
   calculateTotalPrice,
   calculateTotalCurrency,
   calculateOrderTotal,
