@@ -1,21 +1,16 @@
-//ProductInListGrid.jsx
+// src/components/product/ProductInListGrid.jsx
 import { FiShoppingCart, FiEye } from "react-icons/fi";
-import { useSelector } from "react-redux";
-
 import {
   ProductImage,
+  Paragraph,
   InputField,
   DeliveryEstimate,
   Button,
   FavoriteButton,
-  QuantityControls,
 } from "common";
 import { FlexibleModal } from "components/layout";
-import { formatCurrency } from "config/config";
-
 import ProductDetail from "../../pages/ProductDetail";
-
-import { CURRENT_IN_STOCK } from "@/constants/constant";
+import { CURRENT_IN_STOCK, OUT_OF_STOCK } from "@/constants/constant";
 
 export default function ProductInListGrid({
   product,
@@ -30,7 +25,7 @@ export default function ProductInListGrid({
   setShowQuickLook,
 }) {
   const { id, itemid, file_url, price, totalquantityonhand } = product;
-  const inStock = Number(totalquantityonhand) > 0;
+  const inStock = totalquantityonhand && totalquantityonhand > 0;
 
   return (
     <>
@@ -38,16 +33,13 @@ export default function ProductInListGrid({
         className="product-card border p-4 rounded shadow hover:shadow-md transition flex flex-col h-full group relative cursor-pointer"
         onClick={handleNavigate}
       >
-        {/* single Redux-powered heart */}
         <div className="absolute top-2 right-2 z-20">
           <FavoriteButton itemId={id} />
         </div>
 
-        {/* Light grey hover overlay */}
         <div className="absolute inset-0 bg-gray-200 opacity-0 group-hover:opacity-20 transition-opacity duration-200 rounded pointer-events-none" />
         <div className="relative group/image">
           <ProductImage src={file_url} />
-          {/* Quick Look Button - Centered overlay on image hover */}
           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded">
             <Button
               onClick={(e) => {
@@ -92,19 +84,23 @@ export default function ProductInListGrid({
           {product.promotioncode_id && product.fixedprice ? (
             <div className="space-y-1">
               <div className="text-gray-500 line-through text-xs">
-                {formatCurrency(price)}
+                ${Math.floor(price)}.{(price % 1).toFixed(2).slice(2)}
               </div>
               <div className="text-red-600 font-semibold text-xl">
-                {formatCurrency(product.fixedprice)}
+                ${Math.floor(product.fixedprice)}.
+                {(product.fixedprice % 1).toFixed(2).slice(2)}
               </div>
               <div className="text-green-600 text-xs">
-                Save {formatCurrency(price - product.fixedprice)}
+                Save ${(price - product.fixedprice).toFixed(2)}
               </div>
             </div>
           ) : (
             <div>
               <span className="text-xl font-bold text-gray-800">
-                {formatCurrency(price)}
+                ${Math.floor(price)}
+              </span>
+              <span className="text-sm font-semibold text-gray-600 align-top">
+                .{(price % 1).toFixed(2).slice(2)}
               </span>
             </div>
           )}
@@ -116,45 +112,70 @@ export default function ProductInListGrid({
               <Paragraph className="text-smiles-blue font-semibold">
                 {CURRENT_IN_STOCK}
               </Paragraph>
-              <DeliveryEstimate inStock={true} size="small" />
+              <DeliveryEstimate
+                inStock={true}
+                size="small"
+                className="inline-block rounded px-2 py-1 text-xs font-medium bg-primary-blue text-white"
+              />
             </div>
           ) : (
             <div className="mb-2">
               <Paragraph className="text-smiles-orange font-semibold">
                 {OUT_OF_STOCK}
               </Paragraph>
-              <DeliveryEstimate inStock={false} size="small" />
+              <DeliveryEstimate
+                inStock={false}
+                size="small"
+                className="inline-block rounded px-2 py-1 text-xs font-medium bg-orange-500 text-white"
+              />
             </div>
           )}
         </div>
 
         <div className="flex justify-between items-center mt-auto gap-2">
-          <div onClick={(e) => e.stopPropagation()}>
-            <QuantityControls
-              quantity={quantity}
-              onDecrement={decrement}
-              onIncrement={increment}
-              min={1}
-              max={999}
-            />
-          </div>
-
-          <div className="relative">
-            <FiShoppingCart
-              size={30}
-              className="text-primary-blue hover:text-smiles-blue hover:scale-150 cursor-pointer transition-all duration-200"
+          <div
+            className="flex items-center border rounded overflow-hidden h-9"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
               onClick={(e) => {
                 e.stopPropagation();
-                handleAddToCart();
+                decrement();
               }}
-              aria-label="Add to cart"
+              className="px-2 h-9 text-sm hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              disabled={Number(quantity) <= 1}
+            >
+              –
+            </button>
+            <InputField
+              type="number"
+              min="1"
+              max={999}
+              value={quantity}
+              onChange={handleQuantityChange}
+              onClick={(e) => e.stopPropagation()}
+              className="w-12 h-9 text-center text-sm border-0 focus:ring-1 focus:ring-blue-500"
             />
-            {cartQuantity > 0 && (
-              <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center min-w-[1.25rem]">
-                {cartQuantity > 99 ? "99+" : cartQuantity}
-              </div>
-            )}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                increment();
+              }}
+              className="px-2 h-9 text-sm hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+            >
+              +
+            </button>
           </div>
+
+          <FiShoppingCart
+            size={30}
+            className="text-primary-blue hover:text-smiles-blue hover:scale-150 cursor-pointer transition-all duration-200"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleAddToCart();
+            }}
+            aria-label="Add to cart"
+          />
         </div>
       </div>
 

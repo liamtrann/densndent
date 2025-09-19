@@ -1,19 +1,15 @@
 // src/components/product/ProductInListRow.jsx
 import { FiEye, FiShoppingCart } from "react-icons/fi";
-import { useSelector } from "react-redux";
-
 import {
   Button,
   ProductImage,
+  InputField,
   DeliveryEstimate,
   FavoriteButton,
-  QuantityControls,
 } from "common";
 import { FlexibleModal } from "components/layout";
 import { formatCurrency } from "config/config";
-
 import ProductDetail from "../../pages/ProductDetail";
-
 import { CURRENT_IN_STOCK, OUT_OF_STOCK } from "@/constants/constant";
 
 /** One product per row with responsive (mobile vs desktop) layouts */
@@ -31,21 +27,48 @@ export default function ProductInListRow({
   handleQuickLook,
   handleCloseQuickLook,
 }) {
-  // Get cart items from Redux store (must be before early return)
-  const cartItems = useSelector((state) => state.cart.items || []);
-
-  // Early return if no product
   if (!product) return null;
 
   const QtyControl = () => (
-    <div onClick={(e) => e.stopPropagation()}>
-      <QuantityControls
-        quantity={quantity}
-        onDecrement={decrement}
-        onIncrement={increment}
-        min={1}
-        max={999}
+    <div
+      className="inline-flex items-stretch h-8 rounded border overflow-hidden"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <button
+        className="inline-flex items-center justify-center w-8 h-8 text-sm hover:bg-gray-50 disabled:opacity-50"
+        onClick={(e) => {
+          e.stopPropagation();
+          decrement();
+        }}
+        disabled={quantity <= 1}
+        aria-label="Decrease quantity"
+      >
+        –
+      </button>
+
+      <InputField
+        type="number"
+        min="1"
+        value={quantity}
+        onChange={(e) => handleQuantityChange(e.target.value)}
+        onClick={(e) => e.stopPropagation()}
+        wrapperClassName="mb-0"
+        variant="unstyled"
+        size="sm"
+        align="center"
+        className="h-8 w-14 px-2 appearance-none leading-none border-0 focus:ring-0 focus:outline-none text-sm"
       />
+
+      <button
+        className="inline-flex items-center justify-center w-8 h-8 text-sm hover:bg-gray-50"
+        onClick={(e) => {
+          e.stopPropagation();
+          increment();
+        }}
+        aria-label="Increase quantity"
+      >
+        +
+      </button>
     </div>
   );
 
@@ -72,7 +95,7 @@ export default function ProductInListRow({
                 <DeliveryEstimate
                   inStock={true}
                   size="small"
-                  className="rounded"
+                  className="inline-block rounded px-2 py-1 text-xs font-medium bg-primary-blue text-white"
                 />
               </div>
             ) : (
@@ -83,7 +106,7 @@ export default function ProductInListRow({
                 <DeliveryEstimate
                   inStock={false}
                   size="small"
-                  className="rounded"
+                  className="inline-block rounded px-2 py-1 text-xs font-medium bg-orange-500 text-white"
                 />
               </div>
             )}
@@ -115,32 +138,29 @@ export default function ProductInListRow({
           </div>
         );
 
-        // const ShortDesc = product.storedetaileddescription ? (
-        //   <div
-        //     className="mt-1 text-sm text-gray-600 line-clamp-2"
-        //     title={product.storedetaileddescription.replace(/<[^>]*>/g, "")}
-        //     dangerouslySetInnerHTML={{
-        //       __html: product.storedetaileddescription,
-        //     }}
-        //   />
-        // ) : product.displayname ? (
-        //   <div className="mt-1 text-sm text-gray-600 line-clamp-2">
-        //     {product.displayname}
-        //   </div>
-        // ) : null;
+        const ShortDesc = product.storedetaileddescription ? (
+          <div
+            className="mt-1 text-sm text-gray-600 line-clamp-2"
+            title={product.storedetaileddescription.replace(/<[^>]*>/g, "")}
+            dangerouslySetInnerHTML={{
+              __html: product.storedetaileddescription,
+            }}
+          />
+        ) : product.displayname ? (
+          <div className="mt-1 text-sm text-gray-600 line-clamp-2">
+            {product.displayname}
+          </div>
+        ) : null;
 
         const Price =
           product.promotioncode_id && product.fixedprice ? (
             <div className="space-y-1">
-              {/* Original price - strikethrough */}
               <div className="text-gray-500 line-through text-xs">
                 {product.price != null ? formatCurrency(product.price) : "—"}
               </div>
-              {/* Promotional price */}
               <div className="text-red-600 font-semibold text-lg md:text-xl">
                 {formatCurrency(product.fixedprice)}
               </div>
-              {/* Savings amount */}
               <div className="text-green-600 text-xs">
                 Save {formatCurrency(product.price - product.fixedprice)}
               </div>
@@ -153,20 +173,16 @@ export default function ProductInListRow({
 
         return (
           <>
-            {/* ---------- Mobile layout (stacked) ---------- */}
+            {/* ---------- Mobile layout ---------- */}
             <div
               className="md:hidden cursor-pointer relative group/mobile"
               onClick={() => handleNavigate()}
             >
-              {/* Favorite Button - Mobile (Redux) */}
               <div className="absolute top-2 right-2 z-20">
                 <FavoriteButton itemId={product.id} size={16} />
               </div>
-
-              {/* Light grey hover overlay for mobile */}
               <div className="absolute inset-0 bg-gray-200 opacity-0 group-hover/mobile:opacity-20 transition-opacity duration-200 rounded pointer-events-none"></div>
               <div className="grid grid-cols-[5rem,1fr] gap-3">
-                {/* image */}
                 <div className="col-span-1 relative group">
                   <ProductImage
                     src={product.file_url}
@@ -175,14 +191,12 @@ export default function ProductInListRow({
                   />
                 </div>
 
-                {/* name + badges */}
                 <div className="col-span-1">
                   {Name}
                   {Badges}
-                  {/* {ShortDesc} */}
+                  {ShortDesc}
                 </div>
 
-                {/* price + qty */}
                 <div className="col-span-2 mt-1 flex items-center justify-between">
                   {Price}
                   <div className="flex flex-col items-end gap-1">
@@ -195,9 +209,7 @@ export default function ProductInListRow({
                   </div>
                 </div>
 
-                {/* buttons */}
                 <div className="col-span-2 flex justify-end items-center gap-2">
-                  {/* Quick Look button - appears on hover */}
                   <Button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -207,85 +219,8 @@ export default function ProductInListRow({
                   >
                     <FiEye size={12} />
                   </Button>
-                  <div className="relative">
-                    <FiShoppingCart
-                      size={30}
-                      className="text-primary-blue hover:text-smiles-blue hover:scale-150 cursor-pointer transition-all duration-200"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleAddToCart();
-                      }}
-                      aria-label={`Add ${actualQuantity} to cart`}
-                      title={
-                        actualQuantity > quantity
-                          ? `Add ${actualQuantity} items (includes bonus!)`
-                          : `Add ${quantity} to cart`
-                      }
-                    />
-                    {cartQuantity > 0 && (
-                      <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center min-w-[1.25rem]">
-                        {cartQuantity > 99 ? "99+" : cartQuantity}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* ---------- Desktop / Tablet layout ---------- */}
-            <div
-              className="hidden md:flex md:flex-row items-center gap-4 cursor-pointer relative group/desktop"
-              onClick={() => handleNavigate()}
-            >
-              {/* Light grey hover overlay for desktop */}
-              <div className="absolute inset-0 bg-gray-200 opacity-0 group-hover/desktop:opacity-20 transition-opacity duration-200 rounded pointer-events-none"></div>
-              {/* image */}
-              <div className="w-24 shrink-0 relative group">
-                <ProductImage
-                  src={product.file_url}
-                  alt={product.itemid || product.displayname}
-                  className="w-24 h-24 object-contain border rounded"
-                />
-              </div>
-
-              {/* name + badges + optional desc */}
-              <div className="flex-1 min-w-0">
-                {Name}
-                {Badges}
-                {/* {ShortDesc} */}
-              </div>
-
-              {/* price */}
-              <div className="md:w-32">{Price}</div>
-
-              {/* qty */}
-              <div className="flex flex-col items-end gap-1">
-                <QtyControl />
-                {actualQuantity > quantity && (
-                  <span className="text-xs text-green-600 font-medium">
-                    = {actualQuantity} total
-                  </span>
-                )}
-              </div>
-
-              {/* buttons */}
-              <div className="md:w-32 flex justify-end items-center gap-2">
-                {/* Favorite Button - Desktop (Redux) */}
-                <FavoriteButton itemId={product.id} size={18} />
-
-                {/* Quick Look button - appears on hover */}
-                <Button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleQuickLook(product.id);
-                  }}
-                  className="opacity-0 group-hover/desktop:opacity-100 transition-opacity duration-200 h-8 px-2 text-xs bg-gray-100 text-white-700 border border-gray-300 hover:bg-smiles-blue rounded flex items-center gap-1"
-                >
-                  <FiEye size={12} />
-                </Button>
-                <div className="relative">
                   <FiShoppingCart
-                    size={24}
+                    size={30}
                     className="text-primary-blue hover:text-smiles-blue hover:scale-150 cursor-pointer transition-all duration-200"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -298,19 +233,73 @@ export default function ProductInListRow({
                         : `Add ${quantity} to cart`
                     }
                   />
-                  {cartQuantity > 0 && (
-                    <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center min-w-[1.25rem]">
-                      {cartQuantity > 99 ? "99+" : cartQuantity}
-                    </div>
-                  )}
                 </div>
+              </div>
+            </div>
+
+            {/* ---------- Desktop / Tablet layout ---------- */}
+            <div
+              className="hidden md:flex md:flex-row items-center gap-4 cursor-pointer relative group/desktop"
+              onClick={() => handleNavigate()}
+            >
+              <div className="absolute inset-0 bg-gray-200 opacity-0 group-hover/desktop:opacity-20 transition-opacity duration-200 rounded pointer-events-none"></div>
+
+              <div className="w-24 shrink-0 relative group">
+                <ProductImage
+                  src={product.file_url}
+                  alt={product.itemid || product.displayname}
+                  className="w-24 h-24 object-contain border rounded"
+                />
+              </div>
+
+              <div className="flex-1 min-w-0">
+                {Name}
+                {Badges}
+                {ShortDesc}
+              </div>
+
+              <div className="md:w-32">{Price}</div>
+
+              <div className="flex flex-col items-end gap-1">
+                <QtyControl />
+                {actualQuantity > quantity && (
+                  <span className="text-xs text-green-600 font-medium">
+                    = {actualQuantity} total
+                  </span>
+                )}
+              </div>
+
+              <div className="md:w-32 flex justify-end items-center gap-2">
+                <FavoriteButton itemId={product.id} size={18} />
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleQuickLook(product.id);
+                  }}
+                  className="opacity-0 group-hover/desktop:opacity-100 transition-opacity duration-200 h-8 px-2 text-xs bg-gray-100 text-white-700 border border-gray-300 hover:bg-smiles-blue rounded flex items-center gap-1"
+                >
+                  <FiEye size={12} />
+                </Button>
+                <FiShoppingCart
+                  size={24}
+                  className="text-primary-blue hover:text-smiles-blue hover:scale-150 cursor-pointer transition-all duration-200"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleAddToCart();
+                  }}
+                  aria-label={`Add ${actualQuantity} to cart`}
+                  title={
+                    actualQuantity > quantity
+                      ? `Add ${actualQuantity} items (includes bonus!)`
+                      : `Add ${quantity} to cart`
+                  }
+                />
               </div>
             </div>
           </>
         );
       })()}
 
-      {/* Quick Look Modal */}
       {showQuickLook && quickLookProductId && (
         <FlexibleModal title="Quick Look" onClose={handleCloseQuickLook}>
           <ProductDetail productId={quickLookProductId} isModal={true} />
