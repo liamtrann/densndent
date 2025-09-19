@@ -5,7 +5,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
 
 import { addToCart } from "store/slices/cartSlice";
-import { addToFavorites, removeFromFavorites } from "store/slices/favoritesSlice";
+import {
+  addToFavorites,
+  removeFromFavorites,
+} from "store/slices/favoritesSlice";
 
 import api from "api/api";
 import endpoint from "api/endpoints";
@@ -111,7 +114,10 @@ export default function ProductsPage({
     const candidates = [
       query,
       query.replace(/\s*-\s*.*/, ""),
-      query.replace(/[^\w\s]/g, " ").replace(/\s+/g, " ").trim(),
+      query
+        .replace(/[^\w\s]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim(),
     ];
 
     for (const q of candidates) {
@@ -120,7 +126,9 @@ export default function ProductsPage({
           endpoint.POST_GET_ITEMS_BY_NAME({ limit: 1 }),
           { name: q }
         );
-        const arr = Array.isArray(res.data) ? res.data : res.data?.items || res.data;
+        const arr = Array.isArray(res.data)
+          ? res.data
+          : res.data?.items || res.data;
         const first = Array.isArray(arr) ? arr[0] : undefined;
         if (first?.id) return String(first.id);
       } catch {
@@ -154,13 +162,16 @@ export default function ProductsPage({
         setIsSubscribed(false);
         setSubInterval("1");
       } catch (err) {
-        if (!abort) setError(err?.response?.data?.error || "Failed to load product.");
+        if (!abort)
+          setError(err?.response?.data?.error || "Failed to load product.");
       } finally {
         if (!abort) setLoading(false);
       }
     }
     fetchProduct();
-    return () => { abort = true; };
+    return () => {
+      abort = true;
+    };
   }, [effectiveRawId, navigate, dispatch, isModal]);
 
   // variants
@@ -223,7 +234,8 @@ export default function ProductsPage({
     }
   };
 
-  const { matrixType, options: matrixOptionsList } = getMatrixInfo(matrixOptions);
+  const { matrixType, options: matrixOptionsList } =
+    getMatrixInfo(matrixOptions);
 
   if (loading) return <Loading text="Loading product..." />;
   if (error) return <ErrorMessage message={error} />;
@@ -249,24 +261,31 @@ export default function ProductsPage({
         {/* Right: Content */}
         <div>
           {/* Title (removed hearts here; we’re putting them near Quantity as requested) */}
-          <h2 className={`${isModal ? "text-xl" : "text-2xl"} font-bold text-gray-800 mb-2`}>
+          <h2
+            className={`${isModal ? "text-xl" : "text-2xl"} font-bold text-gray-800 mb-2`}
+          >
             {product.itemid}
           </h2>
 
           {/* Stock status */}
           {Number(product.totalquantityonhand) > 0 ? (
             <div className="mb-2">
-              <Paragraph className="text-smiles-blue font-semibold">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded border border-blue-200 bg-blue-50 text-blue-700 text-sm font-medium">
                 {CURRENT_IN_STOCK}: {product.totalquantityonhand}
-              </Paragraph>
-              <DeliveryEstimate inStock={true} size="default" />
+              </span>
+              <DeliveryEstimate
+                inStock={true}
+                size="default"
+                className="mt-1 rounded"
+              />
             </div>
           ) : (
             <div className="mb-2">
-              <Paragraph className="text-smiles-orange font-semibold">
-                {OUT_OF_STOCK}
-              </Paragraph>
-              <DeliveryEstimate inStock={false} size="default" />
+              <DeliveryEstimate
+                inStock={false}
+                size="default"
+                className="mt-1 rounded"
+              />
             </div>
           )}
 
@@ -300,7 +319,10 @@ export default function ProductsPage({
 
           {/* Description */}
           {product.storedetaileddescription && (
-            <ShowMoreHtml html={product.storedetaileddescription} maxLength={400} />
+            <ShowMoreHtml
+              html={product.storedetaileddescription}
+              maxLength={400}
+            />
           )}
           <div className="text-sm text-gray-500 mt-4">MPN: {product.mpn}</div>
 
@@ -373,7 +395,9 @@ export default function ProductsPage({
 
             {actualQuantity > quantity && (
               <div className="mt-2 text-sm">
-                <span className="text-gray-600">Selected: {quantity} items</span>
+                <span className="text-gray-600">
+                  Selected: {quantity} items
+                </span>
                 <span className="text-green-600 font-medium ml-2">
                   → Total with bonus: {actualQuantity} items
                 </span>
@@ -404,7 +428,11 @@ export default function ProductsPage({
                 <span className="font-medium">Next order:</span>{" "}
                 <span>{formatLocalDateToronto(firstDeliveryDate)}</span>
                 <span className="ml-1">
-                  ({subInterval === "1" ? "every 1 month" : `every ${subInterval} months`})
+                  (
+                  {subInterval === "1"
+                    ? "every 1 month"
+                    : `every ${subInterval} months`}
+                  )
                 </span>
               </div>
             )}

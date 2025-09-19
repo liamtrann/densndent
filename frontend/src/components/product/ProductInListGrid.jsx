@@ -1,8 +1,6 @@
-//ProductInListGrid.jsx
 import { FiShoppingCart, FiEye } from "react-icons/fi";
 import {
   ProductImage,
-  Paragraph,
   InputField,
   DeliveryEstimate,
   Button,
@@ -25,7 +23,7 @@ export default function ProductInListGrid({
   setShowQuickLook,
 }) {
   const { id, itemid, file_url, price, totalquantityonhand } = product;
-  const inStock = totalquantityonhand && totalquantityonhand > 0;
+  const inStock = Number(totalquantityonhand) > 0;
 
   return (
     <>
@@ -33,16 +31,13 @@ export default function ProductInListGrid({
         className="product-card border p-4 rounded shadow hover:shadow-md transition flex flex-col h-full group relative cursor-pointer"
         onClick={handleNavigate}
       >
-        {/* single Redux-powered heart */}
         <div className="absolute top-2 right-2 z-20">
           <FavoriteButton itemId={id} />
         </div>
 
-        {/* Light grey hover overlay */}
         <div className="absolute inset-0 bg-gray-200 opacity-0 group-hover:opacity-20 transition-opacity duration-200 rounded pointer-events-none" />
         <div className="relative group/image">
           <ProductImage src={file_url} />
-          {/* Quick Look Button - Centered overlay on image hover */}
           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded">
             <Button
               onClick={(e) => {
@@ -109,20 +104,26 @@ export default function ProductInListGrid({
           )}
         </div>
 
+        {/* >>> Boxed stock badges */}
         <div className="flex-grow">
           {inStock ? (
             <div className="mb-2">
-              <Paragraph className="text-smiles-blue font-semibold">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded border border-blue-200 bg-blue-50 text-blue-700 text-sm font-medium">
                 {CURRENT_IN_STOCK}
-              </Paragraph>
-              <DeliveryEstimate inStock={true} size="small" />
+              </span>
+              <DeliveryEstimate
+                inStock={true}
+                size="small"
+                className="mt-1 rounded"
+              />
             </div>
           ) : (
             <div className="mb-2">
-              <Paragraph className="text-smiles-orange font-semibold">
-                {OUT_OF_STOCK}
-              </Paragraph>
-              <DeliveryEstimate inStock={false} size="small" />
+              <DeliveryEstimate
+                inStock={false}
+                size="small"
+                className="mt-1 rounded"
+              />
             </div>
           )}
         </div>
