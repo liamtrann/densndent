@@ -68,11 +68,11 @@ export const URLS = {
       "	https://www.densndente.ca/site/extra%20images/brands/hager-worldwide-logo.png",
   },
   SOCIAL: {
-    FACEBOOK: "https://facebook.com",
-    INSTAGRAM: "https://instagram.com",
-    YOUTUBE: "https://youtube.com",
-    LINKEDIN: "https://linkedin.com",
-    GOOGLE_PLUS: "https://plus.google.com",
+    FACEBOOK: "https://www.facebook.com/densndentehealthcare/",
+    INSTAGRAM: "https://www.instagram.com/densndentehealthcare/",
+    YOUTUBE: "https://www.youtube.com/channel/UC9nhC6KqjCglQ_8yQD6Nf_Q",
+    LINKEDIN: "https://www.linkedin.com/company/densndentehealthcare/?originalSubdomain=ca",
+    GOOGLE_PLUS: "https://workspaceupdates.googleblog.com/2023/04/new-community-features-for-google-chat-and-an-update-currents%20.html",
   },
 };
 
