@@ -270,22 +270,17 @@ export default function ProductsPage({
           {/* Stock status */}
           {Number(product.totalquantityonhand) > 0 ? (
             <div className="mb-2">
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded border border-blue-200 bg-blue-50 text-blue-700 text-sm font-medium">
+              <Paragraph className="text-smiles-blue font-semibold">
                 {CURRENT_IN_STOCK}: {product.totalquantityonhand}
-              </span>
-              <DeliveryEstimate
-                inStock={true}
-                size="default"
-                className="mt-1 rounded"
-              />
+              </Paragraph>
+              <DeliveryEstimate inStock={true} size="default" />
             </div>
           ) : (
             <div className="mb-2">
-              <DeliveryEstimate
-                inStock={false}
-                size="default"
-                className="mt-1 rounded"
-              />
+              <Paragraph className="text-smiles-orange font-semibold">
+                {OUT_OF_STOCK}
+              </Paragraph>
+              <DeliveryEstimate inStock={false} size="default" />
             </div>
           )}
 
