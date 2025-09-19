@@ -40,8 +40,7 @@ export default function SubscriptionRow({ s, initialData, onSave, isSaving }) {
 
   const onSubmit = async (formData) => {
     await onSave(s, formData);
-    // Reset form to mark as clean after successful save
-    reset(formData);
+    reset(formData); // mark as clean after successful save
   };
 
   const ImageWrap = href
@@ -73,6 +72,7 @@ export default function SubscriptionRow({ s, initialData, onSave, isSaving }) {
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <div className="flex items-start gap-4 border rounded-md p-3">
+        {/* Left: image */}
         <ImageWrap>
           <ProductImage
             src={s.file_url}
@@ -81,11 +81,23 @@ export default function SubscriptionRow({ s, initialData, onSave, isSaving }) {
           />
         </ImageWrap>
 
+        {/* Right: content */}
         <div className="flex-1">
-          <div className="flex flex-wrap items-center gap-2">
+          {/* Header row: title (left) + Save (right) */}
+          <div className="flex items-start justify-between gap-3">
             <div className="font-semibold text-gray-800">
               <TitleWrap>{title}</TitleWrap>
             </div>
+
+            <Button
+              type="submit"
+              variant="ghost"
+              className="h-10 text-sm border border-gray-300 rounded px-5 text-gray-700 hover:bg-gray-50 ml-auto"
+              disabled={!isDirty || isSaving}
+              aria-label="Save subscription changes"
+            >
+              {isSaving ? "Saving..." : "Save"}
+            </Button>
           </div>
 
           <Paragraph className="mt-1 text-sm text-gray-600">
@@ -159,17 +171,7 @@ export default function SubscriptionRow({ s, initialData, onSave, isSaving }) {
             </div>
           </div>
 
-          {/* Single bottom Save */}
-          <div className="mt-3 flex justify-end">
-            <Button
-              type="submit"
-              variant="ghost"
-              className="h-10 text-sm w-56 border border-gray-300 rounded px-3 text-gray-700 hover:bg-gray-50"
-              disabled={!isDirty || isSaving}
-            >
-              {isSaving ? "Saving..." : "Save"}
-            </Button>
-          </div>
+          {/* (Bottom Save removed to reclaim space) */}
         </div>
       </div>
     </form>
