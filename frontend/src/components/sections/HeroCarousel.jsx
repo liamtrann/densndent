@@ -106,13 +106,13 @@ export default function HeroCarousel() {
       {/* Navigation Arrows */}
       <button
         onClick={prev}
-        className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white bg-[#005687] hover:bg-[#004D79] p-2 rounded-full z-10"
+        className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white bg-smiles-blue hover:bg-smiles-blue p-2 rounded-full z-10"
       >
         <FaChevronLeft />
       </button>
       <button
         onClick={next}
-        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white bg-[#005687] hover:bg-[#004D79] p-2 rounded-full z-10"
+        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white bg-smiles-blue hover:bg-smiles-blue p-2 rounded-full z-10"
       >
         <FaChevronRight />
       </button>

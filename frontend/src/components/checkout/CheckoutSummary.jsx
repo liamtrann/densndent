@@ -72,7 +72,7 @@ export default function CheckoutSummary({
         <h4 className="text-sm font-medium mb-2">
           Items to Ship ({cart.length})
         </h4>
-        <div className="space-y-3 text-sm">
+        <div className="space-y-3 text-sm max-h-96 overflow-y-auto border rounded p-3 bg-gray-50">
           {cart.map((item, idx) => (
             <PreviewCartItem
               key={item.id + "-" + idx}

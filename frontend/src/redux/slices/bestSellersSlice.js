@@ -1,4 +1,3 @@
-//bestSellersSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
 import endpoint from "api/endpoints";

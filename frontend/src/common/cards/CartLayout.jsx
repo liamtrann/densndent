@@ -1,7 +1,9 @@
 import React from "react";
 
-import { ProductImage } from "common";
+import { ProductImage, QuantityControls } from "common";
 import { formatDeliveryDays } from "config/config";
+
+import { OUT_OF_STOCK } from "@/constants/constant";
 
 export default function CartLayout({
   item,
@@ -20,7 +22,13 @@ export default function CartLayout({
   unitPrice,
   calculateTotalCurrency,
   formatCurrency,
+  inventoryStatus = null,
 }) {
+  // Check if item is out of stock
+  const inv = inventoryStatus?.find
+    ? inventoryStatus.find((i) => i.item === item.id)
+    : null;
+  const isOutOfStock = inv && inv.quantityavailable <= 0;
   return (
     <div
       className={`flex items-start gap-3 ${compact ? "pb-2" : "p-3"} border-b`}
@@ -63,6 +71,11 @@ export default function CartLayout({
           </div>
         )}
 
+        {/* Out of stock message */}
+        {isOutOfStock && (
+          <div className="text-red-600 text-sm mt-1 mb-1">{OUT_OF_STOCK}</div>
+        )}
+
         {!compact && (
           <div className="text-gray-600 mt-1">
             Unit price: ${Number(item.unitprice || item.price || 0).toFixed(2)}
@@ -72,19 +85,13 @@ export default function CartLayout({
         {showQuantityControls && onQuantityChange ? (
           <div className="flex items-center gap-2 mt-1">
             <span>Quantity</span>
-            <button
-              onClick={handleDecrease}
-              className="px-2 py-1 border rounded hover:bg-gray-100"
-            >
-              -
-            </button>
-            <span>{item.quantity}</span>
-            <button
-              onClick={handleIncrease}
-              className="px-2 py-1 border rounded hover:bg-gray-100"
-            >
-              +
-            </button>
+            <QuantityControls
+              quantity={item.quantity}
+              onDecrement={handleDecrease}
+              onIncrement={handleIncrease}
+              min={1}
+              max={999}
+            />
           </div>
         ) : (
           <div className="mt-1">Quantity: {item.quantity}</div>

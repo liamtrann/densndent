@@ -21,6 +21,7 @@ export { default as WeekdaySelector } from "./ui/WeekdaySelector";
 export { default as PreferDeliveryDaySelector } from "./ui/PreferDeliveryDaySelector";
 export { default as PurchaseOption } from "./ui/PurchaseOption";
 export { default as FavoriteButton } from "../components/common/FavoriteButton";
+export { default as QuantityControls } from "./components/QuantityControls";
 
 // Product components
 export { default as ProductImage } from "./product/ProductImage";

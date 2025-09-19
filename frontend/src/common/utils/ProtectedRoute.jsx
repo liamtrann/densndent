@@ -19,7 +19,7 @@ export default function ProtectedRoute() {
           >
             login to your account
           </span>{" "}
-          to access this page and complete your purchase.
+          to access this page!
         </div>
         <div className="text-gray-500 text-sm">
           Create an account or login to save your information, track orders, and

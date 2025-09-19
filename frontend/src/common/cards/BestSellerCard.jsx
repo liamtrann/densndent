@@ -1,4 +1,3 @@
-//BestSellerCard.jsx
 import React from "react";
 import ProductImage from "../product/ProductImage";
 

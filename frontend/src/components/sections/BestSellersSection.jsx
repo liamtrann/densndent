@@ -1,4 +1,3 @@
-//BestSellersSection.jsx
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchBestSellers } from "store/slices/bestSellersSlice";

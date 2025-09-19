@@ -1,5 +1,6 @@
 // src/pages/CartPage.jsx
 import React, { useState, useEffect, useMemo } from "react";
+import { FiGrid, FiList } from "react-icons/fi";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import {
@@ -10,9 +11,8 @@ import {
 } from "store/slices/cartSlice";
 
 // ⬇️ NEW: icons for the toggle
-import { FiGrid, FiList } from "react-icons/fi";
 
-import { formatPrice, formatCurrency } from "config/config";
+import { formatCurrency } from "config/config";
 
 import { delayCall } from "../api/util";
 import { EmptyCart, ErrorMessage, Loading, Dropdown } from "../common";
@@ -65,7 +65,7 @@ export default function CartPage() {
   const subtotalAmount = useSelector((state) =>
     selectCartSubtotalWithDiscounts(state, cart)
   );
-  const subtotal = formatPrice(subtotalAmount);
+  const subtotal = subtotalAmount; // Keep as number for CartOrderSummary
   const totalQuantity = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   const filteredCart = useMemo(() => {
@@ -205,7 +205,7 @@ export default function CartPage() {
             {filteredCart.length > 0 ? (
               view === "grid" ? (
                 // GRID: same cards, just placed in a grid
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
                   {filteredCart.map((item) => {
                     const key =
                       item.id + (item.flavor ? `-${item.flavor}` : "");
@@ -213,7 +213,7 @@ export default function CartPage() {
                       <ListProductInCart
                         key={`${key}-grid`}
                         item={item}
-                        listType="card" // card layout inside grid
+                        listType="card"
                         inventoryStatus={inventoryStatus}
                         onQuantityChange={handleQuantityChange}
                         onItemClick={handleNavigateToProduct}
@@ -243,6 +243,7 @@ export default function CartPage() {
                       onIntervalChange={changeInterval}
                       onRemoveClick={handleRemoveClick}
                       formatLocalDateToronto={formatLocalDateToronto}
+                      listType="table"
                     />
                   );
                 })

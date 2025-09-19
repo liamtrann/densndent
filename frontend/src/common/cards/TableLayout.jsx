@@ -1,7 +1,9 @@
 import React from "react";
 
-import { ProductImage } from "common";
+import { ProductImage, QuantityControls } from "common";
 import { formatDeliveryDays } from "config/config";
+
+import { OUT_OF_STOCK } from "@/constants/constant";
 
 export default function TableLayout({
   item,
@@ -17,7 +19,13 @@ export default function TableLayout({
   unitPrice,
   calculateTotalCurrency,
   formatCurrency,
+  inventoryStatus = null,
 }) {
+  // Check if item is out of stock
+  const inv = inventoryStatus?.find
+    ? inventoryStatus.find((i) => i.item === item.id)
+    : null;
+  const isOutOfStock = inv && inv.quantityavailable <= 0;
   return (
     <>
       {/* Mobile Layout - Stack vertically */}
@@ -49,25 +57,30 @@ export default function TableLayout({
             {/* Product badges/tags */}
             <div className="flex flex-wrap gap-1 mb-2">
               {item.stockdescription && (
-                <span className="text-xs text-blue-600 font-medium bg-blue-50 px-1.5 py-0.5 rounded">
+                <span className="text-xs text-blue-600 font-medium bg-blue-50 px-1 py-0.5 rounded">
                   {item.stockdescription}
                 </span>
               )}
 
               {item.subscriptionEnabled && (
-                <span className="text-xs text-white font-medium bg-smiles-gentleBlue px-1.5 py-0.5 rounded">
+                <span className="text-xs text-white font-medium bg-smiles-gentleBlue px-1 py-0.5 rounded">
                   Every {item.subscriptionInterval} {item.subscriptionUnit}
                 </span>
               )}
 
               {item.subscriptionEnabled &&
                 item.subscriptionPreferredDeliveryDays && (
-                  <span className="text-xs text-orange-700 font-medium bg-orange-50 px-1.5 py-0.5 rounded">
+                  <span className="text-xs text-orange-700 font-medium bg-orange-50 px-1 py-0.5 rounded">
                     Prefer:{" "}
                     {formatDeliveryDays(item.subscriptionPreferredDeliveryDays)}
                   </span>
                 )}
             </div>
+
+            {/* Out of stock message */}
+            {isOutOfStock && (
+              <div className="text-red-600 text-xs mb-2">{OUT_OF_STOCK}</div>
+            )}
 
             {/* Mobile Price and Quantity Row */}
             <div className="flex items-center justify-between">
@@ -82,7 +95,7 @@ export default function TableLayout({
                         <div className="text-gray-500 line-through text-xs">
                           {calculateTotalCurrency(unitPrice, item.quantity)}
                         </div>
-                        <div className="text-red-600 font-semibold text-sm">
+                        <div className="text-red-600 font-semibold text-xs">
                           {formatCurrency(finalPrice)}
                         </div>
                         <div className="text-green-600 text-xs">
@@ -90,7 +103,7 @@ export default function TableLayout({
                         </div>
                       </div>
                     ) : (
-                      <div className="text-gray-800 font-semibold text-sm">
+                      <div className="text-gray-800 font-semibold text-xs">
                         {formatCurrency(finalPrice)}
                       </div>
                     )}
@@ -101,25 +114,15 @@ export default function TableLayout({
               {/* Mobile Quantity Controls */}
               <div className="flex items-center">
                 {showQuantityControls && onQuantityChange ? (
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={handleDecrease}
-                      className="w-8 h-8 flex items-center justify-center border rounded hover:bg-gray-100 text-sm"
-                    >
-                      -
-                    </button>
-                    <span className="w-8 text-center text-sm font-medium">
-                      {item.quantity}
-                    </span>
-                    <button
-                      onClick={handleIncrease}
-                      className="w-8 h-8 flex items-center justify-center border rounded hover:bg-gray-100 text-sm"
-                    >
-                      +
-                    </button>
-                  </div>
+                  <QuantityControls
+                    quantity={item.quantity}
+                    onDecrement={handleDecrease}
+                    onIncrement={handleIncrease}
+                    min={1}
+                    max={999}
+                  />
                 ) : (
-                  <span className="text-sm font-medium">
+                  <span className="text-xs font-medium">
                     Qty: {item.quantity}
                   </span>
                 )}
@@ -157,30 +160,35 @@ export default function TableLayout({
           {/* Product badges/tags */}
           <div className="flex flex-wrap gap-1">
             {item.stockdescription && (
-              <span className="text-xs text-blue-600 font-medium bg-blue-50 px-1.5 py-0.5 rounded">
+              <span className="text-xs text-blue-600 font-medium bg-blue-50 px-1 py-0.5 rounded">
                 {item.stockdescription}
               </span>
             )}
 
             {item.subscriptionEnabled && (
-              <span className="text-xs text-white font-medium bg-smiles-gentleBlue px-1.5 py-0.5 rounded">
+              <span className="text-xs text-white font-medium bg-smiles-gentleBlue px-1 py-0.5 rounded">
                 Every {item.subscriptionInterval} {item.subscriptionUnit}
               </span>
             )}
 
             {item.subscriptionEnabled &&
               item.subscriptionPreferredDeliveryDays && (
-                <span className="text-xs text-orange-700 font-medium bg-orange-50 px-1.5 py-0.5 rounded">
+                <span className="text-xs text-orange-700 font-medium bg-orange-50 px-1 py-0.5 rounded">
                   Prefer:{" "}
                   {formatDeliveryDays(item.subscriptionPreferredDeliveryDays)}
                 </span>
               )}
           </div>
+
+          {/* Out of stock message */}
+          {isOutOfStock && (
+            <div className="text-red-600 text-xs mt-1">{OUT_OF_STOCK}</div>
+          )}
         </div>
 
         {/* Unit Price Column - 2 units */}
         <div className="col-span-2 text-center">
-          <div className="text-sm lg:text-base font-medium">
+          <div className="text-xs font-medium">
             ${Number(item.unitprice || item.price || 0).toFixed(2)}
           </div>
           <div className="text-xs text-gray-500">per unit</div>
@@ -189,27 +197,17 @@ export default function TableLayout({
         {/* Quantity Column - 2 units */}
         <div className="col-span-2 text-center">
           {showQuantityControls && onQuantityChange ? (
-            <div className="flex items-center justify-center gap-1">
-              <button
-                onClick={handleDecrease}
-                className="w-7 h-7 lg:w-8 lg:h-8 flex items-center justify-center border rounded hover:bg-gray-100 text-sm"
-              >
-                -
-              </button>
-              <span className="w-8 lg:w-10 text-center text-sm lg:text-base font-medium">
-                {item.quantity}
-              </span>
-              <button
-                onClick={handleIncrease}
-                className="w-7 h-7 lg:w-8 lg:h-8 flex items-center justify-center border rounded hover:bg-gray-100 text-sm"
-              >
-                +
-              </button>
+            <div className="flex items-center justify-center">
+              <QuantityControls
+                quantity={item.quantity}
+                onDecrement={handleDecrease}
+                onIncrement={handleIncrease}
+                min={1}
+                max={999}
+              />
             </div>
           ) : (
-            <span className="text-sm lg:text-base font-medium">
-              {item.quantity}
-            </span>
+            <span className="text-xs font-medium">{item.quantity}</span>
           )}
         </div>
 
@@ -221,7 +219,7 @@ export default function TableLayout({
                 <div className="text-gray-500 line-through text-xs">
                   {calculateTotalCurrency(unitPrice, item.quantity)}
                 </div>
-                <div className="text-red-600 font-semibold text-sm lg:text-base">
+                <div className="text-red-600 font-semibold text-xs">
                   {formatCurrency(finalPrice)}
                 </div>
                 <div className="text-green-600 text-xs">
@@ -229,7 +227,7 @@ export default function TableLayout({
                 </div>
               </div>
             ) : (
-              <div className="text-gray-800 font-semibold text-sm lg:text-base">
+              <div className="text-gray-800 font-semibold text-xs">
                 {formatCurrency(finalPrice)}
               </div>
             )}
