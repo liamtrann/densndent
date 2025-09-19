@@ -16,7 +16,6 @@ import {
   computeLinesSubtotal,
   computeOrderTotalFromSummary,
   parsePaymentStatus,
-  truncateText,
 } from "config/config";
 
 import OrderItemsTable from "../common/order/OrderItemsTable";
@@ -71,13 +70,25 @@ export default function OrderDetails() {
                 </span>
               );
             }
-            return (
-              <span className="text-gray-800">
-                {truncateText(summary.memo, 30)}
-              </span>
-            );
+            return "—";
           })()
         : "—",
+    },
+    {
+      label: "Transaction",
+      value: summary.memo ? (
+        <div className="bg-gray-50 rounded-lg p-3 border-l-4 border-blue-200">
+          <div className="flex items-start gap-2">
+            <div>
+              <div className="text-xs text-gray-700 leading-relaxed break-words">
+                {summary.memo}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        "—"
+      ),
     },
   ];
 
