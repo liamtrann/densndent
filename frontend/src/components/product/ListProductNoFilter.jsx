@@ -1,15 +1,15 @@
 import { useAuth0 } from "@auth0/auth0-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchProductsBy } from "store/slices/productsSlice";
 
-import { delayCall } from "api/util";
 import { ErrorMessage, Loading, ProductToolbar } from "common";
 
 import { ListProduct } from "..";
 
 export default function ListProductNoFilter({ searchIds, by }) {
   const [view, setView] = useState("grid");
+  const hasFetched = useRef(false);
 
   const dispatch = useDispatch();
   const { getAccessTokenSilently } = useAuth0();
@@ -39,40 +39,35 @@ export default function ListProductNoFilter({ searchIds, by }) {
   const error = useSelector((state) => state.products.error);
 
   useEffect(() => {
-    // Return early if no 'by' prop provided
-    if (!by || !searchIds) {
+    // Return early if no 'by' prop provided or already fetched
+    if (!by || !searchIds || hasFetched.current) {
       return;
     }
 
-    // Load all products when needed
-    if (!isLoading && products.length === 0) {
-      return delayCall(() => {
-        const fetchConfig = {
-          type: by,
-          id: processedSearchIds,
-          sort: "",
-          minPrice: "",
-          maxPrice: "",
-          getAccessTokenSilently,
-        };
+    // Mark as fetched to prevent re-calls
+    hasFetched.current = true;
 
-        // Add auth token for user-specific data
-        if (by === "orderHistory" || by === "favoriteItems") {
-          fetchConfig.getAccessTokenSilently = getAccessTokenSilently;
-        }
+    // Load products
+    const fetchConfig = {
+      type: by,
+      id: processedSearchIds,
+      sort: "",
+      minPrice: "",
+      maxPrice: "",
+    };
 
-        dispatch(fetchProductsBy(fetchConfig));
-      });
+    // Add auth token for user-specific data
+    if (by === "orderHistory" || by === "favoriteItems") {
+      fetchConfig.getAccessTokenSilently = getAccessTokenSilently;
     }
-  }, [
-    dispatch,
-    processedSearchIds,
-    searchIds,
-    getAccessTokenSilently,
-    by,
-    isLoading,
-    products.length,
-  ]);
+
+    dispatch(fetchProductsBy(fetchConfig));
+  }, [dispatch, processedSearchIds, searchIds, by, getAccessTokenSilently]);
+
+  // Reset fetch flag when key parameters change
+  useEffect(() => {
+    hasFetched.current = false;
+  }, [processedSearchIds, by]);
 
   return (
     <div className="px-6 py-8 max-w-screen-xl mx-auto">
