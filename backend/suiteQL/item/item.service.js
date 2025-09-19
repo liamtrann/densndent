@@ -13,7 +13,7 @@ class ItemsService {
   // Helper method for generating sort clause
   _getSortBy(sort, customSort = null) {
     if (customSort) return customSort;
-    
+
     const allowedOrders = ["asc", "desc"];
     if (sort && allowedOrders.includes(sort.toLowerCase())) {
       return ` ORDER BY ip.price ${sort.toLowerCase()}`;
@@ -24,7 +24,11 @@ class ItemsService {
 
   // Helper method for building base item conditions
   _getBaseConditions() {
-    return [`i.isonline = 'T'`, `i.isinactive = 'F'`];
+    return [
+      `i.isonline = 'T'`,
+      `i.isinactive = 'F'`,
+      `(i.matrixtype IS NULL OR i.matrixtype != 'PARENT')`,
+    ];
   }
 
   // Helper method for adding price filter conditions
@@ -39,8 +43,10 @@ class ItemsService {
 
   // Helper method to check if price filtering is needed
   _hasPriceFilter(minPrice, maxPrice) {
-    return (minPrice !== undefined && minPrice !== null && minPrice !== "") ||
-           (maxPrice !== undefined && maxPrice !== null && maxPrice !== "");
+    return (
+      (minPrice !== undefined && minPrice !== null && minPrice !== "") ||
+      (maxPrice !== undefined && maxPrice !== null && maxPrice !== "")
+    );
   }
 
   // Standard item fields for most queries
@@ -64,7 +70,15 @@ class ItemsService {
   }
 
   // Generic query builder for items
-  async _buildAndExecuteQuery(fields, joins, baseConditions, additionalConditions, sortBy, limit, offset) {
+  async _buildAndExecuteQuery(
+    fields,
+    joins,
+    baseConditions,
+    additionalConditions,
+    sortBy,
+    limit,
+    offset
+  ) {
     const conditions = [...baseConditions, ...additionalConditions];
     const sql = `SELECT ${fields} FROM item i ${joins} WHERE ${conditions.join(" AND ")} ${sortBy}`;
     const results = await runQueryWithPagination(sql, limit, offset);
@@ -72,10 +86,16 @@ class ItemsService {
   }
 
   // Generic count query builder
-  async _buildAndExecuteCountQuery(baseConditions, additionalConditions, needsPriceJoin = false) {
+  async _buildAndExecuteCountQuery(
+    baseConditions,
+    additionalConditions,
+    needsPriceJoin = false
+  ) {
     const conditions = [...baseConditions, ...additionalConditions];
     const baseQuery = `SELECT COUNT(*) AS count FROM item i`;
-    const priceJoin = needsPriceJoin ? ` JOIN itemprice ip ON i.id = ip.item AND ip.pricelevel = 1` : '';
+    const priceJoin = needsPriceJoin
+      ? ` JOIN itemprice ip ON i.id = ip.item AND ip.pricelevel = 1`
+      : "";
     const sql = `${baseQuery}${priceJoin} WHERE ${conditions.join(" AND ")}`;
     const results = await runQueryWithPagination(sql, 1, 0);
     return results.items?.[0]?.count || 0;
@@ -102,7 +122,9 @@ class ItemsService {
 
     // Field-based filter
     if (field === "name") {
-      additionalConditions.push(`LOWER(${column}) LIKE '%' || LOWER('${value}') || '%'`);
+      additionalConditions.push(
+        `LOWER(${column}) LIKE '%' || LOWER('${value}') || '%'`
+      );
     } else {
       additionalConditions.push(`LOWER(${column}) = LOWER('${value}')`);
     }
@@ -115,19 +137,36 @@ class ItemsService {
     const joins = this._getStandardJoins();
     const sortBy = this._getSortBy(sort);
 
-    return await this._buildAndExecuteQuery(fields, joins, baseConditions, additionalConditions, sortBy, limit, offset);
+    return await this._buildAndExecuteQuery(
+      fields,
+      joins,
+      baseConditions,
+      additionalConditions,
+      sortBy,
+      limit,
+      offset
+    );
   }
 
   // Find items by both class and brand
-  async findByClassAndBrand(classId, brand, limit, offset, sort, minPrice, maxPrice) {
+  async findByClassAndBrand(
+    classId,
+    brand,
+    limit,
+    offset,
+    sort,
+    minPrice,
+    maxPrice
+  ) {
     const sortBy = this._getSortBy(sort);
-    
+
     // Build filter conditions
     let conditions = [
       `i.isonline = 'T'`,
       `i.isinactive='F'`,
+      `(i.matrixtype IS NULL OR i.matrixtype != 'PARENT')`,
       `i.class='${classId}'`,
-      `i.custitemcustitem_dnd_brand='${brand}'`
+      `i.custitemcustitem_dnd_brand='${brand}'`,
     ];
 
     // Price range filter
@@ -145,7 +184,7 @@ class ItemsService {
   }
 
   async findById(itemId) {
-    const sql = `SELECT i.id, i.class, i.manufacturer, i.mpn, i.itemid, i.itemType, i.subsidiary, i.isonline, i.displayname, i.storedetaileddescription, i.custitemcustitem_dnd_brand AS branditem, i.totalquantityonhand, i.stockdescription, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url, ip.item, ip.price, promo.promotioncode_id, promo.promotion_code, promo.promotion_name, promo.startdate, promo.enddate, promo.ispublic, promo.isinactive, promo.fixedprice, promo.itemquantifier FROM item i LEFT JOIN itemprice ip ON ip.item = i.id AND ip.pricelevel = 1 ${this._getPromotion("i")} WHERE i.id = '${itemId}' AND i.isinactive='F' AND i.isonline = 'T';`; // i.custitem38, i.custitem39 including later if needed
+    const sql = `SELECT i.id, i.class, i.manufacturer, i.mpn, i.itemid, i.itemType, i.subsidiary, i.isonline, i.displayname, i.storedetaileddescription, i.custitemcustitem_dnd_brand AS branditem, i.totalquantityonhand, i.stockdescription, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url, ip.item, ip.price, promo.promotioncode_id, promo.promotion_code, promo.promotion_name, promo.startdate, promo.enddate, promo.ispublic, promo.isinactive, promo.fixedprice, promo.itemquantifier FROM item i LEFT JOIN itemprice ip ON ip.item = i.id AND ip.pricelevel = 1 ${this._getPromotion("i")} WHERE i.id = '${itemId}' AND i.isinactive='F' AND i.isonline = 'T' AND (i.matrixtype IS NULL OR i.matrixtype != 'PARENT');`; // i.custitem38, i.custitem39 including later if needed
 
     const result = await runQueryWithPagination(sql, 1, 0);
     const item = result.items?.[0] || null;
@@ -155,7 +194,7 @@ class ItemsService {
   async findByParent(parent, limit, offset, sort, minPrice, maxPrice) {
     // Custom sort logic for findByParent - primary sort by custitem40, secondary by provided sort
     let orderBy = ` ORDER BY i.custitem40`;
-    
+
     if (sort && ["asc", "desc"].includes(sort.toLowerCase())) {
       // Add secondary sorting by price if specified
       orderBy += `, ip.price ${sort.toLowerCase()}`;
@@ -168,7 +207,8 @@ class ItemsService {
     let conditions = [
       `i.custitem39 = '${parent}'`,
       `i.isinactive = 'F'`,
-      `i.isonline = 'T'`
+      `i.isonline = 'T'`,
+      `(i.matrixtype IS NULL OR i.matrixtype != 'PARENT')`,
     ];
 
     // Price range filter
@@ -191,12 +231,13 @@ class ItemsService {
     }
     const idsString = itemIds.map((id) => `'${id}'`).join(",");
     const sortBy = this._getSortBy(sort);
-    
+
     // Build filter conditions
     let conditions = [
       `i.id IN (${idsString})`,
       `i.isinactive='F'`,
-      `i.isonline = 'T'`
+      `i.isonline = 'T'`,
+      `(i.matrixtype IS NULL OR i.matrixtype != 'PARENT')`,
     ];
 
     // Price range filter
@@ -208,19 +249,24 @@ class ItemsService {
     }
 
     const sql = `SELECT i.id, i.class, i.manufacturer, i.mpn, i.itemid, i.itemType, i.subsidiary, i.isonline, i.displayname, i.custitemcustitem_dnd_brand AS branditem, i.totalquantityonhand, i.stockdescription, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url, ip.item, ip.price, promo.promotioncode_id, promo.promotion_code, promo.promotion_name, promo.startdate, promo.enddate, promo.ispublic, promo.isinactive, promo.fixedprice, promo.itemquantifier FROM item i LEFT JOIN itemprice ip ON ip.item = i.id AND ip.pricelevel = 1 ${this._getPromotion("i")} WHERE ${conditions.join(" AND ")} ${sortBy}`;
-    const results = await runQueryWithPagination(sql, limit || itemIds.length, offset || 0);
+    const results = await runQueryWithPagination(
+      sql,
+      limit || itemIds.length,
+      offset || 0
+    );
 
     return results.items || [];
   }
 
   async findByNameLike(name, limit, offset, sort, minPrice, maxPrice) {
     const sortBy = this._getSortBy(sort);
-    
+
     // Build filter conditions
     let conditions = [
       `LOWER(i.itemid) LIKE '%' || LOWER('${name}') || '%'`,
       `i.isinactive='F'`,
-      `i.isonline = 'T'`
+      `i.isonline = 'T'`,
+      `(i.matrixtype IS NULL OR i.matrixtype != 'PARENT')`,
     ];
 
     // Price range filter
@@ -246,7 +292,11 @@ class ItemsService {
     };
 
     // Base conditions
-    const conditions = [`i.isonline = 'T'`, `i.isinactive = 'F'`];
+    const conditions = [
+      `i.isonline = 'T'`,
+      `i.isinactive = 'F'`,
+      `(i.matrixtype IS NULL OR i.matrixtype != 'PARENT')`,
+    ];
 
     // Add field-specific filter (skip for "all" case)
     if (field !== "all") {
@@ -304,7 +354,7 @@ class ItemsService {
       priceConditions += ` AND ip.price <= ${parseFloat(maxPrice)}`;
     }
 
-    const sql = `SELECT i.id, i.itemid, i.totalquantityonhand, i.stockdescription, ip.price, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url, promo.promotioncode_id, promo.promotion_code, promo.promotion_name, promo.startdate, promo.enddate, promo.ispublic, promo.isinactive, promo.fixedprice, promo.itemquantifier FROM item i INNER JOIN CommerceCategoryItemAssociation cc ON cc.item = i.id INNER JOIN itemprice ip ON ip.item = i.id AND ip.pricelevel = 1 ${this._getPromotion("i")} WHERE cc.category = '${category}' AND i.isonline = 'T' AND i.isinactive = 'F'${priceConditions} ${sortBy}`;
+    const sql = `SELECT i.id, i.itemid, i.totalquantityonhand, i.stockdescription, ip.price, (SELECT f.url FROM file f WHERE f.isonline = 'T' AND f.name LIKE '%' || i.displayname || '%' ORDER BY f.createddate DESC FETCH FIRST 1 ROWS ONLY) AS file_url, promo.promotioncode_id, promo.promotion_code, promo.promotion_name, promo.startdate, promo.enddate, promo.ispublic, promo.isinactive, promo.fixedprice, promo.itemquantifier FROM item i INNER JOIN CommerceCategoryItemAssociation cc ON cc.item = i.id INNER JOIN itemprice ip ON ip.item = i.id AND ip.pricelevel = 1 ${this._getPromotion("i")} WHERE cc.category = '${category}' AND i.isonline = 'T' AND i.isinactive = 'F' AND (i.matrixtype IS NULL OR i.matrixtype != 'PARENT')${priceConditions} ${sortBy}`;
     const results = await runQueryWithPagination(sql, limit, offset);
 
     return results.items || [];
@@ -317,6 +367,7 @@ class ItemsService {
       `cc.category = '${category}'`,
       `i.isonline = 'T'`,
       `i.isinactive = 'F'`,
+      `(i.matrixtype IS NULL OR i.matrixtype != 'PARENT')`,
     ];
 
     // Price range filter
@@ -334,7 +385,11 @@ class ItemsService {
 
   // Method for getting all products with pagination and sorting
   async findAllProducts(limit, offset, sort, minPrice, maxPrice) {
-    let conditions = [`i.isonline = 'T'`, `i.isinactive = 'F'`];
+    let conditions = [
+      `i.isonline = 'T'`,
+      `i.isinactive = 'F'`,
+      `(i.matrixtype IS NULL OR i.matrixtype != 'PARENT')`,
+    ];
 
     // Price range filter
     if (minPrice !== undefined && minPrice !== null && minPrice !== "") {
