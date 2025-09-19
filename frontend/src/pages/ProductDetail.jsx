@@ -260,6 +260,7 @@ export default function ProductsPage({
 
         {/* Right: Content */}
         <div>
+          {/* Title (removed hearts here; we’re putting them near Quantity as requested) */}
           <h2
             className={`${isModal ? "text-xl" : "text-2xl"} font-bold text-gray-800 mb-2`}
           >
@@ -272,22 +273,22 @@ export default function ProductsPage({
               <Paragraph className="text-smiles-blue font-semibold">
                 {CURRENT_IN_STOCK}: {product.totalquantityonhand}
               </Paragraph>
-              <DeliveryEstimate
-                inStock={true}
-                size="default"
-                className="inline-block rounded px-2 py-1 text-xs font-medium bg-primary-blue text-white"
-              />
+
+              {/* NEW: blue boxed estimate */}
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded border border-blue-200 bg-blue-50 text-blue-700">
+                <DeliveryEstimate inStock={true} size="default" />
+              </span>
             </div>
           ) : (
             <div className="mb-2">
               <Paragraph className="text-smiles-orange font-semibold">
                 {OUT_OF_STOCK}
               </Paragraph>
-              <DeliveryEstimate
-                inStock={false}
-                size="default"
-                className="inline-block rounded px-2 py-1 text-xs font-medium bg-orange-500 text-white"
-              />
+
+              {/* NEW: orange boxed estimate */}
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded border border-orange-200 bg-orange-50 text-orange-700">
+                <DeliveryEstimate inStock={false} size="default" />
+              </span>
             </div>
           )}
 
@@ -374,12 +375,14 @@ export default function ProductsPage({
                 </button>
               </div>
 
+              {/* Any stockdescription badge */}
               {product.stockdescription && (
                 <span className="text-sm text-blue-600 font-medium bg-blue-50 px-2 py-1 rounded">
                   {product.stockdescription}
                 </span>
               )}
 
+              {/* ➜ Favorites controls live here */}
               {userInfo?.id && (
                 <div className="flex items-center gap-2 ml-auto">
                   <FavoriteButton itemId={product.id} size={20} />
@@ -420,6 +423,7 @@ export default function ProductsPage({
               onIntervalChange={(val) => setSubInterval(val)}
             />
 
+            {/* Preferred delivery days when subscribed */}
             {isSubscribed && <PreferDeliveryDaySelector />}
 
             {isSubscribed && (
@@ -443,7 +447,7 @@ export default function ProductsPage({
           </Button>
         </div>
       </div>
-
+      {/* Recently Viewed (only full page) */}
       {!isModal && (
         <div className="mt-20">
           <RecentlyViewedSection />

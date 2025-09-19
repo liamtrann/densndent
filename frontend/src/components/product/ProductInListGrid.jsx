@@ -1,4 +1,4 @@
-// src/components/product/ProductInListGrid.jsx
+//ProductInListGrid.jsx
 import { FiShoppingCart, FiEye } from "react-icons/fi";
 import {
   ProductImage,
@@ -33,13 +33,16 @@ export default function ProductInListGrid({
         className="product-card border p-4 rounded shadow hover:shadow-md transition flex flex-col h-full group relative cursor-pointer"
         onClick={handleNavigate}
       >
+        {/* single Redux-powered heart */}
         <div className="absolute top-2 right-2 z-20">
           <FavoriteButton itemId={id} />
         </div>
 
+        {/* Light grey hover overlay */}
         <div className="absolute inset-0 bg-gray-200 opacity-0 group-hover:opacity-20 transition-opacity duration-200 rounded pointer-events-none" />
         <div className="relative group/image">
           <ProductImage src={file_url} />
+          {/* Quick Look Button - Centered overlay on image hover */}
           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded">
             <Button
               onClick={(e) => {
@@ -106,31 +109,29 @@ export default function ProductInListGrid({
           )}
         </div>
 
-        <div className="flex-grow">
-          {inStock ? (
-            <div className="mb-2">
-              <Paragraph className="text-smiles-blue font-semibold">
-                {CURRENT_IN_STOCK}
-              </Paragraph>
-              <DeliveryEstimate
-                inStock={true}
-                size="small"
-                className="inline-block rounded px-2 py-1 text-xs font-medium bg-primary-blue text-white"
-              />
-            </div>
-          ) : (
-            <div className="mb-2">
-              <Paragraph className="text-smiles-orange font-semibold">
-                {OUT_OF_STOCK}
-              </Paragraph>
-              <DeliveryEstimate
-                inStock={false}
-                size="small"
-                className="inline-block rounded px-2 py-1 text-xs font-medium bg-orange-500 text-white"
-              />
-            </div>
-          )}
-        </div>
+        {inStock ? (
+          <div className="mb-2">
+            <Paragraph className="text-smiles-blue font-semibold">
+              {CURRENT_IN_STOCK}
+            </Paragraph>
+
+            {/* NEW: blue boxed estimate */}
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded border border-blue-200 bg-blue-50 text-blue-700">
+              <DeliveryEstimate inStock={true} size="small" />
+            </span>
+          </div>
+        ) : (
+          <div className="mb-2">
+            <Paragraph className="text-smiles-orange font-semibold">
+              {OUT_OF_STOCK}
+            </Paragraph>
+
+            {/* NEW: orange boxed estimate */}
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded border border-orange-200 bg-orange-50 text-orange-700">
+              <DeliveryEstimate inStock={false} size="small" />
+            </span>
+          </div>
+        )}
 
         <div className="flex justify-between items-center mt-auto gap-2">
           <div
