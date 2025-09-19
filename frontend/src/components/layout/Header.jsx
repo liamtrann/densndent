@@ -1,5 +1,6 @@
+// src/components/Header.jsx
 import React, { useState, useEffect } from "react";
-import { FaBars, FaSearch, FaMoon, FaSun } from "react-icons/fa";
+import { FaBars, FaSearch /*, FaMoon, FaSun */ } from "react-icons/fa";
 import { useSelector, useDispatch } from "react-redux";
 import {
   Logo,
@@ -56,12 +57,7 @@ export default function Header() {
 
   return (
     <>
-      {/* Free Shipping Banner */}
-      <div className="bg-blue-900 text-white text-sm text-center py-1 dark:bg-gray-800">
-        FREE SHIPPING on orders over $300
-      </div>
-
-      {/* Mobile Drawer */}
+      {/* Mobile Drawer + overlay (overlay kept ABOVE the sticky header) */}
       <MobileDrawer
         isOpen={drawerOpen}
         onClose={() => setDrawerOpen(false)}
@@ -71,66 +67,62 @@ export default function Header() {
       />
       {drawerOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-30 z-40"
+          className="fixed inset-0 bg-black/30 z-[70]"
           onClick={() => setDrawerOpen(false)}
         />
       )}
 
-      {/* Main Header */}
-      <header className="bg-white dark:bg-gray-900 shadow px-6 py-4 flex items-center justify-between relative z-30 transition-colors duration-300">
-        {/* Left: Logo + Nav */}
-        <div className="flex items-center space-x-4 w-full lg:w-auto">
-          <div className="lg:hidden">
-            <FaBars
-              className="text-2xl text-gray-700 dark:text-gray-200 cursor-pointer"
-              onClick={() => setDrawerOpen(true)}
-            />
-          </div>
-          <Logo />
-          <DesktopNav classification={navCategories} />
+      {/* STICKY WRAPPER: keeps banner + header + search visible on scroll */}
+      <div className="sticky top-0 z-50 bg-white dark:bg-gray-900">
+        {/* Free Shipping Banner */}
+        <div className="bg-blue-900 text-white text-sm text-center py-1 dark:bg-gray-800">
+          FREE SHIPPING on orders over $300
         </div>
 
-        {/* Right: Search, Auth, Cart, Dark Toggle */}
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={() => setShowSearch((prev) => !prev)}
-            className="flex flex-col items-center text-gray-700 dark:text-gray-200 hover:text-black dark:hover:text-white transition"
-            aria-label="Toggle search bar"
-          >
-            <FaSearch className="text-xl" />
-          </button>
-
-          {/* DARK MODE TOGGLE */}
-          {/* <button
-            onClick={() => setIsDarkMode(!isDarkMode)}
-            className="p-2 rounded-full transition-colors bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
-            aria-label="Toggle Dark Mode"
-          >
-            {isDarkMode ? (
-              <FaSun className="text-yellow-300" />
-            ) : (
-              <FaMoon className="text-gray-800" />
-            )}
-          </button> */}
-
-          {/* Auth & Cart */}
-          <div className="hidden lg:block">
-            <React.Suspense fallback={null}>
-              <AuthButton />
-            </React.Suspense>
+        {/* Main Header */}
+        <header className="bg-white dark:bg-gray-900 shadow px-6 py-4 flex items-center justify-between transition-colors duration-300">
+          {/* Left: Logo + Nav */}
+          <div className="flex items-center space-x-4 w-full lg:w-auto">
+            <div className="lg:hidden">
+              <FaBars
+                className="text-2xl text-gray-700 dark:text-gray-200 cursor-pointer"
+                onClick={() => setDrawerOpen(true)}
+              />
+            </div>
+            <Logo />
+            <DesktopNav classification={navCategories} />
           </div>
-          <CartIndicator count={total} />
-        </div>
-      </header>
 
-      {/* Search Bar Below Header */}
-      {showSearch && (
-        <div className="w-full border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 py-4 px-4 flex justify-center">
-          <div className="max-w-3xl w-full">
-            <SearchBar onClose={() => setShowSearch(false)} />
+          {/* Right: Search, Auth, Cart */}
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={() => setShowSearch((prev) => !prev)}
+              className="flex flex-col items-center text-gray-700 dark:text-gray-200 hover:text-black dark:hover:text-white transition"
+              aria-label="Toggle search bar"
+            >
+              <FaSearch className="text-xl" />
+            </button>
+
+            {/* Dark mode toggle left as-is (commented out) */}
+
+            <div className="hidden lg:block">
+              <React.Suspense fallback={null}>
+                <AuthButton />
+              </React.Suspense>
+            </div>
+            <CartIndicator count={total} />
           </div>
-        </div>
-      )}
+        </header>
+
+        {/* Search Bar sits inside sticky area so it stays attached to header */}
+        {showSearch && (
+          <div className="w-full border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 py-4 px-4 flex justify-center">
+            <div className="max-w-3xl w-full">
+              <SearchBar onClose={() => setShowSearch(false)} />
+            </div>
+          </div>
+        )}
+      </div>
     </>
   );
 }

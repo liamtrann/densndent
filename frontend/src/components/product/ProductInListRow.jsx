@@ -1,4 +1,3 @@
-// src/components/product/ProductInListRow.jsx
 import { FiEye, FiShoppingCart } from "react-icons/fi";
 import { useSelector } from "react-redux";
 
@@ -67,11 +66,12 @@ export default function ProductInListRow({
           </div>
         );
 
+        // >>> Boxed stock badges
         const Badges = (
           <div className="mt-1 flex flex-wrap items-center gap-2">
             {inStock ? (
               <div className="flex flex-col gap-1">
-                <span className="text-smiles-blue px-2 py-0.5 rounded text-sm font-medium">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded border border-blue-200 bg-blue-50 text-blue-700 text-sm font-medium">
                   {CURRENT_IN_STOCK}
                 </span>
                 <DeliveryEstimate
@@ -82,9 +82,6 @@ export default function ProductInListRow({
               </div>
             ) : (
               <div className="flex flex-col gap-1">
-                <span className="text-smiles-orange px-2 py-0.5 rounded text-sm font-medium">
-                  {OUT_OF_STOCK}
-                </span>
                 <DeliveryEstimate
                   inStock={false}
                   size="small"
@@ -92,6 +89,7 @@ export default function ProductInListRow({
                 />
               </div>
             )}
+
             {/* Promotion badge */}
             {product.promotioncode_id && product.promotion_code && (
               <div className="mb-2">
@@ -137,15 +135,12 @@ export default function ProductInListRow({
         const Price =
           product.promotioncode_id && product.fixedprice ? (
             <div className="space-y-1">
-              {/* Original price - strikethrough */}
               <div className="text-gray-500 line-through text-xs">
                 {product.price != null ? formatCurrency(product.price) : "—"}
               </div>
-              {/* Promotional price */}
               <div className="text-red-600 font-semibold text-lg md:text-xl">
                 {formatCurrency(product.fixedprice)}
               </div>
-              {/* Savings amount */}
               <div className="text-green-600 text-xs">
                 Save {formatCurrency(product.price - product.fixedprice)}
               </div>
@@ -158,20 +153,17 @@ export default function ProductInListRow({
 
         return (
           <>
-            {/* ---------- Mobile layout (stacked) ---------- */}
+            {/* Mobile */}
             <div
               className="md:hidden cursor-pointer relative group/mobile"
               onClick={() => handleNavigate()}
             >
-              {/* Favorite Button - Mobile (Redux) */}
               <div className="absolute top-2 right-2 z-20">
                 <FavoriteButton itemId={product.id} size={16} />
               </div>
 
-              {/* Light grey hover overlay for mobile */}
-              <div className="absolute inset-0 bg-gray-200 opacity-0 group-hover/mobile:opacity-20 transition-opacity duration-200 rounded pointer-events-none"></div>
+              <div className="absolute inset-0 bg-gray-200 opacity-0 group-hover/mobile:opacity-20 transition-opacity duration-200 rounded pointer-events-none" />
               <div className="grid grid-cols-[5rem,1fr] gap-3">
-                {/* image */}
                 <div className="col-span-1 relative group">
                   <ProductImage
                     src={product.file_url}
@@ -180,14 +172,12 @@ export default function ProductInListRow({
                   />
                 </div>
 
-                {/* name + badges */}
                 <div className="col-span-1">
                   {Name}
                   {Badges}
                   {/* {ShortDesc} */}
                 </div>
 
-                {/* price + qty */}
                 <div className="col-span-2 mt-1 flex items-center justify-between">
                   {Price}
                   <div className="flex flex-col items-end gap-1">
@@ -200,9 +190,7 @@ export default function ProductInListRow({
                   </div>
                 </div>
 
-                {/* buttons */}
                 <div className="col-span-2 flex justify-end items-center gap-2">
-                  {/* Quick Look button - appears on hover */}
                   <Button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -237,14 +225,12 @@ export default function ProductInListRow({
               </div>
             </div>
 
-            {/* ---------- Desktop / Tablet layout ---------- */}
+            {/* Desktop / Tablet */}
             <div
               className="hidden md:flex md:flex-row items-center gap-4 cursor-pointer relative group/desktop"
               onClick={() => handleNavigate()}
             >
-              {/* Light grey hover overlay for desktop */}
-              <div className="absolute inset-0 bg-gray-200 opacity-0 group-hover/desktop:opacity-20 transition-opacity duration-200 rounded pointer-events-none"></div>
-              {/* image */}
+              <div className="absolute inset-0 bg-gray-200 opacity-0 group-hover/desktop:opacity-20 transition-opacity duration-200 rounded pointer-events-none" />
               <div className="w-24 shrink-0 relative group">
                 <ProductImage
                   src={product.file_url}
@@ -253,17 +239,14 @@ export default function ProductInListRow({
                 />
               </div>
 
-              {/* name + badges + optional desc */}
               <div className="flex-1 min-w-0">
                 {Name}
                 {Badges}
                 {/* {ShortDesc} */}
               </div>
 
-              {/* price */}
               <div className="md:w-32">{Price}</div>
 
-              {/* qty */}
               <div className="flex flex-col items-end gap-1">
                 <QtyControl />
                 {actualQuantity > quantity && (
@@ -273,12 +256,8 @@ export default function ProductInListRow({
                 )}
               </div>
 
-              {/* buttons */}
               <div className="md:w-32 flex justify-end items-center gap-2">
-                {/* Favorite Button - Desktop (Redux) */}
                 <FavoriteButton itemId={product.id} size={18} />
-
-                {/* Quick Look button - appears on hover */}
                 <Button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -315,7 +294,6 @@ export default function ProductInListRow({
         );
       })()}
 
-      {/* Quick Look Modal */}
       {showQuickLook && quickLookProductId && (
         <FlexibleModal title="Quick Look" onClose={handleCloseQuickLook}>
           <ProductDetail productId={quickLookProductId} isModal={true} />
